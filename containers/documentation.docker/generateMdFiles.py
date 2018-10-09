@@ -748,6 +748,7 @@ def get_hint(swagger, thisVerb, verb, route, param):
         processed_hints = []
         for hint in hints:
             processed_hints.append(g_re_hint_tag_end.sub(r'', g_re_hint_tag_start.sub(lambda x: '\n**{}:** '.format(x.title()), hint)))
+        del thisVerb['x-hints'] # clear, because we processed all hints for this route already
         return r''.join(processed_hints)
     else:
         #logger.debug("rest hint empty")
