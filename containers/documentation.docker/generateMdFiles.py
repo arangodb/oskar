@@ -180,7 +180,7 @@ class BlockType(Enum):
 
 
 class DocuBlocks():
-    #TODO rename allComments.txt - to intermeadiate Docublocks
+    #TODO rename allComments.txt - to intermediate Docublocks
     ###### regular expressions #####################################################
     """ Structure that holds plain and inline docublocks that are found in the allComments.txt files
     """
@@ -214,7 +214,7 @@ class DocuBlocks():
     @EXAMPLES|                          # -> \n**Examples**\n
     @RESTPARAMETERS|                    # -> <empty>
     @RESTREPLYBODY\{(?P<param>.*)\}     # -> call body function
-    ''', re.X) ## re.X - be verobse
+    ''', re.X) ## re.X - be verbose
     ###### regular expressions - end ###############################################
 
     ###### match replace ###########################################################
@@ -362,8 +362,8 @@ class DocuBlocks():
                     maybe_rest_code_first_RestReplyBodyParam = rest_code
                     current_line_num += 1
 
-                    #skip lines with more thatn 1 char
-                    # delete rest of bolck
+                    #skip lines with more than 1 char
+                    # delete rest of block
                     # if blocks are not separated by empty lines it will be very very broken
                     while len(rest_lines_split[current_line_num]) > 1:
                         rest_lines_split[current_line_num] = ''
@@ -421,7 +421,7 @@ class DocuBlockReader(): #GOOD
 
     def parse(self, filename, swagger): #GOOD
                # file to read the blocks from
-        self.blocks = DocuBlocks(swagger);    # stucture that the found blocks are added to and
+        self.blocks = DocuBlocks(swagger);    # structure that the found blocks are added to and
                                        # that is returned when the parse has finished
         """ Parses the text document that contains the DocuBlocks.
 
@@ -517,7 +517,7 @@ def walk_over_book_source(conf, blocks): #GOOD
     logger.info( "Processed %d files, skipped %d" % (count, skipped))
 
 def walk_replace_blocks_in_file(in_full, out_full, conf, blocks):
-    """ replace dcoublocks and images in file and wirte it into preprocessing directory
+    """ replace docublocks and images in file and write it into preprocessing directory
     """
     baseInPath = conf.book_src
 
@@ -734,6 +734,7 @@ def get_rest_description(swagger, thisVerb, verb, route, param):
         return ""
 
 ###### process hint box tags
+# TODO: apply transformation for Swagger only, output only appropriate version (one of both)
 g_re_hint_tag_start = re.compile(r"{% hint '([^']+?)' %}(?:\r\n|\r|\n)?")
 g_re_hint_tag_end = re.compile(r'{%[^%]*?%}')
 def get_hint(swagger, thisVerb, verb, route, param):
@@ -741,10 +742,9 @@ def get_hint(swagger, thisVerb, verb, route, param):
        {% hint '...' %} ... {% endhint %} tags
     """
     #logger.debug("RESTHINT")
-    logger.debug(get_from_dict(swagger, None, 'paths', route, verb, 'x-hints'))
+    #logger.debug(get_from_dict(swagger, None, 'paths', route, verb, 'x-hints'))
     hints = thisVerb.get('x-hints', None)
     if hints:
-        logger.error(hints)
         processed_hints = []
         for hint in hints:
             processed_hints.append(g_re_hint_tag_end.sub(r'', g_re_hint_tag_start.sub(lambda x: '\n**{}:** '.format(x.title()), hint)))
