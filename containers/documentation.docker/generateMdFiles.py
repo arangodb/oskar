@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Sample call in build documentatin script
+# Sample call in build documentation script
 # #echo " - generating .md-files"
 # python3 ${ARANGO_SOURCE}/Documentation/Scripts/generateMdFiles.py \
 #        "${book_name}" \
@@ -42,7 +42,7 @@ from pprint import pformat as PF
 # re.sub(repl,lines)
 #
 # repl - In this code repl is often a function that takes a match.
-#        the function calcualtes from that match a fitting replacement
+#        the function calculates from that match a fitting replacement
 #
 ### set up of logging #########################################################
 
@@ -120,7 +120,7 @@ def exectue_if_function(fun, *args, **kwargs):
 
 def apply_dict_re_replacement(dictionary, text):
     """
-        applies a dictionary containing regexes and fuctions or replacement text
+        applies a dictionary containing regexes and functions or replacement text
 
         Within the text the regular expressions are used to match
         substrings to be replaced. The are replaced by the provided
@@ -133,7 +133,7 @@ def apply_dict_re_replacement(dictionary, text):
 
 def apply_dict_re_replacement_bind_params(dictionary, text, text_or_function, *args, **kwargs):
     """
-        applies a dictionary containing regexes and fuctions or replacement text
+        applies a dictionary containing regexes and functions or replacement text
 
         Within the text the regular expressions are used to match
         substrings to be replaced. The are replaced by the provided
@@ -197,6 +197,7 @@ class DocuBlocks():
     r'''
     \\|                                 # the backslash...
     @RESTDESCRIPTION|                   # -> <empty>
+    @HINT|                              # -> <inject hint box below headline>
     @RESTURLPARAMETERS|                 # -> \n**Path Parameters**\n
     @RESTQUERYPARAMETERS|               # -> \n**Query Parameters**\n
     @RESTHEADERPARAMETERS|              # -> \n**Header Parameters**\n
@@ -509,7 +510,7 @@ def walk_over_book_source(conf, blocks): #GOOD
                 if conf.filter:
                     if conf.filter.match(in_full_path) == None:
                         skipped += 1
-                        continue;
+                        continue
                 ## what are those 2 functions doing
                 mkdir_recursive(os.path.dirname(out_full_path)) #create dir for output file
                 walk_replace_blocks_in_file(in_full_path, out_full_path, conf, blocks)
@@ -660,7 +661,7 @@ def get_verify_reference(swagger, name, source, verb):
         logger.error(json.dumps(swagger['definitions'], indent=4, separators=(', ',': '), sort_keys=True))
         logger.error("invalid reference: " + ref + " in " + function_name)
         sys.exit(1)
-        raise Exception("invalid reference: " + ref + " in " + function_name) #TODO - better execption handling
+        raise Exception("invalid reference: " + ref + " in " + function_name) #TODO - better exception handling
 
     return ref
 
@@ -669,7 +670,7 @@ def get_verify_reference(swagger, name, source, verb):
 ###### block_simple_repl #######################################################
 #===============================================================================
 
-###### validataion dict ########################################################
+###### validation dict ########################################################
 def validate_none(thisVerb):
     pass
 
@@ -706,7 +707,7 @@ def validate_return_codes(thisVerb):
         raise Exception("@RESTRETURNCODES found in Swagger data without any documented returncodes %s " % json.dumps(thisVerb, indent=4, separators=(', ',': '), sort_keys=True))
 
 #block_simple_repl
-g_dict_text_function_for_validaiton = {
+g_dict_text_function_for_validation = {
     "@RESTDESCRIPTION"      : validate_none,
     "@RESTURLPARAMETERS"    : validate_path_parameters,
     "@RESTQUERYPARAMETERS"  : validate_query_parameters,
@@ -715,7 +716,7 @@ g_dict_text_function_for_validaiton = {
     "@RESTURLPARAMS"        : validate_path_parameters,
     "@EXAMPLES"             : validate_none
 }
-###### validataion dict - END ##################################################
+###### validation dict - END ##################################################
 
 ###### simple dict  ########################################################
 g_re_example_code_pre = re.compile(r'\*\*Example:\*\*((?:.|\n)*?)</code></pre>')
@@ -732,12 +733,28 @@ def get_rest_description(swagger, thisVerb, verb, route, param):
         #logger.debug("rest description empty")
         return ""
 
-###### unwarpPostJson
+###### process hint box tags
+g_re_hint_tag_start = re.compile(r"{% hint '([^']+?)' %}(?:\r\n|\r|\n)?")
+g_re_hint_tag_end = re.compile(r'{%[^%]*?%}')
+def get_hint(swagger, thisVerb, verb, route, param):
+    """gets hint text and replaces
+       {% hint '...' %} ... {% endhint %} tags
+    """
+    logger.debug("RESTHINT")
+    hints = thisVerb.get('x-hint', None)
+    if hints:
+        logger.error(hints)
+        return g_re_hint_tag_end.sub(r'', hints)
+    else:
+        logger.debug("rest hint empty")
+        return ""
+
+###### unwrapPostJson
 g_re_lf = re.compile("\n")
-g_re_dobule_lf = re.compile("\n\n")
+g_re_double_lf = re.compile("\n\n")
 def trim_and_indent(text, layer):
     text = text.rstrip('\n').lstrip('\n')
-    text = g_re_dobule_lf.sub("\n", text)
+    text = g_re_double_lf.sub("\n", text)
     indent =  ' ' * (layer + 2) if layer > 0 else ""
     return g_re_lf.sub("\n" + indent, text)
 
@@ -747,7 +764,7 @@ def trim_br(text):
     return g_re_leading_br.sub("", g_re_trailing_br.sub("", text.strip(' ')))
 
 def unwrapPostJson(swagger, reference, layer):
-    #TODO - create an description / takl about the format with willi
+    #TODO - create an description / talk about the format with Willi
     swaggerDataTypes = ["number", "integer", "string", "boolean", "array", "object"]
     # logger.error("xx" * layer + reference)
     unwrapped = ''
@@ -825,7 +842,7 @@ def unwrapPostJson(swagger, reference, layer):
 
     return unwrapped
 
-###### unwarpPostJson - END
+###### unwrapPostJson - END
 
 def get_rest_reply_body_parameter(swagger, thisVerb, verb, route, param):
     response_body = "\n**Response Body**\n"
@@ -845,6 +862,7 @@ def get_rest_reply_body_parameter(swagger, thisVerb, verb, route, param):
 g_dict_text_replacement = {
     "\\"                    : "\\\\",
     "@RESTDESCRIPTION"      : get_rest_description,
+    "@HINT"                 : get_hint,
     "@RESTURLPARAMETERS"    : "\n**Path Parameters**\n",
     "@RESTQUERYPARAMETERS"  : "\n**Query Parameters**\n",
     "@RESTHEADERPARAMETERS" : "\n**Header Parameters**\n",
@@ -869,7 +887,7 @@ def block_simple_repl(match, swagger, thisVerb, verb, route):
     #logger.info('xxxxx [%s]' % m)
     #logger_multi(logging.ERROR, 'xxxxx [%s]' % thisVerb)
 
-    validation_function = g_dict_text_function_for_validaiton.get(match_0, None)
+    validation_function = g_dict_text_function_for_validation.get(match_0, None)
     if validation_function:
         validation_function(thisVerb)
 
