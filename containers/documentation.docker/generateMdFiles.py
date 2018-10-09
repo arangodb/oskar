@@ -308,8 +308,8 @@ class DocuBlocks():
 
             foundRest = True
 
-        for (re, replacment) in DocuBlocks.dict_re_replacement_blocks:
-            block.content = re.sub(replacment, block.content)
+        for (re, replacement) in DocuBlocks.dict_re_replacement_blocks:
+            block.content = re.sub(replacement, block.content)
 
 
         if foundRest:
@@ -740,13 +740,14 @@ def get_hint(swagger, thisVerb, verb, route, param):
     """gets hint text and replaces
        {% hint '...' %} ... {% endhint %} tags
     """
-    logger.debug("RESTHINT")
-    hints = thisVerb.get('x-hint', None)
+    #logger.debug("RESTHINT")
+    logger.debug(get_from_dict(swagger, None, 'paths', route, verb, 'x-hint'))
+    hint = thisVerb.get('x-hint', None)
     if hints:
-        logger.error(hints)
-        return g_re_hint_tag_end.sub(r'', hints)
+        logger.error(hint)
+        return g_re_hint_tag_end.sub(r'', g_re_hint_tag_start(lambda x: '\n**{}:** '.format(x.title()), hint))
     else:
-        logger.debug("rest hint empty")
+        #logger.debug("rest hint empty")
         return ""
 
 ###### unwrapPostJson
