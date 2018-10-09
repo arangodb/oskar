@@ -747,7 +747,7 @@ def get_hint(swagger, thisVerb, verb, route, param):
         logger.error(hints)
         processed_hints = []
         for hint in hints:
-            processed_hints.append(g_re_hint_tag_end.sub(r'', g_re_hint_tag_start(lambda x: '\n**{}:** '.format(x.title()), hint)))
+            processed_hints.append(g_re_hint_tag_end.sub(r'', g_re_hint_tag_start.sub(lambda x: '\n**{}:** '.format(x.title()), hint)))
         return r''.join(processed_hints)
     else:
         #logger.debug("rest hint empty")
