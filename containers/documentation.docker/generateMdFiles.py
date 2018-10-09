@@ -741,11 +741,14 @@ def get_hint(swagger, thisVerb, verb, route, param):
        {% hint '...' %} ... {% endhint %} tags
     """
     #logger.debug("RESTHINT")
-    logger.debug(get_from_dict(swagger, None, 'paths', route, verb, 'x-hint'))
-    hint = thisVerb.get('x-hint', None)
+    logger.debug(get_from_dict(swagger, None, 'paths', route, verb, 'x-hints'))
+    hints = thisVerb.get('x-hints', None)
     if hints:
-        logger.error(hint)
-        return g_re_hint_tag_end.sub(r'', g_re_hint_tag_start(lambda x: '\n**{}:** '.format(x.title()), hint))
+        logger.error(hints)
+        processed_hints = []
+        for hint in hints:
+            processed_hints.append(g_re_hint_tag_end.sub(r'', g_re_hint_tag_start(lambda x: '\n**{}:** '.format(x.title()), hint)))
+        return r''.join(processed_hints)
     else:
         #logger.debug("rest hint empty")
         return ""
