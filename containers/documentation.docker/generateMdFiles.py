@@ -720,6 +720,7 @@ g_dict_text_function_for_validation = {
 
 ###### simple dict  ########################################################
 g_re_example_code_pre = re.compile(r'\*\*Example:\*\*((?:.|\n)*?)</code></pre>')
+g_re_hints_for_swagger = re.compile(r'<!-- Hints Start -->.*<!-- Hints End -->', re.DOTALL)
 def get_rest_description(swagger, thisVerb, verb, route, param):
     """gets rest description and removes
        **Example** ... </code></pre> before returning
@@ -728,28 +729,25 @@ def get_rest_description(swagger, thisVerb, verb, route, param):
     description = thisVerb.get('description', None)
     if description:
         #logger.error(description)
+        description = g_re_hints_for_swagger.sub(r'', description)
         return g_re_example_code_pre.sub(r'', description)
     else:
         #logger.debug("rest description empty")
         return ""
 
-###### process hint box tags
-# TODO: apply transformation for Swagger only, output only appropriate version (one of both)
-g_re_hint_tag_start = re.compile(r"{% hint '([^']+?)' %}(?:\r\n|\r|\n)?")
-g_re_hint_tag_end = re.compile(r'{%[^%]*?%}')
+###### render hint box markup
 def get_hint(swagger, thisVerb, verb, route, param):
-    """gets hint text and replaces
-       {% hint '...' %} ... {% endhint %} tags
+    """gets original body of hint blocks
+       {% hint '...' %} body {% endhint %}
+       from custom field x-hints for rendering in the docs.
+       Simplified hints for Swagger are removed from description field
+       in get_rest_description()
     """
     #logger.debug("RESTHINT")
     #logger.debug(get_from_dict(swagger, None, 'paths', route, verb, 'x-hints'))
     hints = thisVerb.get('x-hints', None)
     if hints:
-        processed_hints = []
-        for hint in hints:
-            processed_hints.append(g_re_hint_tag_end.sub(r'', g_re_hint_tag_start.sub(lambda x: '\n**{}:** '.format(x.title()), hint)))
-        del thisVerb['x-hints'] # clear, because we processed all hints for this route already
-        return r''.join(processed_hints)
+        return r''.join(hints)
     else:
         #logger.debug("rest hint empty")
         return ""
