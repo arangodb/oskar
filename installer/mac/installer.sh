@@ -18,6 +18,7 @@ brew install zabbix --without-server-proxy
 brew install moreutils --without-parallel
 
 brew cask install java8
+brew cask install docker
 
 sudo gem install rspec
 sudo gem install httparty
@@ -25,6 +26,15 @@ sudo gem install persistent_httparty
 
 brew upgrade
 brew link --overwrite python@2
+
+sudo pmset womp 0
+sudo pmset autorestart 1
+sudo pmset networkoversleep 0
+sudo pmset disksleep 0
+sudo pmset sleep 0
+sudo pmset hibernatemode 0
+sudo pmset ttyskeepawake 1
+sudo pmset displaysleep 1
 
 echo import .p12 manually
 #security unlock-keychain -p $PASSWD
