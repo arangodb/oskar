@@ -197,7 +197,7 @@ class DocuBlocks():
     r'''
     \\|                                 # the backslash...
     @RESTDESCRIPTION|                   # -> <empty>
-    @HINT|                              # -> <inject hint box below headline>
+    @HINTS|                              # -> <inject hints>
     @RESTURLPARAMETERS|                 # -> \n**Path Parameters**\n
     @RESTQUERYPARAMETERS|               # -> \n**Query Parameters**\n
     @RESTHEADERPARAMETERS|              # -> \n**Header Parameters**\n
@@ -744,15 +744,14 @@ def get_hints(swagger, thisVerb, verb, route, param):
        Simplified hints for Swagger are removed from description field
        in get_rest_description()
     """
-    #logger.debug("RESTHINT")
+    #logger.debug("HINTS")
     #logger.debug(get_from_dict(swagger, None, 'paths', route, verb, 'x-hints'))
     hints = thisVerb.get('x-hints', None)
     if hints:
-        del thisVerb['x-hints'] # clear to avoid duplicates in output
-        return r''.join(hints)
+        return hints
     else:
-        #logger.debug("rest hint empty")
-        return ""
+        #logger.debug("hints empty")
+        return ''
 
 ###### unwrapPostJson
 g_re_lf = re.compile("\n")
@@ -867,7 +866,7 @@ def get_rest_reply_body_parameter(swagger, thisVerb, verb, route, param):
 g_dict_text_replacement = {
     "\\"                    : "\\\\",
     "@RESTDESCRIPTION"      : get_rest_description,
-    "@HINT"                 : get_hints,
+    "@HINTS"                 : get_hints,
     "@RESTURLPARAMETERS"    : "\n**Path Parameters**\n",
     "@RESTQUERYPARAMETERS"  : "\n**Query Parameters**\n",
     "@RESTHEADERPARAMETERS" : "\n**Header Parameters**\n",
