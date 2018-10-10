@@ -708,8 +708,8 @@ def validate_return_codes(thisVerb):
 
 #block_simple_repl
 g_dict_text_function_for_validation = {
-    "@RESTDESCRIPTION"      : validate_none,
     "@HINTS"                : validate_none,
+    "@RESTDESCRIPTION"      : validate_none,
     "@RESTURLPARAMETERS"    : validate_path_parameters,
     "@RESTQUERYPARAMETERS"  : validate_query_parameters,
     "@RESTHEADERPARAMETERS" : validate_header_parameters,
@@ -849,8 +849,8 @@ def get_rest_reply_body_parameter(swagger, thisVerb, verb, route, param):
 # block_simple_repl
 g_dict_text_replacement = {
     "\\"                    : "\\\\",
-    "@RESTDESCRIPTION"      : get_rest_description,
     "@HINTS"                : "",
+    "@RESTDESCRIPTION"      : get_rest_description,
     "@RESTURLPARAMETERS"    : "\n**Path Parameters**\n",
     "@RESTQUERYPARAMETERS"  : "\n**Query Parameters**\n",
     "@RESTHEADERPARAMETERS" : "\n**Header Parameters**\n",
