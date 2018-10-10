@@ -849,6 +849,7 @@ def get_rest_reply_body_parameter(swagger, thisVerb, verb, route, param):
 g_dict_text_replacement = {
     "\\"                    : "\\\\",
     "@RESTDESCRIPTION"      : get_rest_description,
+    "@HINTS"                : "",
     "@RESTURLPARAMETERS"    : "\n**Path Parameters**\n",
     "@RESTQUERYPARAMETERS"  : "\n**Query Parameters**\n",
     "@RESTHEADERPARAMETERS" : "\n**Header Parameters**\n",
