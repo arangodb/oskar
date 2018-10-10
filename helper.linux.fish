@@ -8,6 +8,7 @@ set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH
 set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH
 set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH
+set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
 
 function compiler
   set -l version $argv[1]
@@ -25,6 +26,16 @@ function compiler
     case '*'
       echo "unknown compiler version $version"
   end
+end
+
+function launchLdapServer
+  stopLdapServer
+  docker run -d --name $LDAPDOCKERCONTAINERNAME -p 389:389 -p 636:636 neunhoef/ldap-alpine
+end
+
+function stopLdapServer
+  docker stop $LDAPDOCKERCONTAINERNAME
+  docker rm $LDAPDOCKERCONTAINERNAME
 end
 
 function buildUbuntuBuildImage
@@ -339,7 +350,9 @@ end
 
 function oskarFull
   checkoutIfNeeded
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+  launchLdapServer
+  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+  stopLdapServer
 end
 
 function oskarLimited
