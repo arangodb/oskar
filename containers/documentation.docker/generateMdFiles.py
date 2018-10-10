@@ -709,6 +709,7 @@ def validate_return_codes(thisVerb):
 #block_simple_repl
 g_dict_text_function_for_validation = {
     "@RESTDESCRIPTION"      : validate_none,
+    "@HINTS"                : validate_none,
     "@RESTURLPARAMETERS"    : validate_path_parameters,
     "@RESTQUERYPARAMETERS"  : validate_query_parameters,
     "@RESTHEADERPARAMETERS" : validate_header_parameters,
