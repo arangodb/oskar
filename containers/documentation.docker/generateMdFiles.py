@@ -197,7 +197,7 @@ class DocuBlocks():
     r'''
     \\|                                 # the backslash...
     @RESTDESCRIPTION|                   # -> <empty>
-    @HINTS|                              # -> <inject hints>
+    @HINTS|                             # -> <inject hints>
     @RESTURLPARAMETERS|                 # -> \n**Path Parameters**\n
     @RESTQUERYPARAMETERS|               # -> \n**Query Parameters**\n
     @RESTHEADERPARAMETERS|              # -> \n**Header Parameters**\n
@@ -729,29 +729,12 @@ def get_rest_description(swagger, thisVerb, verb, route, param):
     description = thisVerb.get('description', None)
     if description:
         #logger.error(description)
-        # remove simplified hints, original markup is used for rendering in get_hints()
+        # remove simplified hints, original markup is used for rendering in docs
         description = g_re_hints_for_swagger.sub(r'', description)
         return g_re_example_code_pre.sub(r'', description)
     else:
         #logger.debug("rest description empty")
         return ""
-
-###### render hint box markup
-def get_hints(swagger, thisVerb, verb, route, param):
-    """gets original body of hint blocks
-       {% hint '...' %} body {% endhint %}
-       from custom field x-hints for rendering in the docs.
-       Simplified hints for Swagger are removed from description field
-       in get_rest_description()
-    """
-    #logger.debug("HINTS")
-    #logger.debug(get_from_dict(swagger, None, 'paths', route, verb, 'x-hints'))
-    hints = thisVerb.get('x-hints', None)
-    if hints:
-        return hints
-    else:
-        #logger.debug("hints empty")
-        return ''
 
 ###### unwrapPostJson
 g_re_lf = re.compile("\n")
@@ -866,7 +849,6 @@ def get_rest_reply_body_parameter(swagger, thisVerb, verb, route, param):
 g_dict_text_replacement = {
     "\\"                    : "\\\\",
     "@RESTDESCRIPTION"      : get_rest_description,
-    "@HINTS"                 : get_hints,
     "@RESTURLPARAMETERS"    : "\n**Path Parameters**\n",
     "@RESTQUERYPARAMETERS"  : "\n**Query Parameters**\n",
     "@RESTHEADERPARAMETERS" : "\n**Header Parameters**\n",
