@@ -8,7 +8,6 @@ set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH
 set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH
 set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH
-set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
 
 function compiler
   set -l version $argv[1]
@@ -26,16 +25,6 @@ function compiler
     case '*'
       echo "unknown compiler version $version"
   end
-end
-
-function launchLdapServer
-  stopLdapServer
-  docker run -d --name $LDAPDOCKERCONTAINERNAME -p 389:389 -p 636:636 neunhoef/ldap-alpine
-end
-
-function stopLdapServer
-  docker stop $LDAPDOCKERCONTAINERNAME
-  docker rm $LDAPDOCKERCONTAINERNAME
 end
 
 function buildUbuntuBuildImage
@@ -112,7 +101,7 @@ function runInContainer
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -e ASAN="$ASAN" \
              -e BUILDMODE="$BUILDMODE" \
-	     -e COMPILER_VERSION="$COMPILER_VERSION" \
+             -e COMPILER_VERSION="$COMPILER_VERSION" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
@@ -351,8 +340,10 @@ end
 function oskarFull
   checkoutIfNeeded
   launchLdapServer
-  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+  and runInContainer --net="$LDAPNETWORK" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+  set -l res $status
   stopLdapServer
+  return $res
 end
 
 function oskarLimited

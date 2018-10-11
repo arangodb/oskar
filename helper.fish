@@ -1,3 +1,18 @@
+set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
+set -gx LDAPNETWORK ldaptestnet
+
+function launchLdapServer
+  stopLdapServer
+  docker network create "$LDAPNETWORK"
+  docker run -d --name "$LDAPDOCKERCONTAINERNAME" --net="$LDAPNETWORK" -p 389:389 -p 636:636 neunhoef/ldap-alpine
+end
+
+function stopLdapServer
+  docker stop "$LDAPDOCKERCONTAINERNAME"
+  docker rm "$LDAPDOCKERCONTAINERNAME"
+  docker network rm "$LDAPNETWORK"
+end
+
 function lockDirectory
   # Now grab the lock ourselves:
   set -l pid (echo %self)
