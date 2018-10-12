@@ -28,58 +28,74 @@ function compiler
 end
 
 function buildUbuntuBuildImage
-  cd $WORKDIR
-  cp -a scripts/{makeArangoDB,buildArangoDB,checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUbuntu.docker/scripts
-  cd $WORKDIR/containers/buildUbuntu.docker
-  docker build -t $UBUNTUBUILDIMAGE .
-  rm -f $WORKDIR/containers/buildUbuntu.docker/scripts/*.fish
-  cd $WORKDIR
+  pushd $WORKDIR
+  and cp -a scripts/{makeArangoDB,buildArangoDB,checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUbuntu.docker/scripts
+  and cd $WORKDIR/containers/buildUbuntu.docker
+  and docker build -t $UBUNTUBUILDIMAGE .
+  and rm -f $WORKDIR/containers/buildUbuntu.docker/scripts/*.fish
+  or begin ; popd ; return 1 ; end
+  popd
 end
+
 function pushUbuntuBuildImage ; docker push $UBUNTUBUILDIMAGE ; end
+
 function pullUbuntuBuildImage ; docker pull $UBUNTUBUILDIMAGE ; end
 
 function buildUbuntuPackagingImage
-  cd $WORKDIR
-  cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
-  cd $WORKDIR/containers/buildUbuntuPackaging.docker
-  docker build -t $UBUNTUPACKAGINGIMAGE .
-  rm -f $WORKDIR/containers/buildUbuntuPackaging.docker/scripts/*.fish
-  cd $WORKDIR
+  pushd $WORKDIR
+  and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
+  and cd $WORKDIR/containers/buildUbuntuPackaging.docker
+  and docker build -t $UBUNTUPACKAGINGIMAGE .
+  and rm -f $WORKDIR/containers/buildUbuntuPackaging.docker/scripts/*.fish
+  or begin ; popd ; return 1 ; end
+  popd
 end
+
 function pushUbuntuPackagingImage ; docker push $UBUNTUPACKAGINGIMAGE ; end
+
 function pullUbuntuPackagingImage ; docker pull $UBUNTUPACKAGINGIMAGE ; end
 
 function buildAlpineBuildImage
-  cd $WORKDIR
-  cp -a scripts/makeAlpine.fish scripts/buildAlpine.fish containers/buildAlpine.docker/scripts
-  cd $WORKDIR/containers/buildAlpine.docker
-  docker build -t $ALPINEBUILDIMAGE .
-  rm -f $WORKDIR/containers/buildAlpine.docker/scripts/*.fish
-  cd $WORKDIR
+  pushd $WORKDIR
+  and cp -a scripts/makeAlpine.fish scripts/buildAlpine.fish containers/buildAlpine.docker/scripts
+  and cd $WORKDIR/containers/buildAlpine.docker
+  and docker build -t $ALPINEBUILDIMAGE .
+  and rm -f $WORKDIR/containers/buildAlpine.docker/scripts/*.fish
+  or begin ; popd ; return 1 ; end
+  popd
 end
+
 function pushAlpineBuildImage ; docker push $ALPINEBUILDIMAGE ; end
+
 function pullAlpineBuildImage ; docker pull $ALPINEBUILDIMAGE ; end
 
 function buildCentosPackagingImage
-  cd $WORKDIR
-  cp -a scripts/buildRPMPackage.fish containers/buildCentos7Packaging.docker/scripts
-  cd $WORKDIR/containers/buildCentos7Packaging.docker
-  docker build -t $CENTOSPACKAGINGIMAGE .
-  rm -f $WORKDIR/containers/buildCentos7Packaging.docker/scripts/*.fish
-  cd $WORKDIR
+  pushd $WORKDIR
+  and cp -a scripts/buildRPMPackage.fish containers/buildCentos7Packaging.docker/scripts
+  and cd $WORKDIR/containers/buildCentos7Packaging.docker
+  and docker build -t $CENTOSPACKAGINGIMAGE .
+  and rm -f $WORKDIR/containers/buildCentos7Packaging.docker/scripts/*.fish
+  or begin ; popd ; return 1 ; end
+  popd
 end
+
 function pushCentosPackagingImage ; docker push $CENTOSPACKAGINGIMAGE ; end
+
 function pullCentosPackagingImage ; docker pull $CENTOSPACKAGINGIMAGE ; end
 
 function remakeImages
-  buildUbuntuBuildImage
-  pushUbuntuBuildImage
-  buildAlpineBuildImage
-  pushAlpineBuildImage
-  buildUbuntuPackagingImage
-  pushUbuntuPackagingImage
-  buildCentosPackagingImage
-  pushCentosPackagingImage
+  set -l s 0
+
+  buildUbuntuBuildImage ; or set -l s 1
+  pushUbuntuBuildImage ; or set -l s 1
+  buildAlpineBuildImage ; or set -l s 1
+  pushAlpineBuildImage ; or set -l s 1
+  buildUbuntuPackagingImage ; or set -l s 1
+  pushUbuntuPackagingImage ; or set -l s 1
+  buildCentosPackagingImage ; or set -l s 1
+  pushCentosPackagingImage ; or set -l s 1
+
+  return $s
 end
 
 function runInContainer
@@ -97,8 +113,10 @@ function runInContainer
   # from a regular user. Therefore we have to do some Eiertanz to stop it
   # if we receive a TERM outside the container. Note that this does not
   # cover SIGINT, since this will directly abort the whole function.
-  set c (docker run -d -v $WORKDIR/work:$INNERWORKDIR \
+  set c (docker run -d \
+             -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
+	     -v "$WORKDIR/scripts":"/scripts" \
              -e ASAN="$ASAN" \
              -e BUILDMODE="$BUILDMODE" \
 	     -e COMPILER_VERSION="$COMPILER_VERSION" \
@@ -129,7 +147,10 @@ function runInContainer
   docker rm $c >/dev/null
   functions -e termhandler
   # Cleanup ownership:
-  docker run -v $WORKDIR/work:$INNERWORKDIR -e UID=(id -u) -e GID=(id -g) \
+  docker run \
+      -v $WORKDIR/work:$INNERWORKDIR \
+      -e UID=(id -u) \
+      -e GID=(id -g) \
       -e INNERWORKDIR=$INNERWORKDIR \
       $UBUNTUBUILDIMAGE $SCRIPTSDIR/recursiveChown.fish
 
@@ -223,6 +244,11 @@ function makeStaticArangoDB
 end
 
 function buildDebianPackage
+  if test ! -d $WORKDIR/work/ArangoDB/build
+    echo buildRPMPackage: build directory does not exist
+    return 1
+  end
+
   # This assumes that a static build has already happened
   # Must have set ARANGODB_DEBIAN_UPSTREAM and ARANGODB_DEBIAN_REVISION,
   # for example by running findArangoDBVersion.
@@ -268,13 +294,11 @@ function transformSpec
     echo transformSpec: wrong number of arguments
     return 1
   end
-  # FIXME do not rely on relative paths
-  cp "$argv[1]" "$argv[2]"
-  sed -i -e "s/@PACKAGE_VERSION@/$ARANGODB_RPM_UPSTREAM/" "$argv[2]"
-  sed -i -e "s/@PACKAGE_REVISION@/$ARANGODB_RPM_REVISION/" "$argv[2]"
-
-  if test "(" "$ARANGODB_VERSION_MAJOR" -eq "3" ")" \
-       -a "(" "$ARANGODB_VERSION_MINOR" -le "3" ")"
+  and cp "$argv[1]" "$argv[2]"
+  and sed -i -e "s/@PACKAGE_VERSION@/$ARANGODB_RPM_UPSTREAM/" "$argv[2]"
+  and sed -i -e "s/@PACKAGE_REVISION@/$ARANGODB_RPM_REVISION/" "$argv[2]"
+  and if test "(" "$ARANGODB_VERSION_MAJOR" -eq "3" ")" \
+           -a "(" "$ARANGODB_VERSION_MINOR" -le "3" ")"
     sed -i -e "s~@JS_DIR@~~" "$argv[2]"
   else
     sed -i -e "s~@JS_DIR@~/$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH~" "$argv[2]"
@@ -282,23 +306,31 @@ function transformSpec
 end
 
 function buildRPMPackage
-  # FIXME do not rely on relative paths
+  if test ! -d $WORKDIR/work/ArangoDB/build
+    echo buildRPMPackage: build directory does not exist
+    return 1
+  end
 
   # This assumes that a static build has already happened
   # Must have set ARANGODB_RPM_UPSTREAM and ARANGODB_RPM_REVISION,
   # for example by running findArangoDBVersion.
   if test "$ENTERPRISEEDITION" = "On"
-    transformSpec rpm/arangodb3e.spec.in $WORKDIR/work/arangodb3.spec
+    transformSpec "$WORKDIR/rpm/arangodb3e.spec.in" "$WORKDIR/work/arangodb3.spec"
   else
-    transformSpec rpm/arangodb3.spec.in $WORKDIR/work/arangodb3.spec
+    transformSpec "$WORKDIR/rpm/arangodb3.spec.in" "$WORKDIR/work/arangodb3.spec"
   end
-  cp rpm/arangodb3.initd $WORKDIR/work
-  cp rpm/arangodb3.service $WORKDIR/work
-  cp rpm/arangodb3.logrotate $WORKDIR/work
+  and cp $WORKDIR/rpm/arangodb3.initd $WORKDIR/work
+  and cp $WORKDIR/rpm/arangodb3.service $WORKDIR/work
+  and cp $WORKDIR/rpm/arangodb3.logrotate $WORKDIR/work
   and runInContainer $CENTOSPACKAGINGIMAGE $SCRIPTSDIR/buildRPMPackage.fish
 end
 
 function buildTarGzPackage
+  if test ! -d $WORKDIR/work/ArangoDB/build
+    echo buildRPMPackage: build directory does not exist
+    return 1
+  end
+
   buildTarGzPackageHelper "linux"
 end
 
@@ -348,21 +380,23 @@ function oskarLimited
 end
 
 function pushOskar
-  cd $WORKDIR
-  source helper.fish
-  git push
-  buildUbuntuBuildImage
-  pushUbuntuBuildImage
-  buildAlpineBuildImage
-  pushAlpineBuildImage
-  buildUbuntuPackagingImage
-  pushUbuntuPackagingImage
-  buildCentosPackagingImage
-  pushCentosPackagingImage
+  pushd $WORKDIR
+  and source helper.fish
+  and git push
+  and buildUbuntuBuildImage
+  and pushUbuntuBuildImage
+  and buildAlpineBuildImage
+  and pushAlpineBuildImage
+  and buildUbuntuPackagingImage
+  and pushUbuntuPackagingImage
+  and buildCentosPackagingImage
+  and pushCentosPackagingImage
+  or begin ; popd ; return 1 ; end
+  popd
 end
 
 function updateOskar
-  cd $WORKDIR
+  pushd $WORKDIR
   and git checkout -- .
   and git pull
   and source helper.fish
@@ -370,13 +404,17 @@ function updateOskar
   and pullAlpineBuildImage
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
+  or begin ; popd ; return 1 ; end
+  popd
 end
 
 function downloadStarter
+  mkdir -p $WORKDIR$THIRDPARTY_BIN
   runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/downloadStarter.fish $THIRDPARTY_BIN $argv
 end
 
 function downloadSyncer
+  mkdir -p $WORKDIR$THIRDPARTY_SBIN
   rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
   runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $UBUNTUBUILDIMAGE $SCRIPTSDIR/downloadSyncer.fish $THIRDPARTY_SBIN $argv
   ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
@@ -393,15 +431,19 @@ function makeDockerImage
   end
   set -l imagename $argv[1]
 
-  cd $WORKDIR/work/ArangoDB/build/install
-  and tar czvf $WORKDIR/containers/arangodb.docker/install.tar.gz *
+  pushd $WORKDIR/work/ArangoDB/build/install
+  and tar czf $WORKDIR/containers/arangodb.docker/install.tar.gz *
   if test $status -ne 0
     echo Could not create install tarball!
+    popd
     return 1
   end
+  popd
 
-  cd $WORKDIR/containers/arangodb.docker
-  docker build -t $imagename .
+  pushd $WORKDIR/containers/arangodb.docker
+  and docker build -t $imagename .
+  or begin ; popd ; return 1 ; end
+  popd
 end
 
 function buildPackage
@@ -410,9 +452,9 @@ function buildPackage
   buildDebianPackage
   and buildRPMPackage
   and buildTarGzPackage
-  and buildDebianSniplet
-  and buildRPMSniplet
-  and buildTarGzSniplet
+  and buildDebianSnippet
+  and buildRPMSnippet
+  and buildTarGzSnippet
 end
 
 function buildEnterprisePackage
@@ -457,8 +499,9 @@ function buildCommunityPackage
   end
 end
 
-function transformDebianSniplet
-  cd $WORKDIR
+function transformDebianSnippet
+  pushd $WORKDIR
+  
   set -l DEBIAN_NAME_CLIENT "$argv[1]-client_$argv[2]_amd64.deb"
   set -l DEBIAN_NAME_SERVER "$argv[1]_$argv[2]_amd64.deb"
   set -l DEBIAN_NAME_DEBUG_SYMBOLS "$argv[1]-dbg_$argv[2]_amd64.deb"
@@ -478,30 +521,41 @@ function transformDebianSniplet
   set -l DEBIAN_SIZE_CLIENT (expr (wc -c < work/$DEBIAN_NAME_CLIENT) / 1024 / 1024)
   set -l DEBIAN_SIZE_DEBUG_SYMBOLS (expr (wc -c < work/$DEBIAN_NAME_DEBUG_SYMBOLS) / 1024 / 1024)
 
+  set -l DEBIAN_SHA256_SERVER (shasum -a 256 -b < work/$DEBIAN_NAME_SERVER | awk '{print $1}')
+  set -l DEBIAN_SHA256_CLIENT (shasum -a 256 -b < work/$DEBIAN_NAME_CLIENT | awk '{print $1}')
+  set -l DEBIAN_SHA256_DEBUG_SYMBOLS (shasum -a 256 -b < work/$DEBIAN_NAME_DEBUG_SYMBOLS | awk '{print $1}')
+
   set -l TARGZ_NAME_SERVER "$argv[1]-linux-$argv[3].tar.gz"
 
   if test ! -f "work/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
   set -l TARGZ_SIZE_SERVER (expr (wc -c < work/$TARGZ_NAME_SERVER) / 1024 / 1024)
+  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < work/$TARGZ_NAME_SERVER | awk '{print $1}')
 
   set -l n "work/download-$argv[1]-debian.html"
 
-  sed -e "s|@DEBIAN_NAME_SERVER@|$DEBIAN_NAME_SERVER|" \
-      -e "s|@DEBIAN_NAME_CLIENT@|$DEBIAN_NAME_CLIENT|" \
-      -e "s|@DEBIAN_NAME_DEBUG_SYMBOLS@|$DEBIAN_NAME_DEBUG_SYMBOLS|" \
-      -e "s|@DEBIAN_SIZE_SERVER@|$DEBIAN_SIZE_SERVER|" \
-      -e "s|@DEBIAN_SIZE_CLIENT@|$DEBIAN_SIZE_CLIENT|" \
-      -e "s|@DEBIAN_SIZE_DEBUG_SYMBOLS@|$DEBIAN_SIZE_DEBUG_SYMBOLS|" \
-      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|" \
-      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|" \
-      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|" \
-      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|" \
+  sed -e "s|@DEBIAN_NAME_SERVER@|$DEBIAN_NAME_SERVER|g" \
+      -e "s|@DEBIAN_NAME_CLIENT@|$DEBIAN_NAME_CLIENT|g" \
+      -e "s|@DEBIAN_NAME_DEBUG_SYMBOLS@|$DEBIAN_NAME_DEBUG_SYMBOLS|g" \
+      -e "s|@DEBIAN_SIZE_SERVER@|$DEBIAN_SIZE_SERVER|g" \
+      -e "s|@DEBIAN_SIZE_CLIENT@|$DEBIAN_SIZE_CLIENT|g" \
+      -e "s|@DEBIAN_SIZE_DEBUG_SYMBOLS@|$DEBIAN_SIZE_DEBUG_SYMBOLS|g" \
+      -e "s|@DEBIAN_SHA256_SERVER@|$DEBIAN_SHA256_SERVER|g" \
+      -e "s|@DEBIAN_SHA256_CLIENT@|$DEBIAN_SHA256_CLIENT|g" \
+      -e "s|@DEBIAN_SHA256_DEBUG_SYMBOLS@|$DEBIAN_SHA256_DEBUG_SYMBOLS|g" \
+      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
 
-  echo "Debian Sniplet: $n"
+  echo "Debian Snippet: $n"
+  popd
 end
 
-function buildDebianSniplet
+function buildDebianSnippet
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
   if test "$ENTERPRISEEDITION" = "On"
@@ -510,7 +564,7 @@ function buildDebianSniplet
       return 1
     end
 
-    transformDebianSniplet "arangodb3e" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
+    transformDebianSnippet "arangodb3e" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
     or return 1
   else
     if test -z "$COMMUNITY_DOWNLOAD_LINK"
@@ -518,13 +572,14 @@ function buildDebianSniplet
       return 1
     end
 
-    transformDebianSniplet "arangodb3" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
+    transformDebianSnippet "arangodb3" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
     or return 1
   end
 end
 
-function transformRPMSniplet
-  cd $WORKDIR
+function transformRPMSnippet
+  pushd $WORKDIR
+
   set -l RPM_NAME_CLIENT "$argv[1]-client-$argv[2].x86_64.rpm"
   set -l RPM_NAME_SERVER "$argv[1]-$argv[2].x86_64.rpm"
   set -l RPM_NAME_DEBUG_SYMBOLS "$argv[1]-debuginfo-$argv[2].x86_64.rpm"
@@ -544,30 +599,41 @@ function transformRPMSniplet
   set -l RPM_SIZE_CLIENT (expr (wc -c < work/$RPM_NAME_CLIENT) / 1024 / 1024)
   set -l RPM_SIZE_DEBUG_SYMBOLS (expr (wc -c < work/$RPM_NAME_DEBUG_SYMBOLS) / 1024 / 1024)
 
+  set -l RPM_SHA256_SERVER (shasum -a 256 -b < work/$RPM_NAME_SERVER | awk '{print $1}')
+  set -l RPM_SHA256_CLIENT (shasum -a 256 -b < work/$RPM_NAME_CLIENT | awk '{print $1}')
+  set -l RPM_SHA256_DEBUG_SYMBOLS (shasum -a 256 -b < work/$RPM_NAME_DEBUG_SYMBOLS | awk '{print $1}')
+
   set -l TARGZ_NAME_SERVER "$argv[1]-linux-$argv[3].tar.gz"
 
   if test ! -f "work/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
   set -l TARGZ_SIZE_SERVER (expr (wc -c < work/$TARGZ_NAME_SERVER) / 1024 / 1024)
+  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < work/$TARGZ_NAME_SERVER | awk '{print $1}')
 
   set -l n "work/download-$argv[1]-rpm.html"
 
-  sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|" \
-      -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|" \
-      -e "s|@RPM_NAME_DEBUG_SYMBOLS@|$RPM_NAME_DEBUG_SYMBOLS|" \
-      -e "s|@RPM_SIZE_SERVER@|$RPM_SIZE_SERVER|" \
-      -e "s|@RPM_SIZE_CLIENT@|$RPM_SIZE_CLIENT|" \
-      -e "s|@RPM_SIZE_DEBUG_SYMBOLS@|$RPM_SIZE_DEBUG_SYMBOLS|" \
-      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|" \
-      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|" \
-      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|" \
-      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|" \
+  sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
+      -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
+      -e "s|@RPM_NAME_DEBUG_SYMBOLS@|$RPM_NAME_DEBUG_SYMBOLS|g" \
+      -e "s|@RPM_SIZE_SERVER@|$RPM_SIZE_SERVER|g" \
+      -e "s|@RPM_SIZE_CLIENT@|$RPM_SIZE_CLIENT|g" \
+      -e "s|@RPM_SIZE_DEBUG_SYMBOLS@|$RPM_SIZE_DEBUG_SYMBOLS|g" \
+      -e "s|@RPM_SHA256_SERVER@|$RPM_SHA256_SERVER|g" \
+      -e "s|@RPM_SHA256_CLIENT@|$RPM_SHA256_CLIENT|g" \
+      -e "s|@RPM_SHA256_DEBUG_SYMBOLS@|$RPM_SHA256_DEBUG_SYMBOLS|g" \
+      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
 
-  echo "RPM Sniplet: $n"
+  echo "RPM Snippet: $n"
+  popd
 end
 
-function buildRPMSniplet
+function buildRPMSnippet
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
   if test "$ENTERPRISEEDITION" = "On"
@@ -576,7 +642,7 @@ function buildRPMSniplet
       return 1
     end
 
-    transformRPMSniplet "arangodb3e" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
+    transformRPMSnippet "arangodb3e" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
     or return 1
   else
     if test -z "$COMMUNITY_DOWNLOAD_LINK"
@@ -584,13 +650,14 @@ function buildRPMSniplet
       return 1
     end
 
-    transformRPMSniplet "arangodb3" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
+    transformRPMSnippet "arangodb3" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
     or return 1
   end
 end
 
-function transformTarGzSniplet
-  cd $WORKDIR
+function transformTarGzSnippet
+  pushd $WORKDIR
+
   set -l TARGZ_NAME_SERVER "$argv[1]-linux-$argv[2].tar.gz"
   set -l DOWNLOAD_LINK "$argv[3]"
 
@@ -603,19 +670,23 @@ function transformTarGzSniplet
   if test ! -f "work/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
   set -l TARGZ_SIZE_SERVER (expr (wc -c < work/$TARGZ_NAME_SERVER) / 1024 / 1024)
+  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < work/$TARGZ_NAME_SERVER | awk '{print $1}')
 
   set -l n "work/download-$argv[1]-linux.html"
 
-  sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|" \
-      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|" \
-      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|" \
-      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|" \
+  sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
 
-  echo "TarGZ Sniplet: $n"
+  echo "TarGZ Snippet: $n"
+  popd
 end
 
-function buildTarGzSniplet
+function buildTarGzSnippet
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
   if test "$ENTERPRISEEDITION" = "On"
@@ -624,7 +695,7 @@ function buildTarGzSniplet
       return 1
     end
 
-    transformTarGzSniplet "arangodb3e" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
+    transformTarGzSnippet "arangodb3e" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
     or return 1
   else
     if test -z "$COMMUNITY_DOWNLOAD_LINK"
@@ -632,7 +703,7 @@ function buildTarGzSniplet
       return 1
     end
 
-    transformTarGzSniplet "arangodb3" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
+    transformTarGzSnippet "arangodb3" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
     or return 1
   end
 end
@@ -649,13 +720,13 @@ function makeSnippets
   end
 
   community
-  and buildDebianSniplet
-  and buildRPMSniplet
-  and buildTarGzSniplet
+  and buildDebianSnippet
+  and buildRPMSnippet
+  and buildTarGzSnippet
   and enterprise
-  and buildDebianSniplet
-  and buildRPMSniplet
-  and buildTarGzSniplet
+  and buildDebianSnippet
+  and buildRPMSnippet
+  and buildTarGzSnippet
 end
 
 # Set PARALLELISM in a sensible way:

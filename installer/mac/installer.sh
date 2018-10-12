@@ -35,6 +35,8 @@ sudo pmset sleep 0
 sudo pmset hibernatemode 0
 sudo pmset ttyskeepawake 1
 sudo pmset displaysleep 1
+sudo  /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -activate -configure -access -on -configure -allowAccessFor -allUsers -configure -restart -agent -privs -all
+
 
 echo import .p12 manually
 #security unlock-keychain -p $PASSWD

@@ -1,6 +1,4 @@
 #!/usr/bin/env fish
-set TS (which ts; and echo -- -s [\\%.T]; or echo /usr/bin/env cat)
-
 if test "$PARALLELISM" = ""
     set -xg PARALLELISM 64
 end
@@ -50,7 +48,7 @@ end
 echo cmake $FULLARGS ..
 echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
 
-cmake $FULLARGS .. ^&1 | eval $TS > $INNERWORKDIR/cmakeArangoDB.log
+cmake $FULLARGS .. ^&1 > $INNERWORKDIR/cmakeArangoDB.log
 or exit $status
 
 echo "Finished cmake at "(date)", now starting build"
@@ -62,6 +60,6 @@ if test "$VERBOSEBUILD" = "On"
 end
 
 echo Running make, output in $INNERWORKDIR/buildArangoDB.log
-and nice make -j$MAKEFALGS ^&1 | eval $TS > $INNERWORKDIR/buildArangoDB.log
+and nice make $MAKEFALGS > $INNERWORKDIR/buildArangoDB.log ^&1 
 and echo "Finished at "(date)
 and ccache --show-stats

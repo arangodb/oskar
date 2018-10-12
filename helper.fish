@@ -3,20 +3,20 @@ function lockDirectory
   set -l pid (echo %self)
   if test ! -f LOCK.$pid
     echo $pid > LOCK.$pid
-    while true
+    and while true
       # Remove a stale lock if it is found:
       if set -l pidfound (cat LOCK ^/dev/null)
         if not ps ax -o pid | grep '^ *'"$pidfound"'$' > /dev/null
           rm LOCK LOCK.$pidfound
-          echo Have removed stale lock.
+          and echo Have removed stale lock.
         end
       end
-      if ln LOCK.$pid LOCK ^/dev/null
+      and if ln LOCK.$pid LOCK ^/dev/null
         break
       end
-      echo -n Directory is locked, waiting...
-      date
-      sleep 15
+      and echo -n Directory is locked, waiting...
+      and date
+      and sleep 15
     end
   end
 end
@@ -44,22 +44,24 @@ function showConfig
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
 
-  if test -z '$NO_RM_BUILD'
+  if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
   else
     printf $fmt3 'Clear build' Off '(keepBuild/clearBuild)'
   end
   
   echo
-  echo 'Test Configuration:'
+  echo 'Test Configuration'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'
   printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience)'
   echo
-  echo 'Internal Configuration:'
-  printf $fmt3 'Inner workdir' $INNERWORKDIR
+  echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'
   printf $fmt3 'Verbose Build' $VERBOSEBUILD '(verboseBuild/silentBuild)'
   printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR '(verbose/slient)'
+  echo
+  echo 'Directories'
+  printf $fmt2 'Inner workdir' $INNERWORKDIR
   printf $fmt2 'Workdir'       $WORKDIR
   echo '------------------------------------------------------------------------------'
   echo
@@ -111,11 +113,11 @@ else ; set -gx VERBOSEBUILD $VERBOSEBUILD ; end
 function keepBuild ; set -gx NO_RM_BUILD 1 ; end
 function clearBuild ; set -gx NO_RM_BUILD ; end
 
-# TODO FIXME
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
 # else is available before proceeding
 set -gx WORKDIR (pwd)
+if test ! -d scripts ; echo "cannot find scripts directory" ; exit 1 ; end
 if test ! -d work ; mkdir work ; end
 
 function checkoutIfNeeded
@@ -129,9 +131,11 @@ function checkoutIfNeeded
 end
 
 function clearResults
-  cd $WORKDIR/work
-  for f in testreport* ; rm -f $f ; end
-  rm -f test.log buildArangoDB.log cmakeArangoDB.log
+  pushd $WORKDIR/work
+  and for f in testreport* ; rm -f $f ; end
+  and rm -f test.log buildArangoDB.log cmakeArangoDB.log
+  or begin ; popd ; return 1 ; end
+  popd
 end
 
 function oskar1
@@ -156,47 +160,66 @@ function oskar1Limited
 end
 
 function oskar2
+  set -l testsuite $TESTSUITE
+
   showConfig
   set -x NOSTRIP 1
   buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
-  cluster
+
+  set -xg TESTSUITE $testsuite
 end
 
 function oskar4
+  set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE
+
   showConfig
   set -x NOSTRIP 1
   buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+
   rocksdb
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+
   mmfiles
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
   cluster ; rocksdb
+
+  set -xg TESTSUITE $testsuite ; set -xg STORAGEENGINE $storageengine
 end
 
 function oskar8
+  set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE ; set -l enterpriseedition $ENTERPRISEEDITION
+
   showConfig
-  enterprise
   set -x NOSTRIP 1
+
+  enterprise
   buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+
   rocksdb
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+
   mmfiles
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+
   community
   buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+
   rocksdb
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+
   mmfiles
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
-  cluster ; rocksdb
+
+  set -xg TESTSUITE $testsuite ; set -xg STORAGEENGINE $storageengine ; set -l ENTERPRISEEDITION $enterpriseedition
 end
 
 function showLog
@@ -328,17 +351,28 @@ function findArangoDBVersion
     end
   end
 
+  echo '------------------------------------------------------------------------------'
   echo "ArangoDB: $ARANGODB_VERSION"
   echo "Debian:   $ARANGODB_DEBIAN_UPSTREAM / $ARANGODB_DEBIAN_REVISION"
   echo "RPM:      $ARANGODB_RPM_UPSTREAM / $ARANGODB_RPM_REVISION"
   echo "DARWIN:   $ARANGODB_DARWIN_UPSTREAM / $ARANGODB_DARWIN_REVISION"
   echo "TGZ:      $ARANGODB_TGZ_UPSTREAM"
   echo "SNIPPETS: $ARANGODB_SNIPPETS"
+  echo '------------------------------------------------------------------------------'
+  echo
 end
 
 function makeRelease
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
+  end
+  if test "$ENTERPRISE_DOWNLOAD_LINK" = ""
+    echo "Need to set environment variable ENTERPRISE_DOWNLOAD_LINK."
+    return 1
+  end
+  if test "$COMMUNITY_DOWNLOAD_LINK" = ""
+    echo "Need to set environment variable COMMUNITY_DOWNLOAD_LINK."
     return 1
   end
   if test (count $argv) -lt 2
@@ -373,8 +407,7 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
-  cd $WORKDIR
-  and cd $WORKDIR/work/ArangoDB/build/install
+  pushd $WORKDIR/work/ArangoDB/build/install
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
   and rm -f "bin/*~" "bin/*.bak"
@@ -382,38 +415,41 @@ function buildTarGzPackageHelper
   and strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
   and cd $WORKDIR/work/ArangoDB/build
   and mv install "$name-$v"
-  or begin ; cd $WORKDIR ; return 1 ; end
+  or begin ; popd ; return 1 ; end
 
-  tar -c -z -v -f "$WORKDIR/work/$name-$os-$v.tar.gz" --exclude "etc" --exclude "var" "$name-$v"
-  set s $status
-  mv "$name-$v" install
-  cd $WORKDIR
-  return $s 
+  tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" --exclude "etc" --exclude "var" "$name-$v"
+  and set s $status
+  and mv "$name-$v" install
+  and popd
+  and return $s 
 end
 
 function moveResultsToWorkspace
-  # Used in jenkins test
-  echo Moving reports and logs to $WORKSPACE ...
-  if test -f $WORKDIR/work/test.log
-    if head -1 $WORKDIR/work/test.log | grep BAD > /dev/null
-      for f in $WORKDIR/work/testreport* ; echo "mv $f" ; mv $f $WORKSPACE ; end
-    else
-      for f in $WORKDIR/work/testreport* ; echo "rm $f" ; rm $f ; end
+  if test ! -z "$WORKSPACE"
+    # Used in jenkins test
+    echo Moving reports and logs to $WORKSPACE ...
+    if test -f $WORKDIR/work/test.log
+      if head -1 $WORKDIR/work/test.log | grep BAD > /dev/null
+        for f in $WORKDIR/work/testreport* ; echo "mv $f" ; mv $f $WORKSPACE ; end
+      else
+        for f in $WORKDIR/work/testreport* ; echo "rm $f" ; rm $f ; end
+      end
+      mv $WORKDIR/work/test.log $WORKSPACE
     end
-    mv $WORKDIR/work/test.log $WORKSPACE
-  end
-  for x in buildArangoDB.log cmakeArangoDB.log
-    if test -f "$WORKDIR/work/$x" ; mv $WORKDIR/work/$x $WORKSPACE ; end
-  end
+    for x in buildArangoDB.log cmakeArangoDB.log
+      if test -f "$WORKDIR/work/$x" ; mv $WORKDIR/work/$x $WORKSPACE ; end
+    end
 
-  for f in $WORKDIR/work/*.deb ; echo "mv $f" ; mv $f $WORKSPACE ; end
-  for f in $WORKDIR/work/*.dmg ; echo "mv $f" ; mv $f $WORKSPACE ; end
-  for f in $WORKDIR/work/*.rpm ; echo "mv $f" ; mv $f $WORKSPACE ; end
-  for f in $WORKDIR/work/*.tar.gz ; echo "mv $f" ; mv $f $WORKSPACE ; end
+    for f in $WORKDIR/work/*.deb ; echo "mv $f" ; mv $f $WORKSPACE ; end
+    for f in $WORKDIR/work/*.dmg ; echo "mv $f" ; mv $f $WORKSPACE ; end
+    for f in $WORKDIR/work/*.rpm ; echo "mv $f" ; mv $f $WORKSPACE ; end
+    for f in $WORKDIR/work/*.tar.gz ; echo "mv $f" ; mv $f $WORKSPACE ; end
+    for f in $WORKDIR/work/*.html ; echo "mv $f" ; mv $f $WORKSPACE ; end
 
-  if test -f $WORKDIR/work/testfailures.txt
-    if grep -q -v '^[ \t]*$' $WORKDIR/work/testfailures.txt
-      echo "mv $WORKDIR/work/testfailures.txt" ; mv $WORKDIR/work/testfailures.txt $WORKSPACE
+    if test -f $WORKDIR/work/testfailures.txt
+      if grep -q -v '^[ \t]*$' $WORKDIR/work/testfailures.txt
+        echo "mv $WORKDIR/work/testfailures.txt" ; mv $WORKDIR/work/testfailures.txt $WORKSPACE
+      end
     end
   end
 end
