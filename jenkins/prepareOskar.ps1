@@ -8,6 +8,9 @@ If(-Not(Test-Path -PathType Container -Path "$HDD\$env:NODE_NAME"))
     New-Item -ItemType Directory -Path "$HDD\$env:NODE_NAME"
 }
 $OSKARDIR = "$HDD\$env:NODE_NAME"
+
+Get-ChildItem -Recurse $OSKARDIR | Unblock-File
+
 Set-Location $OSKARDIR
 If(-Not(Test-Path -PathType Container -Path "$OSKARDIR\oskar"))
 {
