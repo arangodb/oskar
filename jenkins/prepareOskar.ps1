@@ -17,10 +17,13 @@ ForEach($LINE in (&(Get-Command handle64) $OSKARDIR))
 {
     $VALUE = $REGEX.Match($LINE).Value
     $ID = $VALUE.Split(' ',[System.StringSplitOptions]::RemoveEmptyEntries) | select -Last 1
-    Write-Host "$((Get-Command procdump).Source) -accepteula -ma $ID $HDD\procdump\$ID.dmp"
-    Start-Process $(Get-Command procdump) -ArgumentList "-accepteula -ma $ID $HDD\procdump\$ID.dmp"
-    Write-Host "Stop-Process -Force -Id $ID" 
-    Stop-Process -Force -Id $ID
+    If($ID)
+    {
+        Write-Host "$((Get-Command procdump).Source) -accepteula -ma $ID $HDD\procdump\$ID.dmp"
+        Start-Process $(Get-Command procdump) -ArgumentList "-accepteula -ma $ID $HDD\procdump\$ID.dmp"
+        Write-Host "Stop-Process -Force -Id $ID" 
+        Stop-Process -Force -Id $ID
+    }
 }
 
 If(-Not($env:OSKAR_BRANCH))
