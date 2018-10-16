@@ -1,25 +1,9 @@
-﻿Function Get-LockingProcess([string]$path) {
-[regex]$matchPattern = "(?<Name>\w+\.\w+)\s+pid:\s+(?<PID>\b(\d+)\b)\s+type:\s+(?<Type>\w+)\s+\w+:\s+(?<Path>.*)"
-$data = &$(Get-Command handle) $path 
-$MyMatches = $matchPattern.Matches( $data )
-if ($MyMatches.value) {
-      $MyMatches | foreach {
-     [pscustomobject]@{ 
-      FullName = $_.groups["Name"].value
-      Name = $_.groups["Name"].value.split(".")[0]
-      ID = $_.groups["PID"].value
-      Type = $_.groups["Type"].value
-      Path = $_.groups["Path"].value
-     }
-    }
-  }
-}
-
-$HDD = $(Split-Path -Qualifier $env:WORKSPACE)
+﻿$HDD = $(Split-Path -Qualifier $env:WORKSPACE)
 If(-Not(Test-Path -PathType Container -Path "$HDD\$env:NODE_NAME"))
 {
     New-Item -ItemType Directory -Path "$HDD\$env:NODE_NAME"
 }
+
 $OSKARDIR = "$HDD\$env:NODE_NAME"
 Set-Location $OSKARDIR
 
@@ -27,14 +11,16 @@ If(-Not(Test-Path -PathType Container -Path "$HDD\procdump"))
 {
     New-Item -ItemType Directory -Path "$HDD\procdump"
 }
-foreach($file in  (Get-ChildItem -File -Recurse $OSKARDIR).FullName)
+
+$REGEX = [Regex]::new("pid: \d+")
+ForEach($LINE in (&(Get-Command handle64) $OSKARDIR))
 {
-    $ID = (Get-LockingProcess $file).ID
-    If($ID)
-    {
-        Start-Process $(Get-Command procdump) -ArgumentList "-accepteula -ma $ID $HDD\procdump\$ID.dmp" 
-        Stop-Process -Force -Id $ID
-    }
+    $VALUE = $REGEX.Match($LINE).Value
+    $ID = $VALUE.Split(' ',[System.StringSplitOptions]::RemoveEmptyEntries) | select -Last 1
+    Write-Host "$((Get-Command procdump).Source) -accepteula -ma $ID $HDD\procdump\$ID.dmp"
+    Start-Process $(Get-Command procdump) -ArgumentList "-accepteula -ma $ID $HDD\procdump\$ID.dmp"
+    Write-Host "Stop-Process -Force -Id $ID" 
+    Stop-Process -Force -Id $ID
 }
 
 If(-Not($env:OSKAR_BRANCH))
