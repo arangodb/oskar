@@ -23,11 +23,16 @@ If(-Not(Test-Path -PathType Container -Path "$HDD\$env:NODE_NAME"))
 $OSKARDIR = "$HDD\$env:NODE_NAME"
 Set-Location $OSKARDIR
 
+If(-Not(Test-Path -PathType Container -Path "$HDD\procdump"))
+{
+    New-Item -ItemType Directory -Path "$HDD\procdump"
+}
 foreach($file in  (Get-ChildItem -File -Recurse $OSKARDIR).FullName)
 {
     $ID = (Get-LockingProcess $file).ID
     If($ID)
     {
+        Start-Process $(Get-Command procdump) -ArgumentList "-accepteula -ma $ID $HDD\procdump\$ID.dmp" 
         Stop-Process -Force -Id $ID
     }
 }
