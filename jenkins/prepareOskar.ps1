@@ -1,7 +1,20 @@
-﻿If(-Not($env:OSKAR_BRANCH))
-{
-    $env:OSKAR_BRANCH = "master"
+﻿Function Get-LockingProcess([string]$path) {
+[regex]$matchPattern = "(?<Name>\w+\.\w+)\s+pid:\s+(?<PID>\b(\d+)\b)\s+type:\s+(?<Type>\w+)\s+\w+:\s+(?<Path>.*)"
+$data = &$(Get-Command handle) $path 
+$MyMatches = $matchPattern.Matches( $data )
+if ($MyMatches.value) {
+      $MyMatches | foreach {
+     [pscustomobject]@{ 
+      FullName = $_.groups["Name"].value
+      Name = $_.groups["Name"].value.split(".")[0]
+      ID = $_.groups["PID"].value
+      Type = $_.groups["Type"].value
+      Path = $_.groups["Path"].value
+     }
+    }
+  }
 }
+
 $HDD = $(Split-Path -Qualifier $env:WORKSPACE)
 If(-Not(Test-Path -PathType Container -Path "$HDD\$env:NODE_NAME"))
 {
@@ -9,6 +22,20 @@ If(-Not(Test-Path -PathType Container -Path "$HDD\$env:NODE_NAME"))
 }
 $OSKARDIR = "$HDD\$env:NODE_NAME"
 Set-Location $OSKARDIR
+
+foreach($file in  (Get-ChildItem -File -Recurse $OSKARDIR).FullName)
+{
+    $ID = (Get-LockingProcess $file).ID
+    If($ID)
+    {
+        Stop-Process -Force -Id $ID
+    }
+}
+
+If(-Not($env:OSKAR_BRANCH))
+{
+    $env:OSKAR_BRANCH = "master"
+}
 If(-Not(Test-Path -PathType Container -Path "$OSKARDIR\oskar"))
 {
     git clone -b $env:OSKAR_BRANCH https://github.com/arangodb/oskar
