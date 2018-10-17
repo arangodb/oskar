@@ -13,14 +13,14 @@ If(-Not(Test-Path -PathType Container -Path "$HDD\procdump"))
 }
 
 $REGEX = [Regex]::new("pid: \d+")
-ForEach($LINE in (&(Get-Command handle64) $OSKARDIR))
+ForEach($LINE in $(handle64 $OSKARDIR))
 {
     $VALUE = $REGEX.Match($LINE).Value
     $ID = $VALUE.Split(' ',[System.StringSplitOptions]::RemoveEmptyEntries) | select -Last 1
-    If($ID)
+    If($ID -AND (Get-Process -ErrorAction SilentlyContinue -PID $ID))
     {
-        Write-Host "$((Get-Command procdump).Source) -accepteula -ma $ID $HDD\procdump\$ID.dmp"
-        Start-Process $(Get-Command procdump) -ArgumentList "-accepteula -ma $ID $HDD\procdump\$ID.dmp"
+        Write-Host "procdump -accepteula -ma $ID `"$HDD\procdump\$ID.dmp`""
+        procdump -accepteula -ma $ID "$HDD\procdump\$ID.dmp"
         Write-Host "Stop-Process -Force -Id $ID" 
         Stop-Process -Force -Id $ID
     }
