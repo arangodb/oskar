@@ -11,7 +11,7 @@ function prepareOskar
   if not cd $OSKAR ^ /dev/null 
     git clone -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR ; and cd $OSKAR
   else
-    git fetch ; and git reset --hard origin/$OSKAR_BRANCH
+    git fetch ; and git reset --hard ; and git checkout $OSKAR_BRANCH ; and git reset --hard origin/$OSKAR_BRANCH
   end
   and source helper.fish
   if test $status -ne 0 ; echo Did not find oskar and helpers ; exit 1 ; end

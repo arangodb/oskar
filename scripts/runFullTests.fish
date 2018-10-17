@@ -117,38 +117,37 @@ function launchSingleTests
     case 22 ; test1         http_replication ""
     case 23 ; test1         http_server ""
     case 24 ; test1         importing ""
-    case 25 ; test1         ldap ""
-    case 26 ; test1         ldaprole ""
-    case 27 ; test1         ldaprolesimple ""
-    case 28 ; test1         ldapsearch ""
-    case 29 ; test1         ldapsearchsimple ""
-    case 30 ; test1         load_balancing ""
-    case 31 ; test1         load_balancing_auth ""
-    case 32 ; test1         queryCacheAuthorization ""
-    case 33 ; test1         readOnly ""
-    case 34 ; test1         recovery 0 --testBuckets 4/0
-    case 35 ; test1         recovery 1 --testBuckets 4/1
-    case 36 ; test1         recovery 2 --testBuckets 4/2
-    case 37 ; test1         recovery 3 --testBuckets 4/3
-    case 38 ; test1         replication_aql ""
-    case 39 ; test1         replication_fuzz ""
-    case 40 ; test1MoreLogs replication_ongoing ""
-    case 41 ; test1         replication_random ""
-    case 42 ; test1MoreLogs replication_static ""
-    case 43 ; test1MoreLogs replication_sync ""
-    case 44 ; test1         server_http ""
-    case 45 ; test1         shell_client ""
-    case 46 ; test1         shell_client_aql ""
-    case 47 ; test1         shell_replication ""
-    case 48 ; test1         shell_server ""
-    case 49 ; test1         shell_server_aql 0 --testBuckets 5/0
-    case 50 ; test1         shell_server_aql 1 --testBuckets 5/1
-    case 51 ; test1         shell_server_aql 2 --testBuckets 5/2
-    case 52 ; test1         shell_server_aql 3 --testBuckets 5/3
-    case 53 ; test1         shell_server_aql 4 --testBuckets 5/4
-    case 54 ; test1         ssl_server ""
-    case 55 ; test1         upgrade ""
-    case 56 ; test1         version ""
+    case 25 ; test1         ldaprole "" --ldapHost arangodbtestldapserver
+    case 26 ; test1         ldaprolesimple "" --ldapHost arangodbtestldapserver
+    case 27 ; test1         ldapsearch "" --ldapHost arangodbtestldapserver
+    case 28 ; test1         ldapsearchsimple "" --ldapHost arangodbtestldapserver
+    case 29 ; test1         load_balancing ""
+    case 30 ; test1         load_balancing_auth ""
+    case 31 ; test1         queryCacheAuthorization ""
+    case 32 ; test1         readOnly ""
+    case 33 ; test1         recovery 0 --testBuckets 4/0
+    case 34 ; test1         recovery 1 --testBuckets 4/1
+    case 35 ; test1         recovery 2 --testBuckets 4/2
+    case 36 ; test1         recovery 3 --testBuckets 4/3
+    case 37 ; test1         replication_aql ""
+    case 38 ; test1         replication_fuzz ""
+    case 39 ; test1MoreLogs replication_ongoing ""
+    case 40 ; test1         replication_random ""
+    case 41 ; test1MoreLogs replication_static ""
+    case 42 ; test1MoreLogs replication_sync ""
+    case 43 ; test1         server_http ""
+    case 44 ; test1         shell_client ""
+    case 45 ; test1         shell_client_aql ""
+    case 46 ; test1         shell_replication ""
+    case 47 ; test1         shell_server ""
+    case 48 ; test1         shell_server_aql 0 --testBuckets 5/0
+    case 49 ; test1         shell_server_aql 1 --testBuckets 5/1
+    case 50 ; test1         shell_server_aql 2 --testBuckets 5/2
+    case 51 ; test1         shell_server_aql 3 --testBuckets 5/3
+    case 52 ; test1         shell_server_aql 4 --testBuckets 5/4
+    case 53 ; test1         ssl_server ""
+    case 54 ; test1         upgrade ""
+    case 55 ; test1         version ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)

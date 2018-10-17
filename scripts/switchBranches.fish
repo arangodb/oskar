@@ -12,10 +12,18 @@ function checkoutRepo
   and git fetch
   and git checkout "$branch"
   and if test "$clean" = "true"
-    git reset --hard "origin/$branch"
+    if echo "$branch" | grep -q "^v"
+      git checkout -- .
+    else
+      git reset --hard "origin/$branch"
+    end
     and git clean -fdx
   else
-    git pull
+    if echo "$branch" | grep -q "^v"
+      git checkout --
+    else
+      git pull
+    end
   end
   return $status
 end

@@ -30,7 +30,7 @@ cmd=( docker
       -e "ARANGO_SPIN=true"
       --user $UID
       -v "$oskar_dir:/oskar"
-      -t "$arango_doc_container_default"
+      -t "arangodb/arangodb-documentation"
       --
       "$@"
     )

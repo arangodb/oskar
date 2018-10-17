@@ -1,8 +1,8 @@
+$global:WORKDIR = $pwd
 If(-Not($ENV:WORKSPACE))
 {
-    $ENV:WORKSPACE = $(Split-Path -Parent $global:WORKDIR)
+    $ENV:WORKSPACE = Join-Path -Path $global:WORKDIR -ChildPath work
 }
-$global:WORKDIR = $pwd
 If(-Not(Test-Path -PathType Container -Path "work"))
 {
     New-Item -ItemType Directory -Path "work"
@@ -63,31 +63,34 @@ Function 7zip($Path,$DestinationPath)
 
 Function showConfig
 {
-	Write-Host "#################################"
+	Write-Host "------------------------------------------------------------------------------"
 	Write-Host "Global Configuration"
-	Write-Host "- User           : "$env:USERDOMAIN\$env:USERNAME
-	Write-Host "- Cache          : "$env:CLCACHE_CL
-	Write-Host "- Cachedir       : "$env:CLCACHE_DIR
+	Write-Host "User           : "$env:USERDOMAIN\$env:USERNAME
+	Write-Host "Cache          : "$env:CLCACHE_CL
+	Write-Host "Cachedir       : "$env:CLCACHE_DIR
 	Write-Host " "
 	Write-Host "Build Configuration"
-	Write-Host "- Enterprise     : "$ENTERPRISEEDITION
-	Write-Host "- Buildmode      : "$BUILDMODE
-	Write-Host "- Maintainer     : "$MAINTAINER
+	Write-Host "Buildmode      : "$BUILDMODE
+	Write-Host "Enterprise     : "$ENTERPRISEEDITION
+	Write-Host "Maintainer     : "$MAINTAINER
 	Write-Host " "
-	Write-Host "- Generator      : "$GENERATOR
-	Write-Host "- Packaging      : "$PACKAGING
-	Write-Host "- Static         : "$STATICEXECUTABLES
+	Write-Host "Generator      : "$GENERATOR
+	Write-Host "Packaging      : "$PACKAGING
+	Write-Host "Static         : "$STATICEXECUTABLES
 	Write-Host " "	
-	Write-Host "Test Configuration:"
-	Write-Host "- Storage engine : "$STORAGEENGINE
-	Write-Host "- Test suite     : "$TESTSUITE
+	Write-Host "Test Configuration"
+	Write-Host "Storage engine : "$STORAGEENGINE
+	Write-Host "Test suite     : "$TESTSUITE
 	Write-Host " "
-	Write-Host "Internal Configuration:"
-	Write-Host "- Workdir        : "$WORKDIR
-	Write-Host "- Inner workdir  : "$INNERWORKDIR
-	Write-Host "- Parallelism    : "$PARALLELISM
-	Write-Host "- Verbose        : "$VERBOSEOSKAR
-	Write-Host "#################################"
+	Write-Host "Internal Configuration"
+	Write-Host "Parallelism    : "$PARALLELISM
+	Write-Host "Verbose        : "$VERBOSEOSKAR
+	Write-Host " "
+	Write-Host "Directories"
+	Write-Host "Inner workdir  : "$INNERWORKDIR
+	Write-Host "Workdir        : "$WORKDIR
+	Write-Host "Workspace      : "$ENV:WORKSPACE
+	Write-Host "------------------------------------------------------------------------------"
 	Write-Host " "
     comm
 }
@@ -635,7 +638,8 @@ Function buildStaticArangoDB
 
 Function moveResultsToWorkspace
 {
-    Write-Host "Moving reports and logs to $env:WORKSPACE ..."
+    Write-Host "Moving reports and logs to $ENV:WORKSPACE ..."
+    Write-Host "test.log ..."
     If(Test-Path -PathType Leaf "$INNERWORKDIR\test.log")
     {
         If(Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive)
@@ -643,7 +647,7 @@ Function moveResultsToWorkspace
             ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter testreport*))
             {
                 Write-Host "Move $INNERWORKDIR\$file"
-                Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $env:WORKSPACE; comm
+                Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
             } 
         }
         Else
@@ -658,45 +662,52 @@ Function moveResultsToWorkspace
     If(Test-Path -PathType Leaf "$INNERWORKDIR\test.log")
     {
         Write-Host "Move $INNERWORKDIR\test.log"
-        Move-Item -Force -Path "$INNERWORKDIR\test.log" -Destination $env:WORKSPACE; comm
+        Move-Item -Force -Path "$INNERWORKDIR\test.log" -Destination $ENV:WORKSPACE; comm
     }
+    Write-Host "*.zip ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*.zip"))
     {
         Write-Host "Move $INNERWORKDIR\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $env:WORKSPACE; comm
+        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
+    Write-Host "build* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "build*"))
     {
         Write-Host "Move $INNERWORKDIR\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $env:WORKSPACE; comm
+        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
+    Write-Host "cmake* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "cmake*"))
     {
         Write-Host "Move $INNERWORKDIR\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $env:WORKSPACE; comm
+        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
+    Write-Host "package* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "package*"))
     {
         Write-Host "Move $INNERWORKDIR\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $env:WORKSPACE; comm
+        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     if($SKIPPACKAGING -eq "Off")
     {
+        Write-Host "ArangoDB3*.exe ..."
         ForEach ($file in $(Get-ChildItem "$INNERWORKDIR\ArangoDB\build" -Filter "ArangoDB3*.exe"))
         {
             Write-Host "Move $INNERWORKDIR\ArangoDB\build\$file"
-            Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\$file" -Destination $env:WORKSPACE; comm 
+            Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\$file" -Destination $ENV:WORKSPACE; comm 
         }
+        Write-Host "ArangoDB3*.zip ..."
         ForEach ($file in $(Get-ChildItem "$INNERWORKDIR\ArangoDB\build" -Filter "ArangoDB3*.zip"))
         {
             Write-Host "Move $INNERWORKDIR\ArangoDB\build\$file"
-            Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\$file" -Destination $env:WORKSPACE; comm 
+            Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\$file" -Destination $ENV:WORKSPACE; comm 
         }
     }
+    Write-Host "testfailures.log"
     If(Test-Path -PathType Leaf "$INNERWORKDIR\testfailures.log")
     {
         Write-Host "Move $INNERWORKDIR\testfailures.log"
-        Move-Item -Force -Path "$INNERWORKDIR\testfailures.log" -Destination $env:WORKSPACE; comm 
+        Move-Item -Force -Path "$INNERWORKDIR\testfailures.log" -Destination $ENV:WORKSPACE; comm 
     }
 }
 
@@ -1167,6 +1178,7 @@ Function oskar8
 Function makeRelease
 {
     maintainerOff
+    staticExecutablesOn
     skipPackagingOff
     signPackageOn
     community

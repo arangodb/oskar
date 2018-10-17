@@ -1,5 +1,3 @@
-export arango_doc_container_default="arangodb/arangodb-documentation"
-
 err(){
     echo "error: $@"
 }

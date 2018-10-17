@@ -4,6 +4,12 @@ script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 containerdir="$script_dir/../containers/documentation.docker"
 
+image_name="$1"
+
+[[ -n "$image_name" ]] || { echo "no image name provided"; exit 1; }
+
+echo "using image name: '$image_name'"
+
 ## parse args
 force_update=false
 for arg in "$@"; do
@@ -18,7 +24,7 @@ done
 
 ## build command
 cmd=( "docker" "build"
-      "-t" "$arango_doc_container_default"
+      "-t" "$image_name"
     )
 if $force_update; then
     cmd+=( "--build-arg" "FORCE_UPDATE=$(date --iso-8601=seconds)" )

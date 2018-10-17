@@ -26,6 +26,8 @@ sudo gem install persistent_httparty
 brew upgrade
 brew link --overwrite python@2
 
+sudo  /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart -activate -configure -access -on -configure -allowAccessFor -allUsers -configure -restart -agent -privs -all
+
 echo import .p12 manually
 #security unlock-keychain -p $PASSWD
 #security import ./MacBuildCertificates.p12 -P $PASSWD
