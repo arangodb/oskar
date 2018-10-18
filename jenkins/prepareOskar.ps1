@@ -19,8 +19,9 @@ ForEach($LINE in $(handle64 $OSKARDIR))
     $ID = $VALUE.Split(' ',[System.StringSplitOptions]::RemoveEmptyEntries) | select -Last 1
     If($ID -AND (Get-Process -ErrorAction SilentlyContinue -PID $ID))
     {
-        Write-Host "procdump -accepteula -ma $ID `"$HDD\procdump\$ID.dmp`""
-        procdump -accepteula -ma $ID "$HDD\procdump\$ID.dmp"
+        $name = $(Get-Process -ID $ID).ProcessName
+        Write-Host "procdump -accepteula -ma $ID `"$HDD\procdump\$name_$ID.dmp`""
+        procdump -accepteula -ma $ID "$HDD\procdump\$name_$ID.dmp"
         Write-Host "Stop-Process -Force -Id $ID" 
         Stop-Process -Force -Id $ID
     }
