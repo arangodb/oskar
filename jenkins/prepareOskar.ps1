@@ -20,8 +20,8 @@ ForEach($LINE in $(handle64 $OSKARDIR))
     If($ID -AND (Get-Process -ErrorAction SilentlyContinue -PID $ID))
     {
         $name = $(Get-Process -ID $ID).ProcessName
-        Write-Host "procdump -accepteula -ma $ID `"$HDD\procdump\$name_$ID.dmp`""
-        procdump -accepteula -ma $ID "$HDD\procdump\$name_$ID.dmp"
+        Write-Host "procdump -accepteula -ma $ID `"$HDD\procdump\$name-$ID.dmp`""
+        procdump -accepteula -ma $ID "$HDD\procdump\$name-$ID.dmp"
         Write-Host "Stop-Process -Force -Id $ID" 
         Stop-Process -Force -Id $ID
     }
