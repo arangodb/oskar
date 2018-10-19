@@ -13,19 +13,23 @@ If(-Not(Test-Path -PathType Container -Path "$HDD\procdump"))
 }
 
 $REGEX = [Regex]::new("pid: \d+")
-ForEach($LINE in $(handle64 $OSKARDIR))
-{
-    $VALUE = $REGEX.Match($LINE).Value
-    $ID = $VALUE.Split(' ',[System.StringSplitOptions]::RemoveEmptyEntries) | select -Last 1
-    If($ID -AND (Get-Process -ErrorAction SilentlyContinue -PID $ID))
-    {
-        $name = $(Get-Process -ID $ID).ProcessName
-        Write-Host "procdump -accepteula -ma $ID `"$HDD\procdump\$name-$ID.dmp`""
-        procdump -accepteula -ma $ID "$HDD\procdump\$name-$ID.dmp"
-        Write-Host "Stop-Process -Force -Id $ID" 
-        Stop-Process -Force -Id $ID
-    }
-}
+ ForEach($LINE in $(handle64 $OSKARDIR))
+ {
+   $VALUE = $REGEX.Match($LINE).Value
+   $ID = $VALUE.Split(' ',[System.StringSplitOptions]::RemoveEmptyEntries) | select -Last 1
+   $PROC = Get-Process -ID "$ID" -ErrorAction SilentlyContinue
+   if($PROC.Id -ne $pid -and $PROC.Id -ne 0)
+   {
+     Write-Host "procdump -accepteula -ma $ID `"$HDD\procdump\"$PROC.ProcessName"-$ID.dmp`""
+     procdump -accepteula -ma $ID "$HDD\procdump\$name-$ID.dmp"
+     Write-Host "Stop-Process -Force -Id $ID"
+     Stop-Process -Force -Id $ID -PassThru -ErrorAction SilentlyContinue
+     if(-Not (Get-Process | Where-Object {$_.HasExited}))
+     {
+       Write-Host "Process $ID wasn't stopped!"
+     }
+   }
+ }
 
 If(-Not($env:OSKAR_BRANCH))
 {
