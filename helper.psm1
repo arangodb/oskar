@@ -843,7 +843,7 @@ Function launchSingleTests
             {
                 $output = "$($test[0])"
             }
-            unittest "$($test[0]) --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport false" -output "$global:ARANGODIR\$output"
+            unittest "$($test[0]) --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true" -output "$global:ARANGODIR\$output"
             $global:portBase = $($global:portBase + 100)
             Start-Sleep 5
         }
@@ -911,7 +911,7 @@ Function launchClusterTests
             {
                 $output = "$($test[0])"
             }
-            unittest "$($test[0]) --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport false $ruby $rspec" -output "$global:ARANGODIR\$output"
+            unittest "$($test[0]) --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true $ruby $rspec" -output "$global:ARANGODIR\$output"
             $global:portBase = $($global:portBase + 100)
             Start-Sleep 5
         }
@@ -944,7 +944,7 @@ Function launchClusterTests
             {
                 $output = "$($test[0])"
             }
-            unittest "$($test[0]) --test $($test[2]) --storageEngine $STORAGEENGINE --cluster true --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --testOutput $env:TMP\$output.out --writeXmlReport false $ruby $rspec" -output "$global:ARANGODIR\$output"
+            unittest "$($test[0]) --test $($test[2]) --storageEngine $STORAGEENGINE --cluster true --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --testOutput $env:TMP\$output.out --writeXmlReport true $ruby $rspec" -output "$global:ARANGODIR\$output"
             $global:portBase = $($global:portBase + 100)
             Start-Sleep 5
         }
