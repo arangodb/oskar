@@ -107,7 +107,9 @@ function showRepository
     pushd $WORKDIR/work/ArangoDB
     printf $fmt3 'Community' (findBranch)
     if test -d $WORKDIR/work/ArangoDB/enterprise
+      pushd enterprise
       printf $fmt3 'Enterprise' (findBranch)
+      popd
     else
       printf $fmt3 'Enterprise' 'missing'
     end
@@ -289,6 +291,7 @@ function findArangoDBVersion
   set -xg ARANGODB_VERSION_MINOR (grep "$AV""_MINOR" $CMAKELIST | sed -e $SEDFIX)
 
   set -xg ARANGODB_SNIPPETS "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR"
+  set -xg ARANGODB_PACKAGES "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR"
 
   # old version scheme (upto 3.3.x)
   if grep -q "$APR" $CMAKELIST
@@ -411,6 +414,7 @@ function findArangoDBVersion
   echo "DARWIN:   $ARANGODB_DARWIN_UPSTREAM / $ARANGODB_DARWIN_REVISION"
   echo "TGZ:      $ARANGODB_TGZ_UPSTREAM"
   echo "SNIPPETS: $ARANGODB_SNIPPETS"
+  echo "PACKAGES: $ARANGODB_PACKAGES"
   echo '------------------------------------------------------------------------------'
   echo
 end
