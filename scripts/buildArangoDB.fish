@@ -49,7 +49,7 @@ if test "$ASAN" = "On"
    -DCMAKE_CXX_FLAGS=-"fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=vptr -fno-sanitize=alignment"
 else
   set -g FULLARGS $FULLARGS \
-   -DUSE_JEMALLOC=On \
+   -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
    -DCMAKE_C_FLAGS=-fno-stack-protector \
    -DCMAKE_CXX_FLAGS=-fno-stack-protector
 end

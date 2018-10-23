@@ -8,6 +8,9 @@ set -gx THIRDPARTY_SBIN $INNERWORKDIR/third_party/sbin
 set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 
+# disable JEMALLOC for now in oskar on MacOSX, since we never tried it:
+jemallocOff
+
 # disable strange TAR feature from MacOSX
 set -xg COPYFILE_DISABLE 1
 

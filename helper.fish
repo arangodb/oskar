@@ -57,6 +57,7 @@ function showConfig
   printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'   "$COMPILER_VERSION"  '(compiler x.y.z)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
+  printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
 
   if test -z "$NO_RM_BUILD"
@@ -137,6 +138,11 @@ function asanOn ; set -gx ASAN On ; end
 function asanOff ; set -gx ASAN Off ; end
 if test -z "$ASAN" ; asanOff
 else ; set -gx ASAN $ASAN ; end
+
+function jemallocOn; set -gx JEMALLOC_OSKAR On ; end
+function jemallocOff; set -gx JEMALLOC_OSKAR Off ; end
+if test -z "$JEMALLOC_OSKAR" ; jemallocOn
+else ; set -gx JEMALLOC_OSKAR $JEMALLOC_OSKAR ; end
 
 function debugMode ; set -gx BUILDMODE Debug ; end
 function releaseMode ; set -gx BUILDMODE RelWithDebInfo ; end
