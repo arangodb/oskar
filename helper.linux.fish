@@ -254,12 +254,18 @@ function buildDebianPackage
     return 1
   end
 
+  set -l pd "default"
+
+  if test -d $WORKDIR/rpm/$ARANGODB_PACKAGES
+    set pd "$ARANGODB_PACKAGES"
+  end
+
   # This assumes that a static build has already happened
   # Must have set ARANGODB_DEBIAN_UPSTREAM and ARANGODB_DEBIAN_REVISION,
   # for example by running findArangoDBVersion.
   set -l v "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION"
   set -l ch $WORKDIR/work/debian/changelog
-  set -l SOURCE $WORKDIR/debian
+  set -l SOURCE $WORKDIR/debian/$pd
   set -l TARGET $WORKDIR/work/debian
   set -l EDITION arangodb3
   set -l EDITIONFOLDER $SOURCE/community
@@ -316,17 +322,23 @@ function buildRPMPackage
     return 1
   end
 
+  set -l pd "default"
+
+  if test -d $WORKDIR/rpm/$ARANGODB_PACKAGES
+    set pd "$ARANGODB_PACKAGES"
+  end
+
   # This assumes that a static build has already happened
   # Must have set ARANGODB_RPM_UPSTREAM and ARANGODB_RPM_REVISION,
   # for example by running findArangoDBVersion.
   if test "$ENTERPRISEEDITION" = "On"
-    transformSpec "$WORKDIR/rpm/arangodb3e.spec.in" "$WORKDIR/work/arangodb3.spec"
+    transformSpec "$WORKDIR/rpm/$pd/arangodb3e.spec.in" "$WORKDIR/work/arangodb3.spec"
   else
-    transformSpec "$WORKDIR/rpm/arangodb3.spec.in" "$WORKDIR/work/arangodb3.spec"
+    transformSpec "$WORKDIR/rpm/$pd/arangodb3.spec.in" "$WORKDIR/work/arangodb3.spec"
   end
-  and cp $WORKDIR/rpm/arangodb3.initd $WORKDIR/work
-  and cp $WORKDIR/rpm/arangodb3.service $WORKDIR/work
-  and cp $WORKDIR/rpm/arangodb3.logrotate $WORKDIR/work
+  and cp $WORKDIR/rpm/$pd/arangodb3.initd $WORKDIR/work
+  and cp $WORKDIR/rpm/$pd/arangodb3.service $WORKDIR/work
+  and cp $WORKDIR/rpm/$pd/arangodb3.logrotate $WORKDIR/work
   and runInContainer $CENTOSPACKAGINGIMAGE $SCRIPTSDIR/buildRPMPackage.fish
 end
 
