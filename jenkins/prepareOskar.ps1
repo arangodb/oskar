@@ -21,7 +21,7 @@ $REGEX = [Regex]::new("pid: \d+")
    if($PROC.Id -ne $pid -and $PROC.Id -ne 0)
    {
      Write-Host "procdump -accepteula -ma $ID `"$HDD\procdump\"$PROC.ProcessName"-$ID.dmp`""
-     procdump -accepteula -ma $ID "$HDD\procdump\$name-$ID.dmp"
+     procdump -accepteula -ma $ID "$HDD\procdump\$PROC.ProcessName-$ID.dmp"
      Write-Host "Stop-Process -Force -Id $ID"
      Stop-Process -Force -Id $ID -PassThru -ErrorAction SilentlyContinue
      if(-Not (Get-Process | Where-Object {$_.HasExited}))
