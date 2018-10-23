@@ -18,7 +18,7 @@ $REGEX = [Regex]::new("pid: \d+")
    $VALUE = $REGEX.Match($LINE).Value
    $ID = $VALUE.Split(' ',[System.StringSplitOptions]::RemoveEmptyEntries) | select -Last 1
    $PROC = Get-Process -ID "$ID" -ErrorAction SilentlyContinue
-   if($PROC.Id -ne $pid -and $PROC.Id -ne 0)
+   if($PROC.Id -ne $pid -and $PROC.Id -ne 0 -and $PROC.Id -ne $null)
    {
      Write-Host "procdump -accepteula -ma $ID `"$HDD\procdump\"$PROC.ProcessName"-$ID.dmp`""
      procdump -accepteula -ma $ID "$HDD\procdump\$PROC.ProcessName-$ID.dmp"
