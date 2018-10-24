@@ -163,6 +163,11 @@ Function resilience
     $global:TESTSUITE = "resilience"
 }
 
+Function catchtest
+{
+    $global:TESTSUITE = "catchtest"
+}
+
 If(-Not($TESTSUITE))
 {
     cluster
@@ -821,6 +826,42 @@ Function unittest($test,$output)
     Pop-Location
 }
 
+Function launchCatchTest
+{
+    noteStartAndRepoState
+    Write-Host "Launching tests..."
+    $global:portBase = 10000
+
+    Function test1([array]$test)
+    {
+        If($VERBOSEOSKAR -eq "On")
+        {
+            Write-Host "Launching $test"
+        }
+        If(-Not(Select-String -Path $global:ARANGODIR\UnitTests\OskarTestSuitesBlackList -pattern $test[0]))
+        {
+            If($test[1])
+            {
+                $output = "$($test[0])_$($test[1])"
+            }
+            Else
+            {
+                $output = "$($test[0])"
+            }
+            unittest "$($test[0]) --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true" -output "$global:ARANGODIR\$output"
+            $global:portBase = $($global:portBase + 100)
+            Start-Sleep 5
+        }
+        Else
+        {
+            Write-Host "Test suite" $test[0] "skipped by UnitTests/OskarTestSuitesBlackList"
+        }
+    }
+    [array]$global:UPIDS = $null
+    test1 "catch",""
+    comm
+}
+
 Function launchSingleTests
 {
     noteStartAndRepoState
@@ -1145,6 +1186,13 @@ Function runTests
         "resilience"
         {
             launchResilienceTests
+            waitOrKill 1800
+            createReport
+            Break
+        }
+        "catchtest"
+        {
+            launchCatchTest
             waitOrKill 1800
             createReport
             Break
