@@ -848,7 +848,7 @@ Function launchCatchTest
             {
                 $output = "$($test[0])"
             }
-            unittest "$($test[0]) --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true" -output "$global:ARANGODIR\$output"
+            unittest "$($test[0]) --coreCheck true --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true" -output "$global:ARANGODIR\$output"
             $global:portBase = $($global:portBase + 100)
             Start-Sleep 5
         }
@@ -884,7 +884,7 @@ Function launchSingleTests
             {
                 $output = "$($test[0])"
             }
-            unittest "$($test[0]) --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true" -output "$global:ARANGODIR\$output"
+            unittest "$($test[0]) --coreCheck true --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true" -output "$global:ARANGODIR\$output"
             $global:portBase = $($global:portBase + 100)
             Start-Sleep 5
         }
@@ -952,7 +952,7 @@ Function launchClusterTests
             {
                 $output = "$($test[0])"
             }
-            unittest "$($test[0]) --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true $ruby $rspec" -output "$global:ARANGODIR\$output"
+            unittest "$($test[0]) --coreCheck true --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true $ruby $rspec" -output "$global:ARANGODIR\$output"
             $global:portBase = $($global:portBase + 100)
             Start-Sleep 5
         }
@@ -985,7 +985,7 @@ Function launchClusterTests
             {
                 $output = "$($test[0])"
             }
-            unittest "$($test[0]) --test $($test[2]) --storageEngine $STORAGEENGINE --cluster true --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --testOutput $env:TMP\$output.out --writeXmlReport true $ruby $rspec" -output "$global:ARANGODIR\$output"
+            unittest "$($test[0]) --test $($test[2]) --storageEngine $STORAGEENGINE --coreCheck true --cluster true --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --testOutput $env:TMP\$output.out --writeXmlReport true $ruby $rspec" -output "$global:ARANGODIR\$output"
             $global:portBase = $($global:portBase + 100)
             Start-Sleep 5
         }
@@ -1101,22 +1101,17 @@ Function createReport
             }
     }
     $global:result | Add-Content "$env:TMP\testProtocol.txt"
-    If(Get-ChildItem -Path "$env:TMP" -Filter "core.dmp" -Recurse -ErrorAction SilentlyContinue -Force)
+    If(Get-ChildItem -Path "$env:TMP" -Filter "core_*" -Recurse -ErrorAction SilentlyContinue -Force)
     {
         Write-Host "7zip -Path `"$global:ARANGODIR\build\bin\$BUILDMODE\`" -DestinationPath `"$INNERWORKDIR\crashreport-$date.zip`""
         7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\" -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
-        New-Item -ItemType Directory -Path "$INNERWORKDIR\core"
-        ForEach($core in (Get-ChildItem -Path "$env:TMP" -Filter "core.dmp" -Recurse -ErrorAction SilentlyContinue))
+        ForEach($core in (Get-ChildItem -Path "$env:TMP" -Filter "core_*" -Recurse -ErrorAction SilentlyContinue))
         {
-            $newcore = "$($core.BaseName).$(Get-Random)"
-            Add-Content -Value "$($core.FullName) = $newcore" -Path "$INNERWORKDIR\core\corelocation.log"
-            Move-Item -Force $core.FullName  "$INNERWORKDIR\core\$newcore"
-            Write-Host "7zip -Path `"$INNERWORKDIR\core\$newcore`" -DestinationPath `"$INNERWORKDIR\crashreport-$date.zip`""
-            7zip -Path "$INNERWORKDIR\core\$newcore" -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
+            Write-Host "7zip -Path $($core.FullName) -DestinationPath `"$INNERWORKDIR\crashreport-$date.zip`""   
+            7zip -Path $($core.FullName) -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
+            Write-Host "Remove-Item $($core.FullName)"
+            Remove-Item $($core.FullName)
         }
-        Write-Host "7zip -Path `"$INNERWORKDIR\core\corelocation.log`" -DestinationPath `"$INNERWORKDIR\crashreport-$date.zip`""
-        7zip -Path "$INNERWORKDIR\core\corelocation.log" -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
-        Remove-Item -Force -Recurse -Path "$INNERWORKDIR\core"
     }
     If(Test-Path -PathType Leaf -Path "$global:ARANGODIR\innerlogs.zip")
     {
