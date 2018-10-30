@@ -19,6 +19,13 @@ $env:CLCACHE_DIR="$INNERWORKDIR\.clcache.windows"
 $global:GENERATOR = "Visual Studio 15 2017 Win64"
 Import-Module VSSetup -ErrorAction Stop
 
+#$global:numberSlots = $((Get-WmiObject Win32_processor).NumberOfLogicalProcessors * 2)
+$global:numberSlots = $((Get-WmiObject Win32_processor).NumberOfLogicalProcessors)
+
+$global:launcheableTests = @()
+$global:maxTestCount = 0
+$global:testCount = 0
+
 While (Test-Path Alias:curl) 
 {
     Remove-Item Alias:curl
@@ -816,248 +823,179 @@ Function noteStartAndRepoState
     }
 }
 
-Function unittest($test,$output)
-{
-    $PORT=Get-Random -Minimum 20000 -Maximum 65535
+Function launchTest($which) {
+
     Push-Location $pwd
     Set-Location $global:ARANGODIR; comm
-    Write-Host "Test: $global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $test"
-    [array]$global:UPIDS = [array]$global:UPIDS+$(Start-Process -FilePath "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe" -ArgumentList " -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $test" -RedirectStandardOutput "$output.stdout.log" -RedirectStandardError "$output.stderr.log" -PassThru).Id; comm
+    echo "Test: $global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $test"
+    echo "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe"
+    echo $global:launcheableTests[$which]['commandline'] 
+    echo "-RedirectStandardOutput $global:launcheableTests[$which]['StandardOutput']"
+    echo "-RedirectStandardError $global:launcheableTests[$which]['StandardError']"
+    $str=$global:launcheableTests[$which] | Out-String
+    Write-Host $str
+
+    $process = $(Start-Process -FilePath "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe" -ArgumentList $global:launcheableTests[$which]['commandline'] -RedirectStandardOutput $global:launcheableTests[$which]['StandardOutput'] -RedirectStandardError $global:launcheableTests[$which]['StandardError'] -PassThru)
+    
+    $global:launcheableTests[$which]['pid'] = $process.Id
     Pop-Location
+
 }
 
-Function launchCatchTest
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster)
 {
-    noteStartAndRepoState
-    Write-Host "Launching tests..."
-    $global:portBase = 10000
-
-    Function test1([array]$test)
-    {
-        If($VERBOSEOSKAR -eq "On")
-        {
-            Write-Host "Launching $test"
-        }
-        If(-Not(Select-String -Path $global:ARANGODIR\UnitTests\OskarTestSuitesBlackList -pattern $test[0]))
-        {
-            If($test[1])
-            {
-                $output = "$($test[0])_$($test[1])"
-            }
-            Else
-            {
-                $output = "$($test[0])"
-            }
-            unittest "$($test[0]) --coreCheck true --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true" -output "$global:ARANGODIR\$output"
-            $global:portBase = $($global:portBase + 100)
-            Start-Sleep 5
-        }
-        Else
-        {
-            Write-Host "Test suite" $test[0] "skipped by UnitTests/OskarTestSuitesBlackList"
-        }
-    }
-    [array]$global:UPIDS = $null
-    test1 "catch",""
+    #echo "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
+    #If(-Not(Select-String -Path $global:ARANGODIR\UnitTests\OskarTestSuitesBlackList -pattern $test[0]))
+    #{
+    	$weight = 1
+    	$testparams = ""
+    	if ($filter) {
+    	   $testparams = $testparams + " --test $filter"
+    	}
+    	if ($bucket) {
+    	    $testparams = $testparams + " --testBuckets $bucket"
+    	}
+    	#if ($cluster) { # TODO - howto test if set?
+    	#  $weight = 4
+    	#  $testparams = $testparams + " --cluster true"
+    	#}
+    	$output = $testname
+    	if ($index) {
+    	  $output = $output + "_$index"
+    	}
+    	$testparams = $testparams + " --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true"
+    	
+    	$testparams = $testparams + " --testOutput $env:TMP\$output.out"
+    	
+    	$testparams + $testparams + $moreParams
+    	
+    	$PORT=Get-Random -Minimum 20000 -Maximum 65535
+    	$i = $global:testCount
+    	$global:testCount = $global:testCount + 1
+    	$global:launcheableTests += @{}
+    	$global:launcheableTests[$i]['weight'] = $weight
+    	$global:launcheableTests[$i]['testname'] = $testname
+    	$global:launcheableTests[$i]['commandline'] = " -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams"
+    	$global:launcheableTests[$i]['StandardOutput'] = "$global:ARANGODIR\$output.stdout.log"
+    	$global:launcheableTests[$i]['StandardError'] = "$global:ARANGODIR\$output.stderr.log"
+    	$global:launcheableTests[$i]['pid'] = -1
+    	
+    	$global:maxTestCount = $global:maxTestCount + 1
+    	
+    	$global:portBase = $($global:portBase + 100)
+    #}
+    #Else
+    #{
+    #    Write-Host "Test suite" $testname "skipped by UnitTests/OskarTestSuitesBlackList"
+    #}
     comm
 }
 
-Function launchSingleTests
+Function registerSingleTests()
 {
     noteStartAndRepoState
-    Write-Host "Launching tests..."
+    Write-Host "Registering tests..."
     $global:portBase = 10000
 
-    Function test1([array]$test)
-    {
-        If($VERBOSEOSKAR -eq "On")
-        {
-            Write-Host "Launching $test"
-        }
-        If(-Not(Select-String -Path $global:ARANGODIR\UnitTests\OskarTestSuitesBlackList -pattern $test[0]))
-        {
-            If($test[1])
-            {
-                $output = "$($test[0])_$($test[1])"
-            }
-            Else
-            {
-                $output = "$($test[0])"
-            }
-            unittest "$($test[0]) --coreCheck true --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true" -output "$global:ARANGODIR\$output"
-            $global:portBase = $($global:portBase + 100)
-            Start-Sleep 5
-        }
-        Else
-        {
-            Write-Host "Test suite" $test[0] "skipped by UnitTests/OskarTestSuitesBlackList"
-        }
-    }
-    [array]$global:UPIDS = $null
-    test1 "shell_server",""
-    test1 "shell_client",""
-    test1 "recovery","0","--testBuckets","4/0"
-    test1 "recovery","1","--testBuckets","4/1"
-    test1 "recovery","2","--testBuckets","4/2"
-    test1 "recovery","3","--testBuckets","4/3"
-    test1 "replication_sync",""
-    test1 "replication_static",""
-    test1 "replication_ongoing",""
-    test1 "http_server",""
-    test1 "ssl_server",""
-    test1 "shell_server_aql","0","--testBuckets","5/0"
-    test1 "shell_server_aql","1","--testBuckets","5/1"
-    test1 "shell_server_aql","2","--testBuckets","5/2"
-    test1 "shell_server_aql","3","--testBuckets","5/3"
-    test1 "shell_server_aql","4","--testBuckets","5/4"
-    test1 "shell_client_aql",""
-    test1 "dump",""
-    test1 "server_http",""
-    test1 "agency",""
-    test1 "shell_replication",""
-    test1 "http_replication",""
-    test1 "catch",""
-    test1 "version",""
-    test1 "endpoints","","--skipEndpointsIpv6","true"
+    registerTest -testname "shell_server"
+    registerTest -testname "shell_client"
+    registerTest -testname "recovery" -index "0" -bucket "4/0"
+    registerTest -testname "recovery" -index "1" -bucket "4/1"
+    registerTest -testname "recovery" -index "2" -bucket "4/2"
+    registerTest -testname "recovery" -index "3" -bucket "4/3"
+    registerTest -testname "replication_sync"
+    registerTest -testname "replication_static"
+    registerTest -testname "replication_ongoing"
+    registerTest -testname "http_server"
+    registerTest -testname "ssl_server"
+    registerTest -testname "shell_server_aql" -index "0" -bucket "5/0"
+    registerTest -testname "shell_server_aql" -index "1" -bucket "5/1"
+    registerTest -testname "shell_server_aql" -index "2" -bucket "5/2"
+    registerTest -testname "shell_server_aql" -index "3" -bucket "5/3"
+    registerTest -testname "shell_server_aql" -index "4" -bucket "5/4"
+    registerTest -testname "shell_client_aql"
+    registerTest -testname "dump"
+    registerTest -testname "server_http"
+    registerTest -testname "agency"
+    registerTest -testname "shell_replication"
+    registerTest -testname "http_replication"
+    registerTest -testname "catch"
+    registerTest -testname "version"
+    registerTest -testname "endpoints" -moreParams "--skipEndpointsIpv6 true"
     comm
 }
 
-Function launchClusterTests
+Function registerClusterTests()
 {
     noteStartAndRepoState
-    Write-Host "Launching tests..."
+    Write-Host "Registering tests..."
     $global:portBase = 10000
-
-    Function test1([array]$test)
-    {
-        If($VERBOSEOSKAR -eq "On")
-        {
-            Write-Host "Launching $test"
-        }
-        If(-Not(Select-String -Path $global:ARANGODIR\UnitTests\OskarTestSuitesBlackList -pattern $test[0]))
-        {
-            $ruby = $(Get-Command ruby.exe -ErrorAction SilentlyContinue).Source
-            if (-not $ruby -eq "") {
-              $ruby = "--ruby $ruby"
-            }
-            $rspec = $((Get-Command rspec.bat).Source).Substring(0,((Get-Command rspec.bat).Source).Length-4)
-            if (-not $rspec -eq "") {
-              $rspec = "--rspec $rspec"
-            }
-            If($test[1])
-            {
-                $output = "$($test[0])_$($test[1])"
-            }
-            Else
-            {
-                $output = "$($test[0])"
-            }
-            unittest "$($test[0]) --coreCheck true --cluster false --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) $($test[2..$($test.Length)]) --skipNondeterministic true --skipTimeCritical true --testOutput $env:TMP\$output.out --writeXmlReport true $ruby $rspec" -output "$global:ARANGODIR\$output"
-            $global:portBase = $($global:portBase + 100)
-            Start-Sleep 5
-        }
-        Else
-        {
-            Write-Host "Test suite" $test[0] "skipped by UnitTests/OskarTestSuitesBlackList"
-        }
-    }
-    Function test3([array]$test)
-    {
-        If($VERBOSEOSKAR -eq "On")
-        {
-            Write-Host "Launching $test"
-        }
-        If(-Not(Select-String -Path $global:ARANGODIR\UnitTests\OskarTestSuitesBlackList -pattern $test[0]))
-        {
-            $ruby = $(Get-Command ruby.exe -ErrorAction SilentlyContinue).Source
-            if (-not $ruby -eq "") {
-              $ruby = "--ruby $ruby"
-            }
-            $rspec = $((Get-Command rspec.bat).Source).Substring(0,((Get-Command rspec.bat).Source).Length-4)
-            if (-not $rspec -eq "") {
-              $rspec = "--rspec $rspec"
-            }
-            If($test[1])
-            {
-                $output = "$($test[0])_$($test[1])"
-            }
-            Else
-            {
-                $output = "$($test[0])"
-            }
-            unittest "$($test[0]) --test $($test[2]) --storageEngine $STORAGEENGINE --coreCheck true --cluster true --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --testOutput $env:TMP\$output.out --writeXmlReport true $ruby $rspec" -output "$global:ARANGODIR\$output"
-            $global:portBase = $($global:portBase + 100)
-            Start-Sleep 5
-        }
-        Else
-        {
-            Write-Host "Test suite" $test[0] "skipped by UnitTests/OskarTestSuitesBlackList"
-        }
-    }
-    [array]$global:UPIDS = $null
-    test3 "resilience","move","moving-shards-cluster.js"
-    test3 "resilience","failover","resilience-synchronous-repl-cluster.js"
-    test1 "shell_client",""
-    test1 "shell_server",""
-    test1 "http_server",""
-    test1 "ssl_server",""
-    test3 "resilience","sharddist","shard-distribution-spec.js"
-    test1 "shell_server_aql","0","--testBuckets","5/0"
-    test1 "shell_server_aql","1","--testBuckets","5/1"
-    test1 "shell_server_aql","2","--testBuckets","5/2"
-    test1 "shell_server_aql","3","--testBuckets","5/3"
-    test1 "shell_server_aql","4","--testBuckets","5/4"
-    test1 "shell_client_aql",""
-    test1 "dump",""
-    test1 "server_http",""
-    test1 "agency",""
+    registerTest 3 -cluster true -testname "resilience" -index "move" -filter "moving-shards-cluster.js"
+    registerTest 3 -cluster true -testname "resilience" -index "failover" -filter "resilience-synchronous-repl-cluster.js"
+    registerTest 1 -cluster true -testname "shell_client"
+    registerTest 1 -cluster true -testname "shell_server"
+    registerTest 1 -cluster true -testname "http_server"
+    registerTest 1 -cluster true -testname "ssl_server"
+    registerTest 3 -cluster true -testname "resilience" -index "sharddist" -filter "shard-distribution-spec.js"
+    registerTest 1 -cluster true -testname "shell_server_aql" -index "0" -bucket "5/0"
+    registerTest 1 -cluster true -testname "shell_server_aql" -index "1" -bucket "5/1"
+    registerTest 1 -cluster true -testname "shell_server_aql" -index "2" -bucket "5/2"
+    registerTest 1 -cluster true -testname "shell_server_aql" -index "3" -bucket "5/3"
+    registerTest 1 -cluster true -testname "shell_server_aql" -index "4" -bucket "5/4"
+    registerTest 1 -cluster true -testname "shell_client_aql"
+    registerTest 1 -cluster true -testname "dump"
+    registerTest 1 -cluster true -testname "server_http"
+    registerTest 1 -cluster true -testname "agency"
     comm
 }
 
-Function waitForProcesses($seconds)
+Function LaunchController($seconds)
 {
-    While($true)
-    {
-        [array]$global:NUPIDS = $null
-        ForEach($UPID in $UPIDS)
-        {
-            If(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $UPID})
-            {
-                [array]$global:NUPIDS = [array]$global:NUPIDS + $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $UPID})
-            }
-        } 
-        If($NUPIDS.Count -eq 0 ) 
-        {
-            Return $false
+    $maxTime = 500000
+    $timeSlept = 0;
+    $nextLauncheableTest = 0
+    $currentScore = 0
+    $currentRunning = 1
+    Write-Host "Testrun timeout: $global:launcheableTests"
+    While (($timeSlept -lt $maxTime) -and ($currentRunning -gt 0)) {
+        while (($currentScore -lt $global:numberSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
+            Write-Host "Launching $nextLauncheableTest "
+            launchTest $nextLauncheableTest 
+            $currentScore = $currentScore + $global:launcheableTests[$nextLauncheableTest ]['weight']
+            Start-Sleep 5
+            $timeSlept = $timeSlept + 5
+            $nextLauncheableTest = $nextLauncheableTest + 1
         }
-        Write-Host "$($NUPIDS.Count) jobs still running, remaining $seconds seconds..."
-        $seconds = $($seconds - 5)
-        If($seconds -lt 0)
-        {
-            return $true
+        $currentRunning = 0
+        ForEach ($test in $global:launcheableTests) {
+            if ($test['pid'] -gt 0) {
+                if ($(Get-WmiObject win32_process | Where {$_.ProcessId -eq $test['pid']})) {
+                    $currentRunning = $currentRunning + 1
+                }
+                Else {
+                    $test['pid'] = -1
+                    $currentScore = $currentScore - $test['weight']
+                    Write-Host "Testrun finished:"
+                    $str=$test | Out-String
+                    Write-Host $str
+                }
+            }
         }
         Start-Sleep 5
+        $timeSlept = $timeSlept + 5
     }
-    comm
-}
-
-Function waitOrKill($seconds)
-{
-    Write-Host "Waiting for processes to terminate..."
-    If(waitForProcesses $seconds) 
-    {
-        ForEach($NUPID in $NUPIDS)
-        {
-            Stop-Process -Id $NUPID.Handle
-        } 
-        If(waitForProcesses 30) 
-        {
-            ForEach($NUPID in $NUPIDS)
-            {
-                Stop-Process -Force -Id $NUPID.Handle
-            } 
-            waitForProcesses 15  
-        }
+    if ($currentRunning -gt 0) {
+        ForEach ($test in $global:launcheableTests) {
+            if ($test['pid'] -gt 0) {
+              Write-Host "Testrun timeout:"
+              $str=$test | Out-String
+              Write-Host $str
+              ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
+                 Stop-Process -Force -Id $childProcess.ProcessId
+              }
+              Stop-Process -Force -Id $test['pid']
+            }
+       }
     }
     comm
 }
@@ -1166,29 +1104,29 @@ Function runTests
     {
         "cluster"
         {
-            launchClusterTests
-            waitOrKill 1800
+            registerClusterTests
+            LaunchController 1800
             createReport  
             Break
         }
         "single"
         {
-            launchSingleTests
-            waitOrKill 1800
+            registerSingleTests
+            LaunchController 1800
             createReport
             Break
         }
         "resilience"
         {
-            launchResilienceTests
-            waitOrKill 1800
-            createReport
+            Write-Host "resilience tests currently not implemented"
+            $global:result = "BAD"
             Break
         }
         "catchtest"
         {
-            launchCatchTest
-            waitOrKill 1800
+
+            registerCatchTest
+            LaunchController 1800
             createReport
             Break
         }
