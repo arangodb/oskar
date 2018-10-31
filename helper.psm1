@@ -1008,7 +1008,7 @@ Function LaunchController($seconds)
               $str=$test | Out-String
               Write-Host $str
               ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-                 Stop-Process -Force -Id $childProcess.ProcessId
+                 Stop-Process -Force -Id $childProcess.Handle
               }
               Stop-Process -Force -Id $test['pid']
             }
