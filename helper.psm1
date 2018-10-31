@@ -102,7 +102,7 @@ Function showConfig
     Write-Host "Test suite     : "$TESTSUITE
     Write-Host " "
     Write-Host "Internal Configuration"
-    Write-Host "Parallelism    : "$PARALLELISM
+    Write-Host "Parallelism    : "$numberSlots
     Write-Host "Verbose        : "$VERBOSEOSKAR
     Write-Host " "
     Write-Host "Directories"
