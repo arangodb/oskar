@@ -943,10 +943,12 @@ Function LaunchController($seconds)
             $nextLauncheableTest = $nextLauncheableTest + 1
         }
         $currentRunning = 0
+        $currentRunningNames = ""
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
                 if ($(Get-WmiObject win32_process | Where {$_.ProcessId -eq $test['pid']})) {
                     $currentRunning = $currentRunning + 1
+                    $currentRunningNames = "$currentRunningNames , $test['testname']"
                 }
                 Else {
                     $test['pid'] = -1
@@ -959,7 +961,7 @@ Function LaunchController($seconds)
         }
         Start-Sleep 5
         $seconds = $seconds - 5
-        Write-Host ""
+        Write-Host "$(Get-Date) - $seconds - $currentRunningNames"
     }
     if ($currentRunning -gt 0) {
         ForEach ($test in $global:launcheableTests) {
