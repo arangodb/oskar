@@ -25,6 +25,10 @@ $global:portBase = 10000
 
 $global:ok = $true
 
+################################################################################
+# Utilities
+################################################################################
+
 #ToDo
 #Function transformBundleSniplet
 #{   
@@ -77,42 +81,9 @@ Function 7zip($Path,$DestinationPath)
     7za.exe a -mx9 $DestinationPath $Path 
 }
 
-Function showConfig
-{
-    Write-Host "------------------------------------------------------------------------------"
-    Write-Host "Global Configuration"
-    Write-Host "User           : "$env:USERDOMAIN\$env:USERNAME
-    Write-Host "Cache          : "$env:CLCACHE_CL
-    Write-Host "Cachedir       : "$env:CLCACHE_DIR
-    Write-Host " "
-    Write-Host "Build Configuration"
-    Write-Host "Buildmode      : "$BUILDMODE
-    Write-Host "Enterprise     : "$ENTERPRISEEDITION
-    Write-Host "Maintainer     : "$MAINTAINER
-    Write-Host " "
-    Write-Host "Generator      : "$GENERATOR
-    Write-Host "Packaging      : "$PACKAGING
-    Write-Host "Static exec    : "$STATICEXECUTABLES
-    Write-Host "Static libs    : "$STATICLIBS
-    Write-Host "Failure tests  : "$USEFAILURETESTS
-    Write-Host "Keep build     : "$KEEPBUILD
-    Write-Host " "	
-    Write-Host "Test Configuration"
-    Write-Host "Storage engine : "$STORAGEENGINE
-    Write-Host "Test suite     : "$TESTSUITE
-    Write-Host " "
-    Write-Host "Internal Configuration"
-    Write-Host "Parallelism    : "$numberSlots
-    Write-Host "Verbose        : "$VERBOSEOSKAR
-    Write-Host " "
-    Write-Host "Directories"
-    Write-Host "Inner workdir  : "$INNERWORKDIR
-    Write-Host "Workdir        : "$WORKDIR
-    Write-Host "Workspace      : "$env:WORKSPACE
-    Write-Host "------------------------------------------------------------------------------"
-    Write-Host " "
-    comm
-}
+################################################################################
+# Locking
+################################################################################
 
 Function lockDirectory
 {
@@ -157,6 +128,47 @@ Function unlockDirectory
     }
     comm
     Pop-Location   
+}
+
+################################################################################
+# Configure Oskar
+################################################################################
+
+Function showConfig
+{
+    Write-Host "------------------------------------------------------------------------------"
+    Write-Host "Global Configuration"
+    Write-Host "User           : "$env:USERDOMAIN\$env:USERNAME
+    Write-Host "Cache          : "$env:CLCACHE_CL
+    Write-Host "Cachedir       : "$env:CLCACHE_DIR
+    Write-Host " "
+    Write-Host "Build Configuration"
+    Write-Host "Buildmode      : "$BUILDMODE
+    Write-Host "Enterprise     : "$ENTERPRISEEDITION
+    Write-Host "Maintainer     : "$MAINTAINER
+    Write-Host " "
+    Write-Host "Generator      : "$GENERATOR
+    Write-Host "Packaging      : "$PACKAGING
+    Write-Host "Static exec    : "$STATICEXECUTABLES
+    Write-Host "Static libs    : "$STATICLIBS
+    Write-Host "Failure tests  : "$USEFAILURETESTS
+    Write-Host "Keep build     : "$KEEPBUILD
+    Write-Host " "	
+    Write-Host "Test Configuration"
+    Write-Host "Storage engine : "$STORAGEENGINE
+    Write-Host "Test suite     : "$TESTSUITE
+    Write-Host " "
+    Write-Host "Internal Configuration"
+    Write-Host "Parallelism    : "$numberSlots
+    Write-Host "Verbose        : "$VERBOSEOSKAR
+    Write-Host " "
+    Write-Host "Directories"
+    Write-Host "Inner workdir  : "$INNERWORKDIR
+    Write-Host "Workdir        : "$WORKDIR
+    Write-Host "Workspace      : "$env:WORKSPACE
+    Write-Host "------------------------------------------------------------------------------"
+    Write-Host " "
+    comm
 }
 
 Function single
@@ -324,6 +336,10 @@ If(-Not($KEEPBUILD))
     $global:KEEPBUILD = "Off"
 }
 
+################################################################################
+# git working copy manipulation
+################################################################################
+
 Function checkoutArangoDB
 {
     Push-Location $pwd
@@ -467,10 +483,59 @@ Function clearResults
     comm
 }
 
-Function showLog
+################################################################################
+# ArangoDB git working copy manipulation
+################################################################################
+
+Function getRepoState
 {
-    Get-Content "$INNERWORKDIR\test.log" | Out-GridView -Title "$INNERWORKDIR\test.log";comm
+    Push-Location $pwd
+    Set-Location $global:ARANGODIR; comm
+    $global:repoState = "$(git rev-parse HEAD)`r`n"+$(git status -b -s | Select-String -Pattern "^[?]" -NotMatch)
+    If($ENTERPRISEEDITION -eq "On")
+    {
+        Push-Location $pwd
+        Set-Location $global:ENTERPRISEDIR; comm
+        $global:repoStateEnterprise = "$(git rev-parse HEAD)`r`n$(git status -b -s | Select-String -Pattern "^[?]" -NotMatch)"
+        Pop-Location
+    }
+    Else
+    {
+        $global:repoStateEnterprise = ""
+    }
+    Pop-Location
 }
+
+Function noteStartAndRepoState
+{
+    getRepoState
+    If(Test-Path -PathType Leaf -Path $env:TMP\testProtocol.txt)
+    {
+        Remove-Item -Force $env:TMP\testProtocol.txt
+    }
+    $(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH.mm.ssZ") | Add-Content $env:TMP\testProtocol.txt
+    Write-Output "========== Status of main repository:" | Add-Content $env:TMP\testProtocol.txt
+    Write-Host "========== Status of main repository:"
+    ForEach($line in $global:repoState)
+    {
+        Write-Output " $line" | Add-Content $env:TMP\testProtocol.txt
+        Write-Host " $line"
+    }
+    If($ENTERPRISEEDITION -eq "On")
+    {
+        Write-Output "Status of enterprise repository:" | Add-Content $env:TMP\testProtocol.txt
+        Write-Host "Status of enterprise repository:"
+        ForEach($line in $global:repoStateEnterprise)
+        {
+            Write-Output " $line" | Add-Content $env:TMP\testProtocol.txt
+            Write-Host " $line"
+        }
+    }
+}
+
+################################################################################
+# Version detection
+################################################################################
 
 Function  findArangoDBVersion
 {
@@ -516,6 +581,10 @@ Function  findArangoDBVersion
     return $global:ARANGODB_FULL_VERSION
 }
 
+################################################################################
+# include External resources starter, syncer
+################################################################################
+
 Function downloadStarter
 {
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
@@ -551,6 +620,10 @@ Function downloadSyncer
     Write-Host "Download: Syncer"
     curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
 }
+
+################################################################################
+# Compiling & package generation
+################################################################################
 
 Function configureWindows
 {
@@ -757,51 +830,9 @@ Function moveResultsToWorkspace
     }
 }
 
-Function getRepoState
-{
-    Push-Location $pwd
-    Set-Location $global:ARANGODIR; comm
-    $global:repoState = "$(git rev-parse HEAD)`r`n"+$(git status -b -s | Select-String -Pattern "^[?]" -NotMatch)
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        Push-Location $pwd
-        Set-Location $global:ENTERPRISEDIR; comm
-        $global:repoStateEnterprise = "$(git rev-parse HEAD)`r`n$(git status -b -s | Select-String -Pattern "^[?]" -NotMatch)"
-        Pop-Location
-    }
-    Else
-    {
-        $global:repoStateEnterprise = ""
-    }
-    Pop-Location
-}
-
-Function noteStartAndRepoState
-{
-    getRepoState
-    If(Test-Path -PathType Leaf -Path $env:TMP\testProtocol.txt)
-    {
-        Remove-Item -Force $env:TMP\testProtocol.txt
-    }
-    $(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH.mm.ssZ") | Add-Content $env:TMP\testProtocol.txt
-    Write-Output "========== Status of main repository:" | Add-Content $env:TMP\testProtocol.txt
-    Write-Host "========== Status of main repository:"
-    ForEach($line in $global:repoState)
-    {
-        Write-Output " $line" | Add-Content $env:TMP\testProtocol.txt
-        Write-Host " $line"
-    }
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        Write-Output "Status of enterprise repository:" | Add-Content $env:TMP\testProtocol.txt
-        Write-Host "Status of enterprise repository:"
-        ForEach($line in $global:repoStateEnterprise)
-        {
-            Write-Output " $line" | Add-Content $env:TMP\testProtocol.txt
-            Write-Host " $line"
-        }
-    }
-}
+################################################################################
+# Test control
+################################################################################
 
 Function launchTest($which) {
     Push-Location $pwd
@@ -986,6 +1017,15 @@ Function LaunchController($seconds)
     comm
 }
 
+################################################################################
+# report generation
+################################################################################
+
+Function showLog
+{
+    Get-Content "$INNERWORKDIR\test.log" | Out-GridView -Title "$INNERWORKDIR\test.log";comm
+}
+
 Function log([array]$log)
 {
     ForEach($l in $log)
@@ -1067,6 +1107,10 @@ Function createReport
     }
 }
 
+################################################################################
+# test main control
+################################################################################
+
 Function runTests
 {
     If(Test-Path -PathType Container -Path $env:TMP)
@@ -1132,6 +1176,10 @@ Function runTests
         Set-Variable -Name "ok" -Value $false -Scope global
     }   
 }
+
+################################################################################
+# Oskar entry points
+################################################################################
 
 Function oskar
 {
