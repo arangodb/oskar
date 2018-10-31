@@ -336,6 +336,95 @@ If(-Not($KEEPBUILD))
     $global:KEEPBUILD = "Off"
 }
 
+
+################################################################################
+# Version detection
+################################################################################
+
+Function  findArangoDBVersion
+{
+    If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_MAJOR")[0] -match '.*"([0-9a-zA-Z]*)".*')
+    {
+        $global:ARANGODB_VERSION_MAJOR = $Matches[1]
+        If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_MINOR")[0] -match '.*"([0-9a-zA-Z]*)".*')
+        {
+            $global:ARANGODB_VERSION_MINOR = $Matches[1]
+            If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_PATCH")[0] -match '.*"([0-9a-zA-Z]*)".*')
+            {
+                $global:ARANGODB_VERSION_PATCH = $Matches[1]
+                If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_RELEASE_TYPE")[0] -match '.*"([0-9a-zA-Z]*)".*')
+                {
+                    $global:ARANGODB_VERSION_RELEASE_TYPE = $Matches[1]
+                    If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_RELEASE_NUMBER")[0] -match '.*"([0-9a-zA-Z]*)".*')
+                    {
+                        $global:ARANGODB_VERSION_RELEASE_NUMBER = $Matches[1]  
+                    }
+                }
+
+            }
+        }
+
+    }
+    $global:ARANGODB_VERSION = "$global:ARANGODB_VERSION_MAJOR.$global:ARANGODB_VERSION_MINOR.$global:ARANGODB_VERSION_PATCH"
+    If($global:ARANGODB_VERSION_RELEASE_TYPE)
+    {
+        If($global:ARANGODB_VERSION_RELEASE_NUMBER)
+        {
+            $global:ARANGODB_FULL_VERSION = "$global:ARANGODB_VERSION-$global:ARANGODB_VERSION_RELEASE_TYPE.$global:ARANGODB_VERSION_RELEASE_NUMBER"
+        }
+        Else
+        {
+            $global:ARANGODB_FULL_VERSION = "$global:ARANGODB_VERSION-$global:ARANGODB_VERSION_RELEASE_TYPE"
+        }
+        
+    }
+    Else
+    {
+        $global:ARANGODB_FULL_VERSION = $global:ARANGODB_VERSION   
+    }
+    return $global:ARANGODB_FULL_VERSION
+}
+
+################################################################################
+# include External resources starter, syncer
+################################################################################
+
+Function downloadStarter
+{
+    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "STARTER_REV")[0] -match '([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
+    $STARTER_REV = $Matches[0]
+    If($STARTER_REV -eq "latest")
+    {
+        $JSON = Invoke-WebRequest -Uri 'https://api.github.com/repos/arangodb-helper/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
+        $STARTER_REV = $JSON.name
+    }
+    Write-Host "Download: Starter"
+    (New-Object System.Net.WebClient).DownloadFile("https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
+}
+
+Function downloadSyncer
+{
+    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    If(-Not($env:DOWNLOAD_SYNC_USER))
+    {
+        Write-Host "Need  environment variable set!"
+    }
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV")[0] -match '([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
+    $SYNCER_REV = $Matches[0]
+    If($SYNCER_REV -eq "latest")
+    {
+        $JSON = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/latest" | ConvertFrom-Json
+        $SYNCER_REV = $JSON.name
+    }
+    $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
+    $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
+    Write-Host "Download: Syncer"
+    curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
+}
+
 ################################################################################
 # git working copy manipulation
 ################################################################################
@@ -531,94 +620,6 @@ Function noteStartAndRepoState
             Write-Host " $line"
         }
     }
-}
-
-################################################################################
-# Version detection
-################################################################################
-
-Function  findArangoDBVersion
-{
-    If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_MAJOR")[0] -match '.*"([0-9a-zA-Z]*)".*')
-    {
-        $global:ARANGODB_VERSION_MAJOR = $Matches[1]
-        If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_MINOR")[0] -match '.*"([0-9a-zA-Z]*)".*')
-        {
-            $global:ARANGODB_VERSION_MINOR = $Matches[1]
-            If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_PATCH")[0] -match '.*"([0-9a-zA-Z]*)".*')
-            {
-                $global:ARANGODB_VERSION_PATCH = $Matches[1]
-                If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_RELEASE_TYPE")[0] -match '.*"([0-9a-zA-Z]*)".*')
-                {
-                    $global:ARANGODB_VERSION_RELEASE_TYPE = $Matches[1]
-                    If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_RELEASE_NUMBER")[0] -match '.*"([0-9a-zA-Z]*)".*')
-                    {
-                        $global:ARANGODB_VERSION_RELEASE_NUMBER = $Matches[1]  
-                    }
-                }
-
-            }
-        }
-
-    }
-    $global:ARANGODB_VERSION = "$global:ARANGODB_VERSION_MAJOR.$global:ARANGODB_VERSION_MINOR.$global:ARANGODB_VERSION_PATCH"
-    If($global:ARANGODB_VERSION_RELEASE_TYPE)
-    {
-        If($global:ARANGODB_VERSION_RELEASE_NUMBER)
-        {
-            $global:ARANGODB_FULL_VERSION = "$global:ARANGODB_VERSION-$global:ARANGODB_VERSION_RELEASE_TYPE.$global:ARANGODB_VERSION_RELEASE_NUMBER"
-        }
-        Else
-        {
-            $global:ARANGODB_FULL_VERSION = "$global:ARANGODB_VERSION-$global:ARANGODB_VERSION_RELEASE_TYPE"
-        }
-        
-    }
-    Else
-    {
-        $global:ARANGODB_FULL_VERSION = $global:ARANGODB_VERSION   
-    }
-    return $global:ARANGODB_FULL_VERSION
-}
-
-################################################################################
-# include External resources starter, syncer
-################################################################################
-
-Function downloadStarter
-{
-    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "STARTER_REV")[0] -match '([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
-    $STARTER_REV = $Matches[0]
-    If($STARTER_REV -eq "latest")
-    {
-        $JSON = Invoke-WebRequest -Uri 'https://api.github.com/repos/arangodb-helper/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
-        $STARTER_REV = $JSON.name
-    }
-    Write-Host "Download: Starter"
-    (New-Object System.Net.WebClient).DownloadFile("https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
-}
-
-Function downloadSyncer
-{
-    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    If(-Not($env:DOWNLOAD_SYNC_USER))
-    {
-        Write-Host "Need  environment variable set!"
-    }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV")[0] -match '([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
-    $SYNCER_REV = $Matches[0]
-    If($SYNCER_REV -eq "latest")
-    {
-        $JSON = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/latest" | ConvertFrom-Json
-        $SYNCER_REV = $JSON.name
-    }
-    $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
-    $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
-    Write-Host "Download: Syncer"
-    curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
 }
 
 ################################################################################
@@ -984,7 +985,7 @@ Function LaunchController($seconds)
             if ($test['pid'] -gt 0) {
                 if ($(Get-WmiObject win32_process | Where {$_.ProcessId -eq $test['pid']})) {
                     $currentRunning = $currentRunning + 1
-                    $currentRunningNames = $currentRunningNames ", " $test['identifier']
+                    $currentRunningNames = "$currentRunningNames,  $($test['identifier'])"
                 }
                 Else {
                     $test['pid'] = -1
