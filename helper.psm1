@@ -17,14 +17,18 @@ $env:TMP = "$INNERWORKDIR\tmp"
 $env:CLCACHE_DIR="$INNERWORKDIR\.clcache.windows"
 
 $global:GENERATOR = "Visual Studio 15 2017 Win64"
-Import-Module VSSetup -ErrorAction Stop
-
-#$global:numberSlots = $((Get-WmiObject Win32_processor).NumberOfLogicalProcessors * 2)
-$global:numberSlots = $((Get-WmiObject Win32_processor).NumberOfLogicalProcessors)
 
 $global:launcheableTests = @()
 $global:maxTestCount = 0
 $global:testCount = 0
+$global:portBase = 10000
+
+$global:ok = $true
+
+#ToDo
+#Function transformBundleSniplet
+#{   
+#}
 
 While (Test-Path Alias:curl) 
 {
@@ -159,22 +163,18 @@ Function single
 {
     $global:TESTSUITE = "single"
 }
-
 Function cluster
 {
     $global:TESTSUITE = "cluster"
 }
-
 Function resilience
 {
     $global:TESTSUITE = "resilience"
 }
-
 Function catchtest
 {
     $global:TESTSUITE = "catchtest"
 }
-
 If(-Not($TESTSUITE))
 {
     cluster
@@ -186,28 +186,24 @@ Function skipPackagingOn
     $global:PACKAGING = "Off"
     $global:USEFAILURETESTS = "On"
 }
-
 Function skipPackagingOff
 {
     $global:SKIPPACKAGING = "Off"
     $global:PACKAGING = "On"
     $global:USEFAILURETESTS = "Off"
 }
-
 Function packagingOn
 {
     $global:SKIPPACKAGING = "Off"
     $global:PACKAGING = "On"
     $global:USEFAILURETESTS = "Off"
 }
-
 Function packagingOff
 {
     $global:SKIPPACKAGING = "On"
     $global:PACKAGING = "Off"
     $global:USEFAILURETESTS = "On"
 }
-
 If(-Not($SKIPPACKAGING))
 {
     skipPackagingOff
@@ -218,13 +214,11 @@ Function staticExecutablesOn
     $global:STATICEXECUTABLES = "On"
     $global:STATICLIBS = "true"
 }
-
 Function staticExecutablesOff
 {
     $global:STATICEXECUTABLES = "Off"
     $global:STATICLIBS = "false"
 }
-
 If(-Not($STATICEXECUTABLES))
 {
     staticExecutablesOff
@@ -234,12 +228,10 @@ Function signPackageOn
 {
     $global:SIGN = $true
 }
-
 Function signPackageOff
 {
     $global:SIGN = $false
 }
-
 If(-Not($SIGN))
 {
     signPackageOn
@@ -249,12 +241,10 @@ Function maintainerOn
 {
     $global:MAINTAINER = "On"
 }
-
 Function maintainerOff
 {
     $global:MAINTAINER = "Off"
 }
-
 If(-Not($MAINTAINER))
 {
     maintainerOn
@@ -264,7 +254,6 @@ Function debugMode
 {
     $global:BUILDMODE = "Debug"
 }
-
 Function releaseMode
 {
     $global:BUILDMODE = "RelWithDebInfo"
@@ -278,7 +267,6 @@ Function community
 {
     $global:ENTERPRISEEDITION = "Off"
 }
-
 Function enterprise
 {
     $global:ENTERPRISEEDITION = "On"
@@ -292,12 +280,10 @@ Function mmfiles
 {
     $global:STORAGEENGINE = "mmfiles"
 }
-
 Function rocksdb
 {
     $global:STORAGEENGINE = "rocksdb"
 }
-
 If(-Not($STORAGEENGINE))
 {
     rocksdb
@@ -307,12 +293,10 @@ Function verbose
 {
     $global:VERBOSEOSKAR = "On"
 }
-
 Function silent
 {
     $global:VERBOSEOSKAR = "Off"
 }
-
 If(-Not($VERBOSEOSKAR))
 {
     verbose
@@ -320,24 +304,21 @@ If(-Not($VERBOSEOSKAR))
 
 Function parallelism($threads)
 {
-    $global:PARALLELISM = $threads
+    $global:numberSlots = $threads
 }
-
-If(-Not($PARALLELISM))
+If(-Not($global:numberSlots))
 {
-    $global:PARALLELISM = 16
+    $global:numberSlots = $(Get-WmiObject Win32_processor).NumberOfLogicalProcessors
 }
 
 Function keepBuild
 {
     $global:KEEPBUILD = "On"
 }
-
 Function clearBuild
 {
     $global:KEEPBUILD = "Off"
 }
-
 If(-Not($KEEPBUILD))
 {
     $global:KEEPBUILD = "Off"
@@ -535,20 +516,16 @@ Function  findArangoDBVersion
     return $global:ARANGODB_FULL_VERSION
 }
 
-Function transformBundleSniplet
-{   
-}
-
 Function downloadStarter
 {
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "STARTER_REV")[0] -match '([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
-    $global:STARTER_REV = $Matches[0]
-    If($global:STARTER_REV -eq "latest")
+    $STARTER_REV = $Matches[0]
+    If($STARTER_REV -eq "latest")
     {
         $JSON = Invoke-WebRequest -Uri 'https://api.github.com/repos/arangodb-helper/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
-        $global:STARTER_REV = $JSON.name
+        $STARTER_REV = $JSON.name
     }
     Write-Host "Download: Starter"
     (New-Object System.Net.WebClient).DownloadFile("https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
@@ -563,11 +540,11 @@ Function downloadSyncer
         Write-Host "Need  environment variable set!"
     }
     (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV")[0] -match '([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
-    $global:SYNCER_REV = $Matches[0]
-    If($global:SYNCER_REV -eq "latest")
+    $SYNCER_REV = $Matches[0]
+    If($SYNCER_REV -eq "latest")
     {
         $JSON = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/latest" | ConvertFrom-Json
-        $global:SYNCER_REV = $JSON.name
+        $SYNCER_REV = $JSON.name
     }
     $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
     $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
@@ -827,11 +804,10 @@ Function launchTest($which) {
 
     Push-Location $pwd
     Set-Location $global:ARANGODIR; comm
-    echo "Test: $global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $test"
-    echo "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe"
-    echo $global:launcheableTests[$which]['commandline'] 
-    echo "-RedirectStandardOutput $global:launcheableTests[$which]['StandardOutput']"
-    echo "-RedirectStandardError $global:launcheableTests[$which]['StandardError']"
+    Write-Host "Test: $global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe"
+    Write-Host $global:launcheableTests[$which]['commandline'] 
+    Write-Host "-RedirectStandardOutput $global:launcheableTests[$which]['StandardOutput']"
+    Write-Host "-RedirectStandardError $global:launcheableTests[$which]['StandardError']"
     $str=$global:launcheableTests[$which] | Out-String
     Write-Host $str
 
@@ -844,26 +820,30 @@ Function launchTest($which) {
 
 Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster)
 {
-    #echo "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
-    #If(-Not(Select-String -Path $global:ARANGODIR\UnitTests\OskarTestSuitesBlackList -pattern $test[0]))
-    #{
+    Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
+    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $testname))
+    {
     	$weight = 1
     	$testparams = ""
-    	if ($filter) {
+    	If ($filter) {
     	   $testparams = $testparams + " --test $filter"
     	}
     	if ($bucket) {
     	    $testparams = $testparams + " --testBuckets $bucket"
     	}
-    	#if ($cluster) { # TODO - howto test if set?
-    	#  $weight = 4
-    	#  $testparams = $testparams + " --cluster true"
-    	#}
+    	if ($cluster -eq $true)
+        {
+    	    $weight = 4
+    	}
+        else
+        {
+            $cluster = $false
+        }
     	$output = $testname
     	if ($index) {
     	  $output = $output + "_$index"
     	}
-    	$testparams = $testparams + " --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true"
+    	$testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true"
     	
     	$testparams = $testparams + " --testOutput $env:TMP\$output.out"
     	
@@ -883,11 +863,11 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     	$global:maxTestCount = $global:maxTestCount + 1
     	
     	$global:portBase = $($global:portBase + 100)
-    #}
-    #Else
-    #{
-    #    Write-Host "Test suite" $testname "skipped by UnitTests/OskarTestSuitesBlackList"
-    #}
+    }
+    Else
+    {
+        Write-Host "Test suite $testname skipped by UnitTests/OskarTestSuitesBlackList"
+    }
     comm
 }
 
@@ -895,8 +875,6 @@ Function registerSingleTests()
 {
     noteStartAndRepoState
     Write-Host "Registering tests..."
-    $global:portBase = 10000
-
     registerTest -testname "shell_server"
     registerTest -testname "shell_client"
     registerTest -testname "recovery" -index "0" -bucket "4/0"
@@ -929,41 +907,39 @@ Function registerClusterTests()
 {
     noteStartAndRepoState
     Write-Host "Registering tests..."
-    $global:portBase = 10000
-    registerTest 3 -cluster true -testname "resilience" -index "move" -filter "moving-shards-cluster.js"
-    registerTest 3 -cluster true -testname "resilience" -index "failover" -filter "resilience-synchronous-repl-cluster.js"
-    registerTest 1 -cluster true -testname "shell_client"
-    registerTest 1 -cluster true -testname "shell_server"
-    registerTest 1 -cluster true -testname "http_server"
-    registerTest 1 -cluster true -testname "ssl_server"
-    registerTest 3 -cluster true -testname "resilience" -index "sharddist" -filter "shard-distribution-spec.js"
-    registerTest 1 -cluster true -testname "shell_server_aql" -index "0" -bucket "5/0"
-    registerTest 1 -cluster true -testname "shell_server_aql" -index "1" -bucket "5/1"
-    registerTest 1 -cluster true -testname "shell_server_aql" -index "2" -bucket "5/2"
-    registerTest 1 -cluster true -testname "shell_server_aql" -index "3" -bucket "5/3"
-    registerTest 1 -cluster true -testname "shell_server_aql" -index "4" -bucket "5/4"
-    registerTest 1 -cluster true -testname "shell_client_aql"
-    registerTest 1 -cluster true -testname "dump"
-    registerTest 1 -cluster true -testname "server_http"
-    registerTest 1 -cluster true -testname "agency"
+    registerTest -cluster $true -testname "resilience" -index "move" -filter "moving-shards-cluster.js"
+    registerTest -cluster $true -testname "resilience" -index "failover" -filter "resilience-synchronous-repl-cluster.js"
+    registerTest -cluster $true -testname "shell_client"
+    registerTest -cluster $true -testname "shell_server"
+    registerTest -cluster $true -testname "http_server"
+    registerTest -cluster $true -testname "ssl_server"
+    registerTest -cluster $true -testname "resilience" -index "sharddist" -filter "shard-distribution-spec.js"
+    registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
+    registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
+    registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"
+    registerTest -cluster $true -testname "shell_server_aql" -index "3" -bucket "5/3"
+    registerTest -cluster $true -testname "shell_server_aql" -index "4" -bucket "5/4"
+    registerTest -cluster $true -testname "shell_client_aql"
+    registerTest -cluster $true -testname "dump"
+    registerTest -cluster $true -testname "server_http"
+    registerTest -cluster $true -testname "agency"
     comm
 }
 
 Function LaunchController($seconds)
 {
-    $maxTime = 500000
     $timeSlept = 0;
     $nextLauncheableTest = 0
     $currentScore = 0
     $currentRunning = 1
     Write-Host "Testrun timeout: $global:launcheableTests"
-    While (($timeSlept -lt $maxTime) -and ($currentRunning -gt 0)) {
+    While (($seconds -gt 0) -and ($currentRunning -gt 0)) {
         while (($currentScore -lt $global:numberSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
             Write-Host "Launching $nextLauncheableTest "
             launchTest $nextLauncheableTest 
             $currentScore = $currentScore + $global:launcheableTests[$nextLauncheableTest ]['weight']
-            Start-Sleep 5
-            $timeSlept = $timeSlept + 5
+            Start-Sleep 20
+            $seconds = $seconds - 20
             $nextLauncheableTest = $nextLauncheableTest + 1
         }
         $currentRunning = 0
@@ -982,7 +958,8 @@ Function LaunchController($seconds)
             }
         }
         Start-Sleep 5
-        $timeSlept = $timeSlept + 5
+        $seconds = $seconds - 5
+        Write-Host ""
     }
     if ($currentRunning -gt 0) {
         ForEach ($test in $global:launcheableTests) {
@@ -1124,8 +1101,7 @@ Function runTests
         }
         "catchtest"
         {
-
-            registerCatchTest
+            registerTest -testname "catch"
             LaunchController 1800
             createReport
             Break
