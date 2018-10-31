@@ -839,11 +839,11 @@ Function launchTest($which) {
     Set-Location $global:ARANGODIR; comm
     $arangosh = "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe"
     $test = $global:launcheableTests[$which]
-    Write-Host "Test: " + $test['testname']
+    Write-Host "Test: " $test['testname'] " - " $test['identifier']
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    Write-Host $arangosh + " --- " + $test['commandline'] 
-    Write-Host "-RedirectStandardOutput " + $test['StandardOutput']
-    Write-Host "-RedirectStandardError " + $test['StandardError']
+    Write-Host $arangosh " --- " $test['commandline'] 
+    Write-Host "-RedirectStandardOutput " $test['StandardOutput']
+    Write-Host "-RedirectStandardError " $test['StandardError']
     $str=$test | Out-String
     Write-Host $str
 
@@ -890,7 +890,8 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     	$global:testCount = $global:testCount + 1
     	$global:launcheableTests += @{}
     	$global:launcheableTests[$i]['weight'] = $weight
-    	$global:launcheableTests[$i]['testname'] = $testname
+   	$global:launcheableTests[$i]['testname'] = $testname
+   	$global:launcheableTests[$i]['identifier'] = $output
     	$global:launcheableTests[$i]['commandline'] = " -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams"
     	$global:launcheableTests[$i]['StandardOutput'] = "$global:ARANGODIR\$output.stdout.log"
     	$global:launcheableTests[$i]['StandardError'] = "$global:ARANGODIR\$output.stderr.log"
@@ -968,10 +969,9 @@ Function LaunchController($seconds)
     $nextLauncheableTest = 0
     $currentScore = 0
     $currentRunning = 1
-    Write-Host "Testrun timeout: $global:launcheableTests"
     While (($seconds -gt 0) -and ($currentRunning -gt 0)) {
         while (($currentScore -lt $global:numberSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
-            Write-Host "Launching $nextLauncheableTest " + $global:launcheableTests[$nextLauncheableTest ]['testname']
+            Write-Host "Launching $nextLauncheableTest '" $global:launcheableTests[$nextLauncheableTest ]['identifier'] "'"
             launchTest $nextLauncheableTest 
             $currentScore = $currentScore + $global:launcheableTests[$nextLauncheableTest ]['weight']
             Start-Sleep 20
@@ -984,23 +984,23 @@ Function LaunchController($seconds)
             if ($test['pid'] -gt 0) {
                 if ($(Get-WmiObject win32_process | Where {$_.ProcessId -eq $test['pid']})) {
                     $currentRunning = $currentRunning + 1
-                    $currentRunningNames = $currentRunningNames + ", " + $test['testname']
+                    $currentRunningNames = $currentRunningNames ", " $test['identifier']
                 }
                 Else {
                     $test['pid'] = -1
                     $currentScore = $currentScore - $test['weight']
-                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: " +  $test['testname']
+                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: " $test['identifier']
                     $str=$test | Out-String
                     Write-Host $str
                 }
             }
         }
         Start-Sleep 5
-        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - " + $seconds + " - Running Tests: " + $currentRunningNames
+        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - " $seconds " - Running Tests: " $currentRunningNames
         $seconds = $seconds - 5
     }
     if ($currentRunning -gt 0) {
-        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have " + $currentRunning " tests that timed out! Currently running processes:"
+        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have " $currentRunning " tests that timed out! Currently running processes:"
         Get-WmiObject win32_process
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
@@ -1042,8 +1042,10 @@ Function createReport
     $date | Add-Content "$env:TMP\testProtocol.txt"
     $global:result = "GOOD"
     $global:badtests = $null
+    new-item $env:TMP\oskar-junit-report -itemtype directory
     ForEach($dir in (Get-ChildItem -Path $env:TMP  -Directory -Filter "*.out"))
     {
+        Copy-Item -Path $($dir.FullName)\*.xml $env:TMP\oskar-junit-report
         Write-Host "Looking at directory $($dir.BaseName)"
         If(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_EXECUTIVE_SUMMARY.json")
             {
