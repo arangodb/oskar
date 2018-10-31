@@ -308,7 +308,7 @@ Function parallelism($threads)
 }
 If(-Not($global:numberSlots))
 {
-    $global:numberSlots = $(Get-WmiObject Win32_processor).NumberOfLogicalProcessors
+    $global:numberSlots = ($(Get-WmiObject Win32_processor).NumberOfLogicalProcessors / 2)
 }
 
 Function keepBuild
@@ -575,6 +575,7 @@ Function configureWindows
         Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" `"$global:ARANGODIR`""
 	    proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake"
     }
+    #"
     Pop-Location
 }
 
@@ -602,6 +603,7 @@ Function packageWindows
         Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$TARGET`""
         proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --target `"$TARGET`"" -logfile "$INNERWORKDIR\$TARGET-package"
     }
+    #`
     Pop-Location
 }
 
@@ -609,6 +611,7 @@ Function signWindows
 {
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build\"
+    #"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     $SIGNTOOL = $(Get-ChildItem C:\ -Recurse "signtool.exe" -ErrorAction SilentlyContinue).FullName[0]
     ForEach($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
@@ -801,17 +804,19 @@ Function noteStartAndRepoState
 }
 
 Function launchTest($which) {
-
     Push-Location $pwd
     Set-Location $global:ARANGODIR; comm
-    Write-Host "Test: $global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe"
-    Write-Host $global:launcheableTests[$which]['commandline'] 
-    Write-Host "-RedirectStandardOutput $global:launcheableTests[$which]['StandardOutput']"
-    Write-Host "-RedirectStandardError $global:launcheableTests[$which]['StandardError']"
-    $str=$global:launcheableTests[$which] | Out-String
+    $arangosh = "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe"
+    $test = $global:launcheableTests[$which]
+    Write-Host "Test: " + $test['testname']
+    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+    Write-Host $arangosh + " --- " + $test['commandline'] 
+    Write-Host "-RedirectStandardOutput " + $test['StandardOutput']
+    Write-Host "-RedirectStandardError " + $test['StandardError']
+    $str=$test | Out-String
     Write-Host $str
 
-    $process = $(Start-Process -FilePath "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe" -ArgumentList $global:launcheableTests[$which]['commandline'] -RedirectStandardOutput $global:launcheableTests[$which]['StandardOutput'] -RedirectStandardError $global:launcheableTests[$which]['StandardError'] -PassThru)
+    $process = $(Start-Process -FilePath "$arangosh" -ArgumentList $test['commandline'] -RedirectStandardOutput $test['StandardOutput'] -RedirectStandardError $test['StandardError'] -PassThru)
     
     $global:launcheableTests[$which]['pid'] = $process.Id
     Pop-Location
@@ -935,7 +940,7 @@ Function LaunchController($seconds)
     Write-Host "Testrun timeout: $global:launcheableTests"
     While (($seconds -gt 0) -and ($currentRunning -gt 0)) {
         while (($currentScore -lt $global:numberSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
-            Write-Host "Launching $nextLauncheableTest "
+            Write-Host "Launching $nextLauncheableTest " + $global:launcheableTests[$nextLauncheableTest ]['testname']
             launchTest $nextLauncheableTest 
             $currentScore = $currentScore + $global:launcheableTests[$nextLauncheableTest ]['weight']
             Start-Sleep 20
@@ -948,22 +953,24 @@ Function LaunchController($seconds)
             if ($test['pid'] -gt 0) {
                 if ($(Get-WmiObject win32_process | Where {$_.ProcessId -eq $test['pid']})) {
                     $currentRunning = $currentRunning + 1
-                    $currentRunningNames = "$currentRunningNames , $test['testname']"
+                    $currentRunningNames = $currentRunningNames + ", " + $test['testname']
                 }
                 Else {
                     $test['pid'] = -1
                     $currentScore = $currentScore - $test['weight']
-                    Write-Host "Testrun finished:"
+                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: " +  $test['testname']
                     $str=$test | Out-String
                     Write-Host $str
                 }
             }
         }
         Start-Sleep 5
+        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - " + $seconds + " - Running Tests: " + $currentRunningNames
         $seconds = $seconds - 5
-        Write-Host "$(Get-Date) - $seconds - $currentRunningNames"
     }
     if ($currentRunning -gt 0) {
+        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have " + $currentRunning " tests that timed out! Currently running processes:"
+        Get-WmiObject win32_process
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
               Write-Host "Testrun timeout:"
@@ -974,7 +981,7 @@ Function LaunchController($seconds)
               }
               Stop-Process -Force -Id $test['pid']
             }
-       }
+        }
     }
     comm
 }
