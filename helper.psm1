@@ -1000,6 +1000,8 @@ Function LaunchController($seconds)
         Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - " $seconds " - Running Tests: " $currentRunningNames
         $seconds = $seconds - 5
     }
+    $str=$global:launcheableTests | Out-String
+    Write-Host $str
     if ($currentRunning -gt 0) {
         Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have " $currentRunning " tests that timed out! Currently running processes:"
         Get-WmiObject win32_process
@@ -1009,11 +1011,15 @@ Function LaunchController($seconds)
               $str=$test | Out-String
               Write-Host $str
               ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-                 Stop-Process -Force -Id $childProcess.Handle
+                Write-Host "killing child: "
+                $str=$childProcess | Out-String
+                Write-Host $str
+                Stop-Process -Force -Id $childProcess.Handle
               }
               Stop-Process -Force -Id $test['pid']
             }
         }
+        Get-WmiObject win32_process
     }
     comm
 }
