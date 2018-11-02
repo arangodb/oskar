@@ -872,10 +872,11 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     	if ($cluster -eq $true)
         {
     	    $weight = 4
+            $cluster = "true"
     	}
         else
         {
-            $cluster = $false
+            $cluster = "false"
         }
     	$output = $testname
     	if ($index) {
@@ -1012,22 +1013,22 @@ Function LaunchController($seconds)
               $str=$test | Out-String
               Write-Host $str
               ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-                Write-Host "killing child: "
-                $str=$childProcess | Out-String
-                Write-Host $str
-
                 ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-                  Write-Host "killing child2: "
-                  $str=$childChildProcesses | Out-String
-                  Write-Host $str
                   ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
                     Write-Host "killing child3: "
                     $str=$childChildChildProcesses | Out-String
                     Write-Host $str
                     Stop-Process -Force -Id $childChildChildProcesses.Handle
-                }
+                  }
+                  Write-Host "killing child2: "
+                  $str=$childChildProcesses | Out-String
+                  Write-Host $str
                   Stop-Process -Force -Id $childChildProcesses.Handle
                 }
+                Write-Host "killing child: "
+                $str=$childProcess | Out-String
+                Write-Host $str
+
                 Stop-Process -Force -Id $childProcess.Handle
               }
               Stop-Process -Force -Id $test['pid']
