@@ -268,6 +268,8 @@ function createReport
       echo Bad result in jslint
       echo Bad result in jslint >> testProtocol.txt
       set badtests $badtests "Bad result in jslint"
+      mkdir "$INNERWORKDIR/jslint.out/"
+      grep ERROR "jslint.log" > "$INNERWORKDIR/jslint.out/testfailures.txt"
     end
   end
  
