@@ -1161,14 +1161,14 @@ Function runTests
         "cluster"
         {
             registerClusterTests
-            LaunchController 1800
+            LaunchController 18000
             createReport  
             Break
         }
         "single"
         {
             registerSingleTests
-            LaunchController 1800
+            LaunchController 18000
             createReport
             Break
         }
