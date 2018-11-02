@@ -1026,10 +1026,10 @@ Function LaunchController($seconds)
                   Stop-Process -Force -Id $childChildProcesses.Handle
                 }
                 Write-Host "killing child: "
-                $str=$childProcess | Out-String
+                $str=$childProcesses | Out-String
                 Write-Host $str
 
-                Stop-Process -Force -Id $childProcess.Handle
+                Stop-Process -Force -Id $childProcesses.Handle
               }
               Stop-Process -Force -Id $test['pid']
             }
