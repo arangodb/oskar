@@ -851,6 +851,7 @@ Function launchTest($which) {
     $process = $(Start-Process -FilePath "$arangosh" -ArgumentList $test['commandline'] -RedirectStandardOutput $test['StandardOutput'] -RedirectStandardError $test['StandardError'] -PassThru)
     
     $global:launcheableTests[$which]['pid'] = $process.Id
+    $global:launcheableTests[$which]['launchDate'] = $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))
     Pop-Location
 
 }
@@ -990,7 +991,7 @@ Function LaunchController($seconds)
                 Else {
                     $test['pid'] = -1
                     $currentScore = $currentScore - $test['weight']
-                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: " $test['identifier']
+                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: " $test['identifier'] $test['launchdate']
                     $str=$test | Out-String
                     Write-Host $str
                 }
