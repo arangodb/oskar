@@ -851,7 +851,7 @@ Function launchTest($which) {
     $global:launcheableTests[$which]['pid'] = $process.Id
     $global:launcheableTests[$which]['launchDate'] = $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))
 
-    $str=$test | where {($.Name -ne "commandline")} | Out-String
+    $str=$test | where {($_.Name -ne "commandline")} | Out-String
     Write-Host $str
     Pop-Location
 
@@ -996,7 +996,7 @@ Function LaunchController($seconds)
                 Else {
                     $currentScore = $currentScore - $test['weight']
                     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identifier'] $test['launchdate']
-                    $str=$test | where {($.Name -ne "commandline")} | Out-String
+                    $str=$test | where {($_.Name -ne "commandline")} | Out-String
                     $test['pid'] = -1
                 }
             }
@@ -1015,7 +1015,7 @@ Function LaunchController($seconds)
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
               Write-Host "Testrun timeout:"
-              $str=$test | where {($.Name -ne "commandline")} | Out-String
+              $str=$test | where {($_.Name -ne "commandline")} | Out-String
               Write-Host $str
               ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
                 ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
