@@ -934,7 +934,7 @@ Function registerSingleTests()
     registerTest -testname "shell_client_aql"
     registerTest -testname "dump"
     registerTest -testname "server_http"
-    registerTest -testname "agency"
+    # registerTest -testname "agency"
     registerTest -testname "shell_replication"
     registerTest -testname "http_replication"
     registerTest -testname "catch"
@@ -962,7 +962,7 @@ Function registerClusterTests()
     registerTest -cluster $true -testname "shell_client_aql"
     registerTest -cluster $true -testname "dump"
     registerTest -cluster $true -testname "server_http"
-    registerTest -cluster $true -testname "agency"
+    # registerTest -cluster $true -testname "agency"
     comm
 }
 
@@ -986,15 +986,14 @@ Function LaunchController($seconds)
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
                 if ($(Get-WmiObject win32_process | Where {$_.ProcessId -eq $test['pid']})) {
-                    $currentRunningNames[$currentRunning] = $($test['identifier'])
-                    $currentRunning = $currentRunning+1
+                  $currentRunningNames += $test['identifier']
+                  $currentRunning = $currentRunning+1
                 }
                 Else {
                     $currentScore = $currentScore - $test['weight']
                     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: " $test['identifier'] $test['launchdate']
                     $test.PSObject.Properties | ForEach-Object {
-                      $_.Name
-                      $_.Value
+                      Write -host $_.Name+": "+$_.Value
                     }
                     $test['pid'] = -1
                 }
@@ -1170,7 +1169,7 @@ Function runTests
         "single"
         {
             registerSingleTests
-            LaunchController 1800
+            LaunchController 5400
             createReport
             Break
         }
