@@ -1070,7 +1070,7 @@ Function createReport
     new-item $env:TMP\oskar-junit-report -itemtype directory
     ForEach($dir in (Get-ChildItem -Path $env:TMP  -Directory -Filter "*.out"))
     {
-        if ($(Get-ChildItem -filter "$($dir.FullName)\*.xml" -path $d1 | Measure-Object | Select -ExpandProperty Count) -gt 0) {
+        if ($(Get-ChildItem -filter "*.xml" -path $dir.FullName | Measure-Object | Select -ExpandProperty Count) -gt 0) {
           Copy-Item -Path $($dir.FullName)\*.xml $env:TMP\oskar-junit-report
         }
         Write-Host "Looking at directory $($dir.BaseName)"
