@@ -320,7 +320,7 @@ Function parallelism($threads)
 }
 If(-Not($global:numberSlots))
 {
-    $global:numberSlots = ($(Get-WmiObject Win32_processor).NumberOfLogicalProcessors / 2)
+    $global:numberSlots = ($(Get-WmiObject Win32_processor).NumberOfLogicalProcessors)
 }
 
 Function keepBuild
@@ -991,9 +991,9 @@ Function LaunchController($seconds)
                 }
                 Else {
                     $currentScore = $currentScore - $test['weight']
-                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: " $test['identifier'] $test['launchdate']
+                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identifier'] $test['launchdate']
                     $test.PSObject.Properties | ForEach-Object {
-                      Write -host $_.Name+": "+$_.Value
+                      Write-Host $_.Name"=> "$test[$_.Name]
                     }
                     $test['pid'] = -1
                 }
@@ -1001,14 +1001,15 @@ Function LaunchController($seconds)
         }
         Start-Sleep 5
         $a = $currentRunningNames -join ","
-        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - " $seconds " - Running Tests: "$a
+        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - "$seconds" - Running Tests: "$a
         $seconds = $seconds - 5
     }
     Write-Host "tests done or timeout reached. Current state of worker jobs:"
     $str=$global:launcheableTests | Out-String
     Write-Host $str
     if ($currentRunning -gt 0) {
-        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have " $currentRunning " tests that timed out! Currently running processes:"
+        Get-WmiObject win32_process | Output-File 
+        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have "$currentRunning" tests that timed out! Currently running processes:"
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
               Write-Host "Testrun timeout:"
@@ -1036,6 +1037,7 @@ Function LaunchController($seconds)
               Stop-Process -Force -Id $test['pid']
             }
         }
+        Get-WmiObject win32_process | Output-File 
     }
     comm
 }
