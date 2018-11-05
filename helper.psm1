@@ -864,10 +864,10 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     	$weight = 1
     	$testparams = ""
     	If ($filter) {
-    	   $testparams = $testparams + " --test $filter"
+    	   $testparams = $testparams+" --test $filter"
     	}
     	if ($bucket) {
-    	    $testparams = $testparams + " --testBuckets $bucket"
+    	    $testparams = $testparams+" --testBuckets $bucket"
     	}
     	if ($cluster -eq $true)
         {
@@ -880,27 +880,27 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         }
     	$output = $testname
     	if ($index) {
-    	  $output = $output + "_$index"
+    	  $output = $output+"_$index"
     	}
-    	$testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true"
+    	$testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true"
     	
-    	$testparams = $testparams + " --testOutput $env:TMP\$output.out"
+    	$testparams = $testparams+" --testOutput $env:TMP\$output.out"
     	
-    	$testparams + $testparams + $moreParams
+    	$testparams + $testparams+$moreParams
     	
     	$PORT=Get-Random -Minimum 20000 -Maximum 65535
     	$i = $global:testCount
-    	$global:testCount = $global:testCount + 1
-    	$global:launcheableTests += @{}
-    	$global:launcheableTests[$i]['weight'] = $weight
-   	$global:launcheableTests[$i]['testname'] = $testname
-   	$global:launcheableTests[$i]['identifier'] = $output
-    	$global:launcheableTests[$i]['commandline'] = " -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams"
-    	$global:launcheableTests[$i]['StandardOutput'] = "$global:ARANGODIR\$output.stdout.log"
-    	$global:launcheableTests[$i]['StandardError'] = "$global:ARANGODIR\$output.stderr.log"
-    	$global:launcheableTests[$i]['pid'] = -1
-    	
-    	$global:maxTestCount = $global:maxTestCount + 1
+    	$global:testCount = $global:testCount+1
+    	$global:launcheableTests += @{
+    	  weight=$weight;
+   	  testname=$testname;
+   	  identifier=$output;
+    	  commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams";
+    	  StandardOutput="$global:ARANGODIR\$output.stdout.log";
+    	  StandardError="$global:ARANGODIR\$output.stderr.log";
+    	  pid=-1;
+    	}
+    	$global:maxTestCount = $global:maxTestCount+1
     	
     	$global:portBase = $($global:portBase + 100)
     }
@@ -976,37 +976,40 @@ Function LaunchController($seconds)
         while (($currentScore -lt $global:numberSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
             Write-Host "Launching $nextLauncheableTest '" $global:launcheableTests[$nextLauncheableTest ]['identifier'] "'"
             launchTest $nextLauncheableTest 
-            $currentScore = $currentScore + $global:launcheableTests[$nextLauncheableTest ]['weight']
+            $currentScore = $currentScore+$global:launcheableTests[$nextLauncheableTest ]['weight']
             Start-Sleep 20
             $seconds = $seconds - 20
-            $nextLauncheableTest = $nextLauncheableTest + 1
+            $nextLauncheableTest = $nextLauncheableTest+1
         }
         $currentRunning = 0
-        $currentRunningNames = ""
+        $currentRunningNames = @()
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
                 if ($(Get-WmiObject win32_process | Where {$_.ProcessId -eq $test['pid']})) {
-                    $currentRunning = $currentRunning + 1
-                    $currentRunningNames = "$currentRunningNames,  $($test['identifier'])"
+                    $currentRunningNames[$currentRunning] = $($test['identifier'])
+                    $currentRunning = $currentRunning+1
                 }
                 Else {
-                    $test['pid'] = -1
                     $currentScore = $currentScore - $test['weight']
                     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: " $test['identifier'] $test['launchdate']
-                    $str=$test | Out-String
-                    Write-Host $str
+                    $test.PSObject.Properties | ForEach-Object {
+                      $_.Name
+                      $_.Value
+                    }
+                    $test['pid'] = -1
                 }
             }
         }
         Start-Sleep 5
-        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - " $seconds " - Running Tests: " $currentRunningNames
+        $a = $currentRunningNames -join ","
+        Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - " $seconds " - Running Tests: "$a
         $seconds = $seconds - 5
     }
+    Write-Host "tests done or timeout reached. Current state of worker jobs:"
     $str=$global:launcheableTests | Out-String
     Write-Host $str
     if ($currentRunning -gt 0) {
         Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have " $currentRunning " tests that timed out! Currently running processes:"
-        Get-WmiObject win32_process
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
               Write-Host "Testrun timeout:"
@@ -1034,7 +1037,6 @@ Function LaunchController($seconds)
               Stop-Process -Force -Id $test['pid']
             }
         }
-        Get-WmiObject win32_process
     }
     comm
 }
@@ -1168,7 +1170,7 @@ Function runTests
         "single"
         {
             registerSingleTests
-            LaunchController 18000
+            LaunchController 1800
             createReport
             Break
         }
