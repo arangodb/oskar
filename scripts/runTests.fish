@@ -102,7 +102,7 @@ function launchSingleTests
     case  7 ; test1         catch ""
     case  8 ; test1         dump ""
     case  9 ; test1         dump_authentication ""
-    case 10 ; test1         endpoints "" --skipEndpointsIpv6 true
+    case 10 ; test1         endpoints "" --skipEndpointsIpv6 false
     case 11 ; test1         http_replication ""
     case 12 ; test1         http_server ""
     case 13 ; test1         recovery 0 --testBuckets 4/0

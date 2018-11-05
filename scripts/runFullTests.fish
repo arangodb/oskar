@@ -111,7 +111,7 @@ function launchSingleTests
     case 16 ; test1         dump ""
     case 17 ; test1         dump_authentication ""
     case 18 ; test1         dump_encrypted "" 
-    case 19 ; test1         endpoints "" --skipEndpointsIpv6 true
+    case 19 ; test1         endpoints "" --skipEndpointsIpv6 false
     case 20 ; test1         export ""
     case 21 ; test1         foxx_manager ""
     case 22 ; test1         http_replication ""
