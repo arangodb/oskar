@@ -845,23 +845,24 @@ Function launchTest($which) {
     Write-Host $arangosh " --- " $test['commandline'] 
     Write-Host "-RedirectStandardOutput " $test['StandardOutput']
     Write-Host "-RedirectStandardError " $test['StandardError']
-    $str=$test | Out-String
-    Write-Host $str
 
     $process = $(Start-Process -FilePath "$arangosh" -ArgumentList $test['commandline'] -RedirectStandardOutput $test['StandardOutput'] -RedirectStandardError $test['StandardError'] -PassThru)
     
     $global:launcheableTests[$which]['pid'] = $process.Id
     $global:launcheableTests[$which]['launchDate'] = $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))
+
+    $str=$test | where {($.Name -ne "commandline")} | Out-String
+    Write-Host $str
     Pop-Location
 
 }
 
-Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster)
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
     If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $testname))
     {
-    	$weight = 1
+    	$testWeight = 1
     	$testparams = ""
     	If ($filter) {
     	   $testparams = $testparams+" --test $filter"
@@ -871,12 +872,15 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     	}
     	if ($cluster -eq $true)
         {
-    	    $weight = 4
+    	    $testWeight = 4
             $cluster = "true"
     	}
         else
         {
             $cluster = "false"
+        }
+        if ($weight) {
+          $testWeight = $weight
         }
     	$output = $testname
     	if ($index) {
@@ -892,7 +896,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     	$i = $global:testCount
     	$global:testCount = $global:testCount+1
     	$global:launcheableTests += @{
-    	  weight=$weight;
+    	  weight=$testWeight;
    	  testname=$testname;
    	  identifier=$output;
     	  commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams";
@@ -921,9 +925,9 @@ Function registerSingleTests()
     registerTest -testname "recovery" -index "1" -bucket "4/1"
     registerTest -testname "recovery" -index "2" -bucket "4/2"
     registerTest -testname "recovery" -index "3" -bucket "4/3"
-    registerTest -testname "replication_sync"
-    registerTest -testname "replication_static"
-    registerTest -testname "replication_ongoing"
+    registerTest -testname "replication_sync" -weight 2
+    registerTest -testname "replication_static" -weight 2
+    registerTest -testname "replication_ongoing" -weight 2
     registerTest -testname "http_server"
     registerTest -testname "ssl_server"
     registerTest -testname "shell_server_aql" -index "0" -bucket "5/0"
@@ -935,8 +939,8 @@ Function registerSingleTests()
     registerTest -testname "dump"
     registerTest -testname "server_http"
     # registerTest -testname "agency"
-    registerTest -testname "shell_replication"
-    registerTest -testname "http_replication"
+    registerTest -testname "shell_replication" -weight 2
+    registerTest -testname "http_replication" -weight 2
     registerTest -testname "catch"
     registerTest -testname "version"
     registerTest -testname "endpoints" -moreParams "--skipEndpointsIpv6 true"
@@ -992,9 +996,7 @@ Function LaunchController($seconds)
                 Else {
                     $currentScore = $currentScore - $test['weight']
                     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identifier'] $test['launchdate']
-                    $test.PSObject.Properties | ForEach-Object {
-                      Write-Host $_.Name"=> "$test[$_.Name]
-                    }
+                    $str=$test | where {($.Name -ne "commandline")} | Out-String
                     $test['pid'] = -1
                 }
             }
@@ -1013,7 +1015,7 @@ Function LaunchController($seconds)
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
               Write-Host "Testrun timeout:"
-              $str=$test | Out-String
+              $str=$test | where {($.Name -ne "commandline")} | Out-String
               Write-Host $str
               ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
                 ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
