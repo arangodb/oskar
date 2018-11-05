@@ -1073,7 +1073,7 @@ Function createReport
     ForEach($dir in (Get-ChildItem -Path $env:TMP  -Directory -Filter "*.out"))
     {
         if ($(Get-ChildItem -filter "*.xml" -path $dir.FullName | Measure-Object | Select -ExpandProperty Count) -gt 0) {
-          Copy-Item -Path $($dir.FullName)\*.xml $env:TMP\oskar-junit-report
+          Copy-Item -Path "$($dir.FullName)\*.xml" $env:TMP\oskar-junit-report
         }
         Write-Host "Looking at directory $($dir.BaseName)"
         If(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_EXECUTIVE_SUMMARY.json")
