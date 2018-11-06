@@ -28,8 +28,24 @@ function checkoutRepo
   return $status
 end
 
+if test "$argv[1]" = "help"
+    echo "\
+
+usage: switchBranches <community> <enterprise> [<clean>]
+
+  Checkout the <community> branch of the main repository and the
+  <enterprise> branch of the enterprise repository. This will check
+  out the branches and do a `git pull` afterwards.
+
+
+  If <clean> is `true` all local modifications will be deleted.
+  "
+  exit 0
+end    
+
 if test (count $argv) -lt 2
     echo "you did not provide enough arguments"
+    exit 1
 end
 
 set -l arango $argv[1]

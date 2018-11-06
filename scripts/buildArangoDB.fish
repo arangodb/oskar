@@ -10,7 +10,10 @@ set -x CCACHE_DIR $INNERWORKDIR/.ccache.ubuntu
 if test "$CCACHEBINPATH" = ""
   set -xg CCACHEBINPATH /usr/lib/ccache
 end
-ccache -M 30G
+if test "$CCACHESIZE" = ""
+  set -xg CCACHESIZE 30G
+end
+ccache -M $CCACHESIZE
 cd $INNERWORKDIR/ArangoDB
 
 if test -z "$NO_RM_BUILD"

@@ -10,7 +10,10 @@ set -x CCACHE_DIR $INNERWORKDIR/.ccache.mac
 if test "$CCACHEBINPATH" = ""
   set -xg CCACHEBINPATH /usr/lib/ccache
 end
-ccache -M 100G
+if test "$CCACHESIZE" = ""
+  set -xg CCACHESIZE 100G
+end
+ccache -M $CCACHESIZE
 #ccache -o log_file=$INNERWORKDIR/.ccache.mac.log
 ccache -o cache_dir_levels=1
 cd $INNERWORKDIR/ArangoDB
@@ -60,6 +63,6 @@ if test "$VERBOSEBUILD" = "On"
 end
 
 echo Running make, output in $INNERWORKDIR/buildArangoDB.log
-and nice make $MAKEFALGS > $INNERWORKDIR/buildArangoDB.log ^&1 
+and nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1 
 and echo "Finished at "(date)
 and ccache --show-stats

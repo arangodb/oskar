@@ -73,6 +73,9 @@ function showConfig
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'
+  if test "$CCACHESIZE" != ""
+  printf $fmt3 'CCACHE size'   $CCACHESIZE   '(CCACHESIZE)'
+  end
   printf $fmt3 'Verbose Build' $VERBOSEBUILD '(verboseBuild/silentBuild)'
   printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR '(verbose/slient)'
   echo
@@ -518,6 +521,7 @@ function moveResultsToWorkspace
     for f in $WORKDIR/work/*.rpm ; echo "mv $f" ; mv $f $WORKSPACE ; end
     for f in $WORKDIR/work/*.tar.gz ; echo "mv $f" ; mv $f $WORKSPACE ; end
     for f in $WORKDIR/work/*.html ; echo "mv $f" ; mv $f $WORKSPACE ; end
+    for f in $WORKDIR/work/*.docker ; echo "mv $f" ; mv $f $WORKSPACE ; end
 
     if test -f $WORKDIR/work/testfailures.txt
       if grep -q -v '^[ \t]*$' $WORKDIR/work/testfailures.txt
