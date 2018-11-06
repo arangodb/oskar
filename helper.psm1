@@ -943,7 +943,7 @@ Function registerSingleTests()
     registerTest -testname "http_replication" -weight 2
     registerTest -testname "catch"
     registerTest -testname "version"
-    registerTest -testname "endpoints" -moreParams "--skipEndpointsIpv6 true"
+    registerTest -testname "endpoints"
     comm
 }
 
