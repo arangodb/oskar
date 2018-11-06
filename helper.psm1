@@ -1120,7 +1120,7 @@ Function createReport
                             $file = $($dir.BaseName).Substring(0,$($dir.BaseName).Length-4)+".stdout.log"
                             Write-Host "Crash occured in $file"
                             "Crash occured in $file" | Add-Content "$env:TMP\testProtocol.txt"
-                            $global:badtests = $global:badtests + "Bad result in $file`r`n"
+                            $global:badtests = $global:badtests + "Crash occured in $file`r`n"
                         }   
             }
         Else
