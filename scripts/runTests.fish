@@ -179,8 +179,7 @@ function launchCatchTest
   end
 
   switch $launchCount
-    case  0 ; jslint
-    case  1 ; test1         catch ""
+    case  0 ; test1         catch ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
