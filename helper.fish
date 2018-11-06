@@ -69,7 +69,7 @@ function showConfig
   echo
   echo 'Test Configuration'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'
-  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience)'
+  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/catchtest)'
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'
@@ -133,6 +133,7 @@ end
 function single ; set -gx TESTSUITE single ; end
 function cluster ; set -gx TESTSUITE cluster ; end
 function resilience ; set -gx TESTSUITE resilience ; end
+function catchtest ; set -gx TESTSUITE catchtest ; end
 if test -z "$TESTSUITE" ; cluster
 else ; set -gx TESTSUITE $TESTSUITE ; end
 

@@ -1107,6 +1107,17 @@ Function createReport
                             $global:badtests = $global:badtests + "Bad result in $file`r`n"
                         }   
             }
+        Elseif(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json")
+            {
+                        If(-Not($(Get-Content "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json") -eq "false"))
+                        {
+                            $global:result = "BAD"
+                            $file = $($dir.BaseName).Substring(0,$($dir.BaseName).Length-4)+".stdout.log"
+                            Write-Host "Crash occured in $file"
+                            "Crash occured in $file" | Add-Content "$env:TMP\testProtocol.txt"
+                            $global:badtests = $global:badtests + "Crash occured in $file`r`n"
+                        }   
+            }
         Else
             {
                 Write-Host "No Testresult found at directory $($dir.BaseName)"

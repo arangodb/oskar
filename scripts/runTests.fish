@@ -130,6 +130,62 @@ function launchSingleTests
   return 1
 end
 
+function launchCatchTest
+  function jslint
+    if test $VERBOSEOSKAR = On ; echo Launching jslint $argv ; end
+    echo utils/jslint.sh
+    utils/jslint.sh > $TMPDIR/jslint.log &
+  end
+
+  function test1
+    if test $VERBOSEOSKAR = On ; echo Launching $argv ; end
+
+    set -l t $argv[1]
+    set -l tt $argv[2]
+    set -e argv[1..2]
+    if grep $t UnitTests/OskarTestSuitesBlackList
+      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
+    else
+      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false
+      scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
+        --minPort $portBase --maxPort (math $portBase + 99) $argv \
+        --skipNondeterministic true --skipTimeCritical true \
+        --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
+        >"$t""$tt".log ^&1 &
+      set -g portBase (math $portBase + 100)
+      sleep 1
+    end
+  end
+
+  function test1MoreLogs
+    if test $VERBOSEOSKAR = On ; echo Launching $argv ; end
+
+    set -l t $argv[1]
+    set -l tt $argv[2]
+    set -e argv[1..2]
+    if grep $t UnitTests/OskarTestSuitesBlackList
+      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
+    else
+      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --extraArgs:log.level replication=trace
+      scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
+        --minPort $portBase --maxPort (math $portBase + 99) $argv \
+        --skipNondeterministic true --skipTimeCritical true \
+        --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
+        --extraArgs:log.level replication=trace \
+        >"$t""$tt".log ^&1 &
+      set -g portBase (math $portBase + 100)
+      sleep 1
+    end
+  end
+
+  switch $launchCount
+    case  0 ; test1         catch ""
+    case '*' ; return 0
+  end
+  set -g launchCount (math $launchCount + 1)
+  return 1
+end
+
 function launchClusterTests
   function test1
     if test $VERBOSEOSKAR = On ; echo Launching $argv ; end
@@ -255,6 +311,15 @@ function createReport
         set badtests $badtests "Bad result in $f"
       end
     end
+    if test -f "$d/UNITTEST_RESULT_CRASHED.json"
+      if not grep false "$d/UNITTEST_RESULT_CRASHED.json"
+        set -g result BAD
+        set f (basename -s out $d)log
+        echo a Crash occured in $f
+        echo a Crash occured in $f >> testProtocol.txt
+        set badtests $badtests "a Crash occured in $f"
+      end
+    end
   end
 
   if test -e "jslint.log"
@@ -321,6 +386,10 @@ switch $TESTSUITE
   case "single"
     resetLaunch 1
     waitOrKill 3600 launchSingleTests
+    createReport
+  case "catchtest"
+    resetLaunch 1
+    waitOrKill 3600 launchCatchTest
     createReport
   case "resilience"
     resetLaunch 4
