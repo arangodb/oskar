@@ -179,6 +179,11 @@ function silentBuild ; set -gx VERBOSEBUILD Off ; end
 if test -z "$VERBOSEBUILD"; silentBuild
 else ; set -gx VERBOSEBUILD $VERBOSEBUILD ; end
 
+function skipGrey ; set -gx SKIPGREY true ; end
+function includeGrey ; set -gx SKIPGREY false ; end
+if test -z "$SKIPGREY"; includeGrey
+else ; set -gx SKIPGREY $SKIPGREY ; end
+
 function keepBuild ; set -gx NO_RM_BUILD 1 ; end
 function clearBuild ; set -gx NO_RM_BUILD ; end
 

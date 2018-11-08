@@ -16,7 +16,7 @@ or begin
   exit 1
 end
 
-enterprise ; rocksdb ; cluster
+enterprise ; rocksdb ; cluster ; skipGrey
 
 oskar1
 or begin
@@ -31,7 +31,7 @@ mv cmakeArangoDB.log cmakeArangoDBEnterprise.log
 mv buildArangoDB.log buildArangoDBEnterprise.log
 moveResultsToWorkspace
 
-community ; mmfiles ; single
+community ; mmfiles ; single ; skipGrey
 
 oskar1
 

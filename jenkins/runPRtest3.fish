@@ -3,6 +3,7 @@ source jenkins/helper.jenkins.fish;
 
 and prepareOskar; and lockDirectory ; and updateOskar ; and clearResults
 and eval $EDITION ; and eval $STORAGE_ENGINE ; and eval $TEST_SUITE
+and skipGrey
 
 if $status -ne 0; return $status ; end
 

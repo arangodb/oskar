@@ -147,6 +147,7 @@ function runInContainer
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
+             -e SKIPGREY="$SKIPGREY" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c" ; docker stop $c >/dev/null ; end

@@ -59,12 +59,12 @@ function launchSingleTests
     if grep $t UnitTests/OskarTestSuitesBlackList
       echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
     else
-      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false
+      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --skipGrey "$SKIPGREY"
       scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
         --minPort $portBase --maxPort (math $portBase + 99) $argv \
         --skipNondeterministic true --skipTimeCritical true \
         --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
-        >"$t""$tt".log ^&1 &
+        --skipGrey "$SKIPGREY" >"$t""$tt".log ^&1 &
       set -g portBase (math $portBase + 100)
       sleep 1
     end
@@ -79,13 +79,13 @@ function launchSingleTests
     if grep $t UnitTests/OskarTestSuitesBlackList
       echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
     else
-      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --extraArgs:log.level replication=trace
+      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --extraArgs:log.level replication=trace --skipGrey "$SKIPGREY"
       scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
         --minPort $portBase --maxPort (math $portBase + 99) $argv \
         --skipNondeterministic true --skipTimeCritical true \
         --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
         --extraArgs:log.level replication=trace \
-        >"$t""$tt".log ^&1 &
+        --skipGrey "$SKIPGREY" >"$t""$tt".log ^&1 &
       set -g portBase (math $portBase + 100)
       sleep 1
     end
@@ -150,12 +150,12 @@ function launchCatchTest
     if grep $t UnitTests/OskarTestSuitesBlackList
       echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
     else
-      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false
+      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --skipGrey "$SKIPGREY"
       scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
         --minPort $portBase --maxPort (math $portBase + 99) $argv \
         --skipNondeterministic true --skipTimeCritical true \
         --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
-        >"$t""$tt".log ^&1 &
+        --skipGrey "$SKIPGREY" >"$t""$tt".log ^&1 &
       set -g portBase (math $portBase + 100)
       sleep 1
     end
@@ -170,13 +170,13 @@ function launchCatchTest
     if grep $t UnitTests/OskarTestSuitesBlackList
       echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
     else
-      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --extraArgs:log.level replication=trace
+      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --extraArgs:log.level replication=trace --skipGrey "$SKIPGREY"
       scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
         --minPort $portBase --maxPort (math $portBase + 99) $argv \
         --skipNondeterministic true --skipTimeCritical true \
         --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
         --extraArgs:log.level replication=trace \
-        >"$t""$tt".log ^&1 &
+        --skipGrey "$SKIPGREY" >"$t""$tt".log ^&1 &
       set -g portBase (math $portBase + 100)
       sleep 1
     end
@@ -199,12 +199,12 @@ function launchClusterTests
     if grep $t UnitTests/OskarTestSuitesBlackList
       echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
     else
-      echo scripts/unittest $t --cluster true --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false
+      echo scripts/unittest $t --cluster true --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --skipGrey "$SKIPGREY"
       scripts/unittest $t --cluster true --storageEngine $STORAGEENGINE \
         --minPort $portBase --maxPort (math $portBase + 99) $argv \
         --skipNondeterministic true --skipTimeCritical true \
         --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
-        >"$t""$tt".log ^&1 &
+        --skipGrey "$SKIPGREY" >"$t""$tt".log ^&1 &
       set -g portBase (math $portBase + 100)
       sleep 1
     end
@@ -215,13 +215,13 @@ function launchClusterTests
     if grep $argv[1] UnitTests/OskarTestSuitesBlackList
       echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
     else
-      echo scripts/unittest $argv[1] --test $argv[3] --storageEngine $STORAGEENGINE --cluster true --minPort $portBase --maxPort (math $portBase + 99) --skipNondeterministic true --testOutput "$TMPDIR/$argv[1]_$argv[2].out" --writeXmlReport false
+      echo scripts/unittest $argv[1] --test $argv[3] --storageEngine $STORAGEENGINE --cluster true --minPort $portBase --maxPort (math $portBase + 99) --skipNondeterministic true --testOutput "$TMPDIR/$argv[1]_$argv[2].out" --writeXmlReport false --skipGrey "$SKIPGREY"
       scripts/unittest $argv[1] --test $argv[3] \
         --storageEngine $STORAGEENGINE --cluster true \
         --minPort $portBase --maxPort (math $portBase + 99) \
         --skipNondeterministic true \
         --testOutput "$TMPDIR/$argv[1]_$argv[2].out" --writeXmlReport false \
-        >$argv[1]_$argv[2].log ^&1 &
+        --skipGrey "$SKIPGREY" >$argv[1]_$argv[2].log ^&1 &
       set -g portBase (math $portBase + 100)
       sleep 1
     end

@@ -3,11 +3,12 @@ source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults
 
-eval $EDITION ; eval $STORAGE_ENGINE ; eval $TEST_SUITE ; skipGrey
-parallelism 20
+eval $EDITION ; eval $STORAGE_ENGINE ; eval $TEST_SUITE ; includeGrey
 
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and oskar1Limited
+and parallelism 20
+and compiler "$COMPILER_VERSION"
+and oskar1Full
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
