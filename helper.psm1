@@ -146,6 +146,7 @@ Function showConfig
     Write-Host "Buildmode      : "$BUILDMODE
     Write-Host "Enterprise     : "$ENTERPRISEEDITION
     Write-Host "Maintainer     : "$MAINTAINER
+    Write-host "SkipGrey       : "$SKIPGREY
     Write-Host " "
     Write-Host "Generator      : "$GENERATOR
     Write-Host "Packaging      : "$PACKAGING
@@ -260,6 +261,19 @@ Function maintainerOff
 If(-Not($MAINTAINER))
 {
     maintainerOn
+}
+
+Function skipGrey
+{
+    $global:SKIPGREY = "true"
+}
+Function includeGrey
+{
+    $global:SKIPGREY = "false"
+}
+if(-Not($SKIPGREY))
+{
+    includeGrey
 }
 
 Function debugMode
@@ -905,7 +919,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     	if ($index) {
     	  $output = $output+"_$index"
     	}
-    	$testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true"
+    	$testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true --skipGrey $global:SKIPGREY"
     	
     	$testparams = $testparams+" --testOutput $env:TMP\$output.out"
     	
