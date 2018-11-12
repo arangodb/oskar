@@ -391,7 +391,7 @@ switch $TESTSUITE
     createReport
   case "catchtest"
     resetLaunch 1
-    waitOrKill 3600 launchCatchTest
+    waitOrKill 1800 launchCatchTest
     createReport
   case "resilience"
     resetLaunch 4
