@@ -4,7 +4,14 @@ program=$(basename $me)
 installation=$(dirname $(dirname $me))
 executable=$installation/usr/bin/$program
 if [ -x $executable ] ; then
-  exec $executable --server.arangod=$installation/usr/sbin/arangod --server.js-dir=$installation/usr/share/arangodb3/js "$@"
+  case $1 in
+    abort|auth|create|help|remove|retry|start|stop|upgrade|version)
+      exec $executable "$@"
+      ;;
+    *)
+      exec $executable --server.arangod=$installation/usr/sbin/arangod --server.js-dir=$installation/usr/share/arangodb3/js "$@"
+      ;;
+  esac
 fi
 echo "Could not find executable!"
 exit 1
