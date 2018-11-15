@@ -1,10 +1,10 @@
 #!/bin/sh
-me=$(realpath $0)
-program=$(basename $me)
-installation=$(dirname $(dirname $me))
+me=$(realpath "$0")
+program=$(basename "$me")
+installation=$(dirname "$(dirname "$me")")
 executable=$installation/usr/sbin/$program
-if [ -x $executable ] ; then
-  exec $executable --configuration none "$@"
+if [ -x "$executable" ] ; then
+  exec "$executable" --configuration none "$@"
 fi
 echo "Could not find executable!"
 exit 1
