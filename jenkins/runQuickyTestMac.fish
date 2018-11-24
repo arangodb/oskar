@@ -16,11 +16,11 @@ or begin
   exit 1
 end
 
-if test -z "$PARALLELISM_FULL_TEST"
-  set -g PARALLELISM_FULL_TEST 20
+if test -z "$PARALLELISM_QUICKY_TEST"
+  set -g PARALLELISM_QUICKY_TEST 20
 end
 
-parallelism "$PARALLELISM_FULL_TEST"
+parallelism "$PARALLELISM_QUICKY_TEST"
 
 enterprise ; rocksdb ; cluster ; skipGrey
 
