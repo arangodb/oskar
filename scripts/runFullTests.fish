@@ -73,7 +73,7 @@ function launchSingleTests
   end
 
   function test1MoreLogs
-    if test $VERBOSEOSKAR = On ; echo Launching $argv "$launchCount" ; end
+    if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
 
     set -l t $argv[1]
     set -l tt $argv[2]
