@@ -1024,7 +1024,7 @@ Function LaunchController($seconds)
         $currentRunningNames = @()
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
-                if ($test['process'].HasExited()) {
+                if ($test['process'].HasExited) {
                     $currentScore = $currentScore - $test['weight']
                     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identifier'] $test['launchdate']
                     $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
