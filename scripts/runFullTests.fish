@@ -156,7 +156,8 @@ function launchSingleTests
     case 57 ; test1         queryCacheAuthorization ""
     case 58 ; test1         readOnly ""
     case 59 ; test1         upgrade ""
-    case 60 ; test1         version ""
+    case 60 ; test1         upgrade_data_* ""
+    case 61 ; test1         version ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)

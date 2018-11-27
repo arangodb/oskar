@@ -452,6 +452,20 @@ Function checkoutArangoDB
         proc -process "git" -argument "clone https://github.com/arangodb/ArangoDB" -logfile $false
     }
     Pop-Location
+    {
+        Push-Location $pwd
+        Set-Location "$INNERWORKDIR\ArangoDB"
+        If(-Not(Test-Path -PathType Container -Path "upgrade-data-tests"))
+        {
+            If(Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
+            {
+                Remove-Item -Force "$HOME\.ssh\known_hosts"
+                proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false
+            }
+            proc -process "git" -argument "clone ssh://git@github.com/arangodb/upgrade-data-tests" -logfile $false
+        }
+        Pop-Location
+    }
 }
 
 Function checkoutEnterprise
