@@ -887,6 +887,7 @@ Function launchTest($which) {
 
     $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
     Write-Host $str
+    $global:launcheableTests[$which]['process'] = $process
     Pop-Location
 }
 
@@ -1023,15 +1024,15 @@ Function LaunchController($seconds)
         $currentRunningNames = @()
         ForEach ($test in $global:launcheableTests) {
             if ($test['pid'] -gt 0) {
-                if ($(Get-WmiObject win32_process | Where {$_.ProcessId -eq $test['pid']})) {
-                  $currentRunningNames += $test['identifier']
-                  $currentRunning = $currentRunning+1
-                }
-                Else {
+                if ($test['process'].HasExited()) {
                     $currentScore = $currentScore - $test['weight']
                     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identifier'] $test['launchdate']
                     $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
                     $test['pid'] = -1
+                }
+                Else {
+                    $currentRunningNames += $test['identifier']
+                    $currentRunning = $currentRunning+1
                 }
             }
         }
