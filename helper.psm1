@@ -1066,15 +1066,18 @@ Function LaunchController($seconds)
                 $str=$childChildChildProcesses | Out-String
                 Write-Host $str
                 Stop-Process -Force -Id $childChildChildProcesses.Handle
+                Set-Variable -Name "ok" -Value $false -Scope global
               }
               Write-Host "killing child2: "
               $str=$childChildProcesses | Out-String
               Write-Host $str
               Stop-Process -Force -Id $childChildProcesses.Handle
+              Set-Variable -Name "ok" -Value $false -Scope global
             }
             Write-Host "killing child: "
             $str=$childProcesses | Out-String
             Write-Host $str
+            Set-Variable -Name "ok" -Value $false -Scope global
 
             Stop-Process -Force -Id $childProcesses.Handle
           }
