@@ -22,6 +22,7 @@ $global:launcheableTests = @()
 $global:maxTestCount = 0
 $global:testCount = 0
 $global:portBase = 10000
+$global:result = "GOOD"
 
 $global:ok = $true
 
@@ -1043,7 +1044,7 @@ Function LaunchController($seconds)
         Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - "$seconds" - Running Tests: "$a
         $seconds = $seconds - 5
     }
-    if ($seconds < 1) {
+    if ($seconds -lt 1) {
       Write-Host "tests timeout reached. Current state of worker jobs:"
     }
     Else {
@@ -1066,20 +1067,18 @@ Function LaunchController($seconds)
                 $str=$childChildChildProcesses | Out-String
                 Write-Host $str
                 Stop-Process -Force -Id $childChildChildProcesses.Handle
-                Set-Variable -Name "ok" -Value $false -Scope global
               }
               Write-Host "killing child2: "
               $str=$childChildProcesses | Out-String
               Write-Host $str
               Stop-Process -Force -Id $childChildProcesses.Handle
-              Set-Variable -Name "ok" -Value $false -Scope global
             }
             Write-Host "killing child: "
             $str=$childProcesses | Out-String
             Write-Host $str
-            Set-Variable -Name "ok" -Value $false -Scope global
 
             Stop-Process -Force -Id $childProcesses.Handle
+            $global:result = "BAD"
           }
           Stop-Process -Force -Id $test['pid']
         }
@@ -1111,7 +1110,6 @@ Function createReport
 {
     $date = $(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH.mm.ssZ")
     $date | Add-Content "$env:TMP\testProtocol.txt"
-    $global:result = "GOOD"
     $global:badtests = $null
     new-item $env:TMP\oskar-junit-report -itemtype directory
     ForEach($dir in (Get-ChildItem -Path $env:TMP  -Directory -Filter "*.out"))
