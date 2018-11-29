@@ -1364,8 +1364,10 @@ Function makeRelease
     signPackageOn
     community
     buildArangoDB
+    storeSymbols
     moveResultsToWorkspace
     enterprise
     buildArangoDB
+    storeSymbols
     moveResultsToWorkspace
 }
