@@ -1053,7 +1053,7 @@ Function LaunchController($seconds)
     $str=$global:launcheableTests | Out-String
     Write-Host $str
   
-    Get-WmiObject win32_process | Output-File 
+    Get-WmiObject win32_process | Out-File 
     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have "$currentRunning" tests that timed out! Currently running processes:"
     ForEach ($test in $global:launcheableTests) {
         if ($test['pid'] -gt 0) {
@@ -1083,7 +1083,7 @@ Function LaunchController($seconds)
           Stop-Process -Force -Id $test['pid']
         }
     }
-    Get-WmiObject win32_process | Output-File 
+    Get-WmiObject win32_process | Out-File 
     comm
 }
 
