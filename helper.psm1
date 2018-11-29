@@ -795,7 +795,7 @@ Function storeSymbols
     If((Get-SmbConnection).ServerName -eq "symbol.arangodb.biz")
     {
         findArangoDBVersion
-        proc -process "symstore" -argument "add /f `"$(Get-ChildItem "$global:ARANGODIR\build" -Recurse -Filter "*.pdb")`"  /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
+        proc -process "symstore" -argument "add /f `"$((Get-ChildItem "$global:ARANGODIR\build" -Recurse -Filter "*.pdb").FullName)`"  /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
         If(!$global:OK)
         {
             Write-Host "symstore error, see $INNERWORKDIR\symstore.* for details."
