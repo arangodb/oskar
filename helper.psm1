@@ -790,6 +790,23 @@ Function buildStaticArangoDB
     buildArangoDB
 }
 
+Function storeSymbols
+{
+    If((Get-SmbConnection).ServerName -eq "symbol.arangodb.biz")
+    {
+        findArangoDBVersion
+        proc -process "symstore" -argument "add /f `"$(Get-ChildItem "$global:ARANGODIR\build" -Recurse -Filter "*.pdb")`"  /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
+        If(!$global:OK)
+        {
+            Write-Host "symstore error, see $INNERWORKDIR\symstore.* for details."
+        }
+    }
+    Else
+    {
+        Write-Host "symstore error, no share mounted !"
+    }
+}
+
 Function moveResultsToWorkspace
 {
     Write-Host "Moving reports and logs to $ENV:WORKSPACE ..."
