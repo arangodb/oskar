@@ -828,6 +828,11 @@ function buildDockerImage
   popd
 
   pushd $WORKDIR/containers/arangodb.docker
+  and if test "$ENTERPRISEEDITION" = "On"
+    cp -a entrypoint_enterprise.sh entrypoint.sh
+  else
+    cp -a entrypoint_community.sh entrypoint.sh
+  end
   and docker build -t $imagename .
   or begin ; popd ; return 1 ; end
   popd
