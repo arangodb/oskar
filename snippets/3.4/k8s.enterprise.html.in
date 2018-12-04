@@ -1,0 +1,27 @@
+<div>
+  <p>ArangoDB is available for Kubernetes. In order to install ArangoDB in your Kubernetes Cluster first deploy the latest operator.
+  Please find instructions <a href="https://github.com/arangodb/kube-arangodb/blob/master/README.md" target="_blank">here</a>.</p>
+  <p>Then deploy the following YAML-file containing the license key secret:
+  <pre>
+apiVersion: v1
+data:
+  token: @ARANGODB_LICENSE_KEY_BASE64@
+kind: Secret
+metadata:
+  name: arangodb-license-key
+type: Opaque
+  </pre>
+  <p>
+  After that create and deploy a <a href="https://github.com/arangodb/kube-arangodb/blob/master/docs/Manual/Deployment/Kubernetes/DeploymentResource.md" target="_blank">ArangoDBDeployment</a> resource according to your needs and additionally specify
+  </p>
+  <pre>
+  spec:
+    [...]
+    image: @DOCKER_IMAGE@
+  </pre>
+  <p>
+    You should check the
+    <a href="https://docs.arangodb.com/cookbook/Cloud/DockerContainer.html" target="_blank">information</a>
+    about running ArangoDB on Kubernetes.
+  </p>
+</div>
