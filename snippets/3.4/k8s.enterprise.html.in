@@ -5,16 +5,9 @@
     find instructions
     <a href="https://github.com/arangodb/kube-arangodb/blob/master/README.md" target="_blank">here</a>.
   </p>
-  <p>
-    Then deploy the following YAML-file containing the license key secret:
+  <p>Then use the statement below to deploy your license key as secret:</p>
   <pre>
-apiVersion: v1
-data:
-  token: @ARANGODB_LICENSE_KEY_BASE64@
-kind: Secret
-metadata:
-  name: arangodb-license-key
-type: Opaque
+kubectl create secret generic arango-license-key --from-literal=token="@ARANGO_LICENSE_KEY@"
   </pre>
   <p>
     After that create and deploy a
@@ -25,6 +18,8 @@ type: Opaque
   spec:
     [...]
     image: @DOCKER_IMAGE@
+    license:
+      secretName: arango-license-key
   </pre>
   <p>
     You should check the
