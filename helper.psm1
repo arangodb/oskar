@@ -689,31 +689,6 @@ Function configureWindows
     Pop-Location
 }
 
-Function generateSnippets
-{   
-    findArangoDBVersion | Out-Null
-    $template = Get-Content "$global:WORKDIR\snippets\$global:ARANGODB_VERSION_MAJOR.$global:ARANGODB_VERSION_MINOR\windows.html.in"
-    $template = $template -replace "@DOWNLOAD_LINK@","$env:DOWNLOAD_LINK"
-    $template = $template -replace "@WINDOWS_NAME_SERVER_EXE@","$env:WINDOWS_NAME_SERVER_EXE"
-    $template = $template -replace "@WINDOWS_SIZE_SERVER_EXE@","$env:WINDOWS_SIZE_SERVER_EXE"
-    $template = $template -replace "@WINDOWS_SHA256_SERVER_EXE@","$env:WINDOWS_SHA256_SERVER_EXE"
-    $template = $template -replace "@WINDOWS_NAME_CLIENT_EXE@","$env:WINDOWS_NAME_CLIENT_EXE"
-    $template = $template -replace "@WINDOWS_SIZE_CLIENT_EXE@","$env:WINDOWS_SIZE_CLIENT_EXE"
-    $template = $template -replace "@WINDOWS_SHA256_CLIENT_EXE@","$env:WINDOWS_SHA256_CLIENT_EXE"
-    $template = $template -replace "@WINDOWS_NAME_SERVER_ZIP@","$env:WINDOWS_NAME_SERVER_ZIP"
-    $template = $template -replace "@WINDOWS_SIZE_SERVER_ZIP@","$env:WINDOWS_SIZE_SERVER_ZIP"
-    $template = $template -replace "@WINDOWS_SHA256_SERVER_ZIP@","$env:WINDOWS_SHA256_SERVER_ZIP"
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        $template | Out-File -FilePath "$INNERWORKDIR\download-windows-enterprise.html"
-    }
-    Else
-    {
-        $template | Out-File -FilePath "$INNERWORKDIR\download-windows-community.html"
-    }
-    comm
-}
-
 Function buildWindows 
 {
     Push-Location $pwd
@@ -729,8 +704,42 @@ Function buildWindows
           Copy-Item "$global:ARANGODIR\build\tests\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\tests\"; comm
         }
     }
-    generateSnippets
     Pop-Location
+}
+
+Function generateSnippets
+{   
+    findArangoDBVersion | Out-Null
+    Set-Location "$global:ARANGODIR\build\" 
+    
+    If($ENTERPRISEEDITION -eq "On")
+    {
+        $snippet = "$INNERWORKDIR\download-windows-enterprise.html"
+        $package_server = Get-ChildItem -Filter ArangoDB3e-*.exe | Where-Object {$_.Name -notmatch "client"}
+        $package_client = Get-ChildItem -Filter ArangoDB3e-client-*.exe
+        $package_zip = Get-ChildItem -Filter ArangoDB3e-*.zip
+    }
+    Else
+    {
+        $snippet = "$INNERWORKDIR\download-windows-community.html"
+        $package_server = Get-ChildItem -Filter ArangoDB3-*.exe | Where-Object {$_.Name -notmatch "client"}
+        $package_client = Get-ChildItem -Filter ArangoDB3-client-*.exe
+        $package_zip = Get-ChildItem -Filter ArangoDB3-*.zip
+    }
+  
+    $template = Get-Content "$global:WORKDIR\snippets\$global:ARANGODB_VERSION_MAJOR.$global:ARANGODB_VERSION_MINOR\windows.html.in"
+    $template = $template -replace "@DOWNLOAD_LINK@","$env:DOWNLOAD_LINK"
+    $template = $template -replace "@WINDOWS_NAME_SERVER_EXE@","$($package_server.Name)"
+    $template = $template -replace "@WINDOWS_SIZE_SERVER_EXE@","$((Get-Item $package_server.FullName).Length)"
+    $template = $template -replace "@WINDOWS_SHA256_SERVER_EXE@","$((Get-FileHash -Algorithm SHA256 -Path $package_server.FullName).Hash)"
+    $template = $template -replace "@WINDOWS_NAME_CLIENT_EXE@","$($package_client.Name)"
+    $template = $template -replace "@WINDOWS_SIZE_CLIENT_EXE@","$((Get-Item $package_client.FullName).Length)"
+    $template = $template -replace "@WINDOWS_SHA256_CLIENT_EXE@","$((Get-FileHash -Algorithm SHA256 -Path $package_client.FullName).Hash)"
+    $template = $template -replace "@WINDOWS_NAME_SERVER_ZIP@","$($package_zip.Name)"
+    $template = $template -replace "@WINDOWS_SIZE_SERVER_ZIP@","$((Get-Item $package_zip.FullName).Length)"
+    $template = $template -replace "@WINDOWS_SHA256_SERVER_ZIP@","$((Get-FileHash -Algorithm SHA256 -Path $package_zip.FullName).Hash)"
+    $template | Out-File -FilePath $snippet
+    comm
 }
 
 Function packageWindows
@@ -743,6 +752,7 @@ Function packageWindows
         Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$TARGET`""
         proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --target `"$TARGET`"" -logfile "$INNERWORKDIR\$TARGET-package"
     }
+    generateSnippets
     Pop-Location
 }
 
