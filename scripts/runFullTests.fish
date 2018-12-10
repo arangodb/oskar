@@ -454,11 +454,11 @@ switch $TESTSUITE
     createReport
   case "catchtest"
     resetLaunch 1
-    waitOrKill 3600 launchCatchTest
+    waitOrKill 1800 launchCatchTest
     createReport
   case "resilience"
     resetLaunch 4
-    waitOrKill 1800 launchResilienceTests
+    waitOrKill 3600 launchResilienceTests
     createReport
   case "*"
     echo Unknown test suite $TESTSUITE
