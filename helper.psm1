@@ -87,6 +87,12 @@ Function hostKey
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false
 }
 
+Function uploadSymbols
+{
+    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_arangodb*"; comm
+    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/ gs://download.arangodb.com"; comm
+}
+
 ################################################################################
 # Locking
 ################################################################################
@@ -804,12 +810,13 @@ Function storeSymbols
     Else
     {
         findArangoDBVersion | Out-Null
+        $SYMSTORE = $(Get-ChildItem C:\ -Recurse "symstore.exe" -ErrorAction SilentlyContinue).FullName[0]
         ForEach($symbol in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
         {
-            proc -process "symstore" -argument "add /f `"$symbol`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
+            proc -process $SYMSTORE -argument "add /f `"$symbol`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
         }
     }
-
+    uploadSymbols
 }
 
 Function buildArangoDB
@@ -1453,8 +1460,8 @@ Function makeEnterpriseRelease
     skipPackagingOff
     signPackageOn
     enterprise
-    storeSymbols
     buildArangoDB
+    storeSymbols
     moveResultsToWorkspace
 }
 
