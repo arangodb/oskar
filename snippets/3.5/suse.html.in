@@ -1,0 +1,57 @@
+<div>
+  <p>
+    We provide a single package containing the server and the client tools. For a
+    standard server setup, download the package <strong>Server</strong> and
+    install it using the package manager. You do not need the client tools.
+
+    The <strong>Client Tools</strong> package only contains the tools, like arangosh,
+    arangodump, but nor the server. Use this in case you are already running
+    ArangoDB on a different machine and want to connect to that server from a
+    client machine.
+
+    As an alternative there is a <strong>Tar</strong> containing the server and
+    client tools which can be install in any location and which does not
+    require root rights for installation.
+  </p>
+  <hr/>
+  <p>
+    <strong>RPM</strong> packages
+  </p>
+  <ul>
+    <li>
+      <a href="@DOWNLOAD_LINK@/Linux/@RPM_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      (@RPM_SIZE_SERVER@ MByte, SHA256 @RPM_SHA256_SERVER@)
+    </li>
+    <li>
+      <a href="@DOWNLOAD_LINK@/Linux/@RPM_NAME_CLIENT@">Client Tools @ARANGODB_VERSION@</a><br>
+      (@RPM_SIZE_CLIENT@ MByte, SHA256 @RPM_SHA256_CLIENT@)
+    </li>
+    <li>
+      <a href="@DOWNLOAD_LINK@/Linux/@RPM_NAME_DEBUG_SYMBOLS@">Debug Symbols @ARANGODB_VERSION@</a><br>
+      (@RPM_SIZE_DEBUG_SYMBOLS@ MByte, SHA256 @RPM_SHA256_DEBUG_SYMBOLS@)
+    </li>
+  </ul>
+  <hr/>
+  <p>
+    <strong>Tar</strong> packages
+  </p>
+  <ul>
+    <li>
+      <a href="@DOWNLOAD_LINK@/Linux/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      (@TARGZ_SIZE_SERVER@ MByte, SHA256 @TARGZ_SHA256_SERVER@)
+    </li>
+  </ul>
+  <hr/>
+  <p>
+    Installation via <strong>Package Manager</strong>
+  </p>
+  <p>
+    Run the following as root:
+  </p>
+  <pre>
+    zypper --no-gpg-checks --gpg-auto-import-keys addrepo https://download.arangodb.com/arangodb34/RPM/arangodb.repo
+
+    zypper --no-gpg-checks --gpg-auto-import-keys refresh
+    zypper -n install arangodb3=@ARANGODB_VERSION@
+  </pre>
+</div>

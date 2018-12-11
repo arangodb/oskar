@@ -1,0 +1,25 @@
+<div>
+  <p>
+    We provide a single package containing the server and the client tools. For a
+    standard server setup, download the package <strong>Server</strong> and
+    install it using the package manager.
+
+    As an alternative there is a <strong>Tar</strong> containing the server and
+    client tools which can be install in any location.
+  </p>
+  <hr/>
+  <p><strong>DMG</strong> packages</p>
+  <ul>
+    <li>
+      <a href="@DOWNLOAD_LINK@/MacOSX/@BUNDLE_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      (@BUNDLE_SIZE_SERVER@ MByte, SHA256 @BUNDLE_SHA256_SERVER@)
+    </li>
+  </ul>
+  <p><strong>Tar</strong> packages</p>
+  <ul>
+    <li>
+      <a href="@DOWNLOAD_LINK@/MacOSX/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      (@TARGZ_SIZE_SERVER@ MByte, SHA256 @TARGZ_SHA256_SERVER@)
+    </li>
+  </ul>
+</div>

@@ -1,0 +1,11 @@
+<div>
+  <p>ArangoDB is available as docker container. In order to install the stand-alone version use</p>
+  <pre>
+    docker run -p 8529:8529 -e ARANGO_ROOT_PASSWORD=openSesame -e ARANGO_LICENSE_KEY=@ARANGODB_LICENSE_KEY@ @DOCKER_IMAGE@
+  </pre>
+  <p>
+    You should check the
+    <a href="https://docs.arangodb.com/3.4/Manual/Deployment/Docker/" target="_blank">information</a>
+    about running ArangoDB in container and how to persist your data under docker.
+  </p>
+</div>
