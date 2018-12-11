@@ -1,4 +1,4 @@
-. $PSScriptRoot\lib\Utils.psm1
+& $PSScriptRoot\lib\Utils.psm1
 
 ################################################################################
 # Test control
