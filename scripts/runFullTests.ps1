@@ -137,14 +137,8 @@ Function runTests
         "single"
         {
             registerSingleTests
-            LaunchController 5400
+            LaunchController 7200
             createReport
-            Break
-        }
-        "resilience"
-        {
-            Write-Host "resilience tests currently not implemented"
-            $global:result = "BAD"
             Break
         }
         "catchtest"
@@ -152,6 +146,12 @@ Function runTests
             registerTest -testname "catch"
             LaunchController 1800
             createReport
+            Break
+        }
+        "resilience"
+        {
+            Write-Host "resilience tests currently not implemented"
+            $global:result = "BAD"
             Break
         }
         "*"
