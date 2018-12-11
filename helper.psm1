@@ -196,6 +196,7 @@ Function resilience
 Function catchtest
 {
     $global:TESTSUITE = "catchtest"
+    $global:TESTSUITE_TIMEOUT = 1800
 }
 If(-Not($TESTSUITE))
 {
