@@ -592,6 +592,11 @@ cross_source_check_docublocks() { #TODO review
 
     # These files are converted to docublocks on the fly and only live in memory.
     local example_dir="$ARANGO_SOURCE_DOC/Examples/"
+
+    # expand filename patterns to null string if no files match instead of to return themselves
+    # https://www.endpoint.com/blog/2016/12/12/bash-loop-wildcards-nullglob-failglob
+    shopt -s nullglob
+
     for file in "$example_dir"*.json ; do
         local file_name="${file#$example_dir}"
         local app=${file_name%.json}
@@ -599,6 +604,9 @@ cross_source_check_docublocks() { #TODO review
                            -e "s;.json;;" \
         >> /tmp/rawinprog.txt
     done
+
+    # disable optional behavior again
+    shopt -u nullglob
 
     echo "Generated: startDocuBlockInline errorCodes">> /tmp/rawinprog.txt
     debug "lines rawinprog $(cat /tmp/rawinprog.txt | wc -l)"
