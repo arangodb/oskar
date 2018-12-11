@@ -88,6 +88,12 @@ Function hostKey
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false
 }
 
+Function uploadSymbols
+{
+    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_arangodb*"; comm
+    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/ gs://download.arangodb.com"; comm
+}
+
 ################################################################################
 # Locking
 ################################################################################
@@ -786,7 +792,7 @@ Function signWindows
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build\"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    $SIGNTOOL = $(Get-ChildItem C:\ -Recurse "signtool.exe" -ErrorAction SilentlyContinue).FullName[0]
+    $SIGNTOOL = $(Get-ChildItem C:\ -Recurse "signtool.exe" -ErrorAction SilentlyContinue | Where-Object {$_.FullName -match "x64"}).FullName[0]
     ForEach($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
         Write-Host "Sign: $SIGNTOOL sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
@@ -798,6 +804,8 @@ Function signWindows
 
 Function storeSymbols
 {
+    Push-Location $pwd
+    Set-Location "$global:ARANGODIR\build\"
     If(-not((Get-SmbMapping -LocalPath S:).Status -eq "OK"))
     {
         New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true
@@ -805,12 +813,14 @@ Function storeSymbols
     Else
     {
         findArangoDBVersion | Out-Null
-        ForEach($symbol in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
+        $SYMSTORE = $(Get-ChildItem C:\ -Recurse "symstore.exe" -ErrorAction SilentlyContinue | Where-Object {$_.FullName -match "x64"}).FullName[0]
+        ForEach($SYMBOL in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
         {
-            proc -process "symstore" -argument "add /f `"$symbol`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
+            proc -process "$SYMSTORE" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
         }
     }
-
+    uploadSymbols
+    Pop-Location
 }
 
 Function buildArangoDB
@@ -1097,8 +1107,8 @@ Function makeEnterpriseRelease
     skipPackagingOff
     signPackageOn
     enterprise
-    storeSymbols
     buildArangoDB
+    storeSymbols
     moveResultsToWorkspace
 }
 
