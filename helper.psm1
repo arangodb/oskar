@@ -73,11 +73,6 @@ Function comm
     Set-Variable -Name "ok" -Value $? -Scope global
 }
 
-Function 7zip($Path,$DestinationPath)
-{
-    7za.exe a -mx9 $DestinationPath $Path 
-}
-
 Function hostKey
 {
     If(Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
