@@ -963,8 +963,7 @@ Function oskar
     checkoutIfNeeded
     if($global:ok)
     {
-        . "$global:SCRIPTSDIR\runTests.ps1"
-        runTests
+        & "$global:SCRIPTSDIR\runTests.ps1"
     }
 }
 
@@ -973,8 +972,7 @@ Function oskarFull
     checkoutIfNeeded
     if($global:ok)
     {
-        . "$global:SCRIPTSDIR\runFullTests.ps1"
-        runTests
+        & "$global:SCRIPTSDIR\runFullTests.ps1"
     }
 }
 
@@ -983,8 +981,7 @@ Function oskarLimited
     checkoutIfNeeded
     if($global:ok)
     {
-        . "$global:SCRIPTSDIR\runLimitedTests.ps1"
-        runTests
+        & "$global:SCRIPTSDIR\runLimitedTests.ps1"
     }
 }
 
