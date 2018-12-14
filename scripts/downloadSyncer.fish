@@ -42,7 +42,13 @@ or begin ; echo Finding download asset failed ; exit 1 ; end
 
 echo $meta > $INNERWORKDIR/assets.json
 
-set -l asset_id (echo $meta | jq ".assets | map(select(.name == \"arangosync-$PLATFORM-amd64\"))[0].id")
+if test "$ARCH" = "aarch64"
+  set -x GOARCH arm64
+else
+  set -x GOARCH amd64
+fi
+
+set -l asset_id (echo $meta | jq ".assets | map(select(.name == \"arangosync-$PLATFORM-$GOARCH\"))[0].id")
 if test $status -ne 0
   echo Downloaded JSON cannot be parsed
   exit 1

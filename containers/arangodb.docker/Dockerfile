@@ -1,7 +1,6 @@
 FROM alpine:3.7
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
-RUN apk update && apk add nodejs pwgen && npm install -g foxx-cli
 ADD install.tar.gz /
 COPY setup.sh /setup.sh
 RUN /setup.sh

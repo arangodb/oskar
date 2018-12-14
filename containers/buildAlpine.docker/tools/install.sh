@@ -5,6 +5,8 @@ set -e
 apk update
 apk add groff g++ bison flex make cmake ccache python libldap git linux-vanilla-dev linux-headers vim boost-dev ctags man gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo
 
+if [ "$ARCH" = "x86_64" ] ; then
+
 # Compile newer GCC versions
 mkdir /gcc
 
@@ -35,6 +37,8 @@ for v in 7.3.0 8.2.0; do
     cd /tmp
     rm -rf gcc
 done
+
+fi
     
 # Compile openssl1.1 library:
 export OPENSSLVERSION=1.1.0h

@@ -26,9 +26,15 @@ if test "$STARTER_REV" = latest
 end
 echo Using STARTER_REV "$STARTER_REV"
 
+if test "$ARCH" = "aarch64"
+  set -x GOARCH arm64
+else
+  set -x GOARCH amd64
+fi
+
 mkdir -p $STARTER_FOLDER
 set -l STARTER_PATH $STARTER_FOLDER/arangodb
-curl -s -L -o "$STARTER_PATH" "https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-$PLATFORM-amd64"
+curl -s -L -o "$STARTER_PATH" "https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-$PLATFORM-$GOARCH"
 
 and chmod 755 "$STARTER_PATH"
 and echo Starter ready for build $STARTER_PATH
