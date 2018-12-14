@@ -37,7 +37,7 @@ for v in 7.3.0 8.2.0; do
 done
     
 # Compile openssl1.1 library:
-export OPENSSLVERSION=1.1.0h
+export OPENSSLVERSION=1.1.0j
 cd /tmp
 curl -O https://www.openssl.org/source/openssl-$OPENSSLVERSION.tar.gz
 tar xzvf openssl-$OPENSSLVERSION.tar.gz
