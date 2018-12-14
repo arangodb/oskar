@@ -101,7 +101,9 @@ if [ "$1" = 'arangod' ]; then
         done
 
         if [ "$(id -u)" = "0" ] ; then
+          if which foxx > /dev/null ; then
             foxx server set default http://127.0.0.1:$ARANGO_INIT_PORT
+          fi
         else
             echo Not setting foxx server default because we are not root.
         fi
@@ -137,7 +139,9 @@ if [ "$1" = 'arangod' ]; then
         done
 
         if [ "$(id -u)" = "0" ] ; then
+          if which foxx > /dev/null ; then
             foxx server remove default
+          fi
         fi
 
         if ! kill -s TERM "$pid" || ! wait "$pid"; then
