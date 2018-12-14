@@ -5,10 +5,10 @@
 apk update
 apk add pwgen
 
-if test "$ARCH" == "x86_64"
+if [ "$ARCH" = "x86_64" ] ; then
   apk add nodejs
   npm install -g foxx-cli
-end
+fi
 
 install -o root -g root -m 755 -d /var/lib/arangodb3
 install -o root -g root -m 755 -d /var/lib/arangodb3-apps
