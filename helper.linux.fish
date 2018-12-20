@@ -310,12 +310,14 @@ function transformSpec
   and cp "$argv[1]" "$argv[2]"
   and sed -i -e "s/@PACKAGE_VERSION@/$ARANGODB_RPM_UPSTREAM/" "$argv[2]"
   and sed -i -e "s/@PACKAGE_REVISION@/$ARANGODB_RPM_REVISION/" "$argv[2]"
-  and if test "(" "$ARANGODB_VERSION_MAJOR" -eq "3" ")" \
-           -a "(" "$ARANGODB_VERSION_MINOR" -le "3" ")"
-    sed -i -e "s~@JS_DIR@~~" "$argv[2]"
-  else
-    sed -i -e "s~@JS_DIR@~/$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH~" "$argv[2]"
-  end
+  and sed -i -e "s~@JS_DIR@~~" "$argv[2]"
+
+  # in case of version number inside JS directory
+  # and if test "(" "$ARANGODB_VERSION_MAJOR" -eq "3" ")" -a "(" "$ARANGODB_VERSION_MINOR" -le "3" ")"
+  #  sed -i -e "s~@JS_DIR@~~" "$argv[2]"
+  # else
+  #  sed -i -e "s~@JS_DIR@~/$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH~" "$argv[2]"
+  # end
 end
 
 function buildRPMPackage
@@ -446,32 +448,6 @@ function downloadSyncer
   ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
 end
 
-function makeDockerImage
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
-  end
-  if test (count $argv) -eq 0
-    echo Must give image name as argument
-    return 1
-  end
-  set -l imagename $argv[1]
-
-  pushd $WORKDIR/work/ArangoDB/build/install
-  and tar czf $WORKDIR/containers/arangodb.docker/install.tar.gz *
-  if test $status -ne 0
-    echo Could not create install tarball!
-    popd
-    return 1
-  end
-  popd
-
-  pushd $WORKDIR/containers/arangodb.docker
-  and docker build -t $imagename .
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
 function buildPackage
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
@@ -528,9 +504,10 @@ end
 function transformDebianSnippet
   pushd $WORKDIR
   
-  set -l DEBIAN_NAME_CLIENT "$argv[1]-client_$argv[2]_amd64.deb"
-  set -l DEBIAN_NAME_SERVER "$argv[1]_$argv[2]_amd64.deb"
-  set -l DEBIAN_NAME_DEBUG_SYMBOLS "$argv[1]-dbg_$argv[2]_amd64.deb"
+  set -l DEBIAN_VERSION "$argv[2]"
+  set -l DEBIAN_NAME_CLIENT "$argv[1]-client_$DEBIAN_VERSION""_amd64.deb"
+  set -l DEBIAN_NAME_SERVER "$argv[1]_$DEBIAN_VERSION""_amd64.deb"
+  set -l DEBIAN_NAME_DEBUG_SYMBOLS "$argv[1]-dbg_$DEBIAN_VERSION""_amd64.deb"
   set -l DOWNLOAD_LINK "$argv[4]"
 
   if test "$ENTERPRISEEDITION" = "On"
@@ -575,6 +552,7 @@ function transformDebianSnippet
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
 
   echo "Debian Snippet: $n"
@@ -654,6 +632,25 @@ function transformRPMSnippet
       -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
+
+  set -l n "work/download-$argv[1]-suse.html"
+
+  sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
+      -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
+      -e "s|@RPM_NAME_DEBUG_SYMBOLS@|$RPM_NAME_DEBUG_SYMBOLS|g" \
+      -e "s|@RPM_SIZE_SERVER@|$RPM_SIZE_SERVER|g" \
+      -e "s|@RPM_SIZE_CLIENT@|$RPM_SIZE_CLIENT|g" \
+      -e "s|@RPM_SIZE_DEBUG_SYMBOLS@|$RPM_SIZE_DEBUG_SYMBOLS|g" \
+      -e "s|@RPM_SHA256_SERVER@|$RPM_SHA256_SERVER|g" \
+      -e "s|@RPM_SHA256_CLIENT@|$RPM_SHA256_CLIENT|g" \
+      -e "s|@RPM_SHA256_DEBUG_SYMBOLS@|$RPM_SHA256_DEBUG_SYMBOLS|g" \
+      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      < snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
 
   echo "RPM Snippet: $n"
   popd
@@ -755,5 +752,204 @@ function makeSnippets
   and buildTarGzSnippet
 end
 
-# Set PARALLELISM in a sensible way:
+## #############################################################################
+## docker release
+## #############################################################################
+
+function makeDockerRelease
+  if test "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
+  end
+
+  set -l DOCKER_TAG ""
+
+  if test (count $argv) -lt 1
+    findArangoDBVersion ; or return 1
+
+    set DOCKER_TAG $ARANGODB_VERSION
+  else
+    set DOCKER_TAG $argv[1]
+    findArangoDBVersion
+  end
+
+  community
+  and buildDockerRelease $DOCKER_TAG
+  and buildDockerSnippet
+  and enterprise
+  and buildDockerRelease $DOCKER_TAG
+  and buildDockerSnippet
+end
+
+function buildDockerRelease
+  set -l DOCKER_TAG $argv[1]
+
+  # build tag
+  set -l IMAGE_NAME1 ""
+
+  # snippet content
+  set -l IMAGE_NAME2 ""
+
+  # push tag
+  set -l IMAGE_NAME3 ""
+
+  if test -z "$ENTERPRISE_DOCKER_KEY"
+    set -xg ENTERPRISE_DOCKER_KEY "enterprise-docker-key"
+  end
+
+  if test "$ENTERPRISEEDITION" = "On"
+    if test "$RELEASETYPE" = "stable"
+      set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
+      set IMAGE_NAME2 arangodb/enterprise:$DOCKER_TAG
+      set IMAGE_NAME3 arangodb/enterprise:$DOCKER_TAG
+    else if test "$RELEASETYPE" = "stablePreview"
+      set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
+      set IMAGE_NAME2 arangodb/enterprise:$DOCKER_TAG
+      set IMAGE_NAME3 arangodb/enterprise-preview:$DOCKER_TAG
+    else
+      set IMAGE_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
+      set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
+      set IMAGE_NAME3 arangodb/enterprise-preview:$DOCKER_TAG
+    end
+  else
+    if test "$RELEASETYPE" = "stable"
+      set IMAGE_NAME1 arangodb/arangodb:$DOCKER_TAG
+      set IMAGE_NAME2 arangodb/arangodb:$DOCKER_TAG
+      set IMAGE_NAME3 arangodb/arangodb:$DOCKER_TAG
+    else if test "$RELEASETYPE" = "stablePreview"
+      set IMAGE_NAME1 arangodb/arangodb:$DOCKER_TAG
+      set IMAGE_NAME2 arangodb/arangodb:$DOCKER_TAG
+      set IMAGE_NAME3 arangodb/arangodb-preview:$DOCKER_TAG
+    else
+      set IMAGE_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
+      set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
+      set IMAGE_NAME3 arangodb/arangodb-preview:$DOCKER_TAG
+    end
+  end
+
+  echo "building docker image"
+  and asanOff
+  and maintainerOff
+  and releaseMode
+  and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+  and downloadStarter
+  and if test "$ENTERPRISEEDITION" = "On"
+    downloadSyncer
+  end
+  and buildDockerImage $IMAGE_NAME1
+  and if test "$IMAGE_NAME1" != "$IMAGE_NAME3"
+    docker tag $IMAGE_NAME1 $IMAGE_NAME3
+  end
+  and docker push $IMAGE_NAME3
+  and if test "$ENTERPRISEEDITION" = "On"
+    echo $IMAGE_NAME2 > $WORKDIR/work/arangodb3e.docker
+  else
+    echo $IMAGE_NAME2 > $WORKDIR/work/arangodb3.docker
+  end
+end
+
+function buildDockerImage
+  if test "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
+  end
+
+  if test (count $argv) -eq 0
+    echo Must give image name as argument
+    return 1
+  end
+
+  set -l imagename $argv[1]
+
+  pushd $WORKDIR/work/ArangoDB/build/install
+  and tar czf $WORKDIR/containers/arangodb.docker/install.tar.gz *
+  if test $status -ne 0
+    echo Could not create install tarball!
+    popd
+    return 1
+  end
+  popd
+
+  pushd $WORKDIR/containers/arangodb.docker
+  and docker build -t $imagename .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function buildDockerSnippet
+  set -l name arangodb3.docker
+  set -l edition community
+
+  if test "$ENTERPRISEEDITION" = "On"
+    set name arangodb3e.docker
+    set edition enterprise
+  end
+
+  if test ! -f $WORKDIR/work/$name
+    echo "docker image name file '$name' not found"
+    exit 1
+  end
+
+  set -l DOCKER_IMAGE (cat $WORKDIR/work/$name)
+  transformDockerSnippet $edition $DOCKER_IMAGE
+  and transformK8SSnippet $edition $DOCKER_IMAGE
+end
+
+function transformDockerSnippet
+  pushd $WORKDIR
+  
+  set -l edition "$argv[1]"
+  set -l DOCKER_IMAGE "$argv[2]"
+  set -l ARANGODB_LICENSE_KEY_BASE64 (echo -n "$ARANGODB_LICENSE_KEY" | base64 -w 0)
+
+  set -l n "work/download-docker-$edition.html"
+
+  sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
+      -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
+      -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      < snippets/$ARANGODB_SNIPPETS/docker.$edition.html.in > $n
+
+  echo "Docker Snippet: $n"
+  popd
+end
+
+function transformK8SSnippet
+  pushd $WORKDIR
+  
+  set -l edition "$argv[1]"
+  set -l DOCKER_IMAGE "$argv[2]"
+  set -l ARANGODB_LICENSE_KEY_BASE64 (echo -n "$ARANGODB_LICENSE_KEY" | base64 -w 0)
+
+  set -l n "work/download-k8s-$edition.html"
+
+  sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
+      -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
+      -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      < snippets/$ARANGODB_SNIPPETS/k8s.$edition.html.in > $n
+
+  echo "Docker Snippet: $n"
+  popd
+end
+
+## #############################################################################
+## create repos
+## #############################################################################
+
+function createRepositories
+  pushd $WORKDIR
+  runInContainer \
+      -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
+      -v $HOME/.gnupg2:/root/.gnupg \
+      -v /mnt/buildfiles/release/3.4/packages:/packages \
+      -v /mnt/buildfiles/release/3.4/repositories:/repositories \
+      $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/createAll
+  popd
+end
+
+## #############################################################################
+## set PARALLELISM in a sensible way
+## #############################################################################
+
 parallelism (math (grep processor /proc/cpuinfo | wc -l) "*" 2)

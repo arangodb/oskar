@@ -1,0 +1,32 @@
+<div>
+  <p>
+    We provide a single package containing the server and the client tools. For a
+    standard server setup, download the package <strong>Server</strong> and
+    install it using the package manager. The <strong>Client Tools</strong>
+    package only contain the tools, like arangosh, arangodump, but nor the
+    server.
+
+    As an alternative there is a <strong>Zip</strong> containing the server and
+    client tools which can be install in any location.
+  </p>
+  <hr/>
+  <p><strong>NSIS</strong> packages</p>
+  <ul>
+    <li>
+      <a href="@DOWNLOAD_LINK@/Windows/@WINDOWS_NAME_SERVER_EXE@">Server</a><br>
+      (@WINDOWS_SIZE_SERVER_EXE@ MByte, SHA256 @WINDOWS_SHA256_SERVER_EXE@)
+    </li>
+    <li>
+      <a href="@DOWNLOAD_LINK@/Windows/@WINDOWS_NAME_CLIENT_EXE@">Client Tools</a></li>
+      (@WINDOWS_SIZE_CLIENT_EXE@ MByte, SHA256 @WINDOWS_SHA256_CLIENT_EXE@)
+    </li>
+  </ul>
+  <hr/>
+  <p><strong>Zip</strong> packages</p>
+  <ul>
+    <li>
+      <a href="@DOWNLOAD_LINK@/Windows/@WINDOWS_NAME_SERVER_ZIP@">Server</a><br>
+      (@WINDOWS_SIZE_SERVER_ZIP@ MByte, SHA256 @WINDOWS_SHA256_SERVER_ZIP@)
+    </li>
+  </ul>
+</div>

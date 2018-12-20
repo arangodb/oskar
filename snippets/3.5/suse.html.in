@@ -49,14 +49,9 @@
     Run the following as root:
   </p>
   <pre>
-    cd /etc/yum.repos.d/
-    curl -OL https://download.arangodb.com/arangodb34/RPM/arangodb.repo
-    yum -y install arangodb3-@ARANGODB_VERSION@
-  </pre>
-  <p>
-    To install the debug symbols package (not required by default)
-  </p>
-  <pre>
-    yum -y install arangodb3-debuginfo-@ARANGODB_VERSION@
+    zypper --no-gpg-checks --gpg-auto-import-keys addrepo https://download.arangodb.com/arangodb34/RPM/arangodb.repo
+
+    zypper --no-gpg-checks --gpg-auto-import-keys refresh
+    zypper -n install arangodb3=@ARANGODB_VERSION@
   </pre>
 </div>

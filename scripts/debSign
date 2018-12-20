@@ -22,7 +22,7 @@ debSign(){
             echo "retry"
             setup_gpg
             file="$1"
-            gpg2 --pinentry-mode=loopback --digest-algo SHA512 --passphrase-fd 0 --armor --detach-sign -u "$KEYNAME" "$file" <<<"$ARABGO_SIGN_PASSWD"
+            gpg2 --pinentry-mode=loopback --digest-algo SHA512 --passphrase-fd 0 --armor --detach-sign -u "$KEYNAME" "$file" <<<"$ARANGO_SIGN_PASSWD"
         fi
     fi
     return $?

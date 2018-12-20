@@ -9,7 +9,7 @@ switchBranches devel devel true
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
-and makeDockerImage arangodb/arangodb-preview:devel
+and buildDockerImage arangodb/arangodb-preview:devel
 and docker push arangodb/arangodb-preview:devel
 and docker tag arangodb/arangodb-preview:devel registry.arangodb.biz:5000/arangodb/linux-community-maintainer:devel
 and docker push registry.arangodb.biz:5000/arangodb/linux-community-maintainer:devel
@@ -27,7 +27,7 @@ and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
 and downloadSyncer
-and makeDockerImage registry.arangodb.biz:5000/arangodb/arangodb-preview:devel-$KEY
+and buildDockerImage registry.arangodb.biz:5000/arangodb/arangodb-preview:devel-$KEY
 and docker push registry.arangodb.biz:5000/arangodb/arangodb-preview:devel-$KEY
 and docker tag registry.arangodb.biz:5000/arangodb/arangodb-preview:devel-$KEY registry.arangodb.biz:5000/arangodb/linux-enterprise-maintainer:devel
 and docker push registry.arangodb.biz:5000/arangodb/linux-enterprise-maintainer:devel

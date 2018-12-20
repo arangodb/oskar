@@ -5,3 +5,4 @@ repo_incoming
 *~
 config/environment.fish
 containers/arangodb.docker/install.tar.gz
+release

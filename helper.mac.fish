@@ -159,6 +159,11 @@ function buildEnterprisePackage
     return 1
   end
  
+  if test -z "$ENTERPRISE_DOWNLOAD_LINK"
+    echo "you need to set the variable ENTERPRISE_DOWNLOAD_LINK"
+    return 1
+  end
+
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
   asanOff
@@ -177,6 +182,7 @@ function buildEnterprisePackage
       -DTHIRDPARTY_BIN=$THIRDPARTY_BIN/arangodb \
       -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
+  and buildBundleSnippet
 
   if test $status != 0
     echo Building enterprise release failed, stopping.
@@ -185,6 +191,11 @@ function buildEnterprisePackage
 end
 
 function buildCommunityPackage
+  if test -z "$COMMUNITY_DOWNLOAD_LINK"
+    echo "you need to set the variable COMMUNITY_DOWNLOAD_LINK"
+    return 1
+  end
+
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
   asanOff
@@ -201,6 +212,7 @@ function buildCommunityPackage
       -DTHIRDPARTY_BIN=$THIRDPARTY_BIN/arangodb \
       -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
+  and buildBundleSnippet
 
   if test $status != 0
     echo Building community release failed.
@@ -289,23 +301,6 @@ function buildBundleSnippet
     transformBundleSnippet "arangodb3" "$n" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
     or return 1
   end
-end
-
-function makeSnippets
-  if test -z "$ENTERPRISE_DOWNLOAD_LINK"
-    echo "you need to set the variable ENTERPRISE_DOWNLOAD_LINK"
-    return 1
-  end
-
-  if test -z "$COMMUNITY_DOWNLOAD_LINK"
-    echo "you need to set the variable COMMUNITY_DOWNLOAD_LINK"
-    return 1
-  end
-
-  community
-  and buildBundleSnippet
-  and enterprise
-  and buildBundleSnippet
 end
 
 parallelism 8

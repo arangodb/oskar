@@ -9,6 +9,7 @@ function checkoutRepo
   set -l clean $argv[2]
 
   git checkout -- .
+  and git fetch --tags
   and git fetch
   and git checkout "$branch"
   and if test "$clean" = "true"

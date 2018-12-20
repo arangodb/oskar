@@ -34,10 +34,11 @@ setup_gpg(){
     gpg2 --pinentry-mode=loopback --digest-algo SHA512 \
          --passphrase-fd 0 --yes -abs \
          -u "$KEYNAME" \
-         -o Release.gpg "$test_file" <<<"$ARANOG_SIGN_PASSWD" 2>"$error_info"
+         -o Release.gpg "$test_file" <<<"$ARANGO_SIGN_PASSWD" 2>"$error_info"
     (( $? != 0 )) && {
         echo "failed test signing";
-        cat "$error_info" exit 1;
+        cat "$error_info";
+	exit 1;
     }
     rm -fr "$error_info"
 }
