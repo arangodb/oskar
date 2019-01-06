@@ -405,7 +405,7 @@ class DocuBlocks():
 
 
 
-class DocuBLock(): #GOOD
+class DocuBlock(): #GOOD
     """description of a single DocuBlock"""
     def __init__(self,btype):
         self.block_type = btype  # plain or inline
@@ -454,9 +454,9 @@ class DocuBlockReader(): #GOOD
             block = None
 
             if "@startDocuBlockInline" in line:
-                block = DocuBLock(BlockType.INLINE)
+                block = DocuBlock(BlockType.INLINE)
             else:
-                block = DocuBLock(BlockType.PLAIN)
+                block = DocuBlock(BlockType.PLAIN)
 
             match = DocuBlockReader.re_search_start.search(line)
             if match:
@@ -1039,7 +1039,7 @@ def loadProgramOptionBlocks(blocks):
             output.append('</tbody></table>')
 
         # Join output and register as docublock (like 'program_options_arangosh')
-        block = DocuBLock(BlockType.PLAIN)
+        block = DocuBlock(BlockType.PLAIN)
         block.key = 'program_options_' + program.lower()
         block.content = '\n'.join(output) + '\n\n'
         blocks.add(block)
