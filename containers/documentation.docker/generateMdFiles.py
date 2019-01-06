@@ -973,7 +973,7 @@ def loadProgramOptionBlocks(blocks):
             for optionName, option in sorted(groupPeek[1], key=lambda elem: elem[0]):
 
                 # Skip options marked as obsolete, eventhough they are not dumped at the moment
-                if option["obsolete"]:
+                if option.setdefault("obsolete", False):
                     continue
 
                 # Recover JSON syntax, because the Python representation uses [u'this format']
