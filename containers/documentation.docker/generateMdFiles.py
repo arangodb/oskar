@@ -909,7 +909,7 @@ def loadProgramOptionBlocks(blocks):
     from cgi import escape
     from glob import glob
 
-    # Allows to test if a group will be empty with hidden options ignored
+    # Allows to test if a group will be empty with obsolete options ignored
     def peekIterator(iterable, condition):
         try:
             while True:
@@ -955,10 +955,10 @@ def loadProgramOptionBlocks(blocks):
                 sorted(optionsRaw.items(), key=sortBySection),
                 key=groupBySection):
 
-            # Use some trickery to skip hidden options without consuming items from iterator
-            groupPeek = peekIterator(group, lambda elem: elem[1]["hidden"] is False)
+            # Use some trickery to skip obsolete options without consuming items from iterator
+            groupPeek = peekIterator(group, lambda elem: elem[1].setdefault("obsolete", False) is False)
             if groupPeek is None:
-                # Skip empty section to avoid useless headline (all options are hidden)
+                # Skip empty section to avoid useless headline (all options are obsolete)
                 continue
 
             # Output table header with column labels (one table per section)
