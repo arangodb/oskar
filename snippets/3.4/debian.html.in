@@ -1,16 +1,16 @@
 <div>
   <p>
-    We provide a single package containing the server and the client tools. For a
-    standard server setup, download the package <strong>Server</strong> and
-    install it using the package manager. You do not need the client tools.
+    We provide a single package containing the server and the client tools. 
+    For a standard server setup, download the <strong>Server</strong> package and
+    install it using the package manager. You do not need the separate client tools.
 
-    The <strong>Client Tools</strong> package only contains the tools, like arangosh,
-    arangodump, but nor the server. Use this in case you are already running
+    The <strong>Client Tools</strong> package only contains the tools, like
+    arangosh and arangodump, but not the server. Use this in case you are already running
     ArangoDB on a different machine and want to connect to that server from a
     client machine.
 
-    As an alternative there is a <strong>Tar</strong> containing the server and
-    client tools which can be install in any location and which does not
+    As an alternative there is a <strong>Tar</strong> package containing the server and
+    client tools, which can be unpacked in any location and which does not
     require root rights for installation.
   </p>
   <hr/>
@@ -31,7 +31,7 @@
   </ul>
   <hr/>
   <p>
-    <strong>Tar</strong> packages
+    <strong>Tar</strong> package
   </p>
   <ul>
     <li>
