@@ -11,6 +11,7 @@ mkdir /docker-entrypoint-initdb.d/
 
 # Bind to all endpoints (in the container):
 sed -i -e 's~^endpoint.*8529$~endpoint = tcp://0.0.0.0:8529~' /etc/arangodb3/arangod.conf
+sed -i -e 's~^file =.*~file = -~' /etc/arangodb3/arangod.conf
 # Remove the uid setting in the config file, since we want to be able
 # to run as an arbitrary user:
 sed -i -e 's~^uid = .*$~~' /etc/arangodb3/arangod.conf
