@@ -6,7 +6,9 @@
   </p>
   <p>
     The <strong>Client Tools</strong> package only contain the tools, like
-    arangosh and arangodump, but not the server files and binary.
+    arangosh and arangodump, but not the server. Use this in case you are already running
+    ArangoDB on a different machine and want to connect to that server from a
+    client machine.
   </p>
   <p>
     As an alternative there is a <strong>Zip</strong> package containing the
