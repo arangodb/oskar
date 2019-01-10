@@ -2,8 +2,8 @@
   <p>
     ArangoDB is available for Kubernetes. In order to install ArangoDB
     in your Kubernetes Cluster, first deploy the latest operator. Please
-    find instructions in the
-    <a href="https://github.com/arangodb/kube-arangodb/blob/master/README.md" target="_blank"><em>kube-arangodb</em> readme</a>.
+    find instructions in the documentation:
+    <a href="https://docs.arangodb.com/3.4/Manual/Deployment/Kubernetes/" target="_blank">ArangoDB Kubernetes Operator</a>.
   </p>
   <p>Then use the statement below to deploy your license key as secret:</p>
   <pre>
