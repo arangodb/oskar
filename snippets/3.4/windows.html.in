@@ -1,6 +1,7 @@
 <div>
   <p>
-    The following packages are for Windows 7, Windows 10.1, Windows 2008 R2 and higher.
+    The following packages are for Windows 7 (Service Pack 1),
+    Windows 10 (1803 and higher), Windows Server 2008 R2 and higher.
   </p>
   <p>
     We provide a single package containing the server and the client tools. For a
