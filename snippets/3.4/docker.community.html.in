@@ -1,8 +1,10 @@
 <div>
   <p>
     ArangoDB is available as docker container. In order to install the stand-alone version use
-
-    A processor that supports the Intel Nehalem instructions is required.
+  </p>
+  <p>
+    The processor(s) must support the SSE 4.2 instruction set
+    (Intel Nehalem or better, AMD Bulldozer or better, etc.)
   </p>
   <pre>
     docker run -p 8529:8529 -e ARANGO_ROOT_PASSWORD=openSesame @DOCKER_IMAGE@

@@ -3,8 +3,10 @@
     We provide a <strong>Tar</strong> containing the server and client
     tools which can be install in any location and which does not
     require root rights for installation.
-
-    A processor that supports the Intel Nehalem instructions is required.
+  </p>
+  <p>
+    The processor(s) must support the SSE 4.2 instruction set
+    (Intel Nehalem or better, AMD Bulldozer or better, etc.)
   </p>
   <hr/>
   <p><strong>Tar</strong> packages</p>
