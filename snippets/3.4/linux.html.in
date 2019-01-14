@@ -1,7 +1,7 @@
 <div>
   <p>
-    We provide a <strong>Tar</strong> containing the server and client
-    tools which can be install in any location and which does not
+    We provide a <strong>Tar</strong> package containing the server and client
+    tools, which can be unpacked in any location and which does not
     require root rights for installation.
   </p>
   <p>
@@ -9,7 +9,7 @@
     (Intel Nehalem or better, AMD Bulldozer or better, etc.)
   </p>
   <hr/>
-  <p><strong>Tar</strong> packages</p>
+  <p><strong>Tar</strong> package</p>
   <ul>
     <li>
       <a href="@DOWNLOAD_LINK@/Linux/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
