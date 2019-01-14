@@ -10,7 +10,7 @@
   <p>
     We provide a single package containing the server and the client tools.
     For a standard server setup, download the <strong>Server</strong> package
-    and run the installer.
+    and run the NSIS installer.
   </p>
   <p>
     The <strong>Client Tools</strong> package only contain the tools, like
