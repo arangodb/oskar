@@ -1,5 +1,9 @@
 <div>
-  <p>ArangoDB is available as docker container. In order to install the stand-alone version use</p>
+  <p>
+    ArangoDB is available as docker container. In order to install the stand-alone version use
+
+    A processor that supports the Intel Nehalem instructions is required.
+  </p>
   <pre>
     docker run -p 8529:8529 -e ARANGO_ROOT_PASSWORD=openSesame -e ARANGO_LICENSE_KEY=@ARANGODB_LICENSE_KEY@ @DOCKER_IMAGE@
   </pre>

@@ -4,6 +4,8 @@
     in your Kubernetes Cluster first deploy the latest operator. Please
     find instructions
     <a href="https://github.com/arangodb/kube-arangodb/blob/master/README.md" target="_blank">here</a>.
+
+    A processor that supports the Intel Nehalem instructions is required.
   </p>
   <p>
     After that create and deploy a
