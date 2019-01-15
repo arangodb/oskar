@@ -1,11 +1,14 @@
 <div>
   <p>
     The source code lives on
-    <a href="https://github.com/arangodb/arangodb" target="_blank">github</a>.
+    <a href="https://github.com/arangodb/arangodb" target="_blank">GitHub</a>.
+  </p>
+  <p>
     There are branches for the different major/minor releases together
-    with tags for the individual releases. In general you will not
+    with tags for the individual releases (e.g. <code>3.4</code> branch
+    and <code>v3.4.1</code> tag). In general you will not
     need the source packages, unless you want to
-    <a href="https://docs.arangodb.com/3.1/Manual/GettingStarted/Installing/Compiling.html" target="_blank">compile</a>
+    <a href="https://docs.arangodb.com/3.4/Cookbook/Compiling/" target="_blank">compile</a>
     ArangoDB on an operating system not supported by us.
   </p>
   <hr/>
