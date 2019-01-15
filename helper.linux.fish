@@ -701,7 +701,7 @@ function buildDockerImage
   popd
 
   pushd $WORKDIR/containers/arangodb.docker
-  and docker build -t $imagename .
+  and docker build --pull -t $imagename .
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -804,7 +804,7 @@ function buildUbuntuBuildImage
   pushd $WORKDIR
   and cp -a scripts/{makeArangoDB,buildArangoDB,checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUbuntu.docker/scripts
   and cd $WORKDIR/containers/buildUbuntu.docker
-  and docker build -t $UBUNTUBUILDIMAGE .
+  and docker build --pull -t $UBUNTUBUILDIMAGE .
   and rm -f $WORKDIR/containers/buildUbuntu.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
@@ -818,7 +818,7 @@ function buildUbuntuPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
   and cd $WORKDIR/containers/buildUbuntuPackaging.docker
-  and docker build -t $UBUNTUPACKAGINGIMAGE .
+  and docker build --pull -t $UBUNTUPACKAGINGIMAGE .
   and rm -f $WORKDIR/containers/buildUbuntuPackaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
@@ -832,7 +832,7 @@ function buildAlpineBuildImage
   pushd $WORKDIR
   and cp -a scripts/makeAlpine.fish scripts/buildAlpine.fish containers/buildAlpine.docker/scripts
   and cd $WORKDIR/containers/buildAlpine.docker
-  and docker build -t $ALPINEBUILDIMAGE .
+  and docker build --pull -t $ALPINEBUILDIMAGE .
   and rm -f $WORKDIR/containers/buildAlpine.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
@@ -846,7 +846,7 @@ function buildCentosPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildRPMPackage.fish containers/buildCentos7Packaging.docker/scripts
   and cd $WORKDIR/containers/buildCentos7Packaging.docker
-  and docker build -t $CENTOSPACKAGINGIMAGE .
+  and docker build --pull -t $CENTOSPACKAGINGIMAGE .
   and rm -f $WORKDIR/containers/buildCentos7Packaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
