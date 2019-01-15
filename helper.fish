@@ -497,6 +497,8 @@ function findArangoDBVersion
 
     set -xg ARANGODB_TGZ_UPSTREAM "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH"
 
+    set -xg ARANGODB_REPO "arangodb""$ARANGODB_VERSION_MAJOR""$ARANGODB_VERSION_MINOR"
+
   # new version scheme (from 3.4.x)  
   else
     set -xg ARANGODB_VERSION_PATCH (grep "$AV""_PATCH" $CMAKELIST | grep -v unset | sed -e $SEDFIX)
@@ -521,9 +523,11 @@ function findArangoDBVersion
         if test "$ARANGODB_VERSION_PATCH" = "devel"
           set -xg ARANGODB_RPM_UPSTREAM "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.0"
           set -xg ARANGODB_RPM_REVISION "0.1"
+          set -xg ARANGODB_REPO nightly
         else if test "$ARANGODB_VERSION_PATCH" = "nightly"
           set -xg ARANGODB_RPM_UPSTREAM "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.0"
           set -xg ARANGODB_RPM_REVISION "0.2"
+          set -xg ARANGODB_REPO nightly
 	end
 
       # stable release
@@ -533,6 +537,8 @@ function findArangoDBVersion
 
         set -xg ARANGODB_RPM_UPSTREAM "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH"
         set -xg ARANGODB_RPM_REVISION "1.0"
+
+        set -xg ARANGODB_REPO "arangodb""$ARANGODB_VERSION_MAJOR""$ARANGODB_VERSION_MINOR"
       end
 
     # unstable release
@@ -571,6 +577,8 @@ function findArangoDBVersion
 
       set -xg ARANGODB_TGZ_UPSTREAM "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH-$ARANGODB_VERSION_RELEASE_TYPE.$ARANGODB_VERSION_RELEASE_NUMBER"
 
+      set -xg ARANGODB_REPO "arangodb""$ARANGODB_VERSION_MAJOR""$ARANGODB_VERSION_MINOR"
+
     # hot-fix
     else
       if test "$ARANGODB_VERSION_RELEASE_NUMBER" != ""
@@ -590,17 +598,20 @@ function findArangoDBVersion
       set -xg ARANGODB_DARWIN_REVISION ""
 
       set -xg ARANGODB_TGZ_UPSTREAM "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH-$ARANGODB_VERSION_RELEASE_TYPE"
+
+      set -xg ARANGODB_REPO "hotfix""$ARANGODB_VERSION_MAJOR""$ARANGODB_VERSION_MINOR"
     end
   end
 
   echo '------------------------------------------------------------------------------'
-  echo "ArangoDB: $ARANGODB_VERSION"
-  echo "Debian:   $ARANGODB_DEBIAN_UPSTREAM / $ARANGODB_DEBIAN_REVISION"
-  echo "RPM:      $ARANGODB_RPM_UPSTREAM / $ARANGODB_RPM_REVISION"
-  echo "DARWIN:   $ARANGODB_DARWIN_UPSTREAM / $ARANGODB_DARWIN_REVISION"
-  echo "TGZ:      $ARANGODB_TGZ_UPSTREAM"
-  echo "SNIPPETS: $ARANGODB_SNIPPETS"
-  echo "PACKAGES: $ARANGODB_PACKAGES"
+  echo "ArangoDB:   $ARANGODB_VERSION"
+  echo "Debian:     $ARANGODB_DEBIAN_UPSTREAM / $ARANGODB_DEBIAN_REVISION"
+  echo "RPM:        $ARANGODB_RPM_UPSTREAM / $ARANGODB_RPM_REVISION"
+  echo "DARWIN:     $ARANGODB_DARWIN_UPSTREAM / $ARANGODB_DARWIN_REVISION"
+  echo "TGZ:        $ARANGODB_TGZ_UPSTREAM"
+  echo "SNIPPETS:   $ARANGODB_SNIPPETS"
+  echo "PACKAGES:   $ARANGODB_PACKAGES"
+  echo "Repository: $ARANGODB_REPO"
   echo '------------------------------------------------------------------------------'
   echo
 end
