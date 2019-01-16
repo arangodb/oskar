@@ -1,12 +1,22 @@
 #!/usr/bin/env fish
-set -xg SRC .
-set -xg DST .
+if test (count $argv) -lt 1
+  echo usage: (status current-filename) "<destination>"
+  exit 1
+end
 
-mkdir -p $DST/release/snippets
-mkdir -p $DST/release/source
+if test -z "$RELEASE_TAG"
+  echo "RELEASE_TAG required"
+  exit 1
+end
+
+set -xg SRC .
+set -xg DST $argv[1]/stage1/$RELEASE_TAG
+
+mkdir -m 777 -p $DST/release/snippets
+mkdir -m 777 -p $DST/release/source
 and for e in Community Enterprise
   for d in Linux Windows MacOSX
-    mkdir -p $DST/release/packages/$e/$d
+    mkdir -m 777 -p $DST/release/packages/$e/$d
   end
 end
 
