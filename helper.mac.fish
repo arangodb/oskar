@@ -267,8 +267,9 @@ function transformBundleSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/macosx.html.in > $n
 
