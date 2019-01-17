@@ -164,11 +164,6 @@ function buildEnterprisePackage
     return 1
   end
  
-  if test -z "$ENTERPRISE_DOWNLOAD_LINK"
-    echo "you need to set the variable ENTERPRISE_DOWNLOAD_LINK"
-    return 1
-  end
-
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
   asanOff
@@ -196,11 +191,6 @@ function buildEnterprisePackage
 end
 
 function buildCommunityPackage
-  if test -z "$COMMUNITY_DOWNLOAD_LINK"
-    echo "you need to set the variable COMMUNITY_DOWNLOAD_LINK"
-    return 1
-  end
-
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
   asanOff
@@ -243,12 +233,17 @@ end
 function transformBundleSnippet
   pushd $WORKDIR
   set -l BUNDLE_NAME_SERVER "$argv[1]-$argv[2].x86_64.dmg"
-  set -l DOWNLOAD_LINK "$argv[4]"
 
   if test "$ENTERPRISEEDITION" = "On"
-    set DOWNLOAD_EDITION "Enterprise"
+    set ARANGODB_EDITION "Enterprise"
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "enterprise-download/"
+    else
+      set DOWNLOAD_LINK "$ENTERPRISE_DOWNLOAD_KEY/"
+    end
   else
-    set DOWNLOAD_EDITION "Community"
+    set ARANGODB_EDITION "Community"
+    set DOWNLOAD_LINK ""
   end
 
   if test ! -f "work/$BUNDLE_NAME_SERVER"; echo "DMG package '$BUNDLE_NAME_SERVER' is missing"; return 1; end
@@ -272,7 +267,8 @@ function transformBundleSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/macosx.html.in > $n
 
@@ -290,20 +286,10 @@ function buildBundleSnippet
   end
 
   if test "$ENTERPRISEEDITION" = "On"
-    if test -z "$ENTERPRISE_DOWNLOAD_LINK"
-      echo "you need to set the variable ENTERPRISE_DOWNLOAD_LINK"
-      return 1
-    end
-
-    transformBundleSnippet "arangodb3e" "$n" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
+    transformBundleSnippet "arangodb3e" "$n" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   else
-    if test -z "$COMMUNITY_DOWNLOAD_LINK"
-      echo "you need to set the variable COMMUNITY_DOWNLOAD_LINK"
-      return 1
-    end
-
-    transformBundleSnippet "arangodb3" "$n" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
+    transformBundleSnippet "arangodb3" "$n" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   end
 end

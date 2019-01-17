@@ -151,16 +151,6 @@ end
 ## #############################################################################
 
 function makeSnippets
-  if test -z "$ENTERPRISE_DOWNLOAD_LINK"
-    echo "you need to set the variable ENTERPRISE_DOWNLOAD_LINK"
-    return 1
-  end
-
-  if test -z "$COMMUNITY_DOWNLOAD_LINK"
-    echo "you need to set the variable COMMUNITY_DOWNLOAD_LINK"
-    return 1
-  end
-
   community
   and buildDebianSnippet
   and buildRPMSnippet
@@ -288,20 +278,10 @@ function buildDebianSnippet
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
   if test "$ENTERPRISEEDITION" = "On"
-    if test -z "$ENTERPRISE_DOWNLOAD_LINK"
-      echo "you need to set the variable ENTERPRISE_DOWNLOAD_LINK"
-      return 1
-    end
-
-    transformDebianSnippet "arangodb3e" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
+    transformDebianSnippet "arangodb3e" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   else
-    if test -z "$COMMUNITY_DOWNLOAD_LINK"
-      echo "you need to set the variable COMMUNITY_DOWNLOAD_LINK"
-      return 1
-    end
-
-    transformDebianSnippet "arangodb3" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
+    transformDebianSnippet "arangodb3" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   end
 end
@@ -313,12 +293,17 @@ function transformDebianSnippet
   set -l DEBIAN_NAME_CLIENT "$argv[1]-client_$DEBIAN_VERSION""_amd64.deb"
   set -l DEBIAN_NAME_SERVER "$argv[1]_$DEBIAN_VERSION""_amd64.deb"
   set -l DEBIAN_NAME_DEBUG_SYMBOLS "$argv[1]-dbg_$DEBIAN_VERSION""_amd64.deb"
-  set -l DOWNLOAD_LINK "$argv[4]"
 
   if test "$ENTERPRISEEDITION" = "On"
-    set DOWNLOAD_EDITION "Enterprise"
+    set ARANGODB_EDITION "Enterprise"
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "enterprise-download/"
+    else
+      set DOWNLOAD_LINK "$ENTERPRISE_DOWNLOAD_KEY/"
+    end
   else
-    set DOWNLOAD_EDITION "Community"
+    set ARANGODB_EDITION "Community"
+    set DOWNLOAD_LINK ""
   end
 
   if test ! -f "work/$DEBIAN_NAME_SERVER"; echo "Debian package '$DEBIAN_NAME_SERVER' is missing"; return 1; end
@@ -355,7 +340,8 @@ function transformDebianSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
@@ -398,20 +384,10 @@ function buildRPMSnippet
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
   if test "$ENTERPRISEEDITION" = "On"
-    if test -z "$ENTERPRISE_DOWNLOAD_LINK"
-      echo "you need to set the variable ENTERPRISE_DOWNLOAD_LINK"
-      return 1
-    end
-
-    transformRPMSnippet "arangodb3e" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
+    transformRPMSnippet "arangodb3e" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   else
-    if test -z "$COMMUNITY_DOWNLOAD_LINK"
-      echo "you need to set the variable COMMUNITY_DOWNLOAD_LINK"
-      return 1
-    end
-
-    transformRPMSnippet "arangodb3" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
+    transformRPMSnippet "arangodb3" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   end
 end
@@ -422,12 +398,17 @@ function transformRPMSnippet
   set -l RPM_NAME_CLIENT "$argv[1]-client-$argv[2].x86_64.rpm"
   set -l RPM_NAME_SERVER "$argv[1]-$argv[2].x86_64.rpm"
   set -l RPM_NAME_DEBUG_SYMBOLS "$argv[1]-debuginfo-$argv[2].x86_64.rpm"
-  set -l DOWNLOAD_LINK "$argv[4]"
 
   if test "$ENTERPRISEEDITION" = "On"
-    set DOWNLOAD_EDITION "Enterprise"
+    set ARANGODB_EDITION "Enterprise"
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "enterprise-download/"
+    else
+      set DOWNLOAD_LINK "$ENTERPRISE_DOWNLOAD_KEY/"
+    end
   else
-    set DOWNLOAD_EDITION "Community"
+    set ARANGODB_EDITION "Community"
+    set DOWNLOAD_LINK ""
   end
 
   if test ! -f "work/$RPM_NAME_SERVER"; echo "RPM package '$RPM_NAME_SERVER' is missing"; return 1; end
@@ -464,7 +445,8 @@ function transformRPMSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
 
@@ -483,7 +465,8 @@ function transformRPMSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
 
@@ -508,20 +491,10 @@ function buildTarGzSnippet
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
   if test "$ENTERPRISEEDITION" = "On"
-    if test -z "$ENTERPRISE_DOWNLOAD_LINK"
-      echo "you need to set the variable ENTERPRISE_DOWNLOAD_LINK"
-      return 1
-    end
-
-    transformTarGzSnippet "arangodb3e" "$ARANGODB_TGZ_UPSTREAM" "$ENTERPRISE_DOWNLOAD_LINK"
+    transformTarGzSnippet "arangodb3e" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   else
-    if test -z "$COMMUNITY_DOWNLOAD_LINK"
-      echo "you need to set the variable COMMUNITY_DOWNLOAD_LINK"
-      return 1
-    end
-
-    transformTarGzSnippet "arangodb3" "$ARANGODB_TGZ_UPSTREAM" "$COMMUNITY_DOWNLOAD_LINK"
+    transformTarGzSnippet "arangodb3" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   end
 end
@@ -530,12 +503,17 @@ function transformTarGzSnippet
   pushd $WORKDIR
 
   set -l TARGZ_NAME_SERVER "$argv[1]-linux-$argv[2].tar.gz"
-  set -l DOWNLOAD_LINK "$argv[3]"
 
   if test "$ENTERPRISEEDITION" = "On"
-    set DOWNLOAD_EDITION "Enterprise"
+    set ARANGODB_EDITION "Enterprise"
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "enterprise-download/"
+    else
+      set DOWNLOAD_LINK "$ENTERPRISE_DOWNLOAD_KEY/"
+    end
   else
-    set DOWNLOAD_EDITION "Community"
+    set ARANGODB_EDITION "Community"
+    set DOWNLOAD_LINK ""
   end
 
   if test ! -f "work/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
@@ -549,7 +527,8 @@ function transformTarGzSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@DOWNLOAD_EDITION@|$DOWNLOAD_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
 
@@ -587,11 +566,6 @@ function makeDockerRelease
 end
 
 function makeDockerCommunityRelease
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
-  end
-
   set -l DOCKER_TAG ""
 
   if test (count $argv) -lt 1
@@ -640,7 +614,7 @@ function buildDockerRelease
   set -l IMAGE_NAME2 ""
 
   if test "$ENTERPRISEEDITION" = "On"
-    if test "$RELEASETYPE" = "stable"
+    if test "$RELEASE_TYPE" = "stable"
       set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
       set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
     else
@@ -648,7 +622,7 @@ function buildDockerRelease
       set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
     end
   else
-    if test "$RELEASETYPE" = "stable"
+    if test "$RELEASE_TYPE" = "stable"
       set IMAGE_NAME1 arangodb/arangodb:$DOCKER_TAG
       set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
     else

@@ -19,14 +19,14 @@
   <p><strong>DMG</strong> package</p>
   <ul>
     <li>
-      <a href="@DOWNLOAD_LINK@/MacOSX/@BUNDLE_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/MacOSX/@BUNDLE_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
       (@BUNDLE_SIZE_SERVER@ MByte, SHA256 @BUNDLE_SHA256_SERVER@)
     </li>
   </ul>
   <p><strong>Tar</strong> package</p>
   <ul>
     <li>
-      <a href="@DOWNLOAD_LINK@/MacOSX/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/MacOSX/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
       (@TARGZ_SIZE_SERVER@ MByte, SHA256 @TARGZ_SHA256_SERVER@)
     </li>
   </ul>

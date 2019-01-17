@@ -28,15 +28,15 @@
   </p>
   <ul>
     <li>
-      <a href="@DOWNLOAD_LINK@/Linux/@RPM_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@RPM_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
       (@RPM_SIZE_SERVER@ MByte, SHA256 @RPM_SHA256_SERVER@)
     </li>
     <li>
-      <a href="@DOWNLOAD_LINK@/Linux/@RPM_NAME_CLIENT@">Client Tools @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@RPM_NAME_CLIENT@">Client Tools @ARANGODB_VERSION@</a><br>
       (@RPM_SIZE_CLIENT@ MByte, SHA256 @RPM_SHA256_CLIENT@)
     </li>
     <li>
-      <a href="@DOWNLOAD_LINK@/Linux/@RPM_NAME_DEBUG_SYMBOLS@">Debug Symbols @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@RPM_NAME_DEBUG_SYMBOLS@">Debug Symbols @ARANGODB_VERSION@</a><br>
       (@RPM_SIZE_DEBUG_SYMBOLS@ MByte, SHA256 @RPM_SHA256_DEBUG_SYMBOLS@)
     </li>
   </ul>
@@ -46,7 +46,7 @@
   </p>
   <ul>
     <li>
-      <a href="@DOWNLOAD_LINK@/Linux/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
       (@TARGZ_SIZE_SERVER@ MByte, SHA256 @TARGZ_SHA256_SERVER@)
     </li>
   </ul>
@@ -57,7 +57,7 @@
   <p>
     Run the following as root in a terminal:
   <pre>cd /etc/yum.repos.d/
-curl -OL https://download.arangodb.com/arangodb34/RPM/arangodb.repo
+curl -OL https://download.arangodb.com/@ARANGODB_REPO@/RPM/arangodb.repo
 yum -y install arangodb3-@ARANGODB_VERSION@</pre>
   </p>
   <p>

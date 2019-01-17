@@ -12,7 +12,7 @@
   <p><strong>Tar</strong> package</p>
   <ul>
     <li>
-      <a href="@DOWNLOAD_LINK@/Linux/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
       (@TARGZ_SIZE_SERVER@ MByte, SHA256 @TARGZ_SHA256_SERVER@)
     </li>
   </ul>
