@@ -403,9 +403,9 @@ function transformRPMSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
-      set DOWNLOAD_LINK "enterprise-download/"
+      set DOWNLOAD_LINK "/enterprise-download"
     else
-      set DOWNLOAD_LINK "$ENTERPRISE_DOWNLOAD_KEY/"
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
     end
   else
     set ARANGODB_EDITION "Community"
@@ -510,9 +510,9 @@ function transformTarGzSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
-      set DOWNLOAD_LINK "enterprise-download/"
+      set DOWNLOAD_LINK "/enterprise-download"
     else
-      set DOWNLOAD_LINK "$ENTERPRISE_DOWNLOAD_KEY/"
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
     end
   else
     set ARANGODB_EDITION "Community"
