@@ -783,8 +783,8 @@ function createRepositories
   runInContainer \
       -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
       -v $HOME/.gnupg2:/root/.gnupg \
-      -v /mnt/buildfiles/stage2/$ARANGODB_REPO/packages:/packages \
-      -v /mnt/buildfiles/stage2/$ARANGODB_REPO/repositories:/repositories \
+      -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
+      -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
       $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/createAll
   or begin ; popd ; return 1 ; end
   popd
