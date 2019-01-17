@@ -776,12 +776,15 @@ Function generateSnippets
     $template = Get-Content "$global:WORKDIR\snippets\$global:ARANGODB_VERSION_MAJOR.$global:ARANGODB_VERSION_MINOR\windows.html.in"
     If($ENTERPRISEEDITION -eq "On")
     {
-        $template = $template -replace "@DOWNLOAD_LINK@","$env:ENTERPRISE_DOWNLOAD_KEY/"
+        $template = $template -replace "@DOWNLOAD_LINK@","/$env:ENTERPRISE_DOWNLOAD_KEY"
+        $template = $template -replace "@ARANGODB_EDITION@","Enterprise"
     }
     Else
     {
         $template = $template -replace "@DOWNLOAD_LINK@",""
+        $template = $template -replace "@ARANGODB_EDITION@","Community"
     }
+    $template = $template -replace "@ARANGODB_VERSION@","$global:ARANGODB_FULL_VERSION"
     $template = $template -replace "@ARANGODB_REPO@","$global:ARANGODB_REPO"
     $template = $template -replace "@WINDOWS_NAME_SERVER_EXE@","$($package_server.Name)"
     $template = $template -replace "@WINDOWS_SIZE_SERVER_EXE@","$([math]::Round($((Get-Item $package_server.FullName).Length / 1MB)))"
