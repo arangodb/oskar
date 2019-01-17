@@ -777,13 +777,16 @@ end
 ## #############################################################################
 
 function createRepositories
+  findArangoDBVersion
+
   pushd $WORKDIR
   runInContainer \
       -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
       -v $HOME/.gnupg2:/root/.gnupg \
-      -v /mnt/buildfiles/release/3.4/packages:/packages \
-      -v /mnt/buildfiles/release/3.4/repositories:/repositories \
+      -v /mnt/buildfiles/stage2/$ARANGODB_REPO/packages:/packages \
+      -v /mnt/buildfiles/stage2/$ARANGODB_REPO/repositories:/repositories \
       $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/createAll
+  or begin ; popd ; return 1 ; end
   popd
 end
 
