@@ -428,7 +428,7 @@ function showConfig
 end
 
 function showRepository
-  set -l fmt3 '%-20s: %-20s %s\n'
+  set -l fmt3 '%-12s: %-20s %s\n'
 
   echo '------------------------------------------------------------------------------'
 

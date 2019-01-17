@@ -12,11 +12,12 @@ end
 set -xg SRC .
 set -xg DST $argv[1]/stage1/$RELEASE_TAG
 
-mkdir -m 777 -p $DST/release/snippets
-mkdir -m 777 -p $DST/release/source
+umask 000
+mkdir -p $DST/release/snippets
+mkdir -p $DST/release/source
 and for e in Community Enterprise
   for d in Linux Windows MacOSX
-    mkdir -m 777 -p $DST/release/packages/$e/$d
+    mkdir -p $DST/release/packages/$e/$d
   end
 end
 
