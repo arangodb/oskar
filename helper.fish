@@ -450,6 +450,13 @@ function showRepository
     else
       printf $fmt3 'Enterprise' 'not configured'
     end
+    if test -d $WORKDIR/work/ArangoDB/upgrade-data-tests
+      pushd upgrade-data-tests
+      printf $fmt3 'Test Data' (findBranch)
+      popd
+    else
+      printf $fmt3 'Test Data' 'missing'
+    end
     popd
   else
     printf $fmt3 'Community' 'missing'
@@ -460,7 +467,21 @@ function showRepository
 end
 
 function showLog
-  less +G work/test.log
+  if test -f work/test.log
+    less +G work/test.log
+  else
+    echo "no test log available"
+  end
+end
+
+function showHelp
+  echo '------------------------------------------------------------------------------'
+  echo 'showHelp                   show this message'
+  echo 'showConfig                 show configuration'
+  echo 'showRepository             show status of the checkout repositories'
+  echo 'showLog                    show test log'
+  echo '------------------------------------------------------------------------------'
+  echo
 end
 
 ## #############################################################################
@@ -724,3 +745,4 @@ switch (uname)
 end
 
 showConfig
+showHelp
