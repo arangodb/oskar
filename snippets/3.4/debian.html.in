@@ -26,15 +26,15 @@
   <p><strong>Debian</strong> packages</p>
   <ul>
     <li>
-      <a href="@DOWNLOAD_LINK@/Linux/@DEBIAN_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@DEBIAN_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
       (@DEBIAN_SIZE_SERVER@ MByte, SHA256 @DEBIAN_SHA256_SERVER@)
     </li>
     <li>
-      <a href="@DOWNLOAD_LINK@/Linux/@DEBIAN_NAME_CLIENT@">Client Tools @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@DEBIAN_NAME_CLIENT@">Client Tools @ARANGODB_VERSION@</a><br>
       (@DEBIAN_SIZE_CLIENT@ MByte, SHA256 @DEBIAN_SHA256_CLIENT@)
     </li>
     <li>
-      <a href="@DOWNLOAD_LINK@/Linux/@DEBIAN_NAME_DEBUG_SYMBOLS@">Debug Symbols @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@DEBIAN_NAME_DEBUG_SYMBOLS@">Debug Symbols @ARANGODB_VERSION@</a><br>
       (@DEBIAN_SIZE_DEBUG_SYMBOLS@ MByte, SHA256 @DEBIAN_SHA256_DEBUG_SYMBOLS@)
     </li>
   </ul>
@@ -44,7 +44,7 @@
   </p>
   <ul>
     <li>
-      <a href="@DOWNLOAD_LINK@/Linux/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@TARGZ_NAME_SERVER@">Server @ARANGODB_VERSION@</a><br>
       (@TARGZ_SIZE_SERVER@ MByte, SHA256 @TARGZ_SHA256_SERVER@)
     </li>
   </ul>
@@ -56,14 +56,14 @@
     First add the repository key to apt like this:
   </p>
   <pre>
-    curl -OL https://download.arangodb.com/arangodb34/DEBIAN/Release.key
+    curl -OL https://download.arangodb.com/@ARANGODB_REPO@/DEBIAN/Release.key
     sudo apt-key add - < Release.key
   </pre>
   <p>
     Use apt-get to install arangodb:
   </p>
   <pre>
-    echo 'deb https://download.arangodb.com/arangodb34/DEBIAN/ /' | sudo tee /etc/apt/sources.list.d/arangodb.list
+    echo 'deb https://download.arangodb.com/@ARANGODB_REPO@/DEBIAN/ /' | sudo tee /etc/apt/sources.list.d/arangodb.list
     sudo apt-get install apt-transport-https
     sudo apt-get update
     sudo apt-get install arangodb3=@DEBIAN_VERSION@

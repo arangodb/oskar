@@ -26,11 +26,11 @@
   <p><strong>NSIS</strong> packages</p>
   <ul>
     <li>
-      <a href="@DOWNLOAD_LINK@/Windows/@WINDOWS_NAME_SERVER_EXE@">Server @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Windows/@WINDOWS_NAME_SERVER_EXE@">Server @ARANGODB_VERSION@</a><br>
       (@WINDOWS_SIZE_SERVER_EXE@ MByte, SHA256 @WINDOWS_SHA256_SERVER_EXE@)
     </li>
     <li>
-      <a href="@DOWNLOAD_LINK@/Windows/@WINDOWS_NAME_CLIENT_EXE@">Client Tools @ARANGODB_VERSION@</a></li>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Windows/@WINDOWS_NAME_CLIENT_EXE@">Client Tools @ARANGODB_VERSION@</a></li>
       (@WINDOWS_SIZE_CLIENT_EXE@ MByte, SHA256 @WINDOWS_SHA256_CLIENT_EXE@)
     </li>
   </ul>
@@ -38,7 +38,7 @@
   <p><strong>Zip</strong> package</p>
   <ul>
     <li>
-      <a href="@DOWNLOAD_LINK@/Windows/@WINDOWS_NAME_SERVER_ZIP@">Server @ARANGODB_VERSION@</a><br>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Windows/@WINDOWS_NAME_SERVER_ZIP@">Server @ARANGODB_VERSION@</a><br>
       (@WINDOWS_SIZE_SERVER_ZIP@ MByte, SHA256 @WINDOWS_SHA256_SERVER_ZIP@)
     </li>
   </ul>

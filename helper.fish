@@ -94,10 +94,10 @@ function includeGrey ; set -gx SKIPGREY false ; end
 if test -z "$SKIPGREY"; includeGrey
 else ; set -gx SKIPGREY $SKIPGREY ; end
 
-function stable ; set -gx RELEASETYPE stable ; end
-function preview ; set -gx RELEASETYPE preview ; end
-if test -z "$RELEASETYPE"; preview
-else ; set -gx RELEASETYPE $RELEASETYPE ; end
+function stable ; set -gx RELEASE_TYPE stable ; end
+function preview ; set -gx RELEASE_TYPE preview ; end
+if test -z "$RELEASE_TYPE"; preview
+else ; set -gx RELEASE_TYPE $RELEASE_TYPE ; end
 
 function keepBuild ; set -gx NO_RM_BUILD 1 ; end
 function clearBuild ; set -gx NO_RM_BUILD ; end
@@ -213,14 +213,6 @@ function makeRelease
     return 1
   end
 
-  if test "$ENTERPRISE_DOWNLOAD_LINK" = ""
-    set -xg ENTERPRISE_DOWNLOAD_LINK "https://download.enterprise"
-  end
-
-  if test "$COMMUNITY_DOWNLOAD_LINK" = ""
-    set -xg COMMUNITY_DOWNLOAD_LINK "https://download.enterprise"
-  end
-
   if test (count $argv) -lt 2
     findArangoDBVersion ; or return 1
   else
@@ -239,10 +231,6 @@ end
 
 function makeSourceRelease
   set -l SOURCE_TAG "unknown"
-
-  if test -z "$SOURCE_DOWNLOAD_LINK"
-    set -xg SOURCE_DOWNLOAD_LINK "https://download.source"
-  end
 
   if test (count $argv) -lt 1
     findArangoDBVersion ; or return 1
@@ -408,7 +396,7 @@ function showConfig
   printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/catchtest)'
   echo
   echo 'Build Configuration'
-  printf $fmt3 'Stable/preview' $RELEASETYPE   '(stable/preview)'
+  printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
   printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/catchtest)'
   echo
   echo 'Internal Configuration'
