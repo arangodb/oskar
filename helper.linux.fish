@@ -706,11 +706,19 @@ function transformDockerSnippet
   set -l DOCKER_IMAGE "$argv[2]"
   set -l ARANGODB_LICENSE_KEY_BASE64 (echo -n "$ARANGODB_LICENSE_KEY" | base64 -w 0)
 
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+  else
+    set ARANGODB_EDITION "Community"
+  end
+
   set -l n "work/download-docker-$edition.html"
 
   sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
       -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
       -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/docker.$edition.html.in > $n
 
@@ -725,11 +733,19 @@ function transformK8SSnippet
   set -l DOCKER_IMAGE "$argv[2]"
   set -l ARANGODB_LICENSE_KEY_BASE64 (echo -n "$ARANGODB_LICENSE_KEY" | base64 -w 0)
 
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+  else
+    set ARANGODB_EDITION "Community"
+  end
+
   set -l n "work/download-k8s-$edition.html"
 
   sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
       -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
       -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/k8s.$edition.html.in > $n
 
