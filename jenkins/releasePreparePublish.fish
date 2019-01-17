@@ -25,9 +25,9 @@ and set -g SP_PACKAGES $DST
 and set -g SP_SNIPPETS_CO $DST/snippets/Community
 and set -g SP_SNIPPETS_EN $DST/snippets/Enterprise
 and set -g SP_SOURCE $DST/source
-and set -g WS_PACKAGES $WORKSPACE/release/packages
-and set -g WS_SNIPPETS $WORKSPACE/release/snippets
-and set -g WS_SOURCE $WORKSPACE/release/source
+and set -g WS_PACKAGES $SRC/release/packages
+and set -g WS_SNIPPETS $SRC/release/snippets
+and set -g WS_SOURCE $SRC/release/source
 
 and echo "checking packages source directory '$WS_PACKAGES'"
 and test -d $WS_PACKAGES
@@ -45,7 +45,7 @@ and echo "creating source destination directory '$SP_SOURCE'"
 and mkdir -p $SP_SOURCE
 
 and echo "========== COPYING PACKAGES =========="
-and tar -C $WORKSPACE/release -c -f - packages | tar -C $DST -x -v -f -
+and tar -C $SRC/release -c -f - packages | tar -C $DST -x -v -f -
 and echo "========== COPYING SOURCE =========="
 and tar -C $WS_SOURCE -c -f - . | tar -C $SP_SOURCE -x -v -f -
 and echo "========== COPYING SNIPPETS =========="
