@@ -18,7 +18,7 @@ lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
 switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 
-set -xg SRC $argv[1]/stage1/${RELEASE_TAG}
+set -xg SRC $argv[1]/stage1/$RELEASE_TAG
 set -xg DST $argv[1]/stage2/$ARANGODB_PACKAGES
 
 and set -g SP_PACKAGES $DST
