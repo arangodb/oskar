@@ -297,9 +297,9 @@ function transformDebianSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
-      set DOWNLOAD_LINK "enterprise-download/"
+      set DOWNLOAD_LINK "/enterprise-download"
     else
-      set DOWNLOAD_LINK "$ENTERPRISE_DOWNLOAD_KEY/"
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
     end
   else
     set ARANGODB_EDITION "Community"
@@ -340,8 +340,9 @@ function transformDebianSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
@@ -445,8 +446,9 @@ function transformRPMSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
 
@@ -465,8 +467,9 @@ function transformRPMSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
 
@@ -527,8 +530,9 @@ function transformTarGzSnippet
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
 
@@ -717,8 +721,9 @@ function transformDockerSnippet
   sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
       -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
       -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/docker.$edition.html.in > $n
 
@@ -744,8 +749,9 @@ function transformK8SSnippet
   sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
       -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
       -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/k8s.$edition.html.in > $n
 
