@@ -29,6 +29,7 @@ function updateRepository
   and git reset --hard $cid
   and echo "FORCING UPDATE $GIT_BRANCH"
   and git push --force origin $GIT_BRANCH
+  or begin git merge --abort ; and return 1 ; end
 end
 
 lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
