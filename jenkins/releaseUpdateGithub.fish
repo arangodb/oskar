@@ -13,8 +13,8 @@ else
   exit 1
 end
 
-if test "$RELEASE_IS_HEAD" = "false"
-  echo "build an older release, not updating github"
+if test "$RELEASE_IS_HEAD" != "true"
+  echo "building an older release, not updating github"
   exit 0
 end
 
@@ -25,7 +25,8 @@ function updateRepository
   and git fetch origin $GIT_BRANCH
   and git checkout $GIT_BRANCH
   and git reset --hard $cid
-  and echo need to push
+  and echo "FORCING UPDATE $GIT_BRANCH"
+  and git push --force origin $GIT_BRANCH
 end
 
 lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
