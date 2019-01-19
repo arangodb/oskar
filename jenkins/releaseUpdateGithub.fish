@@ -22,8 +22,10 @@ source jenkins/helper.jenkins.fish ; prepareOskar
 
 function updateRepository
   set -l cid (git rev-parse HEAD)
+  and git reset --hard
   and git fetch origin $GIT_BRANCH
   and git checkout $GIT_BRANCH
+  and git clean -fdx
   and git reset --hard $cid
   and echo "FORCING UPDATE $GIT_BRANCH"
   and git push --force origin $GIT_BRANCH
