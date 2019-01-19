@@ -24,7 +24,6 @@ function updateRepository
   set -l cid (git rev-parse HEAD)
   and git fetch origin $GIT_BRANCH
   and git checkout $GIT_BRANCH
-  git pull origin $GIT_BRANCH
   and git reset --hard $cid
   and echo "FORCING UPDATE $GIT_BRANCH"
   and git push --force origin $GIT_BRANCH
