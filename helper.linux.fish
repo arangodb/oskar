@@ -879,7 +879,12 @@ end
 function runInContainer
   if test -z "$SSH_AUTH_SOCK"
     eval (ssh-agent -c) > /dev/null
-    ssh-add ~/.ssh/id_rsa
+    for key in ~/.ssh/id_rsa ~/.ssh/id_deploy
+      if test -f $key
+        echo "adding key $key"
+        ssh-add $key
+      end
+    end
     set -l agentstarted 1
   else
     set -l agentstarted ""
