@@ -20,6 +20,8 @@ end
 
 source jenkins/helper.jenkins.fish ; prepareOskar
 
+set -xg GIT_SSH_COMMAND "ssh -i ~/.ssh/id_deploy" 
+
 function updateRepository
   set -l cid (git rev-parse HEAD)
   and git reset --hard
@@ -27,7 +29,7 @@ function updateRepository
   and git checkout $GIT_BRANCH
   and git clean -fdx
   and git reset --hard $cid
-  and echo "FORCING UPDATE $GIT_BRANCH"
+  and echo "FORCING UPDATE $GIT_BRANCH @ " (pwd)
   and git push --force origin $GIT_BRANCH
   or begin git merge --abort ; and return 1 ; end
 end
