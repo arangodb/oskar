@@ -128,11 +128,12 @@ function launchSingleTests
     case 29 ; test1         catch ""
     case 30 ; test1         dump ""
     case 31 ; test1         dump_authentication ""
-    case 32 ; test1         endpoints "" --skipEndpointsIpv6 true
-    case 33 ; test1         http_replication ""
-    case 34 ; test1         http_server ""
-    case 35 ; test1         ssl_server ""
-    case 36 ; test1         version ""
+    case 32 ; test1         dump_maskings ""
+    case 33 ; test1         endpoints "" --skipEndpointsIpv6 true
+    case 34 ; test1         http_replication ""
+    case 35 ; test1         http_server ""
+    case 36 ; test1         ssl_server ""
+    case 37 ; test1         version ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
@@ -245,19 +246,20 @@ function launchClusterTests
     case  1 ; test1 shell_server ""
     case  2 ; test1 dump ""
     case  3 ; test1 dump_authentication ""
-    case  4 ; test1 http_server ""
-    case  5 ; test3 resilience move moving-shards-cluster.js
-    case  6 ; test3 resilience failover resilience-synchronous-repl-cluster.js
-    case  7 ; test3 resilience sharddist shard-distribution-spec.js
-    case  8 ; test1 shell_client ""
-    case  9 ; test1 shell_client_aql ""
-    case 10 ; test1 shell_server_aql 0 --testBuckets 5/0
-    case 11 ; test1 shell_server_aql 1 --testBuckets 5/1
-    case 12 ; test1 shell_server_aql 2 --testBuckets 5/2
-    case 13 ; test1 shell_server_aql 3 --testBuckets 5/3
-    case 14 ; test1 shell_server_aql 4 --testBuckets 5/4
-    case 15 ; test1 server_http ""
-    case 16 ; test1 ssl_server ""
+    case  4 ; test1 dump_maskings ""
+    case  5 ; test1 http_server ""
+    case  6 ; test3 resilience move moving-shards-cluster.js
+    case  7 ; test3 resilience failover resilience-synchronous-repl-cluster.js
+    case  8 ; test3 resilience sharddist shard-distribution-spec.js
+    case  9 ; test1 shell_client ""
+    case 10 ; test1 shell_client_aql ""
+    case 11 ; test1 shell_server_aql 0 --testBuckets 5/0
+    case 12 ; test1 shell_server_aql 1 --testBuckets 5/1
+    case 13 ; test1 shell_server_aql 2 --testBuckets 5/2
+    case 14 ; test1 shell_server_aql 3 --testBuckets 5/3
+    case 15 ; test1 shell_server_aql 4 --testBuckets 5/4
+    case 16 ; test1 server_http ""
+    case 17 ; test1 ssl_server ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
