@@ -64,6 +64,7 @@ Function global:registerSingleTests()
     registerTest -testname "dump"
     registerTest -testname "dump_authentication"
     registerTest -testname "dump_encrypted"
+    registerTest -testname "dump_maskings"
     registerTest -testname "endpoints"
     registerTest -testname "export"
     registerTest -testname "foxx_manager"
@@ -100,6 +101,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "shell_server_aql" -index "4" -bucket "5/4"
     registerTest -cluster $true -testname "shell_client_aql"
     registerTest -cluster $true -testname "dump"
+    registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "server_http"
     # registerTest -cluster $true -testname "agency"
     comm
