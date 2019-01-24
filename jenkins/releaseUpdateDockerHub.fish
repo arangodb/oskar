@@ -18,7 +18,7 @@ source jenkins/helper.jenkins.fish ; prepareOskar
 
 function updateDockerHub
   set -l to $argv[1]
-  set -l from $from-preview
+  set -l from $to-preview
   set -l version $argv[2]
 
   echo "Copying $from to $to"
