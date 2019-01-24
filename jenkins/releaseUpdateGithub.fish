@@ -20,7 +20,7 @@ end
 
 source jenkins/helper.jenkins.fish ; prepareOskar
 
-set -xg GIT_SSH_COMMAND "ssh -i ~/.ssh/id_deploy" 
+set -xg GIT_SSH_COMMAND "ssh -i ~/.ssh/id_rsa" 
 
 function updateRepository
   set -l cid (git rev-parse HEAD)
