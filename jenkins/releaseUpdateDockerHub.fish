@@ -17,14 +17,18 @@ end
 source jenkins/helper.jenkins.fish ; prepareOskar
 
 function updateDockerHub
-  set -l image argv[1]
+  set -l to $argv[1]
+  set -l from $from-preview
+  set -l version $argv[2]
 
-  docker pull arangodb/$image-preview:$ARANGODB_VERSION
-  and docker tag arangodb/$image-preview:$ARANGODB_VERSION arangodb/$image:$ARANGODB_VERSION
-  and docker push arangodb/$image:$ARANGODB_VERSION
+  echo "Copying $from to $to"
+
+  docker pull arangodb/$from:$version
+  and docker tag arangodb/$from:$version arangodb/$to:$version
+  and docker push arangodb/$to:$version
   and if test "$RELEASE_IS_HEAD" = "true"
-    docker tag arangodb/$image-preview:$ARANGODB_VERSION arangodb/$image:latest
-    docker push arangodb/$image:latest
+    docker tag arangodb/$from:$version arangodb/$to:latest
+    docker push arangodb/$to:latest
   end
 end
 
@@ -32,8 +36,8 @@ lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
 
 switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
-and updateDockerHub arangodb
-and updateDockerHub enterprise
+and updateDockerHub arangodb $ARANGODB_VERSION
+and updateDockerHub enterprise $ARANGODB_VERSION
 
 set -l s $status
 unlockDirectory
