@@ -49,30 +49,32 @@ and tar -C $SRC/release -c -f - packages | tar -C $DST -x -v -f -
 and echo "========== COPYING SOURCE =========="
 and tar -C $WS_SOURCE -c -f - . | tar -C $SP_SOURCE -x -v -f -
 and echo "========== COPYING SNIPPETS =========="
-and cp -v $WS_SNIPPETS/download-arangodb3-debian.html  $SP_SNIPPETS_CO/download-debian.html
-and cp -v $WS_SNIPPETS/download-arangodb3-debian.html  $SP_SNIPPETS_CO/download-ubuntu.html
-and cp -v $WS_SNIPPETS/download-arangodb3-rpm.html     $SP_SNIPPETS_CO/download-centos.html
-and cp -v $WS_SNIPPETS/download-arangodb3-rpm.html     $SP_SNIPPETS_CO/download-fedora.html
-and cp -v $WS_SNIPPETS/download-arangodb3-suse.html    $SP_SNIPPETS_CO/download-opensuse.html
-and cp -v $WS_SNIPPETS/download-arangodb3-rpm.html     $SP_SNIPPETS_CO/download-redhat.html
-and cp -v $WS_SNIPPETS/download-arangodb3-suse.html    $SP_SNIPPETS_CO/download-sle.html
-and cp -v $WS_SNIPPETS/download-arangodb3-linux.html   $SP_SNIPPETS_CO/download-linux-general.html
-and cp -v $WS_SNIPPETS/download-arangodb3-macosx.html  $SP_SNIPPETS_CO/download-macosx.html
-and cp -v $WS_SNIPPETS/download-docker-community.html  $SP_SNIPPETS_CO/download-docker.html
-and cp -v $WS_SNIPPETS/download-k8s-community.html     $SP_SNIPPETS_CO/download-k8s.html
-and cp -v $WS_SNIPPETS/download-source.html            $SP_SNIPPETS_CO/download-source.html
+and cp -v $WS_SNIPPETS/download-arangodb3-debian.html   $SP_SNIPPETS_CO/download-debian.html
+and cp -v $WS_SNIPPETS/download-arangodb3-debian.html   $SP_SNIPPETS_CO/download-ubuntu.html
+and cp -v $WS_SNIPPETS/download-arangodb3-rpm.html      $SP_SNIPPETS_CO/download-centos.html
+and cp -v $WS_SNIPPETS/download-arangodb3-rpm.html      $SP_SNIPPETS_CO/download-fedora.html
+and cp -v $WS_SNIPPETS/download-arangodb3-suse.html     $SP_SNIPPETS_CO/download-opensuse.html
+and cp -v $WS_SNIPPETS/download-arangodb3-rpm.html      $SP_SNIPPETS_CO/download-redhat.html
+and cp -v $WS_SNIPPETS/download-arangodb3-suse.html     $SP_SNIPPETS_CO/download-sle.html
+and cp -v $WS_SNIPPETS/download-arangodb3-linux.html    $SP_SNIPPETS_CO/download-linux-general.html
+and cp -v $WS_SNIPPETS/download-arangodb3-macosx.html   $SP_SNIPPETS_CO/download-macosx.html
+and cp -v $WS_SNIPPETS/download-docker-community.html   $SP_SNIPPETS_CO/download-docker.html
+and cp -v $WS_SNIPPETS/download-k8s-community.html      $SP_SNIPPETS_CO/download-k8s.html
+and cp -v $WS_SNIPPETS/download-source.html             $SP_SNIPPETS_CO/download-source.html
+and cp -v $WS_SNIPPETS/download-windows-community.html  $SP_SNIPPETS_CO/download-windows.html
 
-and cp -v $WS_SNIPPETS/download-arangodb3e-debian.html $SP_SNIPPETS_EN/download-debian.html
-and cp -v $WS_SNIPPETS/download-arangodb3e-debian.html $SP_SNIPPETS_EN/download-ubuntu.html
-and cp -v $WS_SNIPPETS/download-arangodb3e-rpm.html    $SP_SNIPPETS_EN/download-centos.html
-and cp -v $WS_SNIPPETS/download-arangodb3e-rpm.html    $SP_SNIPPETS_EN/download-fedora.html
-and cp -v $WS_SNIPPETS/download-arangodb3e-suse.html   $SP_SNIPPETS_EN/download-opensuse.html
-and cp -v $WS_SNIPPETS/download-arangodb3e-rpm.html    $SP_SNIPPETS_EN/download-redhat.html
-and cp -v $WS_SNIPPETS/download-arangodb3e-suse.html   $SP_SNIPPETS_EN/download-sle.html
-and cp -v $WS_SNIPPETS/download-arangodb3e-linux.html  $SP_SNIPPETS_EN/download-linux-general.html
-and cp -v $WS_SNIPPETS/download-arangodb3e-macosx.html $SP_SNIPPETS_EN/download-macosx.html
-and cp -v $WS_SNIPPETS/download-docker-enterprise.html $SP_SNIPPETS_EN/download-docker.html
-and cp -v $WS_SNIPPETS/download-k8s-enterprise.html    $SP_SNIPPETS_EN/download-k8s.html
+and cp -v $WS_SNIPPETS/download-arangodb3e-debian.html  $SP_SNIPPETS_EN/download-debian.html
+and cp -v $WS_SNIPPETS/download-arangodb3e-debian.html  $SP_SNIPPETS_EN/download-ubuntu.html
+and cp -v $WS_SNIPPETS/download-arangodb3e-rpm.html     $SP_SNIPPETS_EN/download-centos.html
+and cp -v $WS_SNIPPETS/download-arangodb3e-rpm.html     $SP_SNIPPETS_EN/download-fedora.html
+and cp -v $WS_SNIPPETS/download-arangodb3e-suse.html    $SP_SNIPPETS_EN/download-opensuse.html
+and cp -v $WS_SNIPPETS/download-arangodb3e-rpm.html     $SP_SNIPPETS_EN/download-redhat.html
+and cp -v $WS_SNIPPETS/download-arangodb3e-suse.html    $SP_SNIPPETS_EN/download-sle.html
+and cp -v $WS_SNIPPETS/download-arangodb3e-linux.html   $SP_SNIPPETS_EN/download-linux-general.html
+and cp -v $WS_SNIPPETS/download-arangodb3e-macosx.html  $SP_SNIPPETS_EN/download-macosx.html
+and cp -v $WS_SNIPPETS/download-docker-enterprise.html  $SP_SNIPPETS_EN/download-docker.html
+and cp -v $WS_SNIPPETS/download-k8s-enterprise.html     $SP_SNIPPETS_EN/download-k8s.html
+and cp -v $WS_SNIPPETS/download-windows-enterprise.html $SP_SNIPPETS_EN/download-windows.html
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; unlockDirectory
