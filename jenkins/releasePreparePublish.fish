@@ -61,7 +61,6 @@ and cp -v $WS_SNIPPETS/download-arangodb3-macosx.html   $SP_SNIPPETS_CO/download
 and cp -v $WS_SNIPPETS/download-docker-community.html   $SP_SNIPPETS_CO/download-docker.html
 and cp -v $WS_SNIPPETS/download-k8s-community.html      $SP_SNIPPETS_CO/download-k8s.html
 and cp -v $WS_SNIPPETS/download-source.html             $SP_SNIPPETS_CO/download-source.html
-and cp -v $WS_SNIPPETS/download-windows-community.html  $SP_SNIPPETS_CO/download-windows.html
 
 and cp -v $WS_SNIPPETS/download-arangodb3e-debian.html  $SP_SNIPPETS_EN/download-debian.html
 and cp -v $WS_SNIPPETS/download-arangodb3e-debian.html  $SP_SNIPPETS_EN/download-ubuntu.html
@@ -74,7 +73,9 @@ and cp -v $WS_SNIPPETS/download-arangodb3e-linux.html   $SP_SNIPPETS_EN/download
 and cp -v $WS_SNIPPETS/download-arangodb3e-macosx.html  $SP_SNIPPETS_EN/download-macosx.html
 and cp -v $WS_SNIPPETS/download-docker-enterprise.html  $SP_SNIPPETS_EN/download-docker.html
 and cp -v $WS_SNIPPETS/download-k8s-enterprise.html     $SP_SNIPPETS_EN/download-k8s.html
-and cp -v $WS_SNIPPETS/download-windows-enterprise.html $SP_SNIPPETS_EN/download-windows.html
+
+and recode UTF8..latin1 < $WS_SNIPPETS/download-windows-enterprise.html > $SP_SNIPPETS_EN/download-windows.html
+and recode UTF8..latin1 < $WS_SNIPPETS/download-windows-community.html  > $SP_SNIPPETS_CO/download-windows.html
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; unlockDirectory
