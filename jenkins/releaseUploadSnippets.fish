@@ -25,9 +25,10 @@ or begin unlockDirectory ; exit 1 ; end
 function upload
   cd /mnt/buildfiles/stage2
   set -l HOST live.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f@appserver.live.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f.drush.in
+  set -l SSL "ssh -o StrictHostkeyChecking=false -i $HOME/.ssh/pantheon -p 2222"
 
-  rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" --delete -rvvz -e "ssh -i $HOME/.ssh/pantheon -p 2222" $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-current/
-  and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" --delete -rvvz -e "ssh -i $HOME/.ssh/pantheon -p 2222" $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/
+  rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" --delete -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-current/
+  and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" --delete -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/
 end
 
 # there might be internet hickups
