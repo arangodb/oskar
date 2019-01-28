@@ -30,7 +30,7 @@
       (@WINDOWS_SIZE_SERVER_EXE@ MByte, SHA256 @WINDOWS_SHA256_SERVER_EXE@)
     </li>
     <li>
-      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Windows/@WINDOWS_NAME_CLIENT_EXE@">Client Tools @ARANGODB_VERSION@</a></li>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Windows/@WINDOWS_NAME_CLIENT_EXE@">Client Tools @ARANGODB_VERSION@</a><br>
       (@WINDOWS_SIZE_CLIENT_EXE@ MByte, SHA256 @WINDOWS_SHA256_CLIENT_EXE@)
     </li>
   </ul>
