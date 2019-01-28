@@ -487,6 +487,7 @@ function findArangoDBVersion
 
   set -xg ARANGODB_SNIPPETS "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR"
   set -xg ARANGODB_PACKAGES "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR"
+  set -xg ARANGODB_PACKAGES "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR"
 
   # old version scheme (upto 3.3.x)
   if grep -q "$APR" $CMAKELIST
@@ -508,11 +509,15 @@ function findArangoDBVersion
 
     set -xg ARANGODB_REPO "arangodb""$ARANGODB_VERSION_MAJOR""$ARANGODB_VERSION_MINOR"
 
+    set -xg DOCKER_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR"
+
   # new version scheme (from 3.4.x)  
   else
     set -xg ARANGODB_VERSION_PATCH (grep "$AV""_PATCH" $CMAKELIST | grep -v unset | sed -e $SEDFIX)
     set -l  ARANGODB_VERSION_RELEASE_TYPE (grep "$AV""_RELEASE_TYPE" $CMAKELIST | grep -v unset | sed -e $SEDFIX)
     set -l  ARANGODB_VERSION_RELEASE_NUMBER (grep "$AV""_RELEASE_NUMBER" $CMAKELIST | grep -v unset | sed -e $SEDFIX)
+
+    set -xg DOCKER_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH"
 
     # stable release, devel or nightly
     if test "$ARANGODB_VERSION_RELEASE_TYPE" = ""
@@ -614,13 +619,14 @@ function findArangoDBVersion
 
   echo '------------------------------------------------------------------------------'
   echo "ArangoDB:   $ARANGODB_VERSION"
-  echo "Debian:     $ARANGODB_DEBIAN_UPSTREAM / $ARANGODB_DEBIAN_REVISION"
-  echo "RPM:        $ARANGODB_RPM_UPSTREAM / $ARANGODB_RPM_REVISION"
   echo "DARWIN:     $ARANGODB_DARWIN_UPSTREAM / $ARANGODB_DARWIN_REVISION"
-  echo "TGZ:        $ARANGODB_TGZ_UPSTREAM"
-  echo "SNIPPETS:   $ARANGODB_SNIPPETS"
+  echo "DOCKER:     $DOCKER_TAG"
+  echo "DEBIAN:     $ARANGODB_DEBIAN_UPSTREAM / $ARANGODB_DEBIAN_REVISION"
   echo "PACKAGES:   $ARANGODB_PACKAGES"
-  echo "Repository: $ARANGODB_REPO"
+  echo "REPOSITORY: $ARANGODB_REPO"
+  echo "RPM:        $ARANGODB_RPM_UPSTREAM / $ARANGODB_RPM_REVISION"
+  echo "SNIPPETS:   $ARANGODB_SNIPPETS"
+  echo "TGZ:        $ARANGODB_TGZ_UPSTREAM"
   echo '------------------------------------------------------------------------------'
   echo
 end
