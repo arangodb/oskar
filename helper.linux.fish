@@ -296,6 +296,7 @@ function transformDebianSnippet
 
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
     else
@@ -303,6 +304,7 @@ function transformDebianSnippet
     end
   else
     set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
     set DOWNLOAD_LINK ""
   end
 
@@ -342,6 +344,7 @@ function transformDebianSnippet
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
@@ -402,6 +405,7 @@ function transformRPMSnippet
 
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
     else
@@ -409,6 +413,7 @@ function transformRPMSnippet
     end
   else
     set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
     set DOWNLOAD_LINK ""
   end
 
@@ -448,6 +453,7 @@ function transformRPMSnippet
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
@@ -469,6 +475,7 @@ function transformRPMSnippet
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
@@ -509,6 +516,7 @@ function transformTarGzSnippet
 
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
     else
@@ -516,6 +524,7 @@ function transformTarGzSnippet
     end
   else
     set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
     set DOWNLOAD_LINK ""
   end
 
@@ -532,6 +541,7 @@ function transformTarGzSnippet
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
@@ -707,8 +717,10 @@ function transformDockerSnippet
 
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
   else
     set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3e"
   end
 
   set -l n "work/download-docker-$edition.html"
@@ -718,6 +730,7 @@ function transformDockerSnippet
       -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/docker.$edition.html.in > $n
@@ -735,8 +748,10 @@ function transformK8SSnippet
 
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
   else
     set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
   end
 
   set -l n "work/download-k8s-$edition.html"
@@ -746,6 +761,7 @@ function transformK8SSnippet
       -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/k8s.$edition.html.in > $n

@@ -236,6 +236,7 @@ function transformBundleSnippet
 
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download/"
     else
@@ -243,6 +244,7 @@ function transformBundleSnippet
     end
   else
     set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
     set DOWNLOAD_LINK ""
   end
 
@@ -269,6 +271,7 @@ function transformBundleSnippet
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       < snippets/$ARANGODB_SNIPPETS/macosx.html.in > $n

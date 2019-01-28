@@ -56,9 +56,9 @@
   </p>
   <p>
     Run the following as root:
-    <pre>zypper --no-gpg-checks --gpg-auto-import-keys addrepo https://download.arangodb.com/@ARANGODB_REPO@/RPM/arangodb.repo
+    <pre>zypper --no-gpg-checks --gpg-auto-import-keys addrepo https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/RPM/arangodb.repo
 
 zypper --no-gpg-checks --gpg-auto-import-keys refresh
-zypper -n install arangodb3=@ARANGODB_VERSION@</pre>
+zypper -n install @ARANGODB_PKG_NAME@=@ARANGODB_VERSION@</pre>
   </p>
 </div>

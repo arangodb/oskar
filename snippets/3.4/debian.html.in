@@ -56,22 +56,22 @@
     First add the repository key to apt like this:
   </p>
   <pre>
-    curl -OL https://download.arangodb.com/@ARANGODB_REPO@/DEBIAN/Release.key
+    curl -OL https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/DEBIAN/Release.key
     sudo apt-key add - < Release.key
   </pre>
   <p>
     Use apt-get to install arangodb:
   </p>
   <pre>
-    echo 'deb https://download.arangodb.com/@ARANGODB_REPO@/DEBIAN/ /' | sudo tee /etc/apt/sources.list.d/arangodb.list
+    echo 'deb https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/DEBIAN/ /' | sudo tee /etc/apt/sources.list.d/arangodb.list
     sudo apt-get install apt-transport-https
     sudo apt-get update
-    sudo apt-get install arangodb3=@DEBIAN_VERSION@
+    sudo apt-get install @ARANGODB_PKG_NAME@=@DEBIAN_VERSION@
   </pre>
   <p>
     To install the debug symbols package (not required by default)
   </p>
   <pre>
-    sudo apt-get install arangodb3-dbg=@DEBIAN_VERSION@
+    sudo apt-get install @ARANGODB_PKG_NAME@-dbg=@DEBIAN_VERSION@
   </pre>
 </div>

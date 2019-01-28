@@ -58,10 +58,10 @@
     Run the following as root in a terminal:
   <pre>cd /etc/yum.repos.d/
 curl -OL https://download.arangodb.com/@ARANGODB_REPO@/RPM/arangodb.repo
-yum -y install arangodb3-@ARANGODB_VERSION@</pre>
+yum -y install @ARANGODB_PKG_NAME@-@ARANGODB_VERSION@</pre>
   </p>
   <p>
     To install the debug symbols package (not required by default), run:
-    <pre>yum -y install arangodb3-debuginfo-@ARANGODB_VERSION@</pre>
+    <pre>yum -y install @ARANGODB_PKG_NAME@-debuginfo-@ARANGODB_VERSION@</pre>
   </p>
 </div>
