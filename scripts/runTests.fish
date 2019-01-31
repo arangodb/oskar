@@ -305,7 +305,7 @@ function waitOrKill
     if test (count $ids) -gt 0
       kill $ids
       if waitForProcesses 30 ""
-        set ids (jobs -p)
+        set -l ids (jobs -p)
         if test (count $ids) -gt 0
           kill -9 $ids
           waitForProcesses 60 ""   # give jobs some time to finish
