@@ -5,7 +5,7 @@ lockDirectory ; updateOskar ; clearResults
 
 community
 
-switchBranches devel devel true
+switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
