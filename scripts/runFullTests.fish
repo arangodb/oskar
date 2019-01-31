@@ -337,11 +337,11 @@ function waitOrKill
   echo Controlling subprocesses...
   if waitForProcesses $timeout $launcher
     set -l ids (jobs -p)
-    if test (count $jobs) -gt 0
+    if test (count $ids) -gt 0
       kill $ids
       if waitForProcesses 30 ""
         set ids (jobs -p)
-        if test (count $jobs) -gt 0
+        if test (count $ids) -gt 0
           kill -9 $ids
           waitForProcesses 60 ""   # give jobs some time to finish
         end
