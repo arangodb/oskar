@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-set -g SCRIPTS (dirname (readlink -f (status -f)))
+set -g SCRIPTS (dirname (status -f))
 source $SCRIPTS/lib/tests.fish
 
 set -g repoState ""
