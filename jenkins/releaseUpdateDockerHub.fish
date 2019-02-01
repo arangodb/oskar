@@ -5,7 +5,7 @@ if test -z "$RELEASE_TAG"
 end
 
 if test "$RELEASE_TYPE" = "stable"
-  set -g GIT_BRANCH master
+  echo "build a stable version, updating docker hub"
 else if test "$RELEASE_TYPE" = "preview"
   echo "building an preview, not updating docker hub"
   exit 0
@@ -36,8 +36,8 @@ lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
 
 switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
-and updateDockerHub arangodb $DOCKER_VERSION
-and updateDockerHub enterprise $DOCKER_VERSION
+and updateDockerHub arangodb $DOCKER_TAG
+and updateDockerHub enterprise $DOCKER_TAG
 
 set -l s $status
 unlockDirectory
