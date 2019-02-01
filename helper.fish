@@ -697,6 +697,13 @@ function clearResults
 end
 
 function cleanWorkspace
+  if test -d /cores
+    set -l cores /cores/core.*
+    if test (count $cores) -ne 0
+      rm -f $cores
+    end
+  end
+
   if test -d $WORKDIR/work
     pushd $WORKDIR/work
     and find . -maxdepth 1 '!' "(" -name ArangoDB -o -name . -o -name .. -o -name ".cc*" ")" -exec rm -rf "{}" ";"
