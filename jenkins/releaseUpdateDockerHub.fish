@@ -36,8 +36,8 @@ lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
 
 switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
-and updateDockerHub arangodb $ARANGODB_VERSION
-and updateDockerHub enterprise $ARANGODB_VERSION
+and updateDockerHub arangodb $DOCKER_VERSION
+and updateDockerHub enterprise $DOCKER_VERSION
 
 set -l s $status
 unlockDirectory
