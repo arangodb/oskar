@@ -1,7 +1,10 @@
-FROM alpine:3.7
+FROM alpine:3.8
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
-RUN apk update && apk add nodejs pwgen && npm install -g foxx-cli
+RUN apk add --no-cache pwgen nodejs npm binutils && \
+    npm install -g foxx-cli && \
+    rm -rf /root/.npm
+
 ADD install.tar.gz /
 COPY setup.sh /setup.sh
 RUN /setup.sh
@@ -10,7 +13,8 @@ RUN /setup.sh
 # Containers in OpenShift by default run with a random UID but with GID 0,
 # and we want that they can access the database and doc directories even
 # without a volume mount:
-RUN chgrp 0 /var/lib/arangodb3 /var/lib/arangodb3-apps && chmod 775 /var/lib/arangodb3 /var/lib/arangodb3-apps
+RUN chgrp 0 /var/lib/arangodb3 /var/lib/arangodb3-apps && \
+    chmod 775 /var/lib/arangodb3 /var/lib/arangodb3-apps
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]
