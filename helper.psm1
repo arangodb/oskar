@@ -374,7 +374,7 @@ If(-Not($KEEPBUILD))
 # Version detection
 # ##############################################################################
 
-Function  findArangoDBVersion
+Function findArangoDBVersion
 {
     If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_MAJOR")[0] -match '.*"([0-9a-zA-Z]*)".*')
     {
@@ -967,11 +967,16 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "*.pdb ..."
-    ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Filter "*.pdb"))
+    Push-Location $global:ARANGODIR\build\bin\$BUILDMODE
+    If($ENTERPRISEEDITION -eq "On")
     {
-        Write-Host "Move $global:ARANGODIR\build\bin\$BUILDMODE\$file"
-        Move-Item -Force -Path "$global:ARANGODIR\build\bin\$BUILDMODE\$file" -Destination $ENV:WORKSPACE; comm
+        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
     }
+    Else
+    {
+        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+    }
+    Pop-Location
     if($SKIPPACKAGING -eq "Off")
     {
         Write-Host "ArangoDB3*.exe ..."
