@@ -966,16 +966,16 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
+    Write-Host "*.pdb ..."
+    ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build\$BUILDMODE" -Filter "*.pdb"))
+    {
+        Write-Host "Move $global:ARANGODIR\build\$BUILDMODE\$file"
+        Move-Item -Force -Path "$global:ARANGODIR\build\$BUILDMODE\$file" -Destination $ENV:WORKSPACE; comm 
+    }
     if($SKIPPACKAGING -eq "Off")
     {
         Write-Host "ArangoDB3*.exe ..."
         ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "ArangoDB3*.exe"))
-        {
-            Write-Host "Move $global:ARANGODIR\build\$file"
-            Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
-        }
-        Write-Host "*.pdb ..."
-        ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "*.pdb"))
         {
             Write-Host "Move $global:ARANGODIR\build\$file"
             Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
