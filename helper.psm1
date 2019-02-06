@@ -990,12 +990,6 @@ Function moveResultsToWorkspace
             Write-Host "Move $global:ARANGODIR\build\$file"
             Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
         }
-        Write-Host "*.pdb ..."
-        ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "*.pdb"))
-        {
-            Write-Host "Move $global:ARANGODIR\build\$file"
-            Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
-        }
         Write-Host "ArangoDB3*.zip ..."
         ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "ArangoDB3*.zip"))
         {
