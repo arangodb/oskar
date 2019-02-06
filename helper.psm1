@@ -971,6 +971,17 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
+    Write-Host "*.pdb ..."
+    Push-Location $global:ARANGODIR\build\bin\$BUILDMODE
+    If($ENTERPRISEEDITION -eq "On")
+    {
+        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+    }
+    Else
+    {
+        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+    }
+    Pop-Location
     if($SKIPPACKAGING -eq "Off")
     {
         Write-Host "ArangoDB3*.exe ..."
