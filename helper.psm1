@@ -84,12 +84,6 @@ Function hostKey
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false
 }
 
-Function uploadSymbols
-{
-    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_arangodb*"; comm
-    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/ gs://download.arangodb.com"; comm
-}
-
 ################################################################################
 # Locking
 ################################################################################
@@ -417,6 +411,17 @@ Function findArangoDBVersion
         $global:ARANGODB_FULL_VERSION = $global:ARANGODB_VERSION   
     }
     return $global:ARANGODB_FULL_VERSION
+}
+
+################################################################################
+# Upload Symbols to Google Drive
+################################################################################
+
+Function uploadSymbols
+{
+    findArangoDBVersion
+    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_arangodb$global:ARANGODB_REPO"; comm
+    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/symsrv_arangodb$global:ARANGODB_REPO gs://download.arangodb.com/symsrv_arangodb$global:ARANGODB_REPO"; comm
 }
 
 ################################################################################
