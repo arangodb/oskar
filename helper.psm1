@@ -84,12 +84,6 @@ Function hostKey
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false
 }
 
-Function uploadSymbols
-{
-    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_arangodb*"; comm
-    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/ gs://download.arangodb.com"; comm
-}
-
 ################################################################################
 # Locking
 ################################################################################
@@ -374,7 +368,7 @@ If(-Not($KEEPBUILD))
 # Version detection
 # ##############################################################################
 
-Function findArangoDBVersion
+Function  findArangoDBVersion
 {
     If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_MAJOR")[0] -match '.*"([0-9a-zA-Z]*)".*')
     {
@@ -417,6 +411,17 @@ Function findArangoDBVersion
         $global:ARANGODB_FULL_VERSION = $global:ARANGODB_VERSION   
     }
     return $global:ARANGODB_FULL_VERSION
+}
+
+################################################################################
+# Upload Symbols to Google Drive
+################################################################################
+
+Function uploadSymbols
+{
+    findArangoDBVersion
+    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_arangodb$global:ARANGODB_REPO"; comm
+    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/symsrv_arangodb$global:ARANGODB_REPO gs://download.arangodb.com/symsrv_arangodb$global:ARANGODB_REPO"; comm
 }
 
 ################################################################################
@@ -966,21 +971,16 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    Write-Host "*.pdb ..."
-    Push-Location $global:ARANGODIR\build\bin\$BUILDMODE
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
-    }
-    Else
-    {
-        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
-    }
-    Pop-Location
     if($SKIPPACKAGING -eq "Off")
     {
         Write-Host "ArangoDB3*.exe ..."
         ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "ArangoDB3*.exe"))
+        {
+            Write-Host "Move $global:ARANGODIR\build\$file"
+            Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
+        }
+        Write-Host "*.pdb ..."
+        ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "*.pdb"))
         {
             Write-Host "Move $global:ARANGODIR\build\$file"
             Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
