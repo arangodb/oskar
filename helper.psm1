@@ -368,7 +368,7 @@ If(-Not($KEEPBUILD))
 # Version detection
 # ##############################################################################
 
-Function  findArangoDBVersion
+Function findArangoDBVersion
 {
     If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_MAJOR")[0] -match '.*"([0-9a-zA-Z]*)".*')
     {
