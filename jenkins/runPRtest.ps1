@@ -8,6 +8,7 @@ skipGrey
 
 skipPackagingOn
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
+findArangoDBVersion
 If ($global:ok) 
 {
     oskar1
