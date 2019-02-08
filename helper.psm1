@@ -915,6 +915,7 @@ Function buildStaticArangoDB
 
 Function moveResultsToWorkspace
 {
+    findArangoDBVersion
     Write-Host "Moving reports and logs to $ENV:WORKSPACE ..."
     Write-Host "test.log ..."
     If(Test-Path -PathType Leaf "$INNERWORKDIR\test.log")
