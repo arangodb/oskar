@@ -4,15 +4,16 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\prepareOskar.ps1" $pwd
 . $env:EDITION
 . $env:STORAGE_ENGINE
 . $env:TEST_SUITE
-skipGrey
 
+skipGrey
 skipPackagingOn
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
-findArangoDBVersion
+
 If ($global:ok) 
 {
     oskar1
 }
+
 $s = $global:ok
 moveResultsToWorkspace
 unlockDirectory
