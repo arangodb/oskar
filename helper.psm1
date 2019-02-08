@@ -822,11 +822,10 @@ Function signWindows
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build\"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    $SIGNTOOL = $((Get-ChildItem C:\ -Recurse "signtool.exe" -ErrorAction SilentlyContinue | Where-Object {$_.FullName -match "x64"}).FullName).Split([Environment]::NewLine) | Select -First 1
     ForEach($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
-        Write-Host "Sign: $SIGNTOOL sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
-        proc -process "$SIGNTOOL" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$PACKAGE-sign"
+        Write-Host "Sign: signtool.exe sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
+        proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$PACKAGE-sign"
     }
     generateSnippets
     Pop-Location
@@ -843,10 +842,10 @@ Function storeSymbols
     Else
     {
         findArangoDBVersion | Out-Null
-        $SYMSTORE = $((Get-ChildItem C:\ -Recurse "symstore.exe" -ErrorAction SilentlyContinue | Where-Object {$_.FullName -match "x64"}).FullName).Split([Environment]::NewLine) | Select -First 1
         ForEach($SYMBOL in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
         {
-            proc -process "$SYMSTORE" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
+            Write-Host "Symbol: symstore.exe add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress"
+            proc -process "symstore.exe" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
         }
     }
     uploadSymbols
