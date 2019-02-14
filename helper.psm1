@@ -975,11 +975,11 @@ Function moveResultsToWorkspace
     Push-Location $global:ARANGODIR\build\bin\$BUILDMODE
     If($ENTERPRISEEDITION -eq "On")
     {
-        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+        Compress-Archive -Force -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
     }
     Else
     {
-        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+        Compress-Archive -Force -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
     }
     Pop-Location
     if($SKIPPACKAGING -eq "Off")
