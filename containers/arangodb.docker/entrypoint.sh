@@ -38,15 +38,19 @@ if [ "$1" = 'arangod' ]; then
         echo "automatically choosing storage engine"
     fi
     if [ ! -f /var/lib/arangodb3/SERVER ] && [ "$SKIP_DATABASE_INIT" != "1" ]; then
-        if [ -f "$ARANGO_ROOT_PASSWORD_FILE" ]; then
-            ARANGO_ROOT_PASSWORD="$(cat $ARANGO_ROOT_PASSWORD_FILE)"
-        fi
+        if [ ! -z "$ARANGO_ROOT_PASSWORD_FILE" ]; then
+            if [ -f "$ARANGO_ROOT_PASSWORD_FILE" ]; then
+                ARANGO_ROOT_PASSWORD="$(cat $ARANGO_ROOT_PASSWORD_FILE)"
+            else
+                echo "WARNING: password file '$ARANGO_ROOT_PASSWORD_FILE' does not exist"
+            fi
+	fi
         # Please note that the +x in the following line is for the case
         # that ARANGO_ROOT_PASSWORD is set but to an empty value, please
         # do not remove!
         if [ -z "${ARANGO_ROOT_PASSWORD+x}" ] && [ -z "$ARANGO_NO_AUTH" ] && [ -z "$ARANGO_RANDOM_ROOT_PASSWORD" ]; then
             echo >&2 'error: database is uninitialized and password option is not specified '
-            echo >&2 "  You need to specify one of ARANGO_ROOT_PASSWORD, ARANGO_NO_AUTH and ARANGO_RANDOM_ROOT_PASSWORD"
+            echo >&2 "  You need to specify one of ARANGO_ROOT_PASSWORD, ARANGO_ROOT_PASSWORD_FILE, ARANGO_NO_AUTH and ARANGO_RANDOM_ROOT_PASSWORD"
             exit 1
         fi
         
