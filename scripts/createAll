@@ -28,3 +28,5 @@ mkdir -p $repo/Enterprise/Debian/amd64
 ensure_oskar "$version" "$incoming" "$repo" \
             "Linux" "Debian" \
             "amd64" "deb"
+
+chown -R $UID.$GID $repo
