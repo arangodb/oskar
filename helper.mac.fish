@@ -298,4 +298,12 @@ function buildBundleSnippet
   end
 end
 
+## #############################################################################
+## helper functions
+## #############################################################################
+
+function findCompilerVersion
+  gcc -v ^| tail -1 | awk '{print $3}'
+end
+
 parallelism 8

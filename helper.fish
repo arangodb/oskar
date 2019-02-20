@@ -374,11 +374,17 @@ function showConfig
   set -l fmt2 '%-20s: %-20s\n'
   set -l fmt3 '%-20s: %-20s %s\n'
 
+  set -l compiler_version $COMPILER_VERSION
+
+  if test -z "$COMPILER_VERSION"
+    set compiler_version "["(findCompilerVersion)"]"
+  end
+
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
   printf $fmt3 'ASAN'       $ASAN                '(asanOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
-  printf $fmt3 'Compiler'   "$COMPILER_VERSION"  '(compiler x.y.z)'
+  printf $fmt3 'Compiler'   "$compiler_version"  '(compiler x.y.z)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'

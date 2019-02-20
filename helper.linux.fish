@@ -975,6 +975,10 @@ end
 ## helper functions
 ## #############################################################################
 
+function findCompilerVersion
+  runInContainer $ALPINEBUILDIMAGE gcc -v ^| tail -1 | awk '{print $3}'
+end
+
 function clearWorkDir
   runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/clearWorkDir.fish
 end
