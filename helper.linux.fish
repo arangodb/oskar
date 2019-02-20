@@ -612,21 +612,32 @@ function buildDockerRelease
   # push tag
   set -l IMAGE_NAME2 ""
 
+  # latest tag
+  set -l IMAGE_NAME3 ""
+
   if test "$ENTERPRISEEDITION" = "On"
     if test "$RELEASE_TYPE" = "stable"
       set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
-      set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
     else
       set IMAGE_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
-      set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
+    end
+
+    set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
+
+    if test "$RELEASE_IS_HEAD" = "true"
+      set IMAGE_NAME3 arangodb/enterprise-preview:latest
     end
   else
     if test "$RELEASE_TYPE" = "stable"
       set IMAGE_NAME1 arangodb/arangodb:$DOCKER_TAG
-      set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
     else
       set IMAGE_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
-      set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
+    end
+
+    set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
+
+    if test "$RELEASE_IS_HEAD" = "true"
+      set IMAGE_NAME3 arangodb/arangodb-preview:latest
     end
   end
 
@@ -648,6 +659,10 @@ function buildDockerRelease
     echo $IMAGE_NAME1 > $WORKDIR/work/arangodb3e.docker
   else
     echo $IMAGE_NAME1 > $WORKDIR/work/arangodb3.docker
+  end
+  and if test "$IMAGE_NAME3" != ""
+    docker tag $IMAGE_NAME1 $IMAGE_NAME3
+    and docker push $IMAGE_NAME3
   end
 end
 
