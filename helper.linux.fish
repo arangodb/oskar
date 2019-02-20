@@ -991,7 +991,7 @@ end
 ## #############################################################################
 
 function findCompilerVersion
-  runInContainer $ALPINEBUILDIMAGE gcc -v ^| tail -1 | awk '{print $3}'
+  runInContainer $ALPINEBUILDIMAGE gcc -v ^| fgrep -v adding | tail -1 | awk '{print $3}'
 end
 
 function clearWorkDir
