@@ -15,7 +15,7 @@ and python program.py /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories/Com
 set -l s $status
 
 if fgrep -q Errno
-  set status 1
+  set s 1
 end
 
 unlockDirectory
