@@ -14,7 +14,7 @@ and python program.py /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories/Com
 
 set -l s $status
 
-if fgrep -q Errno
+if fgrep -q Errno file-browser.out
   set s 1
 end
 
