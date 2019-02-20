@@ -9,8 +9,14 @@ source jenkins/helper.jenkins.fish ; prepareOskar
 switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 and cd $WORKSPACE/file-browser
-and python program.py /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories/Community
+and rm -f file-browser.out
+and python program.py /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories/Community 2>&1 | tee file-browser.out
 
 set -l s $status
+
+if fgrep -q Errno
+  set status 1
+end
+
 unlockDirectory
 exit $s
