@@ -897,7 +897,6 @@ function runInContainer
     eval (ssh-agent -c) > /dev/null
     for key in ~/.ssh/id_rsa ~/.ssh/id_deploy
       if test -f $key
-        echo "adding key $key"
         ssh-add $key
       end
     end
@@ -991,7 +990,7 @@ end
 ## #############################################################################
 
 function findCompilerVersion
-  runInContainer $ALPINEBUILDIMAGE gcc -v ^| fgrep -v adding | tail -1 | awk '{print $3}'
+  runInContainer $ALPINEBUILDIMAGE gcc -v 2>&1 | fgrep -v adding | tail -1 | awk '{print $3}'
 end
 
 function clearWorkDir
