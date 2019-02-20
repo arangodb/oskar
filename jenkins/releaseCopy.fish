@@ -1,8 +1,9 @@
 #!/usr/bin/env fish
-if test (count $argv) -lt 1
-  echo usage: (status current-filename) "<destination>"
-  exit 1
-end
+#if test (count $argv) -lt 1
+#  echo usage: (status current-filename) "<destination>"
+#  exit 1
+#end
+DST=/mnt/buildfiles
 
 if test -z "$RELEASE_TAG"
   echo "RELEASE_TAG required"
