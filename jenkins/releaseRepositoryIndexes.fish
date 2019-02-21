@@ -15,7 +15,9 @@ and mkdir -p root-dir/$ARANGODB_REPO
 and ln -s /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages/Community root-dir/$ARANGODB_REPO/Community
 and ln -s /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories/Community/Debian root-dir/$ARANGODB_REPO/DEBIAN
 and ln -s /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories/Community/RPM root-dir/$ARANGODB_REPO/RPM
-and python program.py root-dir > file-browser.out 2>&1
+and rm -f program2.py
+and sed -e 's/os\.walk(root)/os\.walk(root,followlinks=True)/' program.py > program2.py
+and python program2.py root-dir > file-browser.out 2>&1
 and cp root-dir/$ARANGODB_REPO/index.html /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/
 
 set -l s $status
