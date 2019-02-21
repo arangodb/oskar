@@ -16,7 +16,7 @@ and ln -s /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages/Community root-dir/
 and ln -s /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories/Community/Debian root-dir/$ARANGODB_REPO/Debian
 and ln -s /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories/Community/RPM root-dir/$ARANGODB_REPO/RPM
 and python program.py root-dir > file-browser.out 2>&1
-and cp root-dir/$ARANGODB_PACKAGES/index.html /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/
+and cp root-dir/$ARANGODB_REPO/index.html /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/
 
 set -l s $status
 
