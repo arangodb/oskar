@@ -18,7 +18,7 @@ and ln -s /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories/Community/RPM r
 and rm -f program2.py
 and sed -e 's/os\.walk(root)/os\.walk(root,followlinks=True)/' program.py > program2.py
 and python program2.py root-dir > file-browser.out 2>&1
-and cp ../snippets/$ARANGODB_PACKAGES/download-index.html /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/
+and cp ../snippets/$ARANGODB_PACKAGES/download-index.html /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/index.html
 
 set -l s $status
 
