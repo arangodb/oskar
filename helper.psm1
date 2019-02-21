@@ -420,8 +420,8 @@ Function findArangoDBVersion
 Function uploadSymbols
 {
     findArangoDBVersion
-    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_arangodb$global:ARANGODB_REPO"; comm
-    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/symsrv_arangodb$global:ARANGODB_REPO gs://download.arangodb.com/symsrv_arangodb$global:ARANGODB_REPO"; comm
+    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_$global:ARANGODB_REPO"; comm
+    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/symsrv_$global:ARANGODB_REPO gs://download.arangodb.com/symsrv_$global:ARANGODB_REPO"; comm
 }
 
 ################################################################################
@@ -975,11 +975,11 @@ Function moveResultsToWorkspace
     Push-Location $global:ARANGODIR\build\bin\$BUILDMODE
     If($ENTERPRISEEDITION -eq "On")
     {
-        Compress-Archive -Force -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
     }
     Else
     {
-        Compress-Archive -Force -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
     }
     Pop-Location
     if($SKIPPACKAGING -eq "Off")
