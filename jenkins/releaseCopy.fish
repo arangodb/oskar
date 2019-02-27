@@ -3,15 +3,13 @@
 #  echo usage: (status current-filename) "<destination>"
 #  exit 1
 #end
-DST=/mnt/buildfiles
-
 if test -z "$RELEASE_TAG"
   echo "RELEASE_TAG required"
   exit 1
 end
 
 set -xg SRC .
-set -xg DST $argv[1]/stage1/$RELEASE_TAG
+set -xg DST /mnt/buildfiles
 
 umask 000
 mkdir -p $DST/release/snippets
