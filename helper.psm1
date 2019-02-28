@@ -376,10 +376,14 @@ Function findArangoDBVersion
         If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_MINOR")[0] -match '.*"([0-9a-zA-Z]*)".*')
         {
             $global:ARANGODB_VERSION_MINOR = $Matches[1]
-            If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_PATCH")[0] -match '.*"([0-9a-zA-Z]*)".*')
+            
+            $34AndAbove = Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_PATCH"
+            $33AndBelow = Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_REVISION"
+            
+            If(($34AndAbove, "")[!$34AndAbove].toString() + ($33AndBelow, "")[!$33AndBelow].toString() -match '.*"([0-9a-zA-Z]*)".*')
             {
                 $global:ARANGODB_VERSION_PATCH = $Matches[1]
-                If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_RELEASE_TYPE")[0] -match '.*"([0-9a-zA-Z]*)".*')
+                If($34AndAbove -and $(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_RELEASE_TYPE")[0] -match '.*"([0-9a-zA-Z]*)".*')
                 {
                     $global:ARANGODB_VERSION_RELEASE_TYPE = $Matches[1]
                     If($(Select-String -Path $global:ARANGODIR\CMakeLists.txt -SimpleMatch "set(ARANGODB_VERSION_RELEASE_NUMBER")[0] -match '.*"([0-9a-zA-Z]*)".*')
