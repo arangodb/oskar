@@ -76,6 +76,11 @@ Function createReport
             Write-Host "Remove-Item $($core.FullName)"
             Remove-Item $($core.FullName)
         }
+        ForEach($pdb in (Get-ChildItem -Path "$global:ARANGODIR\build\bin\$BUILDMODE\" -Filter "arango*.pdb" -Recurse -ErrorAction SilentlyContinue))
+        {
+            Write-Host "7zip -Path $($pdb.FullName) -DestinationPath `"$INNERWORKDIR\crashreport-$date.zip`""
+            7zip -Path $($pdb.FullName) -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
+        }
     }
     If(Test-Path -PathType Leaf -Path "$global:ARANGODIR\innerlogs.zip")
     {

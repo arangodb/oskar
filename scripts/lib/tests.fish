@@ -81,7 +81,7 @@ function createReport
   set cores core*
 
   if test (count $cores) -ne 0
-    set binaries build/bin/arangod build/bin/arangodbtests
+    set binaries (find build/bin -executable -type f -name 'arango*')
     echo tar czvf "$INNERWORKDIR/crashreport-$now.tar.gz" $cores $binaries
     tar czvf "$INNERWORKDIR/crashreport-$now.tar.gz" $cores $binaries
   end
