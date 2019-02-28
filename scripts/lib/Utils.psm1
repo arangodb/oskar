@@ -307,40 +307,42 @@ Function LaunchController($seconds)
     Write-Host $str
   
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-before.txt
-    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have "$currentRunning" tests that timed out! Currently running processes:"
-    ForEach ($test in $global:launcheableTests) {
-        if ($test['pid'] -gt 0) {
-          Write-Host "Testrun timeout:"
-          $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
-          Write-Host $str
-          ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-            ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-              ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-                Write-Host "killing child3: "
-                $str=$childChildChildProcesses | Out-String
-                Write-Host $str
-                Stop-Process -Force -Id $childChildChildProcesses.Handle
-              }
-              Write-Host "killing child2: "
-              $str=$childChildProcesses | Out-String
+    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have "$currentRunning" tests that timed out!"
+    If ($currentRunning -gt 0) {
+        Write-Host "Currently running processes:"
+        ForEach ($test in $global:launcheableTests) {
+            if ($test['pid'] -gt 0 -and $test['running'] -eq  $true) {
+              Write-Host "Testrun timeout:"
+              $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
               Write-Host $str
-              Stop-Process -Force -Id $childChildProcesses.Handle
+              ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
+                ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
+                  ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
+                    Write-Host "killing child3: "
+                    $str=$childChildChildProcesses | Out-String
+                    Write-Host $str
+                    Stop-Process -Force -Id $childChildChildProcesses.Handle
+                  }
+                  Write-Host "killing child2: "
+                  $str=$childChildProcesses | Out-String
+                  Write-Host $str
+                  Stop-Process -Force -Id $childChildProcesses.Handle
+                }
+                Write-Host "killing child: "
+                $str=$childProcesses | Out-String
+                Write-Host $str
+                Stop-Process -Force -Id $childProcesses.Handle
+                $global:result = "BAD"
+              }
+              If((Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue) -ne $null)
+              {
+                Stop-Process -Force -Id $test['pid']
+              }
+              Else
+              {
+                Write-Host ("Process with ID {0} was already stopped" -f $test['pid'])
+              }
             }
-            Write-Host "killing child: "
-            $str=$childProcesses | Out-String
-            Write-Host $str
-
-            Stop-Process -Force -Id $childProcesses.Handle
-            $global:result = "BAD"
-          }
-          If((Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue) -ne $null)
-          {
-            Stop-Process -Force -Id $test['pid']
-          }
-          Else
-          {
-            Write-Host ("Process with ID {0} was already stopped" -f $test['pid'])
-          }
         }
     }
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-after.txt 
