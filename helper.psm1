@@ -1043,7 +1043,7 @@ Function oskarLimited
 Function oskar1
 {
     showConfig
-    buildArangoDB
+    buildStaticArangoDB
     if($global:ok)
     {
         oskar
@@ -1053,7 +1053,7 @@ Function oskar1
 Function oskar1Full
 {
     showConfig
-    buildArangoDB
+    buildStaticArangoDB
     if($global:ok)
     {
         oskarFull
@@ -1063,7 +1063,7 @@ Function oskar1Full
 Function oskar1Limited
 {
     showConfig
-    buildArangoDB
+    buildStaticArangoDB
     if($global:ok)
     {
         oskarLimited
@@ -1073,7 +1073,7 @@ Function oskar1Limited
 Function oskar2
 {
     showConfig
-    buildArangoDB
+    buildStaticArangoDB
     cluster
     oskar
     single
@@ -1085,7 +1085,7 @@ Function oskar2
 Function oskar4
 {
     showConfig
-    buildArangoDB
+    buildStaticArangoDB
     rocksdb
     cluster
     oskar
@@ -1105,7 +1105,7 @@ Function oskar8
 {
     showConfig
     enterprise
-    buildArangoDB
+    buildStaticArangoDB
     rocksdb
     cluster
     oskar
