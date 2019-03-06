@@ -4,6 +4,39 @@
 ### HELPER FUNCTIONS ###########################################################
 ################################################################################
 
+first_version_is_less() {
+    local left=${1%%-*}
+    local right=${2%%-*}
+    declare -l -a left_arr
+    declare -l -a right_arr
+
+    IFS='.' read -r -a left_arr <<<"$left"
+    IFS='.' read -r -a right_arr <<<"$right"
+
+    local len=${#left_arr[@]}
+    local other_len=${#right_arr[@]}
+    if (( other_len < len )); then
+        len=other_len
+    fi
+
+    local i
+    for (( i=0; i < len; i++ )); do
+        left=${left_arr[$i]}
+        right=${right_arr[$i]}
+        if (( left == right )); then
+            continue
+        elif (( left > right )); then
+            return 1
+        else
+            return 0
+        fi
+    done
+
+    # Return false because we test a strict less.
+    # Set this to 0 for less-equal.
+    return 1
+}
+
 # a grep that does not fail if there are no matches
 # can be used with multiple pipes where grep is not
 # expected to macht always something
