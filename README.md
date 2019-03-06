@@ -124,7 +124,7 @@ with the command
 
 ## Building and testing
 
-Build ArangoDB with the current build options by issueing
+Build ArangoDB with the current build options by issuing
 
     buildStaticArangoDB
 
@@ -201,11 +201,43 @@ build enterprise edition (enterprise) or community version (community)
 
     parallelism <PARALLELSIM>
 
-if supported, set numer of concurrent builds to `PARALLELISM`
+if supported, set number of concurrent builds to `PARALLELISM`
 
 ## Testing
 
 ## Documentation
+
+To build the Docker documentation container from the current oskar
+working tree, run:
+
+    ./scripts/buildContainerDocumentation <IMAGE_NAME>
+
+The [official image](https://hub.docker.com/r/arangodb/arangodb-documentation)
+is called `arangodb/arangodb-documentation`.
+
+To rebuild the container after Gitbook plugins were changed externally,
+it is required to invalidate the cache with  `--force-update`:
+
+    ./scripts/buildContainerDocumentation arangodb/arangodb-documentation --force-update
+
+If you want to inspect the filesystem in the container, you can do:
+
+    docker run -it --entrypoint=/bin/bash arangodb/arangodb-documentation
+    ls /
+
+Hit `Ctrl+D` to exit.
+
+To build the documentation with the `arangodb/arangodb-documentation` image, run:
+
+    ./scripts/buildDocumentation
+
+See the comments in the [buildDocumentation](./scripts/buildDocumentation)
+script for options.
+
+Changes to the container should first be tested and merged into the oskar
+master branch. Then the image can be (re-)built and published for Jenkins:
+
+    docker push arangodb/arangodb-documentation
 
 ## Packaging
 
