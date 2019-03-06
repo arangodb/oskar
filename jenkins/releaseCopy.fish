@@ -9,7 +9,7 @@ if test -z "$RELEASE_TAG"
 end
 
 set -xg SRC .
-set -xg DST /mnt/buildfiles
+set -xg DST /mnt/buildfiles/stage1/$RELEASE_TAG
 
 umask 000
 mkdir -p $DST/release/snippets
