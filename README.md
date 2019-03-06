@@ -227,12 +227,29 @@ If you want to inspect the filesystem in the container, you can do:
 
 Hit `Ctrl+D` to exit.
 
+If you want to start the container with the oskar directory mounted
+(including `work/ArangoDB/`) then specify the path mapping with `-v`:
+
+    docker run -v "/home/<NAME>/oskar:/oskar" ...
+
 To build the documentation with the `arangodb/arangodb-documentation` image, run:
 
     ./scripts/buildDocumentation
 
+If you don't want to generate the examples and `api-docs.json` and build
+only a subset of books, run:
+
+    ./scripts/buildDocumentation --skip-examples --skip-swagger --books "AQL Cookbook"
+
+The resulting files are located in `~/oskar/work/build-documentation/`
+(if your oskar directory is in your user folder). You may use
+[serve](https://github.com/zeit/serve) to view the generated website version
+of the documentation:
+
+    serve ~/oskar/work/build-documentation/books_html/
+
 See the comments in the [buildDocumentation](./scripts/buildDocumentation)
-script for options.
+script for more options.
 
 Changes to the container should first be tested and merged into the oskar
 master branch. Then the image can be (re-)built and published for Jenkins:
