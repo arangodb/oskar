@@ -158,14 +158,18 @@ run_gitbook(){
         section "book.json" | sed 's/-/#/g'
         cat book.json
 
+	local plugins=$(mktemp)
+	cat "$book_src/book.json" | sed -e 's/@GPRIORITY@/0/' | jq .plugins > "$plugins" \
+            || ferr "failed to extract plugins from source books.json. Make sure it contains valid json!"
+
         $c && section "diff" | sed 's/-/#/g'
-        $c && diff "$book_src/book.json" "$cache/book.json.original"
+        $c && diff "$plugins" "$cache/book.json.plugins"
         $c && echo "plugins must not differ"
 
         section "modules" | sed 's/-/#/g'
         ls -lisah node_modules
         section "" | sed 's/-/=/g'
-        echo "try to run ./scripts/buildContainerDocumentation --force-update if modules are missing"
+        echo "try to run ./scripts/buildContainerDocumentation --force-update if plugins/modules are missing"
         ferr "running gitbook failed"
     fi
 }
