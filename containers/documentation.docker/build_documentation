@@ -274,9 +274,9 @@ function build_book() {
     rm "$this"
 
     local msg="failed to detect cache - book.json of $book_name\n"
-          msg="Plugins do match any cached version."
-          msg="If you use new plugins make sure to add this branch"
-          msg="to ARANGO_SUPPORTED_BRANCHES and rebuild the doc container."
+          msg+="Plugins do not match any cached version."
+          msg+="If you use new plugins make sure to add this branch"
+          msg+="to ARANGO_SUPPORTED_BRANCHES and rebuild the doc container."
     [[ -v book_cache ]] || ferr -e "$msg"
 
 
