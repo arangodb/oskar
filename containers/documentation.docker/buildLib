@@ -33,7 +33,7 @@ minimum_version() {
     done
 
     # Return false because we test for greater-equal.
-    # Set this to 1 strict greater.
+    # Set this to 1 for a strict greater.
     return 0
 }
 
