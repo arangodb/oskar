@@ -117,15 +117,23 @@ section "" | sed 's/-/=/g'
 section "ArangoDB Documenation Build script" | sed 's/-/=/g'
 section "" | sed 's/-/=/g'
 
+# pull in build lib - this lib contains most of checks
+. "$script_dir/buildLib" || ferr "failed to source buildLib"
+
+
 #### GLOBAL VARS THAT SHOULD NOT BE MODIFIED BY USERS ########################################################
-ALLBOOKS="HTTP AQL Cookbook Drivers" #TODO reactivate Manual
-ALLBOOKS="HTTP AQL Manual Cookbook Drivers"
+ALLBOOKS="HTTP AQL Cookbook Manual"
 OTHER_MIME="pdf epub mobi"
 TRIPPLETICS='```'
 
 newVersionNumber="$( tr -d '\r\n' < "$ARANGO_SOURCE/VERSION" )"
-#If ../../VERSION contains the string "devel" the current date will be added to all pages containing the version.
 
+# Include Drivers book from version 3.4 on
+if minimum_version "${newVersionNumber}" "3.4"; then
+    ALLBOOKS="${ALLBOOKS} Drivers"
+fi
+
+# If ../../VERSION contains the string "devel" the current date will be added to all pages containing the version.
 if echo "${newVersionNumber}" | grep -q devel; then
     VERSION="${newVersionNumber} $(date +' %d. %b %Y ')"
     RELEASE_DIRECTORY=devel
@@ -151,9 +159,6 @@ if test -z "${INSTALLED_GITBOOK_VERSION}"; then
 fi
 GITBOOK_ARGS=(--gitbook "${INSTALLED_GITBOOK_VERSION}")
 #### GLOBAL VARS THAT SHOULD NOT BE MODIFIED BY USERS - END ########################################################
-
-# pull in build lib - this lib contains most of checks
-. "$script_dir/buildLib" || ferr "failed to source buildLib"
 
 
 ################################################################################
@@ -254,7 +259,7 @@ function build_book() {
     # string e.g. numbers. Otherwise jq will fail. So if something goes
     # wrong here you probably need antoher sed command
     cat "$book_src/book.json" | sed -e 's/@GPRIORITY@/0/' | jq .plugins > "$this" \
-        || ferr "failed to extract plugins form books.json. Make sure it contains vaild json!"
+        || ferr "failed to extract plugins from source books.json. Make sure it contains valid json!"
 
     unset book_cache
     while read -r file; do
@@ -269,9 +274,9 @@ function build_book() {
     rm "$this"
 
     local msg="failed to detect cache - book.json of $book_name\n"
-          msg="Plugins do match any cached version."
-          msg="If you use new plugins make sure to add this branch"
-          msg="to ARANGO_SUPPORTED_BRANCHES and rebuild the doc container."
+          msg+="Plugins do not match any cached version."
+          msg+="If you use new plugins make sure to add this branch"
+          msg+="to ARANGO_SUPPORTED_BRANCHES and rebuild the doc container."
     [[ -v book_cache ]] || ferr -e "$msg"
 
 

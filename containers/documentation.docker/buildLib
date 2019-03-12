@@ -4,6 +4,39 @@
 ### HELPER FUNCTIONS ###########################################################
 ################################################################################
 
+minimum_version() {
+    local left=${1%%-*}
+    local right=${2%%-*}
+    declare -l -a left_arr
+    declare -l -a right_arr
+
+    IFS='.' read -r -a left_arr <<<"$left"
+    IFS='.' read -r -a right_arr <<<"$right"
+
+    local len=${#left_arr[@]}
+    local other_len=${#right_arr[@]}
+    if (( other_len < len )); then
+        len=other_len
+    fi
+
+    local i
+    for (( i=0; i < len; i++ )); do
+        left=${left_arr[$i]}
+        right=${right_arr[$i]}
+        if (( left == right )); then
+            continue
+        elif (( left < right )); then
+            return 1
+        else
+            return 0
+        fi
+    done
+
+    # Return false because we test for greater-equal.
+    # Set this to 1 for a strict greater.
+    return 0
+}
+
 # a grep that does not fail if there are no matches
 # can be used with multiple pipes where grep is not
 # expected to macht always something
@@ -125,14 +158,18 @@ run_gitbook(){
         section "book.json" | sed 's/-/#/g'
         cat book.json
 
+	local plugins=$(mktemp)
+	cat "$book_src/book.json" | sed -e 's/@GPRIORITY@/0/' | jq .plugins > "$plugins" \
+            || ferr "failed to extract plugins from source books.json. Make sure it contains valid json!"
+
         $c && section "diff" | sed 's/-/#/g'
-        $c && diff "$book_src/book.json" "$cache/book.json.original"
+        $c && diff "$plugins" "$cache/book.json.plugins"
         $c && echo "plugins must not differ"
 
         section "modules" | sed 's/-/#/g'
         ls -lisah node_modules
         section "" | sed 's/-/=/g'
-        echo "try to run ./scripts/buildContainerDocumentation --force-update if modules are missing"
+        echo "try to run ./scripts/buildContainerDocumentation --force-update if plugins/modules are missing"
         ferr "running gitbook failed"
     fi
 }
