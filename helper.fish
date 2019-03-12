@@ -388,7 +388,6 @@ function showConfig
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
-  printf $fmt3 'SkipGrey'   $SKIPGREY            '(skipGrey/includeGrey)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
@@ -398,12 +397,12 @@ function showConfig
   
   echo
   echo 'Test Configuration'
+  printf $fmt3 'SkipGrey'       $SKIPGREY      '(skipGrey/includeGrey)'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'
   printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/catchtest)'
   echo
-  echo 'Build Configuration'
+  echo 'Package Configuration'
   printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
-  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/catchtest)'
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'
