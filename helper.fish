@@ -768,5 +768,6 @@ switch (uname)
   case '*' ; source helper.linux.fish
 end
 
-showConfig
-showHelp
+if isatty 1
+  showHelp
+end
