@@ -10,9 +10,29 @@ export GLIBCXX_FORCE_NEW=1
 
 # if command starts with an option, prepend arangod
 case "$1" in
-  -*) set -- arangod "$@" ;;
-  *) ;;
+    -*) set -- arangod "$@" ;;
+    *) ;;
 esac
+
+# check for numa
+NUMACTL=""
+
+if [ -d /sys/devices/system/node/node1 -a -f /proc/self/numa_maps ]; then
+    if [ "$NUMA" = "" ]; then
+        NUMACTL="numactl --interleave=all"
+    elif [ "$NUMA" != "disable" ]; then
+        NUMACTL="numactl --interleave=$NUMA"
+    fi
+
+    if [ "$NUMACTL" != "" ]; then
+        if $NUMACTL echo > /dev/null 2>&1; then
+            echo "using NUMA $NUMACTL"
+        else
+            echo "cannot start with NUMA $NUMACTL: please ensure that docker is running with --privileged"
+            NUMACTL=""
+        fi
+    fi
+fi
 
 if [ "$1" = 'arangod' ]; then
     # /var/lib/arangodb3 and /var/lib/arangodb3-apps must exist and
@@ -75,7 +95,7 @@ if [ "$1" = 'arangod' ]; then
 
         echo "Initializing database...Hang on..."
 
-        arangod --config /tmp/arangod.conf \
+        $NUMACTL arangod --config /tmp/arangod.conf \
                 --server.endpoint tcp://127.0.0.1:$ARANGO_INIT_PORT \
                 --server.authentication false \
 		--log.file /tmp/init-log \
@@ -87,21 +107,23 @@ if [ "$1" = 'arangod' ]; then
 
         while [ "$ARANGO_UP" = "0" ]; do
             if [ $counter -gt 0 ]; then
-            sleep 1
+                sleep 1
             fi
 
             if [ "$counter" -gt 100 ]; then
-            echo "ArangoDB didn't start correctly during init"
-            cat /tmp/init-log
-            exit 1
+                echo "ArangoDB didn't start correctly during init"
+                cat /tmp/init-log
+                exit 1
             fi
+
             let counter=counter+1
             ARANGO_UP=1
-                arangosh \
-                    --server.endpoint=tcp://127.0.0.1:$ARANGO_INIT_PORT \
-                    --server.authentication false \
-                    --javascript.execute-string "db._version()" \
-                    > /dev/null 2>&1 || ARANGO_UP=0
+
+            $NUMACTL arangosh \
+                --server.endpoint=tcp://127.0.0.1:$ARANGO_INIT_PORT \
+                --server.authentication false \
+                --javascript.execute-string "db._version()" \
+                > /dev/null 2>&1 || ARANGO_UP=0
         done
 
         if [ "$(id -u)" = "0" ] ; then
@@ -113,30 +135,30 @@ if [ "$1" = 'arangod' ]; then
         for f in /docker-entrypoint-initdb.d/*; do
             case "$f" in
             *.sh)
-                        echo "$0: running $f"
-                        . "$f"
-                        ;;
+                echo "$0: running $f"
+                . "$f"
+                ;;
             *.js)
-                        echo "$0: running $f"
-                        arangosh ${ARANGOSH_ARGS} \
-                                --server.endpoint=tcp://127.0.0.1:$ARANGO_INIT_PORT \
-                                --javascript.execute "$f"
-                        ;;
+                echo "$0: running $f"
+                $NUMACTL arangosh ${ARANGOSH_ARGS} \
+                        --server.endpoint=tcp://127.0.0.1:$ARANGO_INIT_PORT \
+                        --javascript.execute "$f"
+                ;;
             */dumps)
-                        echo "$0: restoring databases"
-                        for d in $f/*; do
-                            DBName=$(echo ${d}|sed "s;$f/;;")
-                            echo "restoring $d into ${DBName}";
-                            arangorestore \
-                                ${ARANGOSH_ARGS} \
-                                --server.endpoint=tcp://127.0.0.1:$ARANGO_INIT_PORT \
-                                --create-database true \
-                                --include-system-collections true \
-                                --server.database "$DBName" \
-                                --input-directory "$d"
-                        done
-                        echo
-                        ;;
+                echo "$0: restoring databases"
+                for d in $f/*; do
+                    DBName=$(echo ${d}|sed "s;$f/;;")
+                    echo "restoring $d into ${DBName}";
+                    $NUMACTL arangorestore \
+                        ${ARANGOSH_ARGS} \
+                        --server.endpoint=tcp://127.0.0.1:$ARANGO_INIT_PORT \
+                        --create-database true \
+                        --include-system-collections true \
+                        --server.database "$DBName" \
+                        --input-directory "$d"
+                done
+                echo
+                ;;
             esac
         done
 
@@ -145,8 +167,8 @@ if [ "$1" = 'arangod' ]; then
         fi
 
         if ! kill -s TERM "$pid" || ! wait "$pid"; then
-                echo >&2 'ArangoDB Init failed.'
-                exit 1
+            echo >&2 'ArangoDB Init failed.'
+            exit 1
         fi
 
         echo "Database initialized...Starting System..."
@@ -162,6 +184,8 @@ if [ "$1" = 'arangod' ]; then
     fi
 
     set -- arangod "$@" --server.authentication="$AUTHENTICATION" --config /tmp/arangod.conf
+else
+    NUMACTL=""
 fi
 
-exec "$@"
+exec $NUMACTL "$@"

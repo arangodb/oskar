@@ -3,11 +3,15 @@ MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 RUN apk add --no-cache pwgen nodejs npm binutils && \
     npm install -g foxx-cli && \
-    rm -rf /root/.npm
+    wget http://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/numactl-2.0.12-r2.apk && \
+    wget http://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/numactl-tools-2.0.12-r2.apk && \
+    apk add ./numactl-2.0.12-r2.apk && \
+    apk add ./numactl-tools-2.0.12-r2.apk && \
+    rm -rf /root/.npm numactl-2.0.12-r2.apk numactl-tools-2.0.12-r2.apk
 
 ADD install.tar.gz /
 COPY setup.sh /setup.sh
-RUN /setup.sh
+RUN /setup.sh && rm /setup.sh
 
 # The following is magic for unholy OpenShift security business.
 # Containers in OpenShift by default run with a random UID but with GID 0,
