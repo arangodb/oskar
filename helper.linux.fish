@@ -10,6 +10,7 @@ set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH
 set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH
 set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH
 set -gx DOCIMAGE arangodb/arangodb-documentation
+set -xg IONICE "ionice -t -n 7"
 
 ## #############################################################################
 ## config
@@ -916,6 +917,7 @@ function runInContainer
              -v $SSH_AUTH_SOCK:/ssh-agent \
 	     -v "$WORKDIR/scripts":"/scripts" \
              -e ASAN="$ASAN" \
+             -e IONICE="$IONICE" \
              -e BUILDMODE="$BUILDMODE" \
              -e COMPILER_VERSION="$COMPILER_VERSION" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \

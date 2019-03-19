@@ -7,6 +7,7 @@ set -gx THIRDPARTY_BIN $INNERWORKDIR/third_party/bin
 set -gx THIRDPARTY_SBIN $INNERWORKDIR/third_party/sbin
 set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
+set -xg IONICE ""
 
 # disable JEMALLOC for now in oskar on MacOSX, since we never tried it:
 jemallocOff
