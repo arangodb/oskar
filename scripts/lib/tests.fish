@@ -62,7 +62,7 @@ function createReport
   pushd $INNERWORKDIR
   and begin
     echo tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
-    tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
+    nice -n 10 tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
     popd
   end
   
@@ -83,14 +83,14 @@ function createReport
   if test (count $cores) -ne 0
     set binaries (find build/bin -executable -type f -name 'arango*')
     echo tar czvf "$INNERWORKDIR/crashreport-$now.tar.gz" $cores $binaries
-    tar czvf "$INNERWORKDIR/crashreport-$now.tar.gz" $cores $binaries
+    nice -n 10 tar czvf "$INNERWORKDIR/crashreport-$now.tar.gz" $cores $binaries
   end
 
   echo tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
-  tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
+  nice -n 10 tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
 
   echo rm -rf $cores $archives
-  rm -rf $cores $archives
+  nice -n 10 rm -rf $cores $archives
 
   # And finally collect the testfailures.txt:
   rm -rf $INNERWORKDIR/testfailures.txt
