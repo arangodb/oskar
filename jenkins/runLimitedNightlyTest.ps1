@@ -4,9 +4,11 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\prepareOskar.ps1" $pwd
 . $env:EDITION
 . $env:STORAGE_ENGINE
 . $env:TEST_SUITE
-skipGrey
 
+skipGrey
 skipPackagingOn
+parallelism 24
+
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok) 
 {
