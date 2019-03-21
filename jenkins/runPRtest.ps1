@@ -7,7 +7,7 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\prepareOskar.ps1" $pwd
 
 skipGrey
 skipPackagingOn
-parallelism ([int]$env:NUMBER_OF_PROCESSORS*2)
+parallelism ([int]$env:NUMBER_OF_PROCESSORS)
 
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 
