@@ -39,6 +39,10 @@ While (Test-Path Alias:curl)
 
 Function proc($process,$argument,$logfile,$priority)
 {
+    If (!$priority)
+    {
+        $priority = "Normal"
+    }
     If($logfile -eq $false)
     {
         $p = Start-Process $process -ArgumentList $argument -NoNewWindow -PassThru
