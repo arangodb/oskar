@@ -136,6 +136,7 @@ function launchSingleTests
     case 35 ; test1         http_server ""
     case 36 ; test1         ssl_server ""
     case 37 ; test1         version ""
+    case 38 ; test1         active_failover ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
