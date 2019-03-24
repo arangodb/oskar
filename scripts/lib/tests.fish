@@ -81,7 +81,7 @@ function createReport
   set cores core*
 
   if test (count $cores) -ne 0
-    set binaries (find build/bin -executable -type f -name 'arango*')
+    set binaries (find build/bin -perm /111 -type f -name 'arango*')
     echo tar czvf "$INNERWORKDIR/crashreport-$now.tar.gz" $cores $binaries
     eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/crashreport-$now.tar.gz" $cores $binaries
   end
