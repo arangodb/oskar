@@ -37,11 +37,16 @@ While (Test-Path Alias:curl)
     Remove-Item Alias:curl
 }
 
-Function proc($process,$argument,$logfile)
+Function proc($process,$argument,$logfile,$priority)
 {
+    If (!$priority)
+    {
+        $priority = "Normal"
+    }
     If($logfile -eq $false)
     {
         $p = Start-Process $process -ArgumentList $argument -NoNewWindow -PassThru
+        $p.PriorityClass = $priority
         $h = $p.Handle
         $p.WaitForExit()
         If($p.ExitCode -eq 0)
@@ -56,6 +61,7 @@ Function proc($process,$argument,$logfile)
     Else
     {
         $p = Start-Process $process -ArgumentList $argument -RedirectStandardOutput "$logfile.stdout.log" -RedirectStandardError "$logfile.stderr.log" -PassThru
+        $p.PriorityClass = $priority
         $h = $p.Handle
         $p.WaitForExit()
         If($p.ExitCode -eq 0)
@@ -74,14 +80,19 @@ Function comm
     Set-Variable -Name "ok" -Value $? -Scope global
 }
 
+Function 7zip($Path,$DestinationPath)
+{
+    proc -process "7za.exe" -argument "-mx9 $DestinationPath $Path" -logfile $false -priority "Normal" 
+}
+
 Function hostKey
 {
     If(Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
     {
         Remove-Item -Force "$HOME\.ssh\known_hosts"
     }
-    proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false
-    proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false
+    proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
+    proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false -priority "Normal"
 }
 
 ################################################################################
@@ -424,8 +435,8 @@ Function findArangoDBVersion
 Function uploadSymbols
 {
     findArangoDBVersion
-    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_$global:ARANGODB_REPO"; comm
-    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/symsrv_$global:ARANGODB_REPO gs://download.arangodb.com/symsrv_$global:ARANGODB_REPO"; comm
+    proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_$global:ARANGODB_REPO" -logfile $true -priority "Normal"; comm
+    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/symsrv_$global:ARANGODB_REPO gs://download.arangodb.com/symsrv_$global:ARANGODB_REPO" -logfile $true -priority "Normal"; comm
 }
 
 ################################################################################
@@ -478,7 +489,7 @@ Function checkoutArangoDB
     Set-Location $INNERWORKDIR
     If(-Not(Test-Path -PathType Container -Path "ArangoDB"))
     {
-        proc -process "git" -argument "clone https://github.com/arangodb/ArangoDB" -logfile $false
+        proc -process "git" -argument "clone https://github.com/arangodb/ArangoDB" -logfile $false -priority "Normal"
     }
     Pop-Location
 }
@@ -492,7 +503,7 @@ Function checkoutEnterprise
         Set-Location $global:ARANGODIR
         If(-Not(Test-Path -PathType Container -Path "enterprise"))
         {
-            proc -process "git" -argument "clone ssh://git@github.com/arangodb/enterprise" -logfile $false
+            proc -process "git" -argument "clone ssh://git@github.com/arangodb/enterprise" -logfile $false -priority "Normal"
         }
         Pop-Location
     }
@@ -509,9 +520,9 @@ Function checkoutUpgradeDataTests
             If(Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
             {
                 Remove-Item -Force "$HOME\.ssh\known_hosts"
-                proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false
+                proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
             }
-            proc -process "git" -argument "clone ssh://git@github.com/arangodb/upgrade-data-tests" -logfile $false
+            proc -process "git" -argument "clone ssh://git@github.com/arangodb/upgrade-data-tests" -logfile $false -priority "Normal"
         }
         Pop-Location
     }
@@ -549,36 +560,36 @@ Function switchBranches($branch_c,$branch_e)
     Set-Location $global:ARANGODIR;comm
     If ($global:ok) 
     {
-        proc -process "git" -argument "clean -fdx" -logfile $false
+        proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
     }
     If ($global:ok) 
     {
-        proc -process "git" -argument "checkout -- ." -logfile $false
+        proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
     }
     If ($global:ok) 
     {
-        proc -process "git" -argument "fetch" -logfile $false
+        proc -process "git" -argument "fetch" -logfile $false -priority "Normal"
     }
     If ($global:ok) 
     {
-        proc -process "git" -argument "fetch --tags -f" -logfile $false
+        proc -process "git" -argument "fetch --tags -f" -logfile $false -priority "Normal"
     }
     If ($global:ok) 
     {
-        proc -process "git" -argument "checkout $branch_c" -logfile $false
+        proc -process "git" -argument "checkout $branch_c" -logfile $false -priority "Normal"
     }
     If ($branch_c.StartsWith("v"))
     {
         If ($global:ok) 
         {
-            proc -process "git" -argument "checkout -- ." -logfile $false
+            proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
         }
     }
     Else
     {
         If ($global:ok) 
         {
-            proc -process "git" -argument "reset --hard origin/$branch_c" -logfile $false
+            proc -process "git" -argument "reset --hard origin/$branch_c" -logfile $false -priority "Normal"
         }
     }
     If($ENTERPRISEEDITION -eq "On")
@@ -587,36 +598,36 @@ Function switchBranches($branch_c,$branch_e)
         Set-Location $global:ENTERPRISEDIR;comm
         If ($global:ok) 
         {
-            proc -process "git" -argument "clean -fdx" -logfile $false
+            proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
         }
         If ($global:ok) 
         {
-            proc -process "git" -argument "checkout -- ." -logfile $false
+            proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
         }
         If ($global:ok) 
         {
-            proc -process "git" -argument "fetch" -logfile $false
+            proc -process "git" -argument "fetch" -logfile $false -priority "Normal"
         }
         If ($global:ok) 
         {
-            proc -process "git" -argument "fetch --tags -f" -logfile $false
+            proc -process "git" -argument "fetch --tags -f" -logfile $false -priority "Normal"
         }
         If ($global:ok) 
         {
-            proc -process "git" -argument "checkout $branch_e" -logfile $false
+            proc -process "git" -argument "checkout $branch_e" -logfile $false -priority "Normal"
         }
         If ($branch_e.StartsWith("v"))
         {
             If ($global:ok) 
             {
-                proc -process "git" -argument "checkout -- ." -logfile $false
+                proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
             }
         }
         Else
         {
             If ($global:ok) 
             {
-                proc -process "git" -argument "reset --hard origin/$branch_e" -logfile $false
+                proc -process "git" -argument "reset --hard origin/$branch_e" -logfile $false -priority "Normal"
             }
         }
         Pop-Location
@@ -630,11 +641,11 @@ Function updateOskar
     Set-Location $WORKDIR
     If ($global:ok) 
     {
-        proc -process "git" -argument "checkout -- ." -logfile $false
+        proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
     }
     If ($global:ok) 
     {
-        proc -process "git" -argument "reset --hard origin/master" -logfile $false
+        proc -process "git" -argument "reset --hard origin/master" -logfile $false -priority "Normal"
     }
     Pop-Location
 }
@@ -732,14 +743,14 @@ Function configureWindows
         downloadSyncer
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
         Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" -DTHIRDPARTY_SBIN=`"$global:ARANGODIR\build\arangosync.exe`" `"$global:ARANGODIR`""
-	    proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" -DTHIRDPARTY_SBIN=`"$global:ARANGODIR\build\arangosync.exe`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake"
+	    proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" -DTHIRDPARTY_SBIN=`"$global:ARANGODIR\build\arangosync.exe`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
     }
     Else
     {
         downloadStarter
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
         Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" `"$global:ARANGODIR`""
-	    proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake"
+	    proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
     }
     Pop-Location
 }
@@ -750,7 +761,7 @@ Function buildWindows
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
-    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build"
+    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
     If($global:ok)
     {
         Copy-Item "$global:ARANGODIR\build\bin\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\bin\"; comm
@@ -816,7 +827,7 @@ Function packageWindows
     ForEach($TARGET in @("package-arangodb-server-nsis","package-arangodb-server-zip","package-arangodb-client-nsis"))
     {
         Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$TARGET`""
-        proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --target `"$TARGET`"" -logfile "$INNERWORKDIR\$TARGET-package"
+        proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --target `"$TARGET`"" -logfile "$INNERWORKDIR\$TARGET-package" -priority "Normal"
     }
     Pop-Location
 }
@@ -829,7 +840,7 @@ Function signWindows
     ForEach($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
         Write-Host "Sign: signtool.exe sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
-        proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$PACKAGE-sign"
+        proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$PACKAGE-sign" -priority "Normal"
     }
     generateSnippets
     Pop-Location
@@ -849,7 +860,7 @@ Function storeSymbols
         ForEach($SYMBOL in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
         {
             Write-Host "Symbol: symstore.exe add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress"
-            proc -process "symstore.exe" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore"
+            proc -process "symstore.exe" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
         }
     }
     uploadSymbols

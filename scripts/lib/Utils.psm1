@@ -1,12 +1,6 @@
 ################################################################################
 # report generation
 ################################################################################
-
-Function 7zip($Path,$DestinationPath)
-{
-    7za.exe a -mx9 $DestinationPath $Path 
-}
-
 Function showLog
 {
     Get-Content "$INNERWORKDIR\test.log" | Out-GridView -Title "$INNERWORKDIR\test.log";comm

@@ -28,17 +28,17 @@ If(-Not($env:OSKAR_BRANCH))
 }
 If(-Not(Test-Path -PathType Container -Path "$OSKARDIR\oskar"))
 {
-    proc -process "git" -argument "clone -b $env:OSKAR_BRANCH https://github.com/arangodb/oskar"
+    proc -process "git" -argument "clone -b $env:OSKAR_BRANCH https://github.com/arangodb/oskar" -priority "Normal"
     Set-Location "$OSKARDIR\oskar"
 }
 Else
 {
     Set-Location "$OSKARDIR\oskar"
-    proc -process "git" -argument "fetch --tags"
-    proc -process "git" -argument "fetch"
-    proc -process "git" -argument "reset --hard"
-    proc -process "git" -argument "checkout $env:OSKAR_BRANCH"
-    proc -process "git" -argument "reset --hard origin/$env:OSKAR_BRANCH"
+    proc -process "git" -argument "fetch --tags" -priority "Normal"
+    proc -process "git" -argument "fetch" -priority "Normal"
+    proc -process "git" -argument "reset --hard" -priority "Normal"
+    proc -process "git" -argument "checkout $env:OSKAR_BRANCH" -priority "Normal"
+    proc -process "git" -argument "reset --hard origin/$env:OSKAR_BRANCH" -priority "Normal"
 }
 Import-Module "$OSKARDIR\oskar\helper.psm1"
 If(-Not($?))
