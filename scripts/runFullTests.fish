@@ -151,18 +151,19 @@ function launchSingleTests
     case 50 ; test1         dump_authentication ""
     case 51 ; test1         dump_encrypted ""
     case 52 ; test1         dump_maskings ""
-    case 53 ; test1         endpoints "" --skipEndpointsIpv6 true
-    case 54 ; test1         export ""
-    case 55 ; test1         foxx_manager ""
-    case 56 ; test1         http_replication ""
-    case 57 ; test1         http_server ""
-    case 58 ; test1         importing ""
-    case 59 ; test1         load_balancing ""
-    case 60 ; test1         load_balancing_auth ""
-    case 61 ; test1         queryCacheAuthorization ""
-    case 62 ; test1         readOnly ""
-    case 63 ; test1         upgrade ""
-    case 64 ; test1         version ""
+    case 53 ; test1         dump_multiple ""
+    case 54 ; test1         endpoints "" --skipEndpointsIpv6 true
+    case 55 ; test1         export ""
+    case 56 ; test1         foxx_manager ""
+    case 57 ; test1         http_replication ""
+    case 58 ; test1         http_server ""
+    case 59 ; test1         importing ""
+    case 60 ; test1         load_balancing ""
+    case 61 ; test1         load_balancing_auth ""
+    case 62 ; test1         queryCacheAuthorization ""
+    case 63 ; test1         readOnly ""
+    case 64 ; test1         upgrade ""
+    case 65 ; test1         version ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
@@ -297,6 +298,7 @@ function launchClusterTests
     case 23 ; test1 agency ""
     case 24 ; test1 dump_authentication ""
     case 25 ; test1 dump_maskings ""
+    case 26 ; test1 dump_multiple ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
