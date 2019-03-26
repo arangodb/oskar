@@ -82,7 +82,7 @@ Function comm
 
 Function 7zip($Path,$DestinationPath)
 {
-    proc -process "7za.exe" -argument "-mx9 $DestinationPath $Path" -logfile $false -priority "Normal" 
+    proc -process "7za.exe" -argument "a -mx9 $DestinationPath $Path" -logfile $false -priority "Normal" 
 }
 
 Function hostKey
