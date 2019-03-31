@@ -143,7 +143,7 @@ end
 function oskarFull
   checkoutIfNeeded
   and launchLdapServer
-  and runInContainer --net="$LDAPNETWORK" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+  and runInContainer --net="$LDAPNETWORK$LDAPEXT" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
   set -l res $status
   stopLdapServer
   return $res
