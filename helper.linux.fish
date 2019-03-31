@@ -73,16 +73,17 @@ if test -n "$NODE_NAME"
   set -gx LDAPEXT (echo "$NODE_NAME" | tr -c -d "[:alnum:]")
 end
 
-function launchLdapServer
-  stopLdapServer
-  docker network create "$LDAPNETWORK$LDAPEXT"
-  docker run -d --name "$LDAPDOCKERCONTAINERNAME$LDAPEXT" --net="$LDAPNETWORK$LDAPEXT" -p 389:389 -p 636:636 neunhoef/ldap-alpine
-end
-
 function stopLdapServer
   docker stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
   docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
   docker network rm "$LDAPNETWORK$LDAPEXT"
+  true
+end
+
+function launchLdapServer
+  stopLdapServer
+  and docker network create "$LDAPNETWORK$LDAPEXT"
+  and docker run -d --name "$LDAPDOCKERCONTAINERNAME$LDAPEXT" --net="$LDAPNETWORK$LDAPEXT" -p 389:389 -p 636:636 neunhoef/ldap-alpine
 end
 
 ## #############################################################################
