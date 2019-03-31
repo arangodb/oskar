@@ -1,5 +1,5 @@
-set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
-set -gx LDAPNETWORK ldaptestnet
+set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver"$BUILD_NUMBER"
+set -gx LDAPNETWORK ldaptestnet"$BUILD_NUMBER"
 set -gx KEYNAME 115E1684
 
 function lockDirectory
