@@ -12,6 +12,9 @@ set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH
 set -gx DOCIMAGE arangodb/arangodb-documentation
 set -xg IONICE "ionice -t -n 7"
 
+set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
+set -gx LDAPNETWORK ldaptestnet
+
 ## #############################################################################
 ## config
 ## #############################################################################
@@ -58,6 +61,28 @@ end
 function switchBranches
   checkoutIfNeeded
   runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/switchBranches.fish $argv
+end
+
+## #############################################################################
+## LDAP
+## #############################################################################
+
+set -gx LDAPEXT ""
+
+if test -n "$NODE_NAME"
+  set -gx LDAPEXT (echo "$NODE_NAME" | tr -c -d "[:alnum:]")
+end
+
+function launchLdapServer
+  stopLdapServer
+  docker network create "$LDAPNETWORK$LDAPEXT"
+  docker run -d --name "$LDAPDOCKERCONTAINERNAME$LDAPEXT" --net="$LDAPNETWORK$LDAPEXT" -p 389:389 -p 636:636 neunhoef/ldap-alpine
+end
+
+function stopLdapServer
+  docker stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+  docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+  docker network rm "$LDAPNETWORK$LDAPEXT"
 end
 
 ## #############################################################################
@@ -111,12 +136,12 @@ end
 
 function oskar
   checkoutIfNeeded
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
 end
 
 function oskarFull
   checkoutIfNeeded
-  launchLdapServer
+  and launchLdapServer
   and runInContainer --net="$LDAPNETWORK" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
   set -l res $status
   stopLdapServer
@@ -125,7 +150,7 @@ end
 
 function oskarLimited
   checkoutIfNeeded
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runLimitedTests.fish
+  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runLimitedTests.fish
 end
 
 ## #############################################################################

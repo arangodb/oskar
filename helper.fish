@@ -1,5 +1,3 @@
-set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver"$BUILD_NUMBER"
-set -gx LDAPNETWORK ldaptestnet"$BUILD_NUMBER"
 set -gx KEYNAME 115E1684
 
 function lockDirectory
@@ -652,22 +650,6 @@ function findArangoDBVersion
   echo "TGZ_UPSTREAM:             $ARANGODB_TGZ_UPSTREAM"
   echo '------------------------------------------------------------------------------'
   echo
-end
-
-## #############################################################################
-## LDAP
-## #############################################################################
-
-function launchLdapServer
-  stopLdapServer
-  docker network create "$LDAPNETWORK"
-  docker run -d --name "$LDAPDOCKERCONTAINERNAME" --net="$LDAPNETWORK" -p 389:389 -p 636:636 neunhoef/ldap-alpine
-end
-
-function stopLdapServer
-  docker stop "$LDAPDOCKERCONTAINERNAME"
-  docker rm "$LDAPDOCKERCONTAINERNAME"
-  docker network rm "$LDAPNETWORK"
 end
 
 ## #############################################################################
