@@ -114,10 +114,10 @@ function launchSingleTests
     case 13 ; test1         replication_fuzz ""
     case 14 ; test1         replication_random ""
     case 15 ; test1MoreLogs replication_sync ""
-    case 16 ; test1         ldaprole "" --ldapHost arangodbtestldapserver
-    case 17 ; test1         ldaprolesimple "" --ldapHost arangodbtestldapserver
-    case 18 ; test1         ldapsearch "" --ldapHost arangodbtestldapserver
-    case 19 ; test1         ldapsearchsimple "" --ldapHost arangodbtestldapserver
+    case 16 ; test1         ldaprole "" --ldapHost $LDAPHOST
+    case 17 ; test1         ldaprolesimple "" --ldapHost $LDAPHOST
+    case 18 ; test1         ldapsearch "" --ldapHost $LDAPHOST
+    case 19 ; test1         ldapsearchsimple "" --ldapHost $LDAPHOST
     case 20 ; test1         recovery 0 --testBuckets 4/0
     case 21 ; test1         recovery 1 --testBuckets 4/1
     case 22 ; test1         recovery 2 --testBuckets 4/2

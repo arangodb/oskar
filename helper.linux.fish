@@ -73,6 +73,8 @@ if test -n "$NODE_NAME"
   set -gx LDAPEXT (echo "$NODE_NAME" | tr -c -d "[:alnum:]")
 end
 
+set -gx LDAPHOST "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+
 function stopLdapServer
   docker stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
   docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
@@ -83,7 +85,7 @@ end
 function launchLdapServer
   stopLdapServer
   and docker network create "$LDAPNETWORK$LDAPEXT"
-  and docker run -d --name "$LDAPDOCKERCONTAINERNAME$LDAPEXT" --net="$LDAPNETWORK$LDAPEXT" -p 389:389 -p 636:636 neunhoef/ldap-alpine
+  and docker run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" neunhoef/ldap-alpine
 end
 
 ## #############################################################################
@@ -142,10 +144,19 @@ end
 
 function oskarFull
   checkoutIfNeeded
-  and launchLdapServer
-  and runInContainer --net="$LDAPNETWORK$LDAPEXT" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+  and if test "$ENTERPRISEEDITION" = "On"
+    launchLdapServer
+    and runInContainer --net="$LDAPNETWORK$LDAPEXT" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+  else
+    runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+  end
+
   set -l res $status
-  stopLdapServer
+
+  if test "$ENTERPRISEEDITION" = "On"
+    stopLdapServer
+  end
+
   return $res
 end
 
@@ -952,6 +963,7 @@ function runInContainer
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
              -e INNERWORKDIR="$INNERWORKDIR" \
 	     -e KEYNAME="$KEYNAME" \
+             -e LDAPHOST="$LDAPHOST" \
              -e MAINTAINER="$MAINTAINER" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
