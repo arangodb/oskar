@@ -122,48 +122,51 @@ function launchSingleTests
     case 21 ; test1         recovery 1 --testBuckets 4/1
     case 22 ; test1         recovery 2 --testBuckets 4/2
     case 23 ; test1         recovery 3 --testBuckets 4/3
-    case 24 ; test1         shell_server_aql 0 --testBuckets 5/0
-    case 25 ; test1         shell_server_aql 1 --testBuckets 5/1
-    case 26 ; test1         shell_server_aql 2 --testBuckets 5/2
-    case 27 ; test1         shell_server_aql 3 --testBuckets 5/3
-    case 28 ; test1         shell_server_aql 4 --testBuckets 5/4
-    case 29 ; test1         server_http ""
-    case 30 ; test1         ssl_server ""
-    case 31 ; test1         shell_client ""
-    case 32 ; test1         shell_client_aql ""
-    case 33 ; test1         shell_replication ""
-    case 34 ; test1         BackupAuthNoSysTests ""
-    case 35 ; test1         BackupAuthSysTests ""
-    case 36 ; test1         BackupNoAuthNoSysTests ""
-    case 37 ; test1         BackupNoAuthSysTests ""
-    case 38 ; test1         active_failover ""
-    case 39 ; test1         agency ""
-    case 40 ; test1         arangobench  ""
-    case 41 ; test1         arangosh ""
-    case 42 ; test1         audit ""
-    case 43 ; test1         authentication ""
-    case 44 ; test1         authentication_parameters ""
-    case 45 ; test1         authentication_server ""
-    case 46 ; test1         catch ""
-    case 47 ; test1         config ""
-    case 48 ; test1         dfdb ""
-    case 49 ; test1         dump ""
-    case 50 ; test1         dump_authentication ""
-    case 51 ; test1         dump_encrypted ""
-    case 52 ; test1         dump_maskings ""
-    case 53 ; test1         dump_multiple ""
-    case 54 ; test1         endpoints "" --skipEndpointsIpv6 true
-    case 55 ; test1         export ""
-    case 56 ; test1         foxx_manager ""
-    case 57 ; test1         http_replication ""
-    case 58 ; test1         http_server ""
-    case 59 ; test1         importing ""
-    case 60 ; test1         load_balancing ""
-    case 61 ; test1         load_balancing_auth ""
-    case 62 ; test1         queryCacheAuthorization ""
-    case 63 ; test1         readOnly ""
-    case 64 ; test1         upgrade ""
-    case 65 ; test1         version ""
+    case 24 ; test1         shell_server_aql 0 --testBuckets 6/0
+    case 25 ; test1         shell_server_aql 1 --testBuckets 6/1
+    case 26 ; test1         shell_server_aql 2 --testBuckets 6/2
+    case 27 ; test1         shell_server_aql 3 --testBuckets 6/3
+    case 28 ; test1         shell_server_aql 4 --testBuckets 6/4
+    case 29 ; test1         shell_server_aql 5 --testBuckets 6/5
+    case 30 ; test1         server_http ""
+    case 31 ; test1         ssl_server 0 --testBuckets 2/0
+    case 32 ; test1         ssl_server 1 --testBuckets 2/1
+    case 33 ; test1         shell_client ""
+    case 34 ; test1         shell_client_aql ""
+    case 35 ; test1         shell_replication ""
+    case 36 ; test1         BackupAuthNoSysTests ""
+    case 37 ; test1         BackupAuthSysTests ""
+    case 38 ; test1         BackupNoAuthNoSysTests ""
+    case 39 ; test1         BackupNoAuthSysTests ""
+    case 40 ; test1         active_failover ""
+    case 41 ; test1         agency ""
+    case 42 ; test1         arangobench  ""
+    case 43 ; test1         arangosh ""
+    case 44 ; test1         audit ""
+    case 45 ; test1         authentication ""
+    case 46 ; test1         authentication_parameters ""
+    case 47 ; test1         authentication_server ""
+    case 48 ; test1         catch ""
+    case 49 ; test1         config ""
+    case 50 ; test1         dfdb ""
+    case 51 ; test1         dump ""
+    case 52 ; test1         dump_authentication ""
+    case 53 ; test1         dump_encrypted ""
+    case 54 ; test1         dump_maskings ""
+    case 55 ; test1         dump_multiple ""
+    case 56 ; test1         endpoints "" --skipEndpointsIpv6 true
+    case 57 ; test1         export ""
+    case 58 ; test1         foxx_manager ""
+    case 59 ; test1         http_replication ""
+    case 60 ; test1         http_server 0 --testBuckets 2/0
+    case 61 ; test1         http_server 1 --testBuckets 2/1
+    case 62 ; test1         importing ""
+    case 63 ; test1         load_balancing ""
+    case 64 ; test1         load_balancing_auth ""
+    case 65 ; test1         queryCacheAuthorization ""
+    case 66 ; test1         readOnly ""
+    case 67 ; test1         upgrade ""
+    case 68 ; test1         version ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
