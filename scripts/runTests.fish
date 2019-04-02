@@ -53,9 +53,11 @@ function launchSingleTests
   end
 
   function logids
-    if test $VERBOSEOSKAR = On ; echo Launching Log-Id-Check $argv "($launchCount)" ; end
-    echo utils/checkLogIds.py
-    utils/checkLogIds.py > $TMPDIR/logids.log &
+    if test -f utils/checkLogIds.py;
+        if test $VERBOSEOSKAR = On ; echo Launching Log-Id-Check $argv "($launchCount)" ; end
+        echo utils/checkLogIds.py
+        utils/checkLogIds.py > $TMPDIR/logids.log &
+    end
   end
 
   function test1
