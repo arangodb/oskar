@@ -52,6 +52,12 @@ function launchSingleTests
     utils/jslint.sh > $TMPDIR/jslint.log &
   end
 
+  function logids
+    if test $VERBOSEOSKAR = On ; echo Launching Log-Id-Check $argv "($launchCount)" ; end
+    echo utils/checkLogIds.py
+    utils/checkLogIds.py > $TMPDIR/logids.log &
+  end
+
   function test1
     if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
 
@@ -138,6 +144,7 @@ function launchSingleTests
     case 37 ; test1         ssl_server ""
     case 38 ; test1         version ""
     case 39 ; test1         active_failover ""
+    case 40 ; test1         logids ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
