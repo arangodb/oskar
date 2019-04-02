@@ -750,6 +750,11 @@ function moveResultsToWorkspace
   end
 end
 
+function hasLDAPHOST
+    test ! -z "$LDAPHOST"
+    return $status
+end
+
 ## #############################################################################
 ## include the specifics for the platform
 ## #############################################################################
