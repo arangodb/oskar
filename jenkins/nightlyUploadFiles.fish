@@ -11,7 +11,7 @@ function upload
   cd /mnt/buildfiles/stage2/nightly
   and echo "Copying NIGHTLY"
   and test "$ARANGODB_PACKAGES" != ""
-  and gsutil rsync -n -d -r $ARANGODB_PACKAGES gs://download.arangodb.com/nightly/$ARANGODB_PACKAGES
+  and gsutil rsync -d -r $ARANGODB_PACKAGES gs://download.arangodb.com/nightly/$ARANGODB_PACKAGES
 end
 
 # there might be internet hickups
