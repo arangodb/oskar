@@ -4,6 +4,7 @@ source jenkins/helper.jenkins.fish ; prepareOskar
 lockDirectory ; updateOskar ; clearResults
 
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and setNightlyRelease
 and makeRelease
 
 set -l s $status
