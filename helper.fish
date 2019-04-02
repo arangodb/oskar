@@ -205,6 +205,16 @@ end
 ## release
 ## #############################################################################
 
+function setNightlyRelease
+  checkoutIfNeeded
+  sed -i -e "s/set(ARANGODB_VERSION_RELEASE_TYPE .*/set(ARANGODB_VERSION_RELEASE_TYPE \"nightly\")/" $WORKDIR/work/ArangoDB/CMakeLists.txt
+  sed -i -e "s/set(ARANGODB_VERSION_RELEASE_NUMBER .*/set(ARANGODB_VERSION_RELEASE_NUMBER \""(date +%Y%m%d)"\")/" $WORKDIR/work/ArangoDB/CMakeLists.txt
+end
+
+## #############################################################################
+## release
+## #############################################################################
+
 function makeRelease
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."

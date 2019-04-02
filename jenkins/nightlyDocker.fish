@@ -23,6 +23,7 @@ rm -rf $WORKSPACE/imagenames.log
 community
 
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and setNightlyRelease
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
@@ -44,6 +45,7 @@ end
 enterprise
 
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and setNightlyRelease
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
