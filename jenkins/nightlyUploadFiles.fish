@@ -3,7 +3,7 @@ source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
 
-switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
+switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
 or begin unlockDirectory ; exit 1 ; end
 
