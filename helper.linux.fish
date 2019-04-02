@@ -15,6 +15,8 @@ set -xg IONICE "ionice -t -n 7"
 set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
 set -gx LDAPNETWORK ldaptestnet
 
+set -gx SYSTEM_IS_LINUX true
+
 ## #############################################################################
 ## config
 ## #############################################################################
