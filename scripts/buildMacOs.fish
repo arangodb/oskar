@@ -44,6 +44,11 @@ set -g FULLARGS $argv \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
       -DOPENSSL_USE_STATIC_LIBS=On
 
+if test "$MAINTAINER" != "On"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_CATCH_TESTS=Off
+end
+
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
 end

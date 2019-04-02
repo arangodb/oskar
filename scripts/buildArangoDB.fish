@@ -38,6 +38,11 @@ set -g FULLARGS $argv \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER
 
+if test "$MAINTAINER" != "On"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_CATCH_TESTS=Off
+end
+
 if test "$PLATFORM" = "linux"
   set -g FULLARGS $FULLARGS \
    -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold \
