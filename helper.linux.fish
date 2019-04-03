@@ -952,7 +952,7 @@ function runInContainer
   set c (docker run -d \
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
-	     -v "$WORKDIR/scripts":"/scripts" \
+             -v "$WORKDIR/scripts":"/scripts" \
              -e ASAN="$ASAN" \
              -e IONICE="$IONICE" \
              -e BUILDMODE="$BUILDMODE" \
@@ -962,7 +962,7 @@ function runInContainer
              -e GID=(id -g) \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
              -e INNERWORKDIR="$INNERWORKDIR" \
-	     -e KEYNAME="$KEYNAME" \
+             -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
              -e MAINTAINER="$MAINTAINER" \
              -e NOSTRIP="$NOSTRIP" \
