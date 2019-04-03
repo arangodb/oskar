@@ -107,3 +107,7 @@ function createReport
   log "$now $TESTSUITE $result M:$MAINTAINER $BUILDMODE E:$ENTERPRISEEDITION $STORAGEENGINE" $repoState $repoStateEnterprise $badtests ""
 end
 
+function hasLDAPHOST
+    test ! -z "$LDAPHOST"
+    return $status
+end
