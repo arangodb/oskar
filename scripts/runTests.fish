@@ -258,12 +258,12 @@ function launchClusterTests
     case  9 ; test3 resilience sharddist shard-distribution-spec.js
     case 10 ; test1 shell_client ""
     case 11 ; test1 shell_client_aql ""
-    case 12 ; test1 shell_server_aql 0 --testBuckets 5/0
-    case 13 ; test1 shell_server_aql 1 --testBuckets 5/1
-    case 14 ; test1 shell_server_aql 2 --testBuckets 5/2
-    case 15 ; test1 shell_server_aql 3 --testBuckets 5/3
-    case 16 ; test1 shell_server_aql 4 --testBuckets 5/4
-    case 17 ; test1 server_http ""
+    case 12 ; test1 shell_server_aql 1 --testBuckets 5/1
+    case 13 ; test1 shell_server_aql 2 --testBuckets 5/2
+    case 14 ; test1 shell_server_aql 3 --testBuckets 5/3
+    case 15 ; test1 shell_server_aql 4 --testBuckets 5/4
+    case 16 ; test1 server_http ""
+    case 17 ; test1 shell_server_aql 0 --testBuckets 5/0
     case 18 ; test1 ssl_server ""
     case '*' ; return 0
   end
