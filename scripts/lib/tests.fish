@@ -56,6 +56,18 @@ function createReport
       grep ERROR "jslint.log" > "$INNERWORKDIR/jslint.out/testfailures.txt"
     end
   end
+
+  # this is the logids output
+  if test -e "logids.log"
+    if grep ERROR "logids.log"
+      set -g result BAD
+      echo Bad result in logids
+      echo Bad result in logids >> testProtocol.txt
+      set badtests $badtests "Bad result in logids"
+      mkdir "$INNERWORKDIR/logids.out/"
+      grep ERROR "logids.log" > "$INNERWORKDIR/logids.out/testfailures.txt"
+    end
+  end
  
   popd
   echo $result >> testProtocol.txt
