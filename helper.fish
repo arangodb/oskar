@@ -663,6 +663,39 @@ function findArangoDBVersion
 end
 
 ## #############################################################################
+## LOG ID
+## #############################################################################
+
+function checkLogId
+  checkoutIfNeeded
+  and pushd $WORKDIR/work/ArangoDB
+  or begin popd; return 1; end
+
+  set -l ids (find lib arangod arangosh enterprise -name "*.cpp" -o -name "*.h" \
+    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\)("[a-f0-9]*"' \
+    | sed -e 's:^.*LOG_[^(]*("\([a-f0-9]*\)".*:\1:')
+
+  set -l duplicate (echo $ids | tr " " "\n" | sort | uniq -d)
+
+  set -l s 0
+
+  if test "$duplicate" != ""
+    echo "Duplicate: $duplicate"
+    set s 1
+  end
+
+  set -l wrong (echo $ids | tr " " "\n" | grep -v '^[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]$')
+
+  if test "$wrong" != ""
+    echo "Wrong format: $wrong"
+    set s 1
+  end
+
+  popd
+  return $s
+end
+
+## #############################################################################
 ## helper functions
 ## #############################################################################
 
