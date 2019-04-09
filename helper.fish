@@ -680,15 +680,19 @@ function checkLogId
   set -l s 0
 
   if test "$duplicate" != ""
-    echo "Duplicate: $duplicate"
+    echo "Duplicates: $duplicate"
     set s 1
+  else
+    echo "Duplicates: NONE"
   end
 
   set -l wrong (echo $ids | tr " " "\n" | grep -v '^[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]$')
 
   if test "$wrong" != ""
-    echo "Wrong format: $wrong"
+    echo "Wrong formats: $wrong"
     set s 1
+  else
+    echo "Wrong formats: NONE"
   end
 
   popd
