@@ -9,6 +9,8 @@ set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
 
+set -gx SYSTEM_IS_MACOSX true
+
 # disable JEMALLOC for now in oskar on MacOSX, since we never tried it:
 jemallocOff
 

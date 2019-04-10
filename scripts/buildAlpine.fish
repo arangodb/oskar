@@ -56,6 +56,11 @@ set -g FULLARGS $argv \
  -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
  -DUSE_MAINTAINER_MODE=$MAINTAINER
 
+if test "$MAINTAINER" != "On"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_CATCH_TESTS=Off
+end
+
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
 end

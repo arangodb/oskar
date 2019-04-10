@@ -9,25 +9,29 @@ function movePackagesToStage2
   set -xg SRC work
   set -xg DST /mnt/buildfiles/stage2/nightly/$ARANGODB_PACKAGES
 
-  mkdir -p $DST
-  and for d in Linux Windows MacOSX
-    mkdir -p $DST/$d
+  if test "$SYSTEM_IS_LINUX" = "true"
+    rm -rf $DST/Linux
+    and mkdir -p $DST/Linux
+    or return 1
   end
-  or return 1
-
-  set -g s 0
 
   for pattern in "arangodb3_*.deb" "arangodb3-*.deb" "arangodb3-*.rpm" "arangodb3-linux-*.tar.gz"
     set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
     for file in $files
-      cp -a $SRC/$file $DST/Linux ; or set -g s 1
+      mv $SRC/$file $DST/Linux ; or set -g s 1
     end
+  end
+
+  if test "$SYSTEM_IS_MACOSX" = "true"
+    rm -rf $DST/MacOSX
+    and mkdir -p $DST/MacOSX
+    or return 1
   end
 
   for pattern in "arangodb3-*.dmg" "arangodb3-macosx-*.tar.gz"
     set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
     for file in $files
-      cp -a $SRC/$file $DST/Linux ; or set -g s 1
+      mv $SRC/$file $DST/Linux ; or set -g s 1
     end
   end
 
