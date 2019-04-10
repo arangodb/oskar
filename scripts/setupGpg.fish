@@ -13,7 +13,7 @@ and begin
   and rm -f $passphrase
   and touch $passphrase
   and chmod 600 $passphrase
-  and echo "$ARANGO_SIGN_PASSWD" >> $passphrase
+  and echo '$ARANGO_SIGN_PASSWD' >> $passphrase
   and gpg2 \
 	--homedir=~/.gnupg \
         --armor \
