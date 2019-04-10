@@ -7,7 +7,7 @@
 set timeout -1
 
 set password $env(ARANGO_SIGN_PASSWD)
-send_user "## EXPECT ## '$password'\n"
+#send_user "## EXPECT ## '$password'\n"
 spawn rpm --define "_gpg_name <info@arangodb.com>" --addsign {*}$argv
 
 expect {
