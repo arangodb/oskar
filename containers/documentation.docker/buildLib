@@ -783,12 +783,9 @@ cross_out_check_dangling_anchors() {
 
         $debug_anchors && debug $check_filename
 
-        # Browsers will resolve links like Foo/ to Foo/index.html automatically,
-	# but our desired format is Foo/README.md in the source code and the
-	# old Jenkins does not append index.html in tests, thus we disable it here
-        #if [[ -d "$check_filename" ]]; then
-        #    check_filename="${check_filename}/index.html"
-        #fi
+        if [[ -d "$check_filename" ]]; then
+            check_filename="${check_filename}/index.html"
+        fi
 
         if  ! [[ -f "/tmp/tags/${check_filename}" ]]; then
             err "File '/tmp/tags/${check_filename}' referenced by '$anchor' doesn't exist."
