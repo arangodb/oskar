@@ -17,6 +17,8 @@ set -gx LDAPNETWORK ldaptestnet
 
 set -gx SYSTEM_IS_LINUX true
 
+echo "$ARANGO_SIGN_PASSWD" > /tmp/ARANGO_SIGN_PASSWD
+
 ## #############################################################################
 ## config
 ## #############################################################################
