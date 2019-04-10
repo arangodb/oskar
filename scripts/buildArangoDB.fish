@@ -34,7 +34,7 @@ set -g FULLARGS $argv \
  -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/g++ \
  -DCMAKE_C_COMPILER=$CCACHEBINPATH/gcc \
  -DCMAKE_INSTALL_PREFIX=/ \
- -DSTATIC_EXECUTABLES=On \
+ -DSTATIC_EXECUTABLES=Off \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER
 
@@ -53,14 +53,17 @@ if test "$ASAN" = "On"
   echo "Building with ASAN"
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=Off \
-   -DCMAKE_C_FLAGS="-fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=alignment" \
-   -DCMAKE_CXX_FLAGS=-"fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=vptr -fno-sanitize=alignment"
+   -DCMAKE_C_FLAGS="-pthread -fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=alignment" \
+   -DCMAKE_CXX_FLAGS="-pthread -fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=vptr -fno-sanitize=alignment" \
+   -DBASE_LIBS="-pthread"
 else
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
    -DCMAKE_C_FLAGS=-fno-stack-protector \
    -DCMAKE_CXX_FLAGS=-fno-stack-protector
 end
+
+set -xg ASAN_OPTIONS "detect_leaks=0"
 
 echo cmake $FULLARGS ..
 echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
@@ -78,7 +81,7 @@ if test "$VERBOSEBUILD" = "On"
 end
 
 set -x DESTDIR (pwd)/install
-echo Running make for static build, output in work/buildArangoDB.log
+echo Running make for build, output in work/buildArangoDB.log
 nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
 and echo "build and install done"  >> $INNERWORKDIR/buildArangoDB.log
 and cd install
