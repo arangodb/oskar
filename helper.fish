@@ -127,14 +127,6 @@ function oskar1Full
   oskarFull
 end
 
-function oskar1Limited
-  showConfig
-  showRepository
-  set -x NOSTRIP 1
-  buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  oskarLimited
-end
-
 function oskar2
   set -l testsuite $TESTSUITE
   set -x NOSTRIP 1

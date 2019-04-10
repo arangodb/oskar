@@ -162,11 +162,6 @@ function oskarFull
   return $res
 end
 
-function oskarLimited
-  checkoutIfNeeded
-  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runLimitedTests.fish
-end
-
 ## #############################################################################
 ## source release
 ## #############################################################################

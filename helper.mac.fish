@@ -104,11 +104,6 @@ function oskarFull
   runLocal $SCRIPTSDIR/runFullTests.fish
 end
 
-function oskarLimited
-  checkoutIfNeeded
-  runLocal $SCRIPTSDIR/runLimitedTests.fish
-end
-
 function pushOskar
   pushd $WORKDIR
   and source helper.fish

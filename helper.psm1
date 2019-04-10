@@ -1042,15 +1042,6 @@ Function oskarFull
     }
 }
 
-Function oskarLimited
-{
-    checkoutIfNeeded
-    if($global:ok)
-    {
-        & "$global:SCRIPTSDIR\runLimitedTests.ps1"
-    }
-}
-
 Function oskar1
 {
     showConfig
@@ -1068,16 +1059,6 @@ Function oskar1Full
     if($global:ok)
     {
         oskarFull
-    }
-}
-
-Function oskar1Limited
-{
-    showConfig
-    buildStaticArangoDB
-    if($global:ok)
-    {
-        oskarLimited
     }
 }
 
