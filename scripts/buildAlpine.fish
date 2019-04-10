@@ -46,14 +46,11 @@ ccache --zero-stats
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
  -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
- -DCMAKE_CXX_FLAGS=-fno-stack-protector \
  -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME \
- -DCMAKE_C_FLAGS=-fno-stack-protector \
  -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id -no-pie"\
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=On \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
- -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
  -DUSE_MAINTAINER_MODE=$MAINTAINER
 
 if test "$MAINTAINER" != "On"
@@ -63,6 +60,11 @@ end
 
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
+else
+  set -g FULLARGS $FULLARGS \
+   -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
+   -DCMAKE_C_FLAGS=-fno-stack-protector \
+   -DCMAKE_CXX_FLAGS=-fno-stack-protector
 end
 
 echo cmake $FULLARGS ..
