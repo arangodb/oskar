@@ -7,7 +7,7 @@ source /scripts/setupGpg.fish
 and rm -f $passphrase
 and touch $passphrase
 and chmod 600 $passphrase
-and echo '$ARANGO_SIGN_PASSWD' >> $passphrase
+and echo "$ARANGO_SIGN_PASSWD" >> $passphrase
 and for i in (seq 1 (count $argv))
   set -l file $argv[$i]
   set -l sign $argv[$i]"".asc
