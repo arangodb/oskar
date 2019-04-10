@@ -10,7 +10,8 @@ if test -z "$PARALLELISM_FULL_TEST"
 end
 
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and checkLogId
+and rm -f test.log
+and checkLogId | tee test.log
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
