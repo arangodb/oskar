@@ -177,7 +177,7 @@ function signSourcePackage
   pushd $WORKDIR/work
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
-        -v $HOME/.gnupg2:/root/.gnupg \
+        -v $HOME/.gnupg3:/root/.gnupg \
 	$UBUNTUBUILDIMAGE $SCRIPTSDIR/signFile.fish \
 	/work/ArangoDB-$SOURCE_TAG.tar.gz \
 	/work/ArangoDB-$SOURCE_TAG.tar.bz2 \
@@ -838,7 +838,7 @@ function createRepositories
   pushd $WORKDIR
   runInContainer \
       -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
-      -v $HOME/.gnupg2:/root/.gnupg \
+      -v $HOME/.gnupg3:/root/.gnupg \
       -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
       -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
       $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/createAll
