@@ -8,7 +8,7 @@ apk add groff g++ bison flex make cmake ccache python libldap git linux-vanilla-
 # Compile newer GCC versions
 mkdir /gcc
 
-for v in 7.3.0 8.2.0; do
+for v in 8.3.0; do
     mkdir /tmp/gcc
     cd /tmp/gcc
     wget https://ftp.gnu.org/gnu/gcc/gcc-$v/gcc-$v.tar.gz
