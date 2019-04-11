@@ -27,7 +27,6 @@ and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
 and downloadSyncer
-
 and buildDockerImage arangodb/enterprise-preview:devel
 and docker push arangodb/enterprise-preview:devel
 and docker tag arangodb/enterprise-preview:devel registry.arangodb.biz:5000/arangodb/linux-enterprise-maintainer:devel
