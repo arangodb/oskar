@@ -13,8 +13,6 @@ and buildDockerImage arangodb/arangodb-preview:3.3
 and docker push arangodb/arangodb-preview:3.3
 and docker tag arangodb/arangodb-preview:3.3 registry.arangodb.biz:5000/arangodb/linux-community-maintainer:3.3
 and docker push registry.arangodb.biz:5000/arangodb/linux-community-maintainer:3.3
-and docker tag arangodb/arangodb-preview:3.3 arangodb/arangodb-preview:latest
-and docker push arangodb/arangodb-preview:latest
 
 if test $status -ne 0
   echo Production of community image failed, giving up...
@@ -33,8 +31,6 @@ and buildDockerImage registry.arangodb.biz:5000/arangodb/arangodb-preview:3.3-$K
 and docker push registry.arangodb.biz:5000/arangodb/arangodb-preview:3.3-$KEY
 and docker tag registry.arangodb.biz:5000/arangodb/arangodb-preview:3.3-$KEY registry.arangodb.biz:5000/arangodb/linux-enterprise-maintainer:3.3
 and docker push registry.arangodb.biz:5000/arangodb/linux-enterprise-maintainer:3.3
-and docker tag registry.arangodb.biz:5000/arangodb/arangodb-preview:3.3-$KEY registry.arangodb.biz:5000/arangodb/arangodb-preview:latest-$KEY
-and docker push registry.arangodb.biz:5000/arangodb/arangodb-preview:latest-$KEY
 
 and begin
   rm -rf $WORKSPACE/imagenames.log
@@ -47,4 +43,3 @@ end
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
-

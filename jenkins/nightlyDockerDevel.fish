@@ -27,20 +27,20 @@ and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
 and downloadSyncer
-and buildDockerImage registry.arangodb.biz:5000/arangodb/arangodb-preview:devel-$KEY
-and docker push registry.arangodb.biz:5000/arangodb/arangodb-preview:devel-$KEY
-and docker tag registry.arangodb.biz:5000/arangodb/arangodb-preview:devel-$KEY registry.arangodb.biz:5000/arangodb/linux-enterprise-maintainer:devel
+
+and buildDockerImage arangodb/enterprise-preview:devel
+and docker push arangodb/enterprise-preview:devel
+and docker tag arangodb/enterprise-preview:devel registry.arangodb.biz:5000/arangodb/linux-enterprise-maintainer:devel
 and docker push registry.arangodb.biz:5000/arangodb/linux-enterprise-maintainer:devel
 
 and begin
   rm -rf $WORKSPACE/imagenames.log
   echo arangodb/arangodb-preview:devel >> $WORKSPACE/imagenames.log
   echo registry.arangodb.biz:5000/arangodb/linux-community-maintainer:devel >> $WORKSPACE/imagenames.log
-  echo registry.arangodb.biz:5000/arangodb/arangodb-preview:devel-$KEY >> $WORKSPACE/imagenames.log
+  echo arangodb/enterprise-preview:devel >> $WORKSPACE/imagenames.log
   echo registry.arangodb.biz:5000/arangodb/linux-enterprise-maintainer:devel >> $WORKSPACE/imagenames.log
 end
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
-
