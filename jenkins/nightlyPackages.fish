@@ -1,4 +1,11 @@
 #!/usr/bin/env fish
+if test -z "$ARANGODB_PACKAGES"
+  echo "ARANGODB_PACKAGES required"
+  exit 1
+end
+
+set -xg PACKAGES "$ARANGODB_PACKAGES"
+
 source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults
@@ -7,7 +14,7 @@ function movePackagesToStage2
  findArangoDBVersion
 
   set -xg SRC work
-  set -xg DST /mnt/buildfiles/stage2/nightly/$ARANGODB_PACKAGES
+  set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
 
   if test "$SYSTEM_IS_LINUX" = "true"
     rm -rf $DST/Linux
@@ -38,10 +45,22 @@ function movePackagesToStage2
   return $s
 end
 
+function createIndex
+  cd $WORKSPACE/file-browser
+  and rm -f file-browser.out
+  and rm -rf root-dir
+  and mkdir -p root-dir/$PACKAGES
+  and ln -s /mnt/buildfiles/stage2/nightly/$PACKAGES root-dir/$PACKAGES
+  and rm -f program2.py
+  and sed -e 's/os\.walk(root)/os\.walk(root,followlinks=True)/' program.py > program2.py
+  and python program2.py root-dir > file-browser.out 2>&1
+end
+
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and makeRelease
 and movePackagesToStage2
+and createIndex
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
