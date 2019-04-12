@@ -300,6 +300,10 @@ Function releaseMode
 {
     $global:BUILDMODE = "RelWithDebInfo"
 }
+Function releaseModeNoSymbols
+{
+    $global:BUILDMODE = "Release"
+}
 If(-Not($BUILDMODE))
 {
     releaseMode
