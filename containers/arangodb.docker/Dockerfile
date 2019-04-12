@@ -21,6 +21,7 @@ RUN chgrp 0 /var/lib/arangodb3 /var/lib/arangodb3-apps && \
     chmod 775 /var/lib/arangodb3 /var/lib/arangodb3-apps
 
 COPY entrypoint.sh /entrypoint.sh
+RUN ["chmod", "+x", "/entrypoint.sh"]
 ENTRYPOINT [ "/entrypoint.sh" ]
 
 EXPOSE 8529
