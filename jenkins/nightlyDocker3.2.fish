@@ -43,4 +43,3 @@ end
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
-
