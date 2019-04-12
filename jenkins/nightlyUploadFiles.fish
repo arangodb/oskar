@@ -1,4 +1,11 @@
 #!/usr/bin/env fish
+if test -z "$ARANGODB_PACKAGES"
+  echo "ARANGODB_PACKAGES required"
+  exit 1
+end
+
+set -xg PACKAGES "$ARANGODB_PACKAGES"
+
 source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
@@ -10,8 +17,7 @@ or begin unlockDirectory ; exit 1 ; end
 function upload
   cd /mnt/buildfiles/stage2/nightly
   and echo "Copying NIGHTLY"
-  and test "$ARANGODB_PACKAGES" != ""
-  and gsutil rsync -d -r $ARANGODB_PACKAGES gs://download.arangodb.com/nightly/$ARANGODB_PACKAGES
+  and gsutil rsync -d -r $PACKAGES gs://download.arangodb.com/nightly/$PACKAGES
 end
 
 # there might be internet hickups

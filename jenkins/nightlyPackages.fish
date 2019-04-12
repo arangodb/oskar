@@ -47,11 +47,8 @@ end
 
 function createIndex
   cd $WORKSPACE/file-browser
-  and rm -f file-browser.out
-  and rm -rf root-dir
-  and mkdir -p root-dir/$PACKAGES
-  and ln -s /mnt/buildfiles/stage2/nightly/$PACKAGES root-dir/$PACKAGES
-  and rm -f program2.py
+  and rm -rf file-browser.out root-dir program2.py
+  and ln -s /mnt/buildfiles/stage2/nightly root-dir/
   and sed -e 's/os\.walk(root)/os\.walk(root,followlinks=True)/' program.py > program2.py
   and python program2.py root-dir > file-browser.out 2>&1
 end
