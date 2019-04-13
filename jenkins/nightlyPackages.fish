@@ -10,12 +10,10 @@ source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults
 
+set -xg SRC work
+set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
+
 function movePackagesToStage2
- findArangoDBVersion
-
-  set -xg SRC work
-  set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
-
   if test "$SYSTEM_IS_LINUX" = "true"
     rm -rf $DST/Linux
     and mkdir -p $DST/Linux
@@ -38,7 +36,7 @@ function movePackagesToStage2
   for pattern in "arangodb3-*.dmg" "arangodb3-macosx-*.tar.gz"
     set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
     for file in $files
-      mv $SRC/$file $DST/Linux ; or set -g s 1
+      mv $SRC/$file $DST/MacOSX ; or set -g s 1
     end
   end
 
@@ -53,4 +51,3 @@ and movePackagesToStage2
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
-
