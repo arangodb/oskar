@@ -288,10 +288,10 @@ function buildBundleSnippet
   end
 
   if test "$ENTERPRISEEDITION" = "On"
-    transformBundleSnippet "arangodb3e" "$n" "$ARANGODB_TGZ_UPSTREAM"
+    transformBundleSnippet "arangodb3e" "$n" "$ARANGODB_DARWIN_UPSTREAM"
     or return 1
   else
-    transformBundleSnippet "arangodb3" "$n" "$ARANGODB_TGZ_UPSTREAM"
+    transformBundleSnippet "arangodb3" "$n" "$ARANGODB_DARWIN_UPSTREAM"
     or return 1
   end
 end
