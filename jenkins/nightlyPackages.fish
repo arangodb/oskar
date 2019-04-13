@@ -45,20 +45,10 @@ function movePackagesToStage2
   return $s
 end
 
-function createIndex
-  cd $WORKSPACE/file-browser
-  and rm -rf file-browser.out root-dir program2.py
-  and mkdir root-dir
-  and ln -s /mnt/buildfiles/stage2/nightly root-dir/
-  and sed -e 's/os\.walk(root)/os\.walk(root,followlinks=True)/' program.py > program2.py
-  and python program2.py root-dir > file-browser.out 2>&1
-end
-
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and makeRelease
 and movePackagesToStage2
-and createIndex
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
