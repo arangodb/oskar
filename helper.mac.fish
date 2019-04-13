@@ -135,11 +135,7 @@ function buildPackage
   # This assumes that a build has already happened
   # Must have set ARANGODB_DARWIN_UPSTREAM and ARANGODB_DARWIN_REVISION,
   # for example by running findArangoDBVersion.
-  if test -z "$ARANGODB_DARWIN_REVISION"
-    set v "$ARANGODB_DARWIN_UPSTREAM"
-  else  
-    set v "$ARANGODB_DARWIN_UPSTREAM-$ARANGODB_DARWIN_REVISION"
-  end
+  set v "$ARANGODB_DARWIN_UPSTREAM"
 
   if test "$ENTERPRISEEDITION" = "On"
     echo Building enterprise edition MacOs bundle...
@@ -281,11 +277,7 @@ end
 function buildBundleSnippet
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
-  if test -z "$ARANGODB_DARWIN_REVISION"
-    set n "$ARANGODB_DARWIN_UPSTREAM"
-  else
-    set n "$ARANGODB_DARWIN_UPSTREAM-$ARANGODB_DARWIN_REVISION"
-  end
+  set n "$ARANGODB_DARWIN_UPSTREAM"
 
   if test "$ENTERPRISEEDITION" = "On"
     transformBundleSnippet "arangodb3e" "$n" "$ARANGODB_DARWIN_UPSTREAM"
