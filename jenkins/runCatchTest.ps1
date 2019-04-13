@@ -7,7 +7,7 @@ skipPackagingOn
 staticExecutablesOn
 catchtest
 parallelism ([int]$env:NUMBER_OF_PROCESSORS)
-releaseModeNoSymbols
+releaseMode
 
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 
