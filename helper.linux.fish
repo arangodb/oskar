@@ -163,6 +163,23 @@ function oskarFull
 end
 
 ## #############################################################################
+## jslint
+## #############################################################################
+
+function jslint
+  checkoutIfNeeded
+  and pushd $WORKDIR/work/ArangoDB
+  or begin popd; return 1; end
+
+  set -l s 0
+  interactiveContainer arangodb/arangodb /scripts/jslint.sh
+  set s $status
+
+  popd
+  return $s
+end
+
+## #############################################################################
 ## source release
 ## #############################################################################
 
@@ -1001,8 +1018,10 @@ function runInContainer
 end
 
 function interactiveContainer
-  docker run -it -v $WORKDIR/work:$INNERWORKDIR --rm \
+  docker run -it --rm \
+             -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
+             -v "$WORKDIR/scripts":"/scripts" \
              -e SSH_AUTH_SOCK=/ssh-agent \
              -e UID=(id -u) \
              -e GID=(id -g) \
