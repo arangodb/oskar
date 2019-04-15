@@ -276,13 +276,13 @@ end
 
 function buildDebianPackage
   if test ! -d $WORKDIR/work/ArangoDB/build
-    echo buildRPMPackage: build directory does not exist
+    echo buildDebianPackage: build directory does not exist
     return 1
   end
 
   set -l pd "default"
 
-  if test -d $WORKDIR/rpm/$ARANGODB_PACKAGES
+  if test -d $WORKDIR/debian/$ARANGODB_PACKAGES
     set pd "$ARANGODB_PACKAGES"
   end
 
