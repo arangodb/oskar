@@ -78,6 +78,8 @@ Function global:registerSingleTests()
     registerTest -testname "readOnly"
     registerTest -testname "upgrade"
     registerTest -testname "version"
+    registerTest -testname "audit_client"
+    registerTest -testname "audit_server"
     comm
 }
 
