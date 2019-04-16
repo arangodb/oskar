@@ -852,7 +852,7 @@ Function signWindows
 
 Function storeSymbols
 {
-    If(-Not((Get-Content $global:WORKDIR\work\ArangoDB\CMakeLists.txt) -match 'set\(ARANGODB_VERSION_RELEASE_TYPE \"nightly\"'))
+    If(-Not((Get-Content $INNERWORKDIR\ArangoDB\CMakeLists.txt) -match 'set\(ARANGODB_VERSION_RELEASE_TYPE \"nightly\"'))
     {
         Push-Location $pwd
         Set-Location "$global:ARANGODIR\build\"
