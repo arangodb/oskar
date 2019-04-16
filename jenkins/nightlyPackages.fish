@@ -20,7 +20,7 @@ function movePackagesToStage2
     or return 1
   end
 
-  for pattern in "arangodb3_*.deb" "arangodb3-*.deb" "arangodb3-*.rpm" "arangodb3-linux-*.tar.gz"
+  for pattern in "arangodb3*_*.deb" "arangodb3*-*.deb" "arangodb3*-*.rpm" "arangodb3*-linux-*.tar.gz"
     set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
     for file in $files
       mv $SRC/$file $DST/Linux ; or set -g s 1
@@ -34,7 +34,7 @@ function movePackagesToStage2
     or return 1
   end
 
-  for pattern in "arangodb3-*.dmg" "arangodb3-macosx-*.tar.gz"
+  for pattern in "arangodb3*-*.dmg" "arangodb3*-macosx-*.tar.gz"
     set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
     for file in $files
       mv $SRC/$file $DST/MacOSX ; or set -g s 1

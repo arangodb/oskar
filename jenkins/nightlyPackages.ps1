@@ -21,7 +21,7 @@ Function movePackagesToStage2
         mkdir -p $DST\Windows
     end
 
-    ForEach ($file in $(Get-ChildItem $SRC\* -Include ArangoDB-*.zip, ArangoDB-*.exe))
+    ForEach ($file in $(Get-ChildItem $SRC\* -Include ArangoDB3*-*.zip, ArangoDB3*-*.exe))
     {
         Move-Item -Force -Path "$SRC\$file" -Destination $DST\Windows;comm
     }
