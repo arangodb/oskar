@@ -852,23 +852,32 @@ Function signWindows
 
 Function storeSymbols
 {
-    Push-Location $pwd
-    Set-Location "$global:ARANGODIR\build\"
-    If(-not((Get-SmbMapping -LocalPath S:).Status -eq "OK"))
+    If(-Not((Get-Content $INNERWORKDIR\ArangoDB\CMakeLists.txt) -match 'set\(ARANGODB_VERSION_RELEASE_TYPE \"nightly\"'))
     {
-        New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true
-    }
-    Else
-    {
-        findArangoDBVersion | Out-Null
-        ForEach($SYMBOL in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
+        Push-Location $pwd
+        Set-Location "$global:ARANGODIR\build\"
+        If(-not((Get-SmbMapping -LocalPath S:).Status -eq "OK"))
         {
-            Write-Host "Symbol: symstore.exe add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress"
-            proc -process "symstore.exe" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
+            New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true
         }
+        Else
+        {
+            findArangoDBVersion | Out-Null
+            ForEach($SYMBOL in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
+            {
+                Write-Host "Symbol: symstore.exe add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress"
+                proc -process "symstore.exe" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
+            }
+        }
+        uploadSymbols
+        Pop-Location
     }
-    uploadSymbols
-    Pop-Location
+}
+
+Function setNightlyRelease
+{
+    checkoutIfNeeded
+    (Get-Content $INNERWORKDIR\ArangoDB\CMakeLists.txt) -replace '"set\(ARANGODB_VERSION_RELEASE_TYPE .*"', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly"' | Out-File $INNERWORKDIR\ArangoDB\CMakeLists.txt
 }
 
 Function buildArangoDB
@@ -1158,3 +1167,5 @@ Function makeRelease
     makeCommunityRelease
     makeEnterpriseRelease
 }
+
+$global:SYSTEM_IS_WINDOWS=$true
