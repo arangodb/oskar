@@ -169,6 +169,8 @@ function launchSingleTests
     case 68 ; test1         version ""
     case 69 ; test1         audit_client ""
     case 70 ; test1         audit_server ""
+    case 71 ; test1         permissions ""
+    case 72 ; test1         permissions_server ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
