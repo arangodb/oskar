@@ -1167,3 +1167,5 @@ Function makeRelease
     makeCommunityRelease
     makeEnterpriseRelease
 }
+
+$global:SYSTEM_IS_WINDOWS=$true
