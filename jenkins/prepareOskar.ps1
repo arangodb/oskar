@@ -54,5 +54,3 @@ If($(Get-Module).Name -ccontains "oskar")
 }
 Import-Module "$OSKARDIR\oskar\helper.psm1"
 clearResults
-
-$global:SYSTEM_IS_WINDOWS=$true
