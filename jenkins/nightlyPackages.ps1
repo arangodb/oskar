@@ -16,10 +16,11 @@ $DST="B:\stage2\nightly\$PACKAGES"
 
 Function movePackagesToStage2
 {
-    If($env:SYSTEM_IS_WINDOWS)
+    If ($env:SYSTEM_IS_WINDOWS)
+    {
         rm -Force -Recurse $DST\Windows
         mkdir -p $DST\Windows
-    end
+    }
 
     ForEach ($file in $(Get-ChildItem $SRC\* -Include ArangoDB3*-*.zip, ArangoDB3*-*.exe))
     {
