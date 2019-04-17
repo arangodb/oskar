@@ -48,7 +48,7 @@ If(-Not($?))
 }
 lockDirectory
 updateOskar
-If($(Get-Module).Name -ccontains "oskar")
+If($(Get-Module).Name -contains "oskar")
 {
     Remove-Module helper
 }
