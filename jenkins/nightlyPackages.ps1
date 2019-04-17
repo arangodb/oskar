@@ -11,7 +11,7 @@ If (!$env:ARANGODB_PACKAGES -or $env:ARANGODB_PACKAGES -eq "")
 
 $PACKAGES="$env:ARANGODB_PACKAGES"
 
-$SRC="$INNERWORKDIR"
+$SRC="$ENV:WORKSPACE"
 Write-Host "SRC: $SRC"
 $DST="B:\stage2\nightly\$PACKAGES"
 Write-Host "DST: $DST"
@@ -40,7 +40,6 @@ If ($global:ok)
     movePackagesToStage2
 }
 $s = $global:ok
-moveResultsToWorkspace
 unlockDirectory
 
 If($s)

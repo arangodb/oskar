@@ -92,6 +92,11 @@ function includeGrey ; set -gx SKIPGREY false ; end
 if test -z "$SKIPGREY"; includeGrey
 else ; set -gx SKIPGREY $SKIPGREY ; end
 
+function onlyGreyOn ; set -gx ONLYGREY true ; end
+function onlyGreyOff ; set -gx ONLYGREY false ; end
+if test -z "$ONLYGREY"; onlyGreyOff
+else ; set -gx ONLYGREY $ONLYGREY ; end
+
 function stable ; set -gx RELEASE_TYPE stable ; end
 function preview ; set -gx RELEASE_TYPE preview ; end
 if test -z "$RELEASE_TYPE"; preview
@@ -398,6 +403,7 @@ function showConfig
   echo
   echo 'Test Configuration'
   printf $fmt3 'SkipGrey'       $SKIPGREY      '(skipGrey/includeGrey)'
+  printf $fmt3 'OnlyGrey'       $ONLYGREY      '(onlyGreyOn/onlyGreyOff)'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'
   printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/catchtest)'
   echo
