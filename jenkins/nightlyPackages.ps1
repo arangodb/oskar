@@ -12,7 +12,9 @@ If (!$env:ARANGODB_PACKAGES -or $env:ARANGODB_PACKAGES -eq "")
 $PACKAGES="$env:ARANGODB_PACKAGES"
 
 $SRC="$INNERWORKDIR"
+Write-Host "SRC: $SRC"
 $DST="B:\stage2\nightly\$PACKAGES"
+Write-Host "DST: $DST"
 
 Function movePackagesToStage2
 {

@@ -877,7 +877,7 @@ Function storeSymbols
 Function setNightlyRelease
 {
     checkoutIfNeeded
-    (Get-Content $INNERWORKDIR\ArangoDB\CMakeLists.txt) -replace '"set\(ARANGODB_VERSION_RELEASE_TYPE .*"', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly"' | Out-File $INNERWORKDIR\ArangoDB\CMakeLists.txt
+    (Get-Content $ARANGODIR\CMakeLists.txt) -replace '"set\(ARANGODB_VERSION_RELEASE_TYPE .*"', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly"' | Out-File $ARANGODIR\CMakeLists.txt
 }
 
 Function buildArangoDB
