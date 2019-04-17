@@ -162,6 +162,7 @@ Function showConfig
     Write-Host "Enterprise     : "$ENTERPRISEEDITION
     Write-Host "Maintainer     : "$MAINTAINER
     Write-host "SkipGrey       : "$SKIPGREY
+    Write-host "OnlyGrey       : "$ONLYGREY
     Write-Host " "
     Write-Host "Generator      : "$GENERATOR
     Write-Host "Packaging      : "$PACKAGING
@@ -290,6 +291,19 @@ Function includeGrey
 if(-Not($SKIPGREY))
 {
     includeGrey
+}
+
+Function onlyGreyOn
+{
+    $global:ONLYGREY = "true"
+}
+Function onlyGreyOff
+{
+    $global:ONLYGREY = "false"
+}
+if(-Not($ONLYGREY))
+{
+    onlyGreyOff
 }
 
 Function debugMode

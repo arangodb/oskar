@@ -230,7 +230,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $testWeight = $weight
         }
         
-        $testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true --skipGrey $global:SKIPGREY"
+        $testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true --skipGrey $global:SKIPGREY --onlyGrey $global:ONLYGREY"
         
         $testparams = $testparams+" --testOutput $env:TMP\$output.out"
         
