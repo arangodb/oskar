@@ -18,7 +18,7 @@ update-alternatives --set c++ /usr/bin/g++
 export OPENSSLVERSION=1.1.0j
 cd /tmp
 curl -O https://www.openssl.org/source/openssl-$OPENSSLVERSION.tar.gz
-tar xzvf openssl-$OPENSSLVERSION.tar.gz
+tar xzf openssl-$OPENSSLVERSION.tar.gz
 cd openssl-$OPENSSLVERSION
 ./config --prefix=/usr no-async no-dso
 make
@@ -31,7 +31,7 @@ rm -rf openssl-$OPENSSLVERSION.tar.gz openssl-$OPENSSLVERSION
 export OPENLDAPVERSION=2.4.46
 cd /tmp
 curl -O ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-$OPENLDAPVERSION.tgz
-tar xzvf openldap-$OPENLDAPVERSION.tgz
+tar xzf openldap-$OPENLDAPVERSION.tgz
 cd openldap-$OPENLDAPVERSION
 cp -a /tools/config.* ./build
 ./configure --prefix=/usr --enable-static
