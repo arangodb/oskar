@@ -104,15 +104,15 @@ function launchSingleTests
     case  3 ; test1         'upgrade_data_3.4.*' ""
     case  4 ; test1MoreLogs replication_static ""
     case  5 ; test1         shell_server ""
-    case  6 ; test1MoreLogs replication_ongoing "-32"             --test replication-ongoing-32.js
-    case  7 ; test1MoreLogs replication_ongoing "-frompresent-32" --test replication-ongoing-frompresent-32.js
-    case  8 ; test1MoreLogs replication_ongoing "-frompresent"    --test replication-ongoing-frompresent.js
-    case  9 ; test1MoreLogs replication_ongoing "-global-spec"    --test replication-ongoing-global-spec.js
-    case 10 ; test1MoreLogs replication_ongoing "-global"         --test replication-ongoing-global.js
-    case 11 ; test1MoreLogs replication_ongoing ""                --test replication-ongoing.js
-    case 12 ; test1         replication_aql ""
-    case 13 ; test1         replication_fuzz ""
-    case 14 ; test1         replication_random ""
+    case  6 ; test1MoreLogs replication_ongoing_32 ""
+    case  7 ; test1MoreLogs replication_ongoing_frompresent_32 ""
+    case  8 ; test1MoreLogs replication_ongoing_frompresent ""
+    case  9 ; test1MoreLogs replication_ongoing_global_spec ""
+    case 10 ; test1MoreLogs replication_ongoing_global ""
+    case 11 ; test1MoreLogs replication_ongoing ""
+    case 12 ; test1MoreLogs replication_aql ""
+    case 13 ; test1MoreLogs replication_fuzz ""
+    case 14 ; test1MoreLogs replication_random ""
     case 15 ; test1MoreLogs replication_sync ""
     case 16 ; hasLDAPHOST;  and test1         ldaprole "" --ldapHost $LDAPHOST
     case 17 ; hasLDAPHOST;  and test1         ldaprolesimple "" --ldapHost $LDAPHOST
@@ -279,14 +279,14 @@ function launchClusterTests
   end
 
   switch $launchCount
-    case  0 ; test3 resilience move          moving-shards-cluster-grey.js
-    case  1 ; test3 resilience move-view     moving-shards-with-arangosearch-view-cluster-grey.js
-    case  2 ; test3 resilience repair        repair-distribute-shards-like-spec.js
-    case  3 ; test3 resilience failover      resilience-synchronous-repl-cluster.js
-    case  4 ; test3 resilience failover      resilience-synchronous-repl-failureAt-cluster.js
-    case  5 ; test3 resilience failover-view resilience-synchronous-repl-cluster-with-arangosearch-view-cluster.js
-    case  6 ; test3 resilience failover      resilience-transactions.js
-    case  7 ; test3 resilience sharddist     shard-distribution-spec.js
+    case  0 ; test3 resilience_move          moving-shards-cluster-grey.js
+    case  1 ; test3 resilience_move_view     moving-shards-with-arangosearch-view-cluster-grey.js
+    case  2 ; test3 resilience_repair        repair-distribute-shards-like-spec.js
+    case  3 ; test3 resilience_failover      resilience-synchronous-repl-cluster.js
+    case  4 ; test3 resilience_failover_failure      resilience-synchronous-repl-failureAt-cluster.js
+    case  5 ; test3 resilience_failover_view resilience-synchronous-repl-cluster-with-arangosearch-view-cluster.js
+    case  6 ; test3 resilience_transactions      resilience-transactions.js
+    case  7 ; test3 resilience_sharddist     shard-distribution-spec.js
     case  8 ; test1 shell_server_aql 3 --testBuckets 6/3
     case  9 ; test1 shell_client ""
     case 10 ; test1 shell_server ""

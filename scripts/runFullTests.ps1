@@ -17,12 +17,12 @@ Function global:registerSingleTests()
     registerTest -testname "upgrade_data_3.4.*"
     registerTest -testname "replication_static" -weight 2
     registerTest -testname "shell_server"
-    registerTest -testname "replication_ongoing" -index "-32" -filter "replication-ongoing-32.js" -weight 2
-    registerTest -testname "replication_ongoing" -index "-frompresent-32" -filter "replication-ongoing-frompresent-32.js" -weight 2
-    registerTest -testname "replication_ongoing" -index "-frompresent" -filter "replication-ongoing-frompresent.js" -weight 2
-    registerTest -testname "replication_ongoing" -index "-global-spec" -filter "replication-ongoing-global-spec.js" -weight 2
-    registerTest -testname "replication_ongoing" -index "-global" -filter "replication-ongoing-global.js" -weight 2
-    registerTest -testname "replication_ongoing" -filter "replication-ongoing.js" -weight 2
+    registerTest -testname "replication_ongoing_32" -weight 2
+    registerTest -testname "replication_ongoing_frompresent_32" -weight 2
+    registerTest -testname "replication_ongoing_frompresent" -weight 2
+    registerTest -testname "replication_ongoing_global_spec" -weight 2
+    registerTest -testname "replication_ongoing_global" -weight 2
+    registerTest -testname "replication_ongoing" -weight 2
     registerTest -testname "replication_aql" -weight 2
     registerTest -testname "replication_fuzz" -weight 2
     registerTest -testname "replication_random" -weight 2
@@ -92,13 +92,18 @@ Function global:registerClusterTests()
 
     $global:TESTSUITE_TIMEOUT = 10800
 
-    registerTest -cluster $true -testname "resilience" -index "move" -filter "moving-shards-cluster.js"
-    registerTest -cluster $true -testname "resilience" -index "failover" -filter "resilience-synchronous-repl-cluster.js"
+    registerTest -cluster $true -testname "resilience_move"
+    registerTest -cluster $true -testname "resilience_move_view"
+    registerTest -cluster $true -testname "resilience_repair"
+    registerTest -cluster $true -testname "resilience_failover"
+    registerTest -cluster $true -testname "resilience_failover_failure"
+    registerTest -cluster $true -testname "resilience_failover_view"
+    registerTest -cluster $true -testname "resilience_transactions"
+    registerTest -cluster $true -testname "resilience_sharddist"
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "http_server"
     registerTest -cluster $true -testname "ssl_server"
-    registerTest -cluster $true -testname "resilience" -index "sharddist" -filter "shard-distribution-spec.js"
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
     registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"

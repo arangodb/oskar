@@ -101,12 +101,12 @@ function launchSingleTests
     case  0 ; jslint
     case  1 ; test1MoreLogs replication_static ""
     case  2 ; test1         shell_server ""
-    case  3 ; test1MoreLogs replication_ongoing "-32"             --test replication-ongoing-32.js
-    case  4 ; test1MoreLogs replication_ongoing "-frompresent-32" --test replication-ongoing-frompresent-32.js
-    case  5 ; test1MoreLogs replication_ongoing "-frompresent"    --test replication-ongoing-frompresent.js
-    case  6 ; test1MoreLogs replication_ongoing "-global-spec"    --test replication-ongoing-global-spec.js
-    case  7 ; test1MoreLogs replication_ongoing "-global"         --test replication-ongoing-global.js
-    case  8 ; test1MoreLogs replication_ongoing ""                --test replication-ongoing.js
+    case  3 ; test1MoreLogs replication_ongoing_32 ""
+    case  4 ; test1MoreLogs replication_ongoing_frompresent_32 ""
+    case  5 ; test1MoreLogs replication_ongoing_frompresent ""
+    case  6 ; test1MoreLogs replication_ongoing_global_spec ""
+    case  7 ; test1MoreLogs replication_ongoing_global ""
+    case  8 ; test1MoreLogs replication_ongoing ""
     case  9 ; test1MoreLogs replication_sync ""
     case 10 ; test1         recovery 0 --testBuckets 4/0
     case 11 ; test1         recovery 1 --testBuckets 4/1
@@ -253,9 +253,9 @@ function launchClusterTests
     case  4 ; test1 dump_maskings ""
     case  5 ; test1 dump_multiple ""
     case  6 ; test1 http_server ""
-    case  7 ; test3 resilience move moving-shards-cluster.js
-    case  8 ; test3 resilience failover resilience-synchronous-repl-cluster.js
-    case  9 ; test3 resilience sharddist shard-distribution-spec.js
+    case  7 ; test1 resilience_move ""
+    case  8 ; test1 resilience_failover ""
+    case  9 ; test1 resilience_sharddist ""
     case 10 ; test1 shell_client ""
     case 11 ; test1 shell_client_aql ""
     case 12 ; test1 shell_server_aql 1 --testBuckets 5/1
