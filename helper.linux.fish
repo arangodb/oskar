@@ -141,16 +141,28 @@ end
 
 function oskar
   checkoutIfNeeded
-  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+  and if test "$ASAN" = "On"
+    runInContainer --privileged $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+  else
+    runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+  end
 end
 
 function oskarFull
   checkoutIfNeeded
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
-    and runInContainer --net="$LDAPNETWORK$LDAPEXT" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+    and if test "$ASAN" = "On"
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --privileged $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+    else
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+    end
   else
-    runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+    if test "$ASAN" = "On"
+      runInContainer $UBUNTUBUILDIMAGE --privileged $SCRIPTSDIR/runFullTests.fish
+    else
+      runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+    end
   end
 
   set -l res $status
@@ -1023,22 +1035,27 @@ function interactiveContainer
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
-             -e SSH_AUTH_SOCK=/ssh-agent \
-             -e UID=(id -u) \
+             -e ASAN="$ASAN" \
              -e GID=(id -g) \
-             -e NOSTRIP="$NOSTRIP" \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
-             -e INNERWORKDIR=$INNERWORKDIR \
-             -e MAINTAINER=$MAINTAINER \
-             -e BUILDMODE=$BUILDMODE \
-             -e PARALLELISM=$PARALLELISM \
-             -e STORAGEENGINE=$STORAGEENGINE \
-             -e TESTSUITE=$TESTSUITE \
-             -e VERBOSEOSKAR=$VERBOSEOSKAR \
-             -e ENTERPRISEEDITION=$ENTERPRISEEDITION \
-             -e SCRIPTSDIR=$SCRIPTSDIR \
-             -e PLATFORM=$PLATFORM \
-             --privileged \
+             -e INNERWORKDIR="$INNERWORKDIR" \
+             -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
+             -e KEYNAME="$KEYNAME" \
+             -e LDAPHOST="$LDAPHOST" \
+             -e MAINTAINER="$MAINTAINER" \
+             -e NOSTRIP="$NOSTRIP" \
+             -e NO_RM_BUILD="$NO_RM_BUILD" \
+             -e PARALLELISM="$PARALLELISM" \
+             -e PLATFORM="$PLATFORM" \
+             -e SCRIPTSDIR="$SCRIPTSDIR" \
+             -e SKIPGREY="$SKIPGREY" \
+             -e SSH_AUTH_SOCK=/ssh-agent \
+             -e SSH_AUTH_SOCK=/ssh-agent \
+             -e STORAGEENGINE="$STORAGEENGINE" \
+             -e TESTSUITE="$TESTSUITE" \
+             -e UID=(id -u) \
+             -e VERBOSEBUILD="$VERBOSEBUILD" \
+             -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              $argv
 end
 

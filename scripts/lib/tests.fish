@@ -1,5 +1,9 @@
 #!/usr/bin/env false
 
+set -xg ASAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
+set -xg LSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+set -xg UBSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+
 function createReport
   set -g result GOOD
 

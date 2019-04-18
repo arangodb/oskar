@@ -120,7 +120,11 @@ function oskar1
   showConfig
   showRepository
   set -x NOSTRIP 1
-  buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  if test "$ASAN" = "On"
+    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  else
+    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  end
   oskar
 end
 
@@ -128,7 +132,11 @@ function oskar1Full
   showConfig
   showRepository
   set -x NOSTRIP 1
-  buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  if test "$ASAN" = "On"
+    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  else
+    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  end
   oskarFull
 end
 
@@ -138,7 +146,12 @@ function oskar2
 
   showConfig
   showRepository
-  buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+
+  if test "$ASAN" = "On"
+    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  else
+    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  end
 
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
@@ -152,7 +165,12 @@ function oskar4
 
   showConfig
   showRepository
-  buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+
+  if test "$ASAN" = "On"
+    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  else
+    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  end
 
   rocksdb
   cluster ; oskar ; or return $status
@@ -174,8 +192,13 @@ function oskar8
   showRepository
 
   enterprise
-  buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
 
+  if test "$ASAN" = "On"
+    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  else
+    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  end
+ 
   rocksdb
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
@@ -185,7 +208,12 @@ function oskar8
   single ; oskar ; or return $status
 
   community
-  buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+
+  if test "$ASAN" = "On"
+    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  else
+    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+  end
 
   rocksdb
   cluster ; oskar ; or return $status

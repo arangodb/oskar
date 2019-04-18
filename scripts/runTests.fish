@@ -346,7 +346,11 @@ switch $TESTSUITE
     createReport
   case "single"
     resetLaunch 1
-    waitOrKill 3600 launchSingleTests
+    and if test "$ASAN" = "On"
+      waitOrKill 14400 launchSingleTests
+    else
+      waitOrKill 3600 launchSingleTests
+    end
     createReport
   case "catchtest"
     resetLaunch 1
