@@ -13,13 +13,15 @@ $PACKAGES="$env:ARANGODB_PACKAGES"
 
 $SRC="$ENV:WORKSPACE"
 Write-Host "SRC: $SRC"
-$DST="B:\stage2\nightly\$PACKAGES"
+$DST="\\nas02.arangodb.biz\buildfiles\stage2\nightly\$PACKAGES"
 Write-Host "DST: $DST"
 
 Function movePackagesToStage2
 {
-    If ($env:SYSTEM_IS_WINDOWS)
+    Write-Host "Windows: $SYSTEM_IS_WINDOWS"
+    If ($SYSTEM_IS_WINDOWS)
     {
+        Write-Host "Recreate $DST\Windows"
         rm -Force -Recurse $DST\Windows
         mkdir -p $DST\Windows
     }
