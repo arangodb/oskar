@@ -279,33 +279,35 @@ function launchClusterTests
   end
 
   switch $launchCount
-    case  0 ; test3 resilience sharddist     shard-distribution-spec.js
-    case  1 ; test3 resilience repair        repair-distribute-shards-like-spec.js
-    case  2 ; test3 resilience move-view     moving-shards-with-arangosearch-view-cluster.js
-    case  3 ; test3 resilience move          moving-shards-cluster.js
-    case  4 ; test3 resilience failover-view resilience-synchronous-repl-cluster-with-arangosearch-view-cluster.js
-    case  5 ; test3 resilience failover      resilience-synchronous-repl-cluster.js
-    case  6 ; test1 shell_server_aql 3 --testBuckets 6/3
-    case  7 ; test1 shell_client ""
-    case  8 ; test1 shell_server ""
-    case  9 ; test1 shell_server_aql 2 --testBuckets 6/2
-    case 10 ; test1 authentication 0 --testBuckets 3/0
-    case 11 ; test1 shell_server_aql 0 --testBuckets 6/0
-    case 12 ; test1 authentication 2 --testBuckets 3/2
-    case 13 ; test1 shell_server_aql 4 --testBuckets 6/4
-    case 14 ; test1 shell_server_aql 5 --testBuckets 6/5
-    case 15 ; test1 http_server ""
-    case 16 ; test1 ssl_server ""
-    case 17 ; test1 shell_server_aql 1 --testBuckets 6/1
-    case 18 ; test1 authentication 1 --testBuckets 3/1
-    case 19 ; test1 shell_client_aql ""
-    case 20 ; test1 server_http ""
-    case 21 ; test1 dump ""
-    case 22 ; test1 client_resilience ""
-    case 23 ; test1 agency ""
-    case 24 ; test1 dump_authentication ""
-    case 25 ; test1 dump_maskings ""
-    case 26 ; test1 dump_multiple ""
+    case  0 ; test3 resilience move          moving-shards-cluster-grey.js
+    case  1 ; test3 resilience move-view     moving-shards-with-arangosearch-view-cluster-grey.js
+    case  2 ; test3 resilience repair        repair-distribute-shards-like-spec.js
+    case  3 ; test3 resilience failover      resilience-synchronous-repl-cluster.js
+    case  4 ; test3 resilience failover      resilience-synchronous-repl-failureAt-cluster.js
+    case  5 ; test3 resilience failover-view resilience-synchronous-repl-cluster-with-arangosearch-view-cluster.js
+    case  6 ; test3 resilience failover      resilience-transactions.js
+    case  7 ; test3 resilience sharddist     shard-distribution-spec.js
+    case  8 ; test1 shell_server_aql 3 --testBuckets 6/3
+    case  9 ; test1 shell_client ""
+    case 10 ; test1 shell_server ""
+    case 11 ; test1 shell_server_aql 2 --testBuckets 6/2
+    case 12 ; test1 authentication 0 --testBuckets 3/0
+    case 13 ; test1 shell_server_aql 0 --testBuckets 6/0
+    case 14 ; test1 authentication 2 --testBuckets 3/2
+    case 15 ; test1 shell_server_aql 4 --testBuckets 6/4
+    case 16 ; test1 shell_server_aql 5 --testBuckets 6/5
+    case 17 ; test1 http_server ""
+    case 18 ; test1 ssl_server ""
+    case 19 ; test1 shell_server_aql 1 --testBuckets 6/1
+    case 20 ; test1 authentication 1 --testBuckets 3/1
+    case 21 ; test1 shell_client_aql ""
+    case 22 ; test1 server_http ""
+    case 23 ; test1 dump ""
+    case 24 ; test1 client_resilience ""
+    case 25 ; test1 agency ""
+    case 26 ; test1 dump_authentication ""
+    case 27 ; test1 dump_maskings ""
+    case 28 ; test1 dump_multiple ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
