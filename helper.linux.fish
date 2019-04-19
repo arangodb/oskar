@@ -140,23 +140,36 @@ end
 ## #############################################################################
 
 function oskar
+  set -l s 1
+  set -l p $PARALLELISM
+
   checkoutIfNeeded
   and if test "$ASAN" = "On"
+    parallelism 1
     runInContainer --privileged $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   else
     runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   end
+  set s $status
+
+  parallelism $p
+  return $s
 end
 
 function oskarFull
+  set -l s 1
+  set -l p $PARALLELISM
+
   checkoutIfNeeded
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
     and if test "$ASAN" = "On"
+      parallelism 1
       runInContainer --net="$LDAPNETWORK$LDAPEXT" --privileged $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     else
       runInContainer --net="$LDAPNETWORK$LDAPEXT" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
+    set s $status
   else
     if test "$ASAN" = "On"
       runInContainer $UBUNTUBUILDIMAGE --privileged $SCRIPTSDIR/runFullTests.fish
@@ -164,14 +177,14 @@ function oskarFull
       runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
   end
-
-  set -l res $status
+  set s $status
 
   if test "$ENTERPRISEEDITION" = "On"
     stopLdapServer
   end
 
-  return $res
+  parallelism $p
+  return $s
 end
 
 ## #############################################################################
