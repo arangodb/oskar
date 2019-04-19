@@ -22,7 +22,7 @@ Function movePackagesToStage2
     If ($SYSTEM_IS_WINDOWS)
     {
         Write-Host "Recreate $DST\Windows"
-        rm -Force -Recurse $DST\Windows
+        rm -Force -Recurse $DST\Windows -ErrorAction SilentlyIgnore
         mkdir -p $DST\Windows
     }
 
