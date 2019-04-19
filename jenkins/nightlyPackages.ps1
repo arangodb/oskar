@@ -13,7 +13,9 @@ $PACKAGES="$env:ARANGODB_PACKAGES"
 
 $SRC="$ENV:WORKSPACE"
 Write-Host "SRC: $SRC"
-$DST="\\nas02.arangodb.biz\buildfiles\stage2\nightly\$PACKAGES"
+
+New-PSDrive -Name "T" -PSProvider FileSystem -Root "\\nas02.arangodb.biz\buildfiles\"
+$DST="T:\stage2\nightly\$PACKAGES"
 Write-Host "DST: $DST"
 
 Function movePackagesToStage2
@@ -51,4 +53,4 @@ If($s)
 Else
 {
     Exit 1
-} 
+}
