@@ -2,142 +2,47 @@
 set -g SCRIPTS (dirname (status -f))
 source $SCRIPTS/lib/tests.fish
 
-set -g repoState ""
-set -g repoStateEnterprise ""
-
-if test -z "$PARALLELISM"
-  set -g PARALLELISM 64
-end
-
-function getRepoState
-  set -g repoState (git rev-parse HEAD) (git status -b -s | grep -v "^[?]")
-  if test $ENTERPRISEEDITION = On 
-    cd enterprise
-    set -g repoStateEnterprise (git rev-parse HEAD) (git status -b -s | grep -v "^[?]")
-    cd ..
-  else
-    set -g repoStateEnterprise ""
-  end
-end
-
-function noteStartAndRepoState
-  getRepoState
-  rm -f testProtocol.txt
-  set -l d (date -u +%F_%H.%M.%SZ)
-  echo $d >> testProtocol.txt
-  echo "==========\nStatus of main repository:" >> testProtocol.txt
-  echo "==========\nStatus of main repository:"
-  for l in $repoState ; echo "  $l" >> testProtocol.txt ; echo "  $l" ; end
-  if test $ENTERPRISEEDITION = On
-    echo "Status of enterprise repository:" >> testProtocol.txt
-    echo "Status of enterprise repository:"
-    for l in $repoStateEnterprise
-      echo "  $l" >> testProtocol.txt ; echo "  $l"
-    end
-  end
-end
-
-function resetLaunch
-  noteStartAndRepoState
-  set -g launchFactor $argv[1]
-  set -g portBase 10000
-  set -g launchCount 0
-  echo Launching tests...
-end
-
 function launchSingleTests
-  function jslint
-    if test $VERBOSEOSKAR = On ; echo Launching jslint $argv "($launchCount)" ; end
-    echo utils/jslint.sh
-    utils/jslint.sh > $TMPDIR/jslint.log &
-  end
-
-  function test1
-    if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
-
-    set -l t $argv[1]
-    set -l tt $argv[2]
-    set -e argv[1..2]
-    if grep $t UnitTests/OskarTestSuitesBlackList
-      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
-    else
-      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY" 
-      mkdir -p $TMPDIR/"$t""$tt".out
-      date -u +%s > $TMPDIR/"$t""$tt".out/started
-      scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
-        --minPort $portBase --maxPort (math $portBase + 99) $argv \
-        --skipNondeterministic true --skipTimeCritical true \
-        --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
-        --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY"  >"$t""$tt".log ^&1 &
-      set -g portBase (math $portBase + 100)
-      sleep 1
-    end
-  end
-
-  function test1MoreLogs
-    if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
-
-    set -l t $argv[1]
-    set -l tt $argv[2]
-    set -e argv[1..2]
-    if grep $t UnitTests/OskarTestSuitesBlackList
-      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
-    else
-      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --extraArgs:log.level replication=trace --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY" 
-      mkdir -p $TMPDIR/"$t""$tt".out
-      date -u +%s > $TMPDIR/"$t""$tt".out/started
-      scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
-        --minPort $portBase --maxPort (math $portBase + 99) $argv \
-        --skipNondeterministic true --skipTimeCritical true \
-        --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
-        --extraArgs:log.level replication=trace --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY"  \
-        >"$t""$tt".log ^&1 &
-      set -g portBase (math $portBase + 100)
-      sleep 1
-    end
-  end
-
   switch $launchCount
-    case  0 ; jslint
-    case  1 ; test1MoreLogs replication_static ""
-    case  2 ; test1         shell_server ""
-    case  3 ; test1MoreLogs replication_ongoing_32 ""
-    case  4 ; test1MoreLogs replication_ongoing_frompresent_32 ""
-    case  5 ; test1MoreLogs replication_ongoing_frompresent ""
-    case  6 ; test1MoreLogs replication_ongoing_global_spec ""
-    case  7 ; test1MoreLogs replication_ongoing_global ""
-    case  8 ; test1MoreLogs replication_ongoing ""
-    case  9 ; test1MoreLogs replication_sync ""
-    case 10 ; test1         recovery 0 --testBuckets 4/0
-    case 11 ; test1         recovery 1 --testBuckets 4/1
-    case 12 ; test1         recovery 2 --testBuckets 4/2
-    case 13 ; test1         recovery 3 --testBuckets 4/3
-    case 14 ; test1         shell_server_aql 0 --testBuckets 5/0
-    case 15 ; test1         shell_server_aql 1 --testBuckets 5/1
-    case 16 ; test1         shell_server_aql 2 --testBuckets 5/2
-    case 17 ; test1         shell_server_aql 3 --testBuckets 5/3
-    case 18 ; test1         shell_server_aql 4 --testBuckets 5/4
-    case 19 ; test1         server_http ""
-    case 20 ; test1         shell_client ""
-    case 21 ; test1         shell_client_aql ""
-    case 22 ; test1         shell_replication ""
-    case 23 ; test1         BackupAuthNoSysTests ""
-    case 24 ; test1         BackupAuthSysTests ""
-    case 25 ; test1         BackupNoAuthNoSysTests ""
-    case 26 ; test1         BackupNoAuthSysTests ""
-    case 27 ; test1         agency ""
-    case 28 ; test1         authentication ""
-    case 29 ; test1         catch ""
-    case 30 ; test1         dump ""
-    case 31 ; test1         dump_authentication ""
-    case 32 ; test1         dump_maskings ""
-    case 33 ; test1         dump_multiple ""
-    case 34 ; test1         endpoints "" --skipEndpointsIpv6 true
-    case 35 ; test1         http_replication ""
-    case 36 ; test1         http_server ""
-    case 37 ; test1         ssl_server ""
-    case 38 ; test1         version ""
-    case 39 ; test1         active_failover ""
+    case  0 ; runSingleTest2 replication_static ""
+    case  1 ; runSingleTest1 shell_server ""
+    case  2 ; runSingleTest2 replication_ongoing_32 ""
+    case  3 ; runSingleTest2 replication_ongoing_frompresent_32 ""
+    case  4 ; runSingleTest2 replication_ongoing_frompresent ""
+    case  5 ; runSingleTest2 replication_ongoing_global_spec ""
+    case  6 ; runSingleTest2 replication_ongoing_global ""
+    case  7 ; runSingleTest2 replication_ongoing ""
+    case  8 ; runSingleTest2 replication_sync ""
+    case  9 ; runSingleTest1 recovery 0 --testBuckets 4/0
+    case 10 ; runSingleTest1 recovery 1 --testBuckets 4/1
+    case 11 ; runSingleTest1 recovery 2 --testBuckets 4/2
+    case 12 ; runSingleTest1 recovery 3 --testBuckets 4/3
+    case 13 ; runSingleTest1 shell_server_aql 0 --testBuckets 5/0
+    case 14 ; runSingleTest1 shell_server_aql 1 --testBuckets 5/1
+    case 15 ; runSingleTest1 shell_server_aql 2 --testBuckets 5/2
+    case 16 ; runSingleTest1 shell_server_aql 3 --testBuckets 5/3
+    case 17 ; runSingleTest1 shell_server_aql 4 --testBuckets 5/4
+    case 18 ; runSingleTest1 server_http ""
+    case 19 ; runSingleTest1 shell_client ""
+    case 20 ; runSingleTest1 shell_client_aql ""
+    case 21 ; runSingleTest1 shell_replication ""
+    case 22 ; runSingleTest1 BackupAuthNoSysTests ""
+    case 23 ; runSingleTest1 BackupAuthSysTests ""
+    case 24 ; runSingleTest1 BackupNoAuthNoSysTests ""
+    case 25 ; runSingleTest1 BackupNoAuthSysTests ""
+    case 26 ; runSingleTest1 agency ""
+    case 27 ; runSingleTest1 authentication ""
+    case 28 ; runSingleTest1 catch ""
+    case 29 ; runSingleTest1 dump ""
+    case 30 ; runSingleTest1 dump_authentication ""
+    case 31 ; runSingleTest1 dump_maskings ""
+    case 32 ; runSingleTest1 dump_multiple ""
+    case 33 ; runSingleTest1 endpoints "" --skipEndpointsIpv6 true
+    case 34 ; runSingleTest1 http_replication ""
+    case 35 ; runSingleTest1 http_server ""
+    case 36 ; runSingleTest1 ssl_server ""
+    case 37 ; runSingleTest1 version ""
+    case 38 ; runSingleTest1 active_failover ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
@@ -145,59 +50,8 @@ function launchSingleTests
 end
 
 function launchCatchTest
-  function jslint
-    if test $VERBOSEOSKAR = On ; echo Launching jslint $argv ; end
-    echo utils/jslint.sh
-    utils/jslint.sh > $TMPDIR/jslint.log &
-  end
-
-  function test1
-    if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
-
-    set -l t $argv[1]
-    set -l tt $argv[2]
-    set -e argv[1..2]
-    if grep $t UnitTests/OskarTestSuitesBlackList
-      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
-    else
-      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY" 
-      mkdir -p $TMPDIR/"$t""$tt".out
-      date -u +%s > $TMPDIR/"$t""$tt".out/started
-      scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
-        --minPort $portBase --maxPort (math $portBase + 99) $argv \
-        --skipNondeterministic true --skipTimeCritical true \
-        --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
-        --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY"  >"$t""$tt".log ^&1 &
-      set -g portBase (math $portBase + 100)
-      sleep 1
-    end
-  end
-
-  function test1MoreLogs
-    if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
-
-    set -l t $argv[1]
-    set -l tt $argv[2]
-    set -e argv[1..2]
-    if grep $t UnitTests/OskarTestSuitesBlackList
-      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
-    else
-      echo scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --extraArgs:log.level replication=trace --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY" 
-      mkdir -p $TMPDIR/"$t""$tt".out
-      date -u +%s > $TMPDIR/"$t""$tt".out/started
-      scripts/unittest $t --cluster false --storageEngine $STORAGEENGINE \
-        --minPort $portBase --maxPort (math $portBase + 99) $argv \
-        --skipNondeterministic true --skipTimeCritical true \
-        --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
-        --extraArgs:log.level replication=trace --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY"  \
-        >"$t""$tt".log ^&1 &
-      set -g portBase (math $portBase + 100)
-      sleep 1
-    end
-  end
-
   switch $launchCount
-    case  0 ; test1         catch ""
+    case  0 ; runCatchTest1 catch ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
@@ -271,78 +125,21 @@ function launchClusterTests
   return 1
 end
 
-function waitForProcesses
-  set i $argv[1]
-  set launcher $argv[2]
-  set start (date -u +%s)
-  while true
-    # Launch if necessary:
-    while test (math (count (jobs -p))"*$launchFactor") -lt "$PARALLELISM"
-      if test -z "$launcher" ; break ; end
-      if eval "$launcher" ; break ; end
-    end
-    # Check subprocesses:
-    if test (count (jobs -p)) -eq 0
-      set stop (date -u +%s)
-      echo (date) executed $launchCount tests in (math $stop - $start) seconds
-      return 1
-    end
-
-    echo (date) (count (jobs -p)) jobs still running, remaining $i "seconds..."
-
-    set i (math $i - 5)
-    if test $i -lt 0
-      set stop (date -u +%s)
-      echo (date) executed $launchCount tests in (math $stop - $start) seconds
-      return 0
-    end
-
-    sleep 5
-  end
-end
-
-function waitOrKill
-  set timeout $argv[1]
-  set launcher $argv[2]
-  echo Controlling subprocesses...
-  if waitForProcesses $timeout $launcher
-    set -l ids (jobs -p)
-    if test (count $ids) -gt 0
-      kill $ids
-      if waitForProcesses 30 ""
-        set -l ids (jobs -p)
-        if test (count $ids) -gt 0
-          kill -9 $ids
-          waitForProcesses 60 ""   # give jobs some time to finish
-        end
-      end
-    end
-  end
-  return 0
-end
-
-function log
-  for l in $argv
-    echo $l
-    echo $l >> $INNERWORKDIR/test.log
-  end
-end
-
-cd $INNERWORKDIR
-rm -rf tmp
-mkdir tmp
-set -xg TMPDIR $INNERWORKDIR/tmp
-cd $INNERWORKDIR/ArangoDB
-for f in *.log ; rm -f $f ; end
-
 # Switch off jemalloc background threads for the tests since this seems
 # to overload our systems and is not needed.
 set -x MALLOC_CONF background_thread:false
 
+setupTmp
+cd $INNERWORKDIR/ArangoDB
+
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
-    waitOrKill 3600 launchClusterTests
+    and if test "$ASAN" = "On"
+      waitOrKill 3600 launchClusterTests
+    else
+      waitOrKill 3600 launchClusterTests
+    end
     createReport
   case "single"
     resetLaunch 1
@@ -354,11 +151,19 @@ switch $TESTSUITE
     createReport
   case "catchtest"
     resetLaunch 1
-    waitOrKill 1800 launchCatchTest
+    and if test "$ASAN" = "On"
+      waitOrKill 1800 launchCatchTest
+    else
+      waitOrKill 1800 launchCatchTest
+    end
     createReport
   case "resilience"
     resetLaunch 4
-    waitOrKill 3600 launchResilienceTests
+    and if test "$ASAN" = "On"
+      waitOrKill 3600 launchResilienceTests
+    else
+      waitOrKill 3600 launchResilienceTests
+    end
     createReport
   case "*"
     echo Unknown test suite $TESTSUITE
