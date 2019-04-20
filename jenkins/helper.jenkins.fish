@@ -1,5 +1,7 @@
 #!/usr/bin/env fish
 
+echo Directory (pwd)
+
 function prepareOskar
   set -xg OSKAR oskar
 
