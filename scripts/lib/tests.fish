@@ -8,45 +8,59 @@ if test -z "$PARALLELISM"
   set -g PARALLELISM 64
 end
 
-function runSingleTest1
-  if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
-
+function runAnyTest
   set -l t $argv[1]
   set -l tt $argv[2]
-  set -l l0 "$t""$tt".log
-  set -l l1 $TMPDIR/"$t""$tt".out
+  set -l l0 "$t""$tt"
+  set -l l1 "$l0".log
+  set -l l2 $TMPDIR/"$l0".out
   set -e argv[1..2]
+
+  if test $VERBOSEOSKAR = On ; echo "$launchCount: Launching $l0" ; end
 
   if grep $t UnitTests/OskarTestSuitesBlackList
     echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
   else
     set -l arguments $t \
-      --cluster false \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic true \
       --skipTimeCritical true \
-      --testOutput $l1 \
+      --testOutput $l2 \
       --writeXmlReport false \
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
       $argv
 
-    echo scripts/unittest $arguments
-    mkdir -p $l1
-    date -u +%s > $l1/started
-    scripts/unittest $arguments > $l0 ^&1 &
+    echo (pwd) "-" scripts/unittest $arguments
+    mkdir -p $l2
+    fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped" &
     set -g portBase (math $portBase + 100)
     sleep 1
   end
 end
 
+function runSingleTest1
+  runAnyTest $argv --cluster false
+end
+
 function runSingleTest2
-  runSingleTest1 $argv --extraArgs:log.level replication=trace
+  runAnyTest $argv --cluster false --extraArgs:log.level replication=trace
 end
 
 function runCatchTest1
-  runSingleTest1 $argv
+  runAnyTest $argv --cluster false
+end
+
+function runClusterTest1
+  runAnyTest $argv --cluster true
+end
+
+function runClusterTest3
+  set t $argv[3]
+  set -e argv[3]
+
+  runAnyTest $argv --cluster true --test $t
 end
 
 function createReport
@@ -86,11 +100,11 @@ function createReport
       end
     end
 
-    if test -f "$d/started" -a -f "$d/UNITTEST_RESULT_EXECUTIVE_SUMMARY.json"
+    if test -f "$d/started" -a -f "$d/stopped"
       set started (cat "$d/started")
-      set stopped (date -u -r "$d/UNITTEST_RESULT_EXECUTIVE_SUMMARY.json" +%s)
+      set stopped (cat "$d/stopped")
       echo Test $d took (math $stopped - $started) seconds, status $localresult
-      echo Test $d took (math $stopped - $started) seconds, status $localresult >> testProtocol.txt
+      echo $d,(math $stopped - $started),$localresult >> testRuns.txt
     end
   end
 
@@ -210,6 +224,7 @@ function waitForProcesses
       if test -z "$launcher" ; break ; end
       if eval "$launcher" ; break ; end
     end
+
     # Check subprocesses:
     if test (count (jobs -p)) -eq 0
       set stop (date -u +%s)
@@ -218,6 +233,14 @@ function waitForProcesses
     end
 
     echo (date) (count (jobs -p)) jobs still running, remaining $i "seconds..."
+    echo (begin \
+            begin \
+              test (count /work/tmp/*.out/started) -gt 0; and ls -1 /work/tmp/*.out/started; \
+            end; \
+            begin \
+              test (count /work/tmp/*.out/stopped) -gt 0; and ls -1 /work/tmp/*.out/stopped; \
+            end; \
+          end | awk -F/ '{print $4}' | sort | uniq -c | awk '$1 == 1 { print substr($2,1,length($2) - 4) }')
 
     set i (math $i - 5)
     if test $i -lt 0

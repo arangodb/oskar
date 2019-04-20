@@ -59,66 +59,26 @@ function launchCatchTest
 end
 
 function launchClusterTests
-  function test1
-    if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
-    set -l t $argv[1]
-    set -l tt $argv[2]
-    set -e argv[1..2]
-    if grep $t UnitTests/OskarTestSuitesBlackList
-      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
-    else
-      echo scripts/unittest $t --cluster true --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY" 
-      mkdir -p $TMPDIR/"$t""$tt".out
-      date -u +%s > $TMPDIR/"$t""$tt".out/started
-      scripts/unittest $t --cluster true --storageEngine $STORAGEENGINE \
-        --minPort $portBase --maxPort (math $portBase + 99) $argv \
-        --skipNondeterministic true --skipTimeCritical true \
-        --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
-        --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY"  >"$t""$tt".log ^&1 &
-      set -g portBase (math $portBase + 100)
-      sleep 1
-    end
-  end
-
-  function test3
-    if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
-    if grep $argv[1] UnitTests/OskarTestSuitesBlackList
-      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
-    else
-      echo scripts/unittest $argv[1] --test $argv[3] --storageEngine $STORAGEENGINE --cluster true --minPort $portBase --maxPort (math $portBase + 99) --skipNondeterministic true --testOutput "$TMPDIR/$argv[1]_$argv[2].out" --writeXmlReport false --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY" 
-      mkdir -p $TMPDIR/"$t""$tt".out
-      date -u +%s > $TMPDIR/"$t""$tt".out/started
-      scripts/unittest $argv[1] --test $argv[3] \
-        --storageEngine $STORAGEENGINE --cluster true \
-        --minPort $portBase --maxPort (math $portBase + 99) \
-        --skipNondeterministic true \
-        --testOutput "$TMPDIR/$argv[1]_$argv[2].out" --writeXmlReport false \
-        --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY"  >$argv[1]_$argv[2].log ^&1 &
-      set -g portBase (math $portBase + 100)
-      sleep 1
-    end
-  end
-
   switch $launchCount
-    case  0 ; test1 agency ""
-    case  1 ; test1 shell_server ""
-    case  2 ; test1 dump ""
-    case  3 ; test1 dump_authentication ""
-    case  4 ; test1 dump_maskings ""
-    case  5 ; test1 dump_multiple ""
-    case  6 ; test1 http_server ""
-    case  7 ; test1 resilience_move ""
-    case  8 ; test1 resilience_failover ""
-    case  9 ; test1 resilience_sharddist ""
-    case 10 ; test1 shell_client ""
-    case 11 ; test1 shell_client_aql ""
-    case 12 ; test1 shell_server_aql 1 --testBuckets 5/1
-    case 13 ; test1 shell_server_aql 2 --testBuckets 5/2
-    case 14 ; test1 shell_server_aql 3 --testBuckets 5/3
-    case 15 ; test1 shell_server_aql 4 --testBuckets 5/4
-    case 16 ; test1 server_http ""
-    case 17 ; test1 shell_server_aql 0 --testBuckets 5/0
-    case 18 ; test1 ssl_server ""
+    case  0 ; runClusterTest1 agency ""
+    case  1 ; runClusterTest1 shell_server ""
+    case  2 ; runClusterTest1 dump ""
+    case  3 ; runClusterTest1 dump_authentication ""
+    case  4 ; runClusterTest1 dump_maskings ""
+    case  5 ; runClusterTest1 dump_multiple ""
+    case  6 ; runClusterTest1 http_server ""
+    case  7 ; runClusterTest1 resilience_move ""
+    case  8 ; runClusterTest1 resilience_failover ""
+    case  9 ; runClusterTest1 resilience_sharddist ""
+    case 10 ; runClusterTest1 shell_client ""
+    case 11 ; runClusterTest1 shell_client_aql ""
+    case 12 ; runClusterTest1 shell_server_aql 1 --testBuckets 5/1
+    case 13 ; runClusterTest1 shell_server_aql 2 --testBuckets 5/2
+    case 14 ; runClusterTest1 shell_server_aql 3 --testBuckets 5/3
+    case 15 ; runClusterTest1 shell_server_aql 4 --testBuckets 5/4
+    case 16 ; runClusterTest1 server_http ""
+    case 17 ; runClusterTest1 shell_server_aql 0 --testBuckets 5/0
+    case 18 ; runClusterTest1 ssl_server ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)

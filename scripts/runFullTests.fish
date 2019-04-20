@@ -92,76 +92,36 @@ function launchCatchTest
 end
 
 function launchClusterTests
-  function test1
-    if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
-    set -l t $argv[1]
-    set -l tt $argv[2]
-    set -e argv[1..2]
-    if grep $t UnitTests/OskarTestSuitesBlackList
-      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
-    else
-      echo scripts/unittest $t --cluster true --storageEngine $STORAGEENGINE --minPort $portBase --maxPort (math $portBase + 99) $argv --skipNondeterministic true --skipTimeCritical true --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY" 
-      mkdir -p $TMPDIR/"$t""$tt".out
-      date -u +%s > $TMPDIR/"$t""$tt".out/started
-      scripts/unittest $t --cluster true --storageEngine $STORAGEENGINE \
-        --minPort $portBase --maxPort (math $portBase + 99) $argv \
-        --skipNondeterministic true --skipTimeCritical true \
-        --testOutput $TMPDIR/"$t""$tt".out --writeXmlReport false \
-        --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY"  >"$t""$tt".log ^&1 &
-      set -g portBase (math $portBase + 100)
-      sleep 1
-    end
-  end
-
-  function test3
-    if test $VERBOSEOSKAR = On ; echo Launching $argv "($launchCount)" ; end
-    if grep $argv[1] UnitTests/OskarTestSuitesBlackList
-      echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
-    else
-      echo scripts/unittest $argv[1] --test $argv[3] --storageEngine $STORAGEENGINE --cluster true --minPort $portBase --maxPort (math $portBase + 99) --skipNondeterministic true --testOutput "$TMPDIR/$argv[1]_$argv[2].out" --writeXmlReport false --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY" 
-      mkdir -p $TMPDIR/"$t""$tt".out
-      date -u +%s > $TMPDIR/"$t""$tt".out/started
-      scripts/unittest $argv[1] --test $argv[3] \
-        --storageEngine $STORAGEENGINE --cluster true \
-        --minPort $portBase --maxPort (math $portBase + 99) \
-        --skipNondeterministic true \
-        --testOutput "$TMPDIR/$argv[1]_$argv[2].out" --writeXmlReport false \
-        --skipGrey "$SKIPGREY" --onlyGrey "$ONLYGREY"  >$argv[1]_$argv[2].log ^&1 &
-      set -g portBase (math $portBase + 100)
-      sleep 1
-    end
-  end
-
   switch $launchCount
-    case  0 ; test3 resilience_move          moving-shards-cluster-grey.js
-    case  1 ; test3 resilience_move_view     moving-shards-with-arangosearch-view-cluster-grey.js
-    case  2 ; test3 resilience_repair        repair-distribute-shards-like-spec.js
-    case  3 ; test3 resilience_failover      resilience-synchronous-repl-cluster.js
-    case  4 ; test3 resilience_failover_failure      resilience-synchronous-repl-failureAt-cluster.js
-    case  5 ; test3 resilience_failover_view resilience-synchronous-repl-cluster-with-arangosearch-view-cluster.js
-    case  6 ; test3 resilience_transactions      resilience-transactions.js
-    case  7 ; test3 resilience_sharddist     shard-distribution-spec.js
-    case  8 ; test1 shell_server_aql 3 --testBuckets 6/3
-    case  9 ; test1 shell_client ""
-    case 10 ; test1 shell_server ""
-    case 11 ; test1 shell_server_aql 2 --testBuckets 6/2
-    case 12 ; test1 authentication 0 --testBuckets 3/0
-    case 13 ; test1 shell_server_aql 0 --testBuckets 6/0
-    case 14 ; test1 authentication 2 --testBuckets 3/2
-    case 15 ; test1 shell_server_aql 4 --testBuckets 6/4
-    case 16 ; test1 shell_server_aql 5 --testBuckets 6/5
-    case 17 ; test1 http_server ""
-    case 18 ; test1 ssl_server ""
-    case 19 ; test1 shell_server_aql 1 --testBuckets 6/1
-    case 20 ; test1 authentication 1 --testBuckets 3/1
-    case 21 ; test1 shell_client_aql ""
-    case 22 ; test1 server_http ""
-    case 23 ; test1 dump ""
-    case 24 ; test1 client_resilience ""
-    case 25 ; test1 agency ""
-    case 26 ; test1 dump_authentication ""
-    case 27 ; test1 dump_maskings ""
-    case 28 ; test1 dump_multiple ""
+    case  0 ; runClusterTest3 resilience_move                  moving-shards-cluster-grey.js
+    case  1 ; runClusterTest3 resilience_move_view             moving-shards-with-arangosearch-view-cluster-grey.js
+    case  2 ; runClusterTest3 resilience_repair                repair-distribute-shards-like-spec.js
+    case  3 ; runClusterTest3 resilience_failover              resilience-synchronous-repl-cluster.js
+    case  4 ; runClusterTest3 resilience_failover_failure      resilience-synchronous-repl-failureAt-cluster.js
+    case  5 ; runClusterTest3 resilience_failover_view         resilience-synchronous-repl-cluster-with-arangosearch-view-cluster.js
+    case  6 ; runClusterTest3 resilience_transactions          resilience-transactions.js
+    case  7 ; runClusterTest3 resilience_sharddist             shard-distribution-spec.js
+    case  8 ; runClusterTest1 shell_server_aql 3 --testBuckets 6/3
+    case  9 ; runClusterTest1 shell_client ""
+    case 10 ; runClusterTest1 shell_server ""
+    case 11 ; runClusterTest1 shell_server_aql 2 --testBuckets 6/2
+    case 12 ; runClusterTest1 authentication 0 --testBuckets 3/0
+    case 13 ; runClusterTest1 shell_server_aql 0 --testBuckets 6/0
+    case 14 ; runClusterTest1 authentication 2 --testBuckets 3/2
+    case 15 ; runClusterTest1 shell_server_aql 4 --testBuckets 6/4
+    case 16 ; runClusterTest1 shell_server_aql 5 --testBuckets 6/5
+    case 17 ; runClusterTest1 http_server ""
+    case 18 ; runClusterTest1 ssl_server ""
+    case 19 ; runClusterTest1 shell_server_aql 1 --testBuckets 6/1
+    case 20 ; runClusterTest1 authentication 1 --testBuckets 3/1
+    case 21 ; runClusterTest1 shell_client_aql ""
+    case 22 ; runClusterTest1 server_http ""
+    case 23 ; runClusterTest1 dump ""
+    case 24 ; runClusterTest1 client_resilience ""
+    case 25 ; runClusterTest1 agency ""
+    case 26 ; runClusterTest1 dump_authentication ""
+    case 27 ; runClusterTest1 dump_maskings ""
+    case 28 ; runClusterTest1 dump_multiple ""
     case '*' ; return 0
   end
   set -g launchCount (math $launchCount + 1)
