@@ -15,7 +15,8 @@ function createIndex
   and echo "Creating INDEX"
   and rm -rf file-browser.out root-dir program2.py
   and mkdir root-dir
-  and ln -s /mnt/buildfiles/stage2/nightly root-dir/
+  and cp -rs /mnt/buildfiles/stage2/nightly root-dir/
+  and find root-dir -name "*3e*" -exec "{}" ";"
   and sed -e 's/os\.walk(root)/os\.walk(root,followlinks=True)/' program.py > program2.py
   and python program2.py root-dir > file-browser.out 2>&1
   or begin popd; return 1; end
