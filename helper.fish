@@ -809,6 +809,10 @@ function moveResultsToWorkspace
       end
     end
 
+    if test -f $WORKDIR/work/Documentation
+      mv $WORKDIR/work/Documentation $WORKSPACE/Documentation.generated
+    end
+
     if test -f $WORKDIR/work/testRuns.txt
       echo "mv $WORKDIR/work/testRuns.txt"
       mv $WORKDIR/work/testRuns.txt $WORKSPACE
