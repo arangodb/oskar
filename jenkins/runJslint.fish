@@ -5,7 +5,7 @@ lockDirectory ; updateOskar ; clearResults
 
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and rm -f work/test.log
-and jslint ^ work/test.log
+and jslint > work/test.log
 
 set -l s $status
 
