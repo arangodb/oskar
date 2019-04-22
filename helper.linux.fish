@@ -99,7 +99,7 @@ function buildArangoDB
   #             have to do a 'cd' for a subsequent call.
   #             Fix by not relying on relative locations in other functions
   checkoutIfNeeded
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/buildArangoDB.fish $argv
+  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/buildArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -118,7 +118,7 @@ end
 
 function buildStaticArangoDB
   checkoutIfNeeded
-  runInContainer $ALPINEBUILDIMAGE $SCRIPTSDIR/buildAlpine.fish $argv
+  and runInContainer $ALPINEBUILDIMAGE $SCRIPTSDIR/buildAlpine.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -128,6 +128,19 @@ end
 
 function makeStaticArangoDB
   runInContainer $ALPINEBUILDIMAGE $SCRIPTSDIR/makeAlpine.fish $argv
+  set -l s $status
+  if test $s -ne 0
+    echo Build error!
+    return $s
+  end
+end
+
+function buildExamples
+  checkoutIfNeeded
+  and if test "$NO_RM_BUILD" != 1
+    buildStaticArangoDB
+  end
+  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/buildExamples.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!

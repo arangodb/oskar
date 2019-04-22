@@ -51,6 +51,6 @@ echo Downloading: Asset with ID $asset_id
 set -l SYNCER_PATH $SYNCER_FOLDER/arangosync
 echo "https://USER@api.github.com/repos/arangodb/arangosync/releases/assets/$asset_id"
 curl -s -L -H "Accept: application/octet-stream" "https://$DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$asset_id" -o "$SYNCER_PATH"
-
 and chmod 755 "$SYNCER_PATH"
 and echo Syncer ready for build $SYNCER_PATH
+or begin echo "ERROR - cannot download Syncer"; return 1; end
