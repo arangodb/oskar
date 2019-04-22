@@ -28,6 +28,7 @@ echo Using STARTER_REV "$STARTER_REV"
 
 mkdir -p $STARTER_FOLDER
 set -l STARTER_PATH $STARTER_FOLDER/arangodb
+echo "https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-$PLATFORM-amd64"
 curl -s -L -o "$STARTER_PATH" "https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-$PLATFORM-amd64"
 
 and chmod 755 "$STARTER_PATH"
