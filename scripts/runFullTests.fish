@@ -93,14 +93,14 @@ end
 
 function launchClusterTests
   switch $launchCount
-    case  0 ; runClusterTest3 resilience_move                  moving-shards-cluster-grey.js
-    case  1 ; runClusterTest3 resilience_move_view             moving-shards-with-arangosearch-view-cluster-grey.js
-    case  2 ; runClusterTest3 resilience_repair                repair-distribute-shards-like-spec.js
-    case  3 ; runClusterTest3 resilience_failover              resilience-synchronous-repl-cluster.js
-    case  4 ; runClusterTest3 resilience_failover_failure      resilience-synchronous-repl-failureAt-cluster.js
-    case  5 ; runClusterTest3 resilience_failover_view         resilience-synchronous-repl-cluster-with-arangosearch-view-cluster.js
-    case  6 ; runClusterTest3 resilience_transactions          resilience-transactions.js
-    case  7 ; runClusterTest3 resilience_sharddist             shard-distribution-spec.js
+    case  0 ; runClusterTest1 resilience_move ""
+    case  1 ; runClusterTest1 resilience_move_view ""
+    case  2 ; runClusterTest1 resilience_repair ""
+    case  3 ; runClusterTest1 resilience_failover ""
+    case  4 ; runClusterTest1 resilience_failover_failure ""
+    case  5 ; runClusterTest1 resilience_failover_view ""
+    case  6 ; runClusterTest1 resilience_transactions ""
+    case  7 ; runClusterTest1 resilience_sharddist ""
     case  8 ; runClusterTest1 shell_server_aql 3 --testBuckets 6/3
     case  9 ; runClusterTest1 shell_client ""
     case 10 ; runClusterTest1 shell_server ""
