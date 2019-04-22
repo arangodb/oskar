@@ -197,7 +197,7 @@ function jslint
   or begin popd; return 1; end
 
   set -l s 0
-  interactiveContainer arangodb/arangodb /scripts/jslint.sh
+  runInContainer arangodb/arangodb /scripts/jslint.sh
   set s $status
 
   popd
