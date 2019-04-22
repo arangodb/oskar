@@ -808,6 +808,11 @@ function moveResultsToWorkspace
         echo "mv $WORKDIR/work/testfailures.txt" ; mv $WORKDIR/work/testfailures.txt $WORKSPACE
       end
     end
+
+    if test -f $WORKDIR/work/testRuns.txt
+      echo "mv $WORKDIR/work/testRuns.txt"
+      mv $WORKDIR/work/testRuns.txt $WORKSPACE
+    end
   end
 end
 

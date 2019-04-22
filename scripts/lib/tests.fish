@@ -11,7 +11,13 @@ end
 function runAnyTest
   set -l t $argv[1]
   set -l tt $argv[2]
-  set -l l0 "$t""$tt"
+  set -l l0 "$t"
+  if test "$tt" = "-"
+    set tt ""
+  end
+  if test "$tt" != ""
+    set l0 "$t"_"$tt"
+  end
   set -l l1 "$l0".log
   set -l l2 $TMPDIR/"$l0".out
   set -e argv[1..2]
@@ -74,6 +80,9 @@ function createReport
 
   pushd $INNERWORKDIR/tmp
 
+  set -l totalStarted (date -u +%s)
+  set -l totalStopped 0
+
   for d in *.out
     set -l localresult GOOD
     echo Looking at directory $d
@@ -100,13 +109,30 @@ function createReport
       end
     end
 
-    if test -f "$d/started" -a -f "$d/stopped"
+    if test -f "$d/started"
       set started (cat "$d/started")
-      set stopped (cat "$d/stopped")
-      echo Test $d took (math $stopped - $started) seconds, status $localresult
-      echo $d,(math $stopped - $started),$localresult >> testRuns.txt
+
+      if test $started -lt $totalStarted
+        set totalStarted $started
+      end
+
+      if test -f "$d/started" -a -f "$d/stopped"
+        set stopped (cat "$d/stopped")
+
+        if test $totalStopped -lt $stopped
+          set totalStopped $stopped
+        end
+
+        echo Test $d took (math $stopped - $started) seconds, status $localresult
+        echo $d,(math $stopped - $started),$localresult >> testRuns.txt
+      else
+        echo Test $d did not finish, status $localresult
+        echo $d,-1,$localresult >> testRuns.txt
+      end
     end
   end
+
+  echo "TOTAL,"(math $totalStopped - $totalStarted)"," >> testRuns.txt
 
   # this is the jslint output
   if test -e "jslint.log"
@@ -165,6 +191,10 @@ function createReport
 
   if grep "unclean shutdown" "$INNERWORKDIR/testfailures.txt"
     set -g result BAD
+  end
+
+  if test -f $INNERWORKDIR/tmp/testRuns.txt
+    cp $INNERWORKDIR/tmp/testRuns.txt $INNERWORKDIR/testRuns.txt
   end
 
   log "$now $TESTSUITE $result M:$MAINTAINER $BUILDMODE E:$ENTERPRISEEDITION $STORAGEENGINE" $repoState $repoStateEnterprise $badtests ""
