@@ -32,4 +32,4 @@ echo "https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV
 and curl -s -L -o "$STARTER_PATH" "https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-$PLATFORM-amd64"
 and chmod 755 "$STARTER_PATH"
 and echo Starter ready for build $STARTER_PATH
-or echo "ERROR - cannot download Starter"; exit 1
+or begin echo "ERROR - cannot download Starter"; exit 1; end
