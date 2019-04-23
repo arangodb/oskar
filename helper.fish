@@ -809,7 +809,7 @@ function moveResultsToWorkspace
       end
     end
 
-    if test -f $WORKDIR/work/Documentation
+    if test -d $WORKDIR/work/Documentation
       mv $WORKDIR/work/Documentation $WORKSPACE/Documentation.generated
     end
 
