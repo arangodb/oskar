@@ -10,6 +10,7 @@ function prepareOskar
   end
 
   mkdir -p "$HOME/$NODE_NAME" ; cd "$HOME/$NODE_NAME"
+
   if not cd $OSKAR ^ /dev/null 
     git clone -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR ; and cd $OSKAR
   else
@@ -18,7 +19,9 @@ function prepareOskar
   and source helper.fish
   if test $status -ne 0 ; echo Did not find oskar and helpers ; exit 1 ; end
 
-  set -l lockfile oskar/work/ArangoDB.git/index.lock
+  set -l lockfile (pwd)/work/ArangoDB.git/index.lock
+
+  echo "Checking for lock file $lockfile"
 
   if test -f $lockfile
     echo "Warning: lock file $lockfile exist"
