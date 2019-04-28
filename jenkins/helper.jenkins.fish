@@ -18,7 +18,7 @@ function prepareOskar
   and source helper.fish
   if test $status -ne 0 ; echo Did not find oskar and helpers ; exit 1 ; end
 
-  set -l lockfile work/ArangoDB.git/index.lock
+  set -l lockfile oskar/work/ArangoDB.git/index.lock
 
   if test -f $lockfile
     echo "Warning: lock file $lockfile exist"
