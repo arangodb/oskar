@@ -31,7 +31,7 @@ function compiler
     case 7.3.0
       set -gx COMPILER_VERSION $version
 
-    case 8.2.0
+    case 8.3.0
       set -gx COMPILER_VERSION $version
 
     case '*'
