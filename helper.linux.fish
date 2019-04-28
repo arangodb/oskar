@@ -1031,6 +1031,7 @@ function runInContainer
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e SKIPGREY="$SKIPGREY" \
              -e ONLYGREY="$ONLYGREY" \
+             -e TEST="$TEST" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c" ; docker stop $c >/dev/null ; end

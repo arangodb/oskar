@@ -57,7 +57,18 @@ function launchSingleTests
     return 0
   end
 
-  eval $STS[$launchCount]
+  set -l test $STS[$launchCount]
+
+  if test -n "$TEST"
+    if echo $test | fgrep -q "$TEST"
+      echo "Running test '$test' (contains '$TEST')"
+    else
+      echo "Skipping test '$test' (does not contain '$TEST')"
+      return 1
+    end
+  end
+
+  eval $test
   return 1
 end
 
@@ -149,7 +160,7 @@ switch $TESTSUITE
   case "cluster"
     resetLaunch 4
     and if test "$ASAN" = "On"
-      waitOrKill 3600 launchClusterTests
+      waitOrKill 14400 launchClusterTests
     else
       waitOrKill 3600 launchClusterTests
     end
@@ -165,7 +176,7 @@ switch $TESTSUITE
   case "catchtest"
     resetLaunch 1
     and if test "$ASAN" = "On"
-      waitOrKill 1800 launchCatchTest
+      waitOrKill 14400 launchCatchTest
     else
       waitOrKill 1800 launchCatchTest
     end
@@ -173,7 +184,7 @@ switch $TESTSUITE
   case "resilience"
     resetLaunch 4
     and if test "$ASAN" = "On"
-      waitOrKill 3600 launchResilienceTests
+      waitOrKill 14400 launchResilienceTests
     else
       waitOrKill 3600 launchResilienceTests
     end
