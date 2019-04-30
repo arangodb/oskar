@@ -1002,6 +1002,8 @@ end
 
 function pushAlpineBuildImage ; docker push $ALPINEBUILDIMAGE ; end
 
+function pullAlpineBuildImage ; docker pull $ALPINEBUILDIMAGE ; end
+
 function buildAlpineBuildImage2
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildAlpine2.docker
@@ -1011,6 +1013,8 @@ function buildAlpineBuildImage2
 end
 
 function pushAlpineBuildImage2 ; docker push $ALPINEBUILDIMAGE2 ; end
+
+function pullAlpineBuildImage2 ; docker pull $ALPINEBUILDIMAGE2 ; end
 
 function buildCentosPackagingImage
   pushd $WORKDIR
@@ -1219,6 +1223,7 @@ function updateOskar
   and source helper.fish
   and pullUbuntuBuildImage
   and pullAlpineBuildImage
+  and pullAlpineBuildImage2
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
   and pullDocumentationImage
