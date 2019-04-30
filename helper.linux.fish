@@ -25,6 +25,11 @@ set -gx SYSTEM_IS_LINUX true
 function compiler
   set -l version $argv[1]
 
+  if test "$version" = ""
+    set -e COMPILER_VERSION
+    return 0
+  end
+
   switch $version
     case 6.4.0
       set -gx COMPILER_VERSION $version
@@ -70,6 +75,30 @@ function findBuildScript
         echo "unknown compiler version $version"
         return 1
     end
+  end
+end
+
+function findRequiredCompiler
+  set -l f $WORKDIR/work/ArangoDB/VERSIONS
+
+  test -f $f
+  or begin
+    echo "Cannot find $f; make sure source is checked out"
+    return 1
+  end
+
+  if test "$COMPILER_VERSION" != ""
+    echo "Compiler version already set to '$COMPILER_VERSION'"
+    return 0
+  end
+
+  set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    echo "$f: no GCC_LINUX specified, using default"
+  else
+    echo "Using compiler '$v' from '$f'"
+    compiler $v
   end
 end
 
@@ -152,6 +181,7 @@ end
 
 function buildStaticArangoDB
   checkoutIfNeeded
+  and findRequiredCompiler
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
