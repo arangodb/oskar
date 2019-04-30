@@ -1161,7 +1161,7 @@ end
 ## #############################################################################
 
 function findCompilerVersion
-  runInContainer (findBuildImage) gcc -v 2>&1 | fgrep -v adding | tail -1 | awk '{print $3}'
+  echo $COMPILER_VERSION
 end
 
 function clearWorkDir
