@@ -8,6 +8,7 @@ set -gx ARCH (uname -m)
 set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH
 set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH
+set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH
 set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH
 set -gx DOCIMAGE arangodb/arangodb-documentation
 set -xg IONICE "ionice -t -n 7"
@@ -28,14 +29,47 @@ function compiler
     case 6.4.0
       set -gx COMPILER_VERSION $version
 
-    case 7.3.0
-      set -gx COMPILER_VERSION $version
-
     case 8.3.0
       set -gx COMPILER_VERSION $version
 
     case '*'
       echo "unknown compiler version $version"
+  end
+end
+
+function findBuildImage
+  if test "$COMPILER_VERSION" = ""
+      echo $ALPINEBUILDIMAGE
+  else
+    switch $COMPILER_VERSION
+      case 6.4.0
+        echo $ALPINEBUILDIMAGE
+
+      case 8.3.0
+        echo $ALPINEBUILDIMAGE2
+
+      case '*'
+        echo "unknown compiler version $version"
+        return 1
+    end
+  end
+end
+
+function findBuildScript
+  if test "$COMPILER_VERSION" = ""
+      echo buildAlpine.fish
+  else
+    switch $COMPILER_VERSION
+      case 6.4.0
+        echo buildAlpine.fish
+
+      case 8.3.0
+        echo buildAlpine2.fish
+
+      case '*'
+        echo "unknown compiler version $version"
+        return 1
+    end
   end
 end
 
@@ -118,7 +152,7 @@ end
 
 function buildStaticArangoDB
   checkoutIfNeeded
-  and runInContainer $ALPINEBUILDIMAGE $SCRIPTSDIR/buildAlpine.fish $argv
+  and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -127,7 +161,7 @@ function buildStaticArangoDB
 end
 
 function makeStaticArangoDB
-  runInContainer $ALPINEBUILDIMAGE $SCRIPTSDIR/makeAlpine.fish $argv
+  runInContainer (findBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -930,17 +964,23 @@ function pullUbuntuPackagingImage ; docker pull $UBUNTUPACKAGINGIMAGE ; end
 
 function buildAlpineBuildImage
   pushd $WORKDIR
-  and cp -a scripts/makeAlpine.fish scripts/buildAlpine.fish containers/buildAlpine.docker/scripts
   and cd $WORKDIR/containers/buildAlpine.docker
   and docker build --pull -t $ALPINEBUILDIMAGE .
-  and rm -f $WORKDIR/containers/buildAlpine.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
 
 function pushAlpineBuildImage ; docker push $ALPINEBUILDIMAGE ; end
 
-function pullAlpineBuildImage ; docker pull $ALPINEBUILDIMAGE ; end
+function buildAlpineBuildImage2
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine2.docker
+  and docker build --pull -t $ALPINEBUILDIMAGE2 .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage2 ; docker push $ALPINEBUILDIMAGE2 ; end
 
 function buildCentosPackagingImage
   pushd $WORKDIR
@@ -1091,7 +1131,7 @@ end
 ## #############################################################################
 
 function findCompilerVersion
-  runInContainer $ALPINEBUILDIMAGE gcc -v 2>&1 | fgrep -v adding | tail -1 | awk '{print $3}'
+  runInContainer (buildimage) gcc -v 2>&1 | fgrep -v adding | tail -1 | awk '{print $3}'
 end
 
 function clearWorkDir
@@ -1121,7 +1161,7 @@ function shellInUbuntuContainer
 end
 
 function shellInAlpineContainer
-  interactiveContainer $ALPINEBUILDIMAGE fish
+  interactiveContainer (buildimage) fish
 end
 
 function pushOskar
