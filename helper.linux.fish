@@ -1161,7 +1161,7 @@ end
 ## #############################################################################
 
 function findCompilerVersion
-  runInContainer (buildimage) gcc -v 2>&1 | fgrep -v adding | tail -1 | awk '{print $3}'
+  runInContainer (findBuildImage) gcc -v 2>&1 | fgrep -v adding | tail -1 | awk '{print $3}'
 end
 
 function clearWorkDir
@@ -1191,7 +1191,7 @@ function shellInUbuntuContainer
 end
 
 function shellInAlpineContainer
-  interactiveContainer (buildimage) fish
+  interactiveContainer (findBuildImage) fish
 end
 
 function pushOskar
