@@ -1,0 +1,16 @@
+--- a/contrib/download_prerequisites	2019-04-28 23:23:24.315603354 +0200
++++ b/contrib/download_prerequisites	2019-04-28 23:23:46.371632003 +0200
+@@ -30,9 +30,9 @@
+ fi
+ 
+ # Necessary to build GCC.
+-MPFR=mpfr-2.4.2
+-GMP=gmp-4.3.2
+-MPC=mpc-0.8.1
++MPFR=mpfr-3.1.4
++GMP=gmp-6.1.0
++MPC=mpc-1.0.3
+ 
+ wget ftp://gcc.gnu.org/pub/gcc/infrastructure/$MPFR.tar.bz2 || exit 1
+ tar xjf $MPFR.tar.bz2 || exit 1
+
