@@ -71,7 +71,6 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "resilience_failover"
     registerTest -cluster $true -testname "resilience_sharddist"
     registerTest -cluster $true -testname "shell_client"
-    registerTest -cluster $true -testname "shell_client_aql"
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
     registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"
