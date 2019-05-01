@@ -222,7 +222,7 @@ function oskar
 
   checkoutIfNeeded
   and if test "$ASAN" = "On"
-    parallelism 1
+    parallelism 2
     runInContainer --privileged $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   else
     runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
@@ -241,7 +241,7 @@ function oskarFull
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
     and if test "$ASAN" = "On"
-      parallelism 1
+      parallelism 2
       runInContainer --net="$LDAPNETWORK$LDAPEXT" --privileged $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     else
       runInContainer --net="$LDAPNETWORK$LDAPEXT" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
@@ -249,6 +249,7 @@ function oskarFull
     set s $status
   else
     if test "$ASAN" = "On"
+      parallelism 2
       runInContainer $UBUNTUBUILDIMAGE --privileged $SCRIPTSDIR/runFullTests.fish
     else
       runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
