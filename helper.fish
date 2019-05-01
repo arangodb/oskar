@@ -105,6 +105,11 @@ else ; set -gx RELEASE_TYPE $RELEASE_TYPE ; end
 function keepBuild ; set -gx NO_RM_BUILD 1 ; end
 function clearBuild ; set -gx NO_RM_BUILD ; end
 
+function setAllLogsToWorkspace ; set -gx WORKSPACE_LOGS "all" ; end
+function setOnlyFailLogsToWorkspace ; set -gx WORKSPACE_LOGS "fail"; end
+if test -z "$WORKSPACE_LOGS"; setOnlyFailLogsToWorkspace
+else ; set -gx WORKSPACE_LOGS $WORKSPACE_LOGS ; end
+
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
 # else is available before proceeding
@@ -445,6 +450,7 @@ function showConfig
   end
   printf $fmt3 'Verbose Build' $VERBOSEBUILD '(verboseBuild/silentBuild)'
   printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR '(verbose/slient)'
+  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR
@@ -779,10 +785,9 @@ function moveResultsToWorkspace
     # Used in jenkins test
     echo Moving reports and logs to $WORKSPACE ...
     if test -f $WORKDIR/work/test.log
-      if head -1 $WORKDIR/work/test.log | grep BAD > /dev/null
+      if head -1 test.log | grep BAD > /dev/null; or test $WORKSPACE_LOGS = "all"
         for f in $WORKDIR/work/testreport* ; echo "mv $f" ; mv $f $WORKSPACE ; end
       else
-       #for f in $WORKDIR/work/testreport* ; echo "mv $f" ; mv $f $WORKSPACE ; end
         for f in $WORKDIR/work/testreport* ; echo "rm $f" ; rm $f ; end
       end
       mv $WORKDIR/work/test.log $WORKSPACE

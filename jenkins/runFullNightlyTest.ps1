@@ -15,6 +15,7 @@ If ($global:ok)
     oskar1Full
 }
 $s = $global:ok
+setAllLogsToWorkspace
 moveResultsToWorkspace
 unlockDirectory
 

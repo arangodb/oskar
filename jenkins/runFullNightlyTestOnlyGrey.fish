@@ -15,6 +15,6 @@ and compiler "$COMPILER_VERSION"
 and oskar1Full
 
 set -l s $status
-cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
+cd "$HOME/$NODE_NAME/$OSKAR" ; setAllLogsToWorkspace ; moveResultsToWorkspace ; unlockDirectory 
 exit $s
 
