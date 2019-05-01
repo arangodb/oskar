@@ -153,6 +153,10 @@ set -x MALLOC_CONF background_thread:false
 setupTmp
 cd $INNERWORKDIR/ArangoDB
 
+if test "$ASAN" = "On"
+  ulimit -c 0
+end
+
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
