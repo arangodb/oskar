@@ -170,7 +170,7 @@ Function showConfig
     Write-Host "Static libs    : "$STATICLIBS
     Write-Host "Failure tests  : "$USEFAILURETESTS
     Write-Host "Keep build     : "$KEEPBUILD
-    Write-Host " "	
+    Write-Host " "
     Write-Host "Test Configuration"
     Write-Host "Storage engine : "$STORAGEENGINE
     Write-Host "Test suite     : "$TESTSUITE
@@ -178,6 +178,7 @@ Function showConfig
     Write-Host "Internal Configuration"
     Write-Host "Parallelism    : "$numberSlots
     Write-Host "Verbose        : "$VERBOSEOSKAR
+    Write-Host "Logs preserve  : "$WORKSPACE_LOGS
     Write-Host " "
     Write-Host "Directories"
     Write-Host "Inner workdir  : "$INNERWORKDIR
@@ -392,6 +393,22 @@ If(-Not($KEEPBUILD))
 {
     $global:KEEPBUILD = "Off"
 }
+
+Function setAllLogsToWorkspace
+{
+    $global:WORKSPACE_LOGS = "all"
+}
+
+Function setOnlyFailLogsToWorkspace
+{
+    $global:WORKSPACE_LOGS = "fail"
+}
+
+If(-Not($WORKSPACE_LOGS))
+{
+    $global:WORKSPACE_LOGS = "fail"
+}
+
 
 # ##############################################################################
 # Version detection
@@ -961,7 +978,7 @@ Function moveResultsToWorkspace
     Write-Host "test.log ..."
     If(Test-Path -PathType Leaf "$INNERWORKDIR\test.log")
     {
-        If(Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive)
+        If((Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive) -Or $global:WORKSPACE_LOGS -eq "all")
         {
             ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter testreport*))
             {
@@ -971,7 +988,7 @@ Function moveResultsToWorkspace
         }
         Else
         {
-            ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "testreport*" -Exclude "*.zip"))
+            ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "testreport*"))
             {
                 Write-Host "Remove $INNERWORKDIR\$file"
                 Remove-Item -Force "$INNERWORKDIR\$file"; comm 
