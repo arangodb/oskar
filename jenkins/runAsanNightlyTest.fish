@@ -13,7 +13,7 @@ switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and parallelism "$PARALLELISM_FULL_TEST"
 and compiler "$COMPILER_VERSION"
 and asanOn
-and oskar1Full
+and oskar1
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
