@@ -785,7 +785,7 @@ function moveResultsToWorkspace
     # Used in jenkins test
     echo Moving reports and logs to $WORKSPACE ...
     if test -f $WORKDIR/work/test.log
-      if head -1 test.log | grep BAD > /dev/null; or test $WORKSPACE_LOGS = "all"
+      if head -1 $WORKDIR/work/test.log | grep BAD > /dev/null; or test $WORKSPACE_LOGS = "all"
         for f in $WORKDIR/work/testreport* ; echo "mv $f" ; mv $f $WORKSPACE ; end
       else
         for f in $WORKDIR/work/testreport* ; echo "rm $f" ; rm $f ; end
