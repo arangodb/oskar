@@ -807,7 +807,7 @@ function moveResultsToWorkspace
     for f in $WORKDIR/work/*.tar.bz2 ; echo "mv $f" ; mv $f $WORKSPACE ; end
     for f in $WORKDIR/work/*.zip ; echo "mv $f" ; mv $f $WORKSPACE ; end
     for f in $WORKDIR/work/*.html ; echo "mv $f" ; mv $f $WORKSPACE ; end
-    for f in $WORKDIR/work/asan.log.* ; echo "mv $f" ; mv $f $WORKSPACE/$f.log ; end
+    for f in $WORKDIR/work/asan.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end
 
     if test -f $WORKDIR/work/testfailures.txt
       if grep -q -v '^[ \t]*$' $WORKDIR/work/testfailures.txt
