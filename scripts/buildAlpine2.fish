@@ -43,11 +43,14 @@ echo "Starting build at "(date)" on "(hostname)
 rm -f $INNERWORKDIR/.ccache.log
 ccache --zero-stats
 
+set -l pie "-fpic -fPIC -fpie -fPIE -static-pie"
+set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
+
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
  -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
  -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME \
- -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id -static-pie -fPIE -fPIC"\
+ -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=On \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
@@ -63,8 +66,8 @@ if test "$ASAN" = "On"
 else
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-   -DCMAKE_C_FLAGS="-fPIE -fPIC -static-pie" \
-   -DCMAKE_CXX_FLAGS="-fPIE -fPIC -static-pie"
+   -DCMAKE_C_FLAGS="$pie $inline -fno-stack-protector" \
+   -DCMAKE_CXX_FLAGS="$pie $inline -fno-stack-protector"
 end
 
 echo cmake $FULLARGS ..
