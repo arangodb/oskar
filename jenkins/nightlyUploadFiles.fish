@@ -13,12 +13,21 @@ lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
 function createIndex
   pushd $WORKSPACE/file-browser
   and echo "Creating INDEX"
+  and echo "cleaning old files..."
   and rm -rf file-browser.out root-dir program2.py
   and mkdir root-dir
+  and echo "create new links..."
   and cp -rs /mnt/buildfiles/stage2/nightly root-dir/
   and find root-dir -name "*3e*" -exec rm -f "{}" ";"
+  and find root-dir -name "index.html" -exec rm -f "{}" ";"
+  and echo "creating index.html..."
   and sed -e 's/os\.walk(root)/os\.walk(root,followlinks=True)/' program.py > program2.py
   and python program2.py root-dir > file-browser.out 2>&1
+  or begin popd; return 1; end
+
+  pushd $WORKSPACE/file-browser/root-dir
+  and echo "copy index.html..."
+  and find . -name "index.html" -ls -exec cp "{}" "/mnt/buildfiles/stage2/{}" ";"
   or begin popd; return 1; end
 
   popd
