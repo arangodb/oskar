@@ -799,8 +799,9 @@ function moveResultsToWorkspace
       if test -f "$WORKDIR/work/$x" ; mv $WORKDIR/work/$x $WORKSPACE ; end
     end
 
-    for f in (ls $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html} | grep -v testreport)
-      echo "mv $f" ; mv $f $WORKSPACE
+    set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html}
+    for f in $matches
+      echo $f | grep -v testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"      
     end
     for f in $WORKDIR/work/asan.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end
 
