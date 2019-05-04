@@ -132,7 +132,13 @@ function createReport
     end
   end
 
-  echo "TOTAL,"(math $totalStopped - $totalStarted)"," >> testRuns.txt
+  echo "TOTAL,"(math $totalStopped - $totalStarted)","$result >> testRuns.txt
+
+  begin
+    echo "<table>"; echo "Test,Runtime,Status" | sed -e 's/^/<tr><th>/' -e 's/,/<\/th><th>/g' -e 's/$/<\/th><\/tr>/'
+    cat testRuns.txt | sed -e 's/^/<tr><td>/' -e 's/,/<\/td><td align="right">/g' -e 's/$/<\/td><\/tr>/'
+    echo "</table>"
+  end > testRuns.html
 
   # this is the jslint output
   if test -e "jslint.log"
@@ -194,7 +200,11 @@ function createReport
   end
 
   if test -f $INNERWORKDIR/tmp/testRuns.txt
-    cp $INNERWORKDIR/tmp/testRuns.txt $INNERWORKDIR/testRuns.txt
+    cp $INNERWORKDIR/tmp/testRuns.txt $INNERWORKDIR
+  end
+
+  if test -f $INNERWORKDIR/tmp/testRuns.html
+    cp $INNERWORKDIR/tmp/testRuns.html $INNERWORKDIR
   end
 
   log "$now $TESTSUITE $result M:$MAINTAINER $BUILDMODE E:$ENTERPRISEEDITION $STORAGEENGINE" $repoState $repoStateEnterprise $badtests ""
