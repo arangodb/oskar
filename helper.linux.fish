@@ -1059,6 +1059,7 @@ end
 
 function runInContainer
   if test -z "$SSH_AUTH_SOCK"
+    sudo killall --older-than 8h ssh-agent
     eval (ssh-agent -c) > /dev/null
     for key in ~/.ssh/id_rsa ~/.ssh/id_deploy
       if test -f $key
