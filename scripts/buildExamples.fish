@@ -10,11 +10,11 @@ and begin
 
   set -xg ARANGODB_VERSION (grep "$AV""_MAJOR" $CMAKELIST | sed -e $SEDFIX)"."(grep "$AV""_MINOR" $CMAKELIST | sed -e $SEDFIX)
 end
-and begin ; rm -rf "Documentation/Books/AQL/*" ; cp docs/$ARANGODB_VERSION/aql/*.md Documentation/Books/AQL/ ; end
-and begin ; rm -rf "Documentation/Books/Manual/*" ; cp docs/$ARANGODB_VERSION/*.md Documentation/Books/Manual/ ; end
-and begin ; rm -rf "Documentation/Books/HTTP/*" ; cp docs/$ARANGODB_VERSION/http/*.md Documentation/Books/HTTP/ ; end
-and begin ; rm -rf "Documentation/Books/Cookbook/*" ; cp docs/$ARANGODB_VERSION/cookbook/*.md Documentation/Books/Cookbook/ ; end
-and begin ; rm -rf "Documentation/Books/Drivers/*" ; cp docs/$ARANGODB_VERSION/drivers/*.md Documentation/Books/Drivers/ ; end
+and begin ; rm -rf Documentation/Books/AQL/* ; cp docs/$ARANGODB_VERSION/aql/*.md Documentation/Books/AQL/ ; end
+and begin ; rm -rf Documentation/Books/Manual/* ; cp docs/$ARANGODB_VERSION/*.md Documentation/Books/Manual/ ; end
+and begin ; rm -rf Documentation/Books/HTTP/* ; cp docs/$ARANGODB_VERSION/http/*.md Documentation/Books/HTTP/ ; end
+and begin ; rm -rf Documentation/Books/Cookbook/* ; cp docs/$ARANGODB_VERSION/cookbook/*.md Documentation/Books/Cookbook/ ; end
+and begin ; rm -rf Documentation/Books/Drivers/* ; cp docs/$ARANGODB_VERSION/drivers/*.md Documentation/Books/Drivers/ ; end
 and rm -rf js/apps/system/_admin/aardvark/APP/api-docs.json
 and rm -rf Documentation/Examples
 and mkdir Documentation/Examples
