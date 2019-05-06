@@ -192,7 +192,7 @@ switch on/off maintainer mode when building
     debugMode
     releaseMode
 
-build `Debug` (debugMode) or `RelWithDepInfo` (releaseMode)
+build `Debug` (debugMode) or `RelWithDebInfo` (releaseMode)
 
     community
     enterprise
