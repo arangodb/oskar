@@ -72,8 +72,6 @@ Function global:registerSingleTests()
     registerTest -testname "http_replication" -weight 2
     registerTest -testname "http_server"
     registerTest -testname "importing"
-    registerTest -testname "load_balancing"
-    registerTest -testname "load_balancing_auth"
     registerTest -testname "queryCacheAuthorization"
     registerTest -testname "readOnly"
     registerTest -testname "upgrade"
@@ -92,6 +90,8 @@ Function global:registerClusterTests()
 
     $global:TESTSUITE_TIMEOUT = 10800
 
+    registerTest -cluster $true -testname "load_balancing"
+    registerTest -cluster $true -testname "load_balancing_auth"
     registerTest -cluster $true -testname "resilience_move"
     registerTest -cluster $true -testname "resilience_move_view"
     registerTest -cluster $true -testname "resilience_repair"

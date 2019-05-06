@@ -69,8 +69,6 @@ set ST "$ST""500,runSingleTest1 http_replication -\n"
 set ST "$ST""500,runSingleTest1 http_server 0 --testBuckets 2/0-\n"
 set ST "$ST""500,runSingleTest1 http_server 1 --testBuckets 2/1-\n"
 set ST "$ST""500,runSingleTest1 importing -\n"
-set ST "$ST""500,runSingleTest1 load_balancing -\n"
-set ST "$ST""500,runSingleTest1 load_balancing_auth -\n"
 set ST "$ST""500,runSingleTest1 queryCacheAuthorization -\n"
 set ST "$ST""500,runSingleTest1 readOnly -\n"
 set ST "$ST""500,runSingleTest1 upgrade -\n"
@@ -123,6 +121,8 @@ end
 ################################################################################
 
 set -l CT
+set CT "$CT""500,runClusterTest1 load_balancing -\n"
+set CT "$CT""500,runClusterTest1 load_balancing_auth -\n"
 set CT "$CT""600,runClusterTest1 resilience_move -\n"
 set CT "$CT""750,runClusterTest1 resilience_move_view -\n"
 set CT "$CT""500,runClusterTest1 resilience_repair -\n"
