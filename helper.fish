@@ -110,6 +110,9 @@ function setOnlyFailLogsToWorkspace ; set -gx WORKSPACE_LOGS "fail"; end
 if test -z "$WORKSPACE_LOGS"; setOnlyFailLogsToWorkspace
 else ; set -gx WORKSPACE_LOGS $WORKSPACE_LOGS ; end
 
+function addLogLevel ; set -gx LOG_LEVELS $LOG_LEVELS $argv ; end
+function clearLogLevel ; set -ge LOG_LEVEL ; end
+
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
 # else is available before proceeding
@@ -120,6 +123,18 @@ if test ! -d work ; mkdir work ; end
 ## #############################################################################
 ## test
 ## #############################################################################
+
+function createLogLevelsOverride
+  for i in arangod-agency arangod-agent arangod-common arangod-coordinator arangod-dbserver arangod-single arangod
+    begin
+      echo "[log]"
+
+      for log in $LOG_LEVELS
+        echo "level = $log"
+      end
+    end > $WORKDIR/work/ArangoDB/etc/testing/$i.conf.local
+  end
+end
 
 function oskar1
   showConfig
@@ -439,6 +454,7 @@ function showConfig
   printf $fmt3 'OnlyGrey'       $ONLYGREY      '(onlyGreyOn/onlyGreyOff)'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'
   printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/catchtest)'
+  printf $fmt2 'Log Levels'     (echo $LOG_LEVELS)
   echo
   echo 'Package Configuration'
   printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
