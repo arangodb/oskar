@@ -263,6 +263,7 @@ function waitForProcesses
     while test (math (count (jobs -p))"*$launchFactor") -lt "$PARALLELISM"
       if test -z "$launcher" ; break ; end
       if eval "$launcher" ; break ; end
+      sleep 30
     end
 
     # Check subprocesses:
