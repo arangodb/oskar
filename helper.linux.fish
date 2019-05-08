@@ -1090,6 +1090,7 @@ function runInContainer
              -e GID=(id -g) \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
              -e INNERWORKDIR="$INNERWORKDIR" \
+             -e SHOW_DETAILS="$SHOW_DETAILS" \
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
              -e MAINTAINER="$MAINTAINER" \

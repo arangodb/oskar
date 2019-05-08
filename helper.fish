@@ -87,6 +87,19 @@ function silentBuild ; set -gx VERBOSEBUILD Off ; end
 if test -z "$VERBOSEBUILD"; silentBuild
 else ; set -gx VERBOSEBUILD $VERBOSEBUILD ; end
 
+function showDetails ; set -gx SHOW_DETAILS On ; end
+function hideDetails ; set -gx SHOW_DETAILS Off ; end
+
+if test -z "$SHOW_DETAILS"
+  if isatty 1
+    showDetails
+  else
+    hideDetails
+  end
+else
+  set -gx SHOW_DETAILS $SHOW_DETAILS
+end
+
 function skipGrey ; set -gx SKIPGREY true ; end
 function includeGrey ; set -gx SKIPGREY false ; end
 if test -z "$SKIPGREY"; includeGrey
@@ -466,6 +479,7 @@ function showConfig
   end
   printf $fmt3 'Verbose Build' $VERBOSEBUILD '(verboseBuild/silentBuild)'
   printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR '(verbose/slient)'
+  printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails)'
   printf $fmt3 'Logs preserve' $WORKSPACE_LOGS '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
   echo
   echo 'Directories'

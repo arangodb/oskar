@@ -17,7 +17,6 @@ else
     set -xg CXX_NAME g++-$COMPILER_VERSION
 end
 
-
 cd $INNERWORKDIR
 mkdir -p .ccache.alpine
 set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine
@@ -55,6 +54,12 @@ set -g FULLARGS $argv \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER
 
+if test "$argv" = ""
+  echo "using default architecture 'nehalem'"
+  set -g FULLARGS $FULLARGS \
+    -DTARGET_ARCHITECTURE=nehalem
+end
+
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
@@ -84,7 +89,11 @@ end
 echo cmake $FULLARGS ..
 echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
 
-cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log ^&1
+if test "$SHOW_DETAILS" = "On"
+  cmake $FULLARGS .. ^&1 | tee $INNERWORKDIR/cmakeArangoDB.log
+else
+  cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log ^&1
+end
 or exit $status
 
 echo "Finished cmake at "(date)", now starting build"
@@ -97,7 +106,12 @@ end
 
 set -x DESTDIR (pwd)/install
 echo Running make $MAKEFLAGS for static build, output in work/buildArangoDB.log
-nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+
+if test "$SHOW_DETAILS" = "On"
+  make $MAKEFLAGS install ^&1 | tee $INNERWORKDIR/buildArangoDB.log
+else
+  nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+end
 and cd install
 and if test -z "$NOSTRIP"
   echo Stripping executables...
