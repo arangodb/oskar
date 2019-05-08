@@ -1,8 +1,9 @@
 #!/usr/bin/env fish
 pushd $INNERWORKDIR/ArangoDB
-and if test ! -d docs
-  git clone ssh://git@github.com/arangodb/docs
+and if test -d docs
+  rm -rf docs
 end
+and git clone ssh://git@github.com/arangodb/docs
 and begin
   set -l CMAKELIST "CMakeLists.txt"
   set -l AV "set(ARANGODB_VERSION"
