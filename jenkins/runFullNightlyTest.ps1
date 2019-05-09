@@ -12,6 +12,7 @@ parallelism ([int]$env:NUMBER_OF_PROCESSORS)
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok) 
 {
+    setPDBsToWorkspaceOnCrashOnly
     oskar1Full
 }
 $s = $global:ok
