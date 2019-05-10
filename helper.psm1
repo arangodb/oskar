@@ -25,6 +25,7 @@ $global:maxTestCount = 0
 $global:testCount = 0
 $global:portBase = 10000
 $global:result = "GOOD"
+$global:hasTestCrashes = "false"
 
 $global:ok = $true
 
@@ -170,6 +171,7 @@ Function showConfig
     Write-Host "Static libs    : "$STATICLIBS
     Write-Host "Failure tests  : "$USEFAILURETESTS
     Write-Host "Keep build     : "$KEEPBUILD
+    Write-Host "PDBs workspace : "$PDBS_TO_WORKSPACE
     Write-Host " "
     Write-Host "Test Configuration"
     Write-Host "Storage engine : "$STORAGEENGINE
@@ -407,6 +409,21 @@ Function setOnlyFailLogsToWorkspace
 If(-Not($WORKSPACE_LOGS))
 {
     $global:WORKSPACE_LOGS = "fail"
+}
+
+Function setPDBsToWorkspaceOnCrashOnly
+{
+    $global:PDBS_TO_WORKSPACE = "crash"
+}
+
+Function setPDBsToWorkspaceAlways
+{
+    $global:PDBS_TO_WORKSPACE = "always"
+}
+
+If(-Not($WORKSPACE_PDB_CRASH_ONLY))
+{
+    $global:PDBS_TO_WORKSPACE = "always"
 }
 
 
@@ -1030,17 +1047,21 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    Write-Host "*.pdb ..."
-    Push-Location $global:ARANGODIR\build\bin\$BUILDMODE
-    If($ENTERPRISEEDITION -eq "On")
+    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes -eq "true"))
     {
-        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+        Write-Host "*.pdb ..."
+        Push-Location $global:ARANGODIR\build\bin\$BUILDMODE
+        If($ENTERPRISEEDITION -eq "On")
+        {
+            Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+        }
+        Else
+        {
+            Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+        }
+        Pop-Location
     }
-    Else
-    {
-        Compress-Archive -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
-    }
-    Pop-Location
+
     if($SKIPPACKAGING -eq "Off")
     {
         Write-Host "ArangoDB3*.exe ..."
