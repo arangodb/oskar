@@ -50,7 +50,7 @@ STARTER_CMD="arangodb --starter.local --server.storage-engine $ARANGO_STORAGE_EN
 STARTER_MODE=""
 
 if [ "$ARANGO_AUTH" == "auth" ]; then
-  JWTDIR="`pwd`/jwtsecret.$$"
+  JWTDIR="`pwd`/jwtsecret"
   rm -rf $JWTDIR
   mkdir $JWTDIR
   echo "geheim" > $JWTDIR/geheim
