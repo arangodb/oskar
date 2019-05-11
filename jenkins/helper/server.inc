@@ -72,10 +72,6 @@ command="$DOCKER_CMD $DOCKER_AUTH $DOCKER_IMAGE $STARTER_CMD $STARTER_MODE $STAR
 echo $command
 $command
 
-if [ "$ARANGO_AUTH" == "auth" ]; then
-  rm -rf $JWTDIR
-fi
-
 trap "$(trap -p | grep EXIT | sed "s/.*-- '\(.*\)'.EXIT/\1;/g")docker rm -fv $ARANGO_DOCKER_NAME" EXIT
 
 echo "Waiting until ArangoDB is ready on port $ARANGO_PORT"
