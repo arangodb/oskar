@@ -72,7 +72,7 @@ command="$DOCKER_CMD $DOCKER_AUTH $DOCKER_IMAGE $STARTER_CMD $STARTER_MODE $STAR
 echo $command
 $command
 
-trap "$(trap -p | grep EXIT | sed "s/.*-- '\(.*\)'.EXIT/\1;/g")docker rm -fv $ARANGO_DOCKER_NAME" EXIT
+trap "docker rm -fv $ARANGO_DOCKER_NAME ; sudo chown jenkins:jenkins -R output ; tar czf arango_data.tar.gz output" EXIT
 
 echo "Waiting until ArangoDB is ready on port $ARANGO_PORT"
 
@@ -83,6 +83,7 @@ else
 fi
 
 count=0
+
 while [ "$count" -lt 120 ]; do
   responseCode=`curl -s -I $CURL_USER http://127.0.0.1:$ARANGO_PORT/_api/version | head -n 1 | cut -d$' ' -f2`
   if [ -n "${responseCode}" ];
