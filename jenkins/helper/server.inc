@@ -38,7 +38,7 @@ echo
 docker kill $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker rm -fv $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker pull $DOCKER_IMAGE
-docker run $DOCKER_IMAGE arangosh --version
+docker run --privileged $DOCKER_IMAGE arangosh --version
 
 OUTDIR="`pwd`/output"
 rm -rf $OUTDIR
