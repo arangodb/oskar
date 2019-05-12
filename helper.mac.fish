@@ -247,7 +247,7 @@ function transformBundleSnippet
   set -l BUNDLE_SIZE_SERVER (expr (wc -c < work/$BUNDLE_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l BUNDLE_SHA256_SERVER (shasum -a 256 -b < work/$BUNDLE_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_SERVER "$argv[1]-macosx-$argv[4].tar.gz"
+  set -l TARGZ_NAME_SERVER "$argv[1]-macosx-$argv[3].tar.gz"
 
   if test ! -f "work/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
@@ -277,13 +277,12 @@ end
 function buildBundleSnippet
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
-  set n "$ARANGODB_DARWIN_UPSTREAM"
 
   if test "$ENTERPRISEEDITION" = "On"
-    transformBundleSnippet "arangodb3e" "$n" "$ARANGODB_DARWIN_UPSTREAM" "$ARANGODB_TGZ_UPSTREAM"
+    transformBundleSnippet "arangodb3e" "$ARANGODB_DARWIN_UPSTREAM" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   else
-    transformBundleSnippet "arangodb3" "$n" "$ARANGODB_DARWIN_UPSTREAM" "$ARANGODB_TGZ_UPSTREAM"
+    transformBundleSnippet "arangodb3" "$ARANGODB_DARWIN_UPSTREAM" "$ARANGODB_TGZ_UPSTREAM"
     or return 1
   end
 end
