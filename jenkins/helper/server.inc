@@ -67,7 +67,7 @@ else
     exit 1
 fi
 
-cat > $OUTDIR/testrun/starter.sh << 'ÈOF'
+cat > $OUTDIR/testrun/starter.sh << 'EOF'
 #!/bin/sh
 cd /testrun
 pwd
