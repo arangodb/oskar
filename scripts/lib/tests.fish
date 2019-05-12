@@ -1,11 +1,30 @@
 #!/usr/bin/env false
 
-set -xg ASAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
-set -xg LSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
-set -xg UBSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
-
 if test -z "$PARALLELISM"
   set -g PARALLELISM 64
+end
+
+# address sanitizer
+set -xg ASAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
+
+# leak sanitizer
+set -xg LSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+
+# undefined behavior sanitizer
+set -xg UBSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+
+# thread sanitizer
+set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
+
+# suppressions
+if test -f asan_arangodb_suppressions.txt
+  set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions="(pwd)"/asan_arangodb_suppressions.txt"
+  set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions="(pwd)"/asan_arangodb_suppressions.txt"
+  set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions="(pwd)"/asan_arangodb_suppressions.txt"
+end
+
+if test -f tsan_arangodb_suppressions.txt
+  set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions="(pwd)"/tsan_arangodb_suppressions.txt"
 end
 
 function runAnyTest
