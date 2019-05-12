@@ -67,8 +67,17 @@ else
     exit 1
 fi
 
+cat > $OUTDIR/testrun/starter.sh << 'ÈOF'
+#!/bin/sh
+cd /testrun
+pwd
+ulimit -a
+$*
+EOF
+chmod 755 $OUTDIR/testrun/starter.sh
+
 echo "Starting the container with the following command:"
-command="$DOCKER_CMD $DOCKER_AUTH $DOCKER_IMAGE sh -c 'cd /testrun ; pwd ; ulimit -a ; $STARTER_CMD $STARTER_MODE $STARTER_AUTH'"
+command="$DOCKER_CMD $DOCKER_AUTH $DOCKER_IMAGE /testrun/starter.sh $STARTER_CMD $STARTER_MODE $STARTER_AUTH"
 echo $command
 $command
 
