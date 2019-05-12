@@ -68,7 +68,7 @@ else
 fi
 
 echo "Starting the container with the following command:"
-command="$DOCKER_CMD $DOCKER_AUTH $DOCKER_IMAGE $STARTER_CMD $STARTER_MODE $STARTER_AUTH"
+command="$DOCKER_CMD $DOCKER_AUTH $DOCKER_IMAGE sh -c 'cd /testrun ; pwd ; ulimit -a ; $STARTER_CMD $STARTER_MODE $STARTER_AUTH'"
 echo $command
 $command
 
