@@ -1081,6 +1081,7 @@ function runInContainer
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
+             -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ASAN="$ASAN" \
              -e IONICE="$IONICE" \
              -e BUILDMODE="$BUILDMODE" \
