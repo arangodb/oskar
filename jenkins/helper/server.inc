@@ -38,14 +38,14 @@ echo
 docker kill $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker rm -fv $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker pull $DOCKER_IMAGE
-docker run --privileged $DOCKER_IMAGE arangosh --version
+docker run --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version
 
 OUTDIR="`pwd`/output"
 rm -rf $OUTDIR
 mkdir $OUTDIR
 DOCKER_AUTH=""
 STARTER_AUTH=""
-DOCKER_CMD="docker run --privileged --name $ARANGO_DOCKER_NAME -d $EXPORT_PORTS -v $OUTDIR:/testrun"
+DOCKER_CMD="docker run --cap-add SYS_NICE --name $ARANGO_DOCKER_NAME -d $EXPORT_PORTS -v $OUTDIR:/testrun"
 STARTER_CMD="arangodb --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun"
 STARTER_MODE=""
 
