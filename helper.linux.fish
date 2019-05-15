@@ -223,7 +223,7 @@ function oskar
   checkoutIfNeeded
   and if test "$ASAN" = "On"
     parallelism 2
-    runInContainer --privileged $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   else
     runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   end
@@ -242,7 +242,7 @@ function oskarFull
     launchLdapServer
     and if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --privileged $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     else
       runInContainer --net="$LDAPNETWORK$LDAPEXT" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
@@ -250,7 +250,7 @@ function oskarFull
   else
     if test "$ASAN" = "On"
       parallelism 2
-      runInContainer $UBUNTUBUILDIMAGE --privileged $SCRIPTSDIR/runFullTests.fish
+      runInContainer $UBUNTUBUILDIMAGE --cap-add SYS_NICE $SCRIPTSDIR/runFullTests.fish
     else
       runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
@@ -1081,6 +1081,7 @@ function runInContainer
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
+             -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ASAN="$ASAN" \
              -e IONICE="$IONICE" \
              -e BUILDMODE="$BUILDMODE" \
