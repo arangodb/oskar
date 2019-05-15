@@ -23,22 +23,22 @@ set -gx SYSTEM_IS_LINUX true
 ## #############################################################################
 
 function compiler
-  set -l version $argv[1]
+  set -l cversion $argv[1]
 
-  if test "$version" = ""
+  if test "$cversion" = ""
     set -e COMPILER_VERSION
     return 0
   end
 
-  switch $version
+  switch $cversion
     case 6.4.0
-      set -gx COMPILER_VERSION $version
+      set -gx COMPILER_VERSION $cversion
 
     case 8.3.0
-      set -gx COMPILER_VERSION $version
+      set -gx COMPILER_VERSION $cversion
 
     case '*'
-      echo "unknown compiler version $version"
+      echo "unknown compiler version $cversion"
   end
 end
 
@@ -1081,6 +1081,7 @@ function runInContainer
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
+             -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ASAN="$ASAN" \
              -e IONICE="$IONICE" \
              -e BUILDMODE="$BUILDMODE" \
