@@ -80,6 +80,7 @@ Function global:registerSingleTests()
     registerTest -testname "audit_server"
     registerTest -testname "permissions"
     registerTest -testname "permissions_server"
+    registerTest -testname "paths_server"    
     comm
 }
 
