@@ -77,6 +77,7 @@ set ST "$ST""500,runSingleTest1 audit_client -\n"
 set ST "$ST""500,runSingleTest1 audit_server -\n"
 set ST "$ST""500,runSingleTest1 permissions -\n"
 set ST "$ST""500,runSingleTest1 permissions_server -\n"
+set ST "$ST""500,runSingleTest1 paths_server -\n"
 
 set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g STL (count $STS)
