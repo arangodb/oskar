@@ -17,6 +17,8 @@ $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
 $env:CLCACHE_DIR="$INNERWORKDIR\.clcache.windows"
+$env:CLCACHE_LOG = 1
+$env:CLCACHE_HARDLINK = 1
 
 $global:GENERATOR = "Visual Studio 15 2017 Win64"
 
@@ -189,6 +191,12 @@ Function showConfig
     Write-Host "------------------------------------------------------------------------------"
     Write-Host " "
     comm
+}
+
+Function configureCache
+{
+	proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
+	proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
 }
 
 Function single
@@ -783,6 +791,7 @@ Function noteStartAndRepoState
 
 Function configureWindows
 {
+    configureCache
     If(-Not(Test-Path -PathType Container -Path "$global:ARANGODIR\build"))
     {
         New-Item -ItemType Directory -Path "$global:ARANGODIR\build"
@@ -809,6 +818,7 @@ Function configureWindows
 
 Function buildWindows 
 {
+    configureCache
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
@@ -873,6 +883,7 @@ Function generateSnippets
 
 Function packageWindows
 {
+    configureCache
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
