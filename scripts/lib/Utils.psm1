@@ -231,7 +231,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $testWeight = $weight
         }
         
-        $testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic true --skipTimeCritical true --writeXmlReport true --skipGrey $global:SKIPGREY --onlyGrey $global:ONLYGREY"
+        $testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --onlyGrey $global:ONLYGREY"
 
         New-Item -Path "$env:TMP\$output.out" -ItemType Directory
 
