@@ -195,8 +195,15 @@ Function showConfig
 
 Function configureCache
 {
-	proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
-	proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+    If($env:CLCACHE_CL)
+    {
+	    proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
+	    proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+    }
+    Else
+    {
+        Write-Host "No clcache installed !"
+    }
 }
 
 Function single
