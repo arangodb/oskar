@@ -164,6 +164,8 @@ Function showConfig
     Write-Host "Buildmode      : "$BUILDMODE
     Write-Host "Enterprise     : "$ENTERPRISEEDITION
     Write-Host "Maintainer     : "$MAINTAINER
+    Write-host "SkipNondeterministic       : "$SKIPNONDETERMINISTIC
+    Write-host "SkipTimecritical       : "$SKIPTIMECRITICAL
     Write-host "SkipGrey       : "$SKIPGREY
     Write-host "OnlyGrey       : "$ONLYGREY
     Write-Host " "
@@ -296,6 +298,32 @@ Function maintainerOff
 If(-Not($MAINTAINER))
 {
     maintainerOn
+}
+
+Function skipNondeterministic
+{
+    $global:SKIPNONDETERMINISTIC = "true"
+}
+Function includeNondeterministic
+{
+    $global:SKIPNONDETERMINISTIC = "false"
+}
+if(-Not($SKIPNONDETERMINISTIC))
+{
+    skipNondeterministic
+}
+
+Function skipTimecritical
+{
+    $global:SKIPTIMECRITICAL = "true"
+}
+Function includeTimecritical
+{
+    $global:SKIPTIMECRITICAL = "false"
+}
+if(-Not($SKIPTIMECRITICAL))
+{
+    skipTimecritical
 }
 
 Function skipGrey
