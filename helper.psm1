@@ -152,6 +152,19 @@ Function unlockDirectory
 # Configure Oskar
 ################################################################################
 
+Function configureCache
+{
+    If($env:CLCACHE_CL)
+    {
+	    proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
+	    proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+    }
+    Else
+    {
+        Write-Host "No clcache installed !"
+    }
+}
+
 Function showConfig
 {
     Write-Host "------------------------------------------------------------------------------"
@@ -189,22 +202,13 @@ Function showConfig
     Write-Host "Workdir        : "$WORKDIR
     Write-Host "Workspace      : "$env:WORKSPACE
     Write-Host "------------------------------------------------------------------------------"
+    Write-Host "Clcache Statistics"
+    configureCache
     Write-Host " "
     comm
 }
 
-Function configureCache
-{
-    If($env:CLCACHE_CL)
-    {
-	    proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
-	    proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
-    }
-    Else
-    {
-        Write-Host "No clcache installed !"
-    }
-}
+
 
 Function single
 {
@@ -798,7 +802,6 @@ Function noteStartAndRepoState
 
 Function configureWindows
 {
-    configureCache
     If(-Not(Test-Path -PathType Container -Path "$global:ARANGODIR\build"))
     {
         New-Item -ItemType Directory -Path "$global:ARANGODIR\build"
@@ -820,12 +823,13 @@ Function configureWindows
         Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" `"$global:ARANGODIR`""
 	    proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
     }
+    Write-Host "Clcache Statistics"
+    configureCache
     Pop-Location
 }
 
 Function buildWindows 
 {
-    configureCache
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
@@ -839,6 +843,8 @@ Function buildWindows
           Copy-Item "$global:ARANGODIR\build\tests\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\tests\"; comm
         }
     }
+    Write-Host "Clcache Statistics"
+    configureCache
     Pop-Location
 }
 
@@ -890,7 +896,6 @@ Function generateSnippets
 
 Function packageWindows
 {
-    configureCache
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
@@ -899,6 +904,8 @@ Function packageWindows
         Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$TARGET`""
         proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --target `"$TARGET`"" -logfile "$INNERWORKDIR\$TARGET-package" -priority "Normal"
     }
+    Write-Host "Clcache Statistics"
+    configureCache
     Pop-Location
 }
 
