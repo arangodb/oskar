@@ -3,7 +3,7 @@ source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults
 
-eval $EDITION ; eval $STORAGE_ENGINE ; eval $TEST_SUITE ; includeGrey; includeNondeterministic; includeTimecritical
+eval $EDITION ; eval $STORAGE_ENGINE ; eval $TEST_SUITE ; includeGrey; includeNondeterministic; includeTimeCritical
 
 if test -z "$PARALLELISM_FULL_TEST"
   set -g PARALLELISM_FULL_TEST 20

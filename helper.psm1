@@ -165,7 +165,7 @@ Function showConfig
     Write-Host "Enterprise     : "$ENTERPRISEEDITION
     Write-Host "Maintainer     : "$MAINTAINER
     Write-host "SkipNondeterministic       : "$SKIPNONDETERMINISTIC
-    Write-host "SkipTimecritical       : "$SKIPTIMECRITICAL
+    Write-host "SkipTimeCritical       : "$SKIPTIMECRITICAL
     Write-host "SkipGrey       : "$SKIPGREY
     Write-host "OnlyGrey       : "$ONLYGREY
     Write-Host " "
@@ -313,17 +313,17 @@ if(-Not($SKIPNONDETERMINISTIC))
     skipNondeterministic
 }
 
-Function skipTimecritical
+Function skipTimeCritical
 {
     $global:SKIPTIMECRITICAL = "true"
 }
-Function includeTimecritical
+Function includeTimeCritical
 {
     $global:SKIPTIMECRITICAL = "false"
 }
 if(-Not($SKIPTIMECRITICAL))
 {
-    skipTimecritical
+    skipTimeCritical
 }
 
 Function skipGrey
