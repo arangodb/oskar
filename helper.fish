@@ -107,7 +107,7 @@ else ; set -gx SKIPNONDETERMINISTIC $SKIPNONDETERMINISTIC ; end
 
 function skipTimeCritical ; set -gx SKIPTIMECRITICAL true ; end
 function includeTimeCritical ; set -gx SKIPTIMECRITICAL false ; end
-if test -z "$SKIPTIMECRITICAL; skipTimeCritical
+if test -z "$SKIPTIMECRITICAL"; skipTimeCritical
 else ; set -gx SKIPTIMECRITICAL $SKIPTIMECRITICAL ; end
 
 function skipGrey ; set -gx SKIPGREY true ; end
