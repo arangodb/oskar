@@ -47,7 +47,7 @@ set -g FULLARGS $argv \
 if test "$MAINTAINER" != "On"
   set -g FULLARGS $FULLARGS \
     -DUSE_CATCH_TESTS=Off \
-    -DnUSE_GOOGLE_TESTS=Off
+    -DUSE_GOOGLE_TESTS=Off
 end
 
 if test "$ASAN" = "On"
