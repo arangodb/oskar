@@ -49,8 +49,8 @@ function runAnyTest
     set -l arguments $t \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
-      --skipNondeterministic true \
-      --skipTimeCritical true \
+      --skipNondeterministic "$SKIPNONDETERMINISTIC" \
+      --skipTimeCritical "$SKIPTIMECRITICAL" \
       --testOutput $l2 \
       --writeXmlReport false \
       --skipGrey "$SKIPGREY" \

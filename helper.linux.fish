@@ -223,9 +223,9 @@ function oskar
   checkoutIfNeeded
   and if test "$ASAN" = "On"
     parallelism 2
-    runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   else
-    runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   end
   set s $status
 
@@ -242,17 +242,17 @@ function oskarFull
     launchLdapServer
     and if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
     set s $status
   else
     if test "$ASAN" = "On"
       parallelism 2
-      runInContainer $UBUNTUBUILDIMAGE --cap-add SYS_NICE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
   end
   set s $status
@@ -1107,6 +1107,8 @@ function runInContainer
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
+             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
+             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
              -e SKIPGREY="$SKIPGREY" \
              -e ONLYGREY="$ONLYGREY" \
              -e TEST="$TEST" \
@@ -1153,7 +1155,10 @@ function interactiveContainer
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
+             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
+             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
              -e SKIPGREY="$SKIPGREY" \
+             -e ONLYGREY="$ONLYGREY" \
              -e SSH_AUTH_SOCK=/ssh-agent \
              -e SSH_AUTH_SOCK=/ssh-agent \
              -e STORAGEENGINE="$STORAGEENGINE" \

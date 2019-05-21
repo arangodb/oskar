@@ -17,6 +17,8 @@ $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
 $env:CLCACHE_DIR="$INNERWORKDIR\.clcache.windows"
+$env:CLCACHE_LOG = 1
+$env:CLCACHE_HARDLINK = 1
 
 $global:GENERATOR = "Visual Studio 15 2017 Win64"
 
@@ -162,6 +164,8 @@ Function showConfig
     Write-Host "Buildmode      : "$BUILDMODE
     Write-Host "Enterprise     : "$ENTERPRISEEDITION
     Write-Host "Maintainer     : "$MAINTAINER
+    Write-host "SkipNondeterministic       : "$SKIPNONDETERMINISTIC
+    Write-host "SkipTimeCritical       : "$SKIPTIMECRITICAL
     Write-host "SkipGrey       : "$SKIPGREY
     Write-host "OnlyGrey       : "$ONLYGREY
     Write-Host " "
@@ -189,6 +193,19 @@ Function showConfig
     Write-Host "------------------------------------------------------------------------------"
     Write-Host " "
     comm
+}
+
+Function configureCache
+{
+    If($env:CLCACHE_CL)
+    {
+	    proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
+	    proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+    }
+    Else
+    {
+        Write-Host "No clcache installed !"
+    }
 }
 
 Function single
@@ -281,6 +298,32 @@ Function maintainerOff
 If(-Not($MAINTAINER))
 {
     maintainerOn
+}
+
+Function skipNondeterministic
+{
+    $global:SKIPNONDETERMINISTIC = "true"
+}
+Function includeNondeterministic
+{
+    $global:SKIPNONDETERMINISTIC = "false"
+}
+if(-Not($SKIPNONDETERMINISTIC))
+{
+    skipNondeterministic
+}
+
+Function skipTimeCritical
+{
+    $global:SKIPTIMECRITICAL = "true"
+}
+Function includeTimeCritical
+{
+    $global:SKIPTIMECRITICAL = "false"
+}
+if(-Not($SKIPTIMECRITICAL))
+{
+    skipTimeCritical
 }
 
 Function skipGrey
@@ -783,6 +826,7 @@ Function noteStartAndRepoState
 
 Function configureWindows
 {
+    configureCache
     If(-Not(Test-Path -PathType Container -Path "$global:ARANGODIR\build"))
     {
         New-Item -ItemType Directory -Path "$global:ARANGODIR\build"
@@ -809,6 +853,7 @@ Function configureWindows
 
 Function buildWindows 
 {
+    configureCache
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
@@ -873,6 +918,7 @@ Function generateSnippets
 
 Function packageWindows
 {
+    configureCache
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
