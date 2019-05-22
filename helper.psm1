@@ -203,7 +203,14 @@ Function showConfig
     Write-Host "Workspace      : "$env:WORKSPACE
     Write-Host "------------------------------------------------------------------------------"
     Write-Host "Clcache Statistics"
-    configureCache
+    If($env:CLCACHE_CL)
+    {
+	    proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+    }
+    Else
+    {
+        Write-Host "No clcache installed !"
+    }
     Write-Host " "
     comm
 }
