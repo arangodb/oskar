@@ -100,6 +100,16 @@ else
   set -gx SHOW_DETAILS $SHOW_DETAILS
 end
 
+function skipNondeterministic ; set -gx SKIPNONDETERMINISTIC true ; end
+function includeNondeterministic ; set -gx SKIPNONDETERMINISTIC false ; end
+if test -z "$SKIPNONDETERMINISTIC"; skipNondeterministic
+else ; set -gx SKIPNONDETERMINISTIC $SKIPNONDETERMINISTIC ; end
+
+function skipTimeCritical ; set -gx SKIPTIMECRITICAL true ; end
+function includeTimeCritical ; set -gx SKIPTIMECRITICAL false ; end
+if test -z "$SKIPTIMECRITICAL"; skipTimeCritical
+else ; set -gx SKIPTIMECRITICAL $SKIPTIMECRITICAL ; end
+
 function skipGrey ; set -gx SKIPGREY true ; end
 function includeGrey ; set -gx SKIPGREY false ; end
 if test -z "$SKIPGREY"; includeGrey
@@ -463,6 +473,8 @@ function showConfig
   
   echo
   echo 'Test Configuration'
+  printf $fmt3 'SkipNondeterministic'       $SKIPNONDETERMINISTIC      '(skipNondeterministic/includeNondeterministic)'
+  printf $fmt3 'SkipTimeCritical'       $SKIPTIMECRITICAL      '(skipTimeCritical/includeTimeCritical)'
   printf $fmt3 'SkipGrey'       $SKIPGREY      '(skipGrey/includeGrey)'
   printf $fmt3 'OnlyGrey'       $ONLYGREY      '(onlyGreyOn/onlyGreyOff)'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'

@@ -1107,6 +1107,8 @@ function runInContainer
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
+             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
+             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
              -e SKIPGREY="$SKIPGREY" \
              -e ONLYGREY="$ONLYGREY" \
              -e TEST="$TEST" \
@@ -1153,7 +1155,10 @@ function interactiveContainer
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
+             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
+             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
              -e SKIPGREY="$SKIPGREY" \
+             -e ONLYGREY="$ONLYGREY" \
              -e SSH_AUTH_SOCK=/ssh-agent \
              -e SSH_AUTH_SOCK=/ssh-agent \
              -e STORAGEENGINE="$STORAGEENGINE" \
