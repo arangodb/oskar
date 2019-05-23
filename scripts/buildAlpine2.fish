@@ -66,7 +66,8 @@ if test "$MAINTAINER" = "On"
 else
   set -g FULLARGS $FULLARGS \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
-    -DUSE_CATCH_TESTS=Off
+    -DUSE_CATCH_TESTS=Off \
+    -DUSE_GOOGLE_TESTS=Off
 end
 
 if test "$ASAN" = "On"
