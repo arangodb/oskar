@@ -27,6 +27,11 @@ if test -f tsan_arangodb_suppressions.txt
   set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions="(pwd)"/tsan_arangodb_suppressions.txt"
 end
 
+echo "ASAN: $ASAN_OPTIONS"
+echo "LSAN: $LSAN_OPTIONS"
+echo "UBSAN: $UBSAN_OPTIONS"
+echo "TSAN: $TSAN_OPTIONS"
+
 function runAnyTest
   set -l t $argv[1]
   set -l tt $argv[2]
