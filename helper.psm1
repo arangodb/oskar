@@ -196,7 +196,7 @@ Function showConfig
     Write-Host "------------------------------------------------------------------------------"
     Write-Host "Global Configuration"
     Write-Host "User           : "$env:USERDOMAIN\$env:USERNAME
-    Write-Host "Use cache      : "$env:CLCACHE
+    Write-Host "Use cache      : "$CLCACHE
     Write-Host "Cache          : "$env:CLCACHE_CL
     Write-Host "Cachedir       : "$env:CLCACHE_DIR
     Write-Host " "
