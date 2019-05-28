@@ -223,16 +223,16 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         {
             $testWeight = 4
             $cluster = "true"
-            dumpAgencyOnError = "true"
+            $dumpAgencyOnError = "true"
         }
         else
         {
             $cluster = "false"
-            dumpAgencyOnError = "false"
+            $dumpAgencyOnError = "false"
         }
-        if ($testname == "agency")
+        if ($testname -eq "agency")
         {
-            dumpAgencyOnError = "true"
+            $dumpAgencyOnError = "true"
         }
         if ($weight) {
           $testWeight = $weight
