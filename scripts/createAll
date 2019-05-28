@@ -6,9 +6,11 @@ oskar_dir="$script_dir/.."
 
 echo "run test"
 
-version="3.4"
+version="$ARANGODB_PACKAGES"
 incoming="/packages"
 repo="/repositories"
+
+test -n "$version" || exit 1
 
 #centos
 #fedora

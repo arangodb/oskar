@@ -1,3 +1,8 @@
+If(-not((Get-SmbMapping -LocalPath B:).Status -eq "OK"))
+{
+    New-PSDrive –Name "B" –PSProvider FileSystem –Root "\\nas02.arangodb.biz\buildfiles" –Persist
+}
+
 $dest = "b:/stage1/$env:RELEASE_TAG/release"
 
 If(-Not(Test-Path -PathType Container -Path "$dest/packages/Community/Windows"))
