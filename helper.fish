@@ -465,7 +465,7 @@ function buildSourceSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/source.html.in > $n
 
-  echo "Source Snippet: $n"
+  and echo "Source Snippet: $n"
 end
 
 ## #############################################################################
@@ -539,7 +539,7 @@ function buildDebianSnippet
       -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
 
-  echo "Debian Snippet: $n"
+  and echo "Debian Snippet: $n"
 end
 
 ## #############################################################################
@@ -612,11 +612,11 @@ function buildRPMSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
 
-  echo "RPM Snippet: $n"
+  and echo "RPM Snippet: $n"
 
-  set -l n "$OUT/download-$ARANGODB_PKG_NAME-suse.html"
+  and set -l n "$OUT/download-$ARANGODB_PKG_NAME-suse.html"
 
-  sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
+  and sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
       -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
       -e "s|@RPM_NAME_DEBUG_SYMBOLS@|$RPM_NAME_DEBUG_SYMBOLS|g" \
       -e "s|@RPM_SIZE_SERVER@|$RPM_SIZE_SERVER|g" \
@@ -637,9 +637,7 @@ function buildRPMSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
 
-  cp $n "$OUT/download-$ARANGODB_PKG_NAME-sle.html"
-
-  echo "SUSE Snippet: $n"
+  and echo "SUSE Snippet: $n"
 end
 
 ## #############################################################################
@@ -686,7 +684,7 @@ function buildTarGzSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
 
-  echo "TarGZ Snippet: $n"
+  and echo "TarGZ Snippet: $n"
 end
 
 ## #############################################################################
@@ -743,7 +741,7 @@ function buildBundleSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/macosx.html.in > $n
 
-  echo "MacOSX Bundle Snippet: $n"
+  and echo "MacOSX Bundle Snippet: $n"
 end
 
 ## #############################################################################
@@ -808,7 +806,7 @@ function buildWindowsSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/windows.html.in > $n
 
-  echo "Windows Snippet: $n"
+  and echo "Windows Snippet: $n"
 end
 
 ## #############################################################################
@@ -861,7 +859,7 @@ function transformDockerSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/docker.$edition.html.in > $n
 
-  echo "Docker Snippet: $n"
+  and echo "Docker Snippet: $n"
 end
 
 function transformK8SSnippet
@@ -891,7 +889,7 @@ function transformK8SSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/k8s.$edition.html.in > $n
 
-  echo "Kubernetes Snippet: $n"
+  and echo "Kubernetes Snippet: $n"
 end
 
 ## #############################################################################
