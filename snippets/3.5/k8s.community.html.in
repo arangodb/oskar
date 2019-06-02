@@ -1,19 +1,36 @@
 <div>
   <p>
+    The release candidate is feature complete and contains all enhancements that
+    will be released with the GA. However, there are known issues, see
+    <a href="https://www.arangodb.com/docs/devel/release-notes-known-issues35.html">
+      known issues in the Release Candidate @ARANGODB_VERSION_RELEASE_NUMBER@ of ArangoDB 3.5
+    </a>.
+
+    Especially, when you are testing the candidate on an existing dataset follow
+    the instruction in the link above and always use a copy of your data! Never
+    try it on a productive dataset.
+
+    In case that your data from ArangoDB 3.4 contains views, you need to delete
+    the views first. Do not use the automatic update procedure.
+  </p>
+  <p>
     ArangoDB is available for Kubernetes.
   </p>
   <p>
-    The processor(s) must support the SSE 4.2 instruction set
-    (Intel Nehalem or better, AMD Bulldozer or better, etc.)
+    The processor(s) must support the SSE 4.2 instruction set (Intel
+    Nehalem or better, AMD Bulldozer or better, etc.)
   </p>
   <p>
-    In order to install ArangoDB in your Kubernetes Cluster, first deploy the
-    latest operator. Instructions how to do so can be found in the documentation:
+    In order to install ArangoDB in your Kubernetes Cluster, first
+    deploy the latest operator. Instructions how to do so can be found
+    in the documentation:
     <a href="https://docs.arangodb.com/@ARANGODB_PACKAGES@/Manual/Deployment/Kubernetes/" target="_blank">ArangoDB Kubernetes Operator</a>.
   </p>
   <p>
     After that create and deploy a
-    <a href="https://github.com/arangodb/kube-arangodb/blob/master/docs/Manual/Deployment/Kubernetes/DeploymentResource.md" target="_blank">ArangoDBDeployment</a>
+    <a href="https://github.com/arangodb/kube-arangodb/blob/master/docs/Manual/Deployment/Kubernetes/DeploymentResource.md" target="_blank">
+      ArangoDBDeployment
+    </a>
     resource according to your needs and additionally specify
     <pre>spec:
   [...]

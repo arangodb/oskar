@@ -918,52 +918,6 @@ Function buildWindows
     Pop-Location
 }
 
-Function generateSnippets
-{   
-    findArangoDBVersion | Out-Null
-    Set-Location "$global:ARANGODIR\build\" 
-    
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        $snippet = "$INNERWORKDIR\download-windows-enterprise.html"
-        $package_server = Get-ChildItem -Filter ArangoDB3e-*.exe | Where-Object {$_.Name -notmatch "client"}
-        $package_client = Get-ChildItem -Filter ArangoDB3e-client-*.exe
-        $package_zip = Get-ChildItem -Filter ArangoDB3e-*.zip
-    }
-    Else
-    {
-        $snippet = "$INNERWORKDIR\download-windows-community.html"
-        $package_server = Get-ChildItem -Filter ArangoDB3-*.exe | Where-Object {$_.Name -notmatch "client"}
-        $package_client = Get-ChildItem -Filter ArangoDB3-client-*.exe
-        $package_zip = Get-ChildItem -Filter ArangoDB3-*.zip
-    }
-  
-    $template = Get-Content "$global:WORKDIR\snippets\$global:ARANGODB_VERSION_MAJOR.$global:ARANGODB_VERSION_MINOR\windows.html.in"
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        $template = $template -replace "@DOWNLOAD_LINK@","/$env:ENTERPRISE_DOWNLOAD_KEY"
-        $template = $template -replace "@ARANGODB_EDITION@","Enterprise"
-    }
-    Else
-    {
-        $template = $template -replace "@DOWNLOAD_LINK@",""
-        $template = $template -replace "@ARANGODB_EDITION@","Community"
-    }
-    $template = $template -replace "@ARANGODB_VERSION@","$global:ARANGODB_FULL_VERSION"
-    $template = $template -replace "@ARANGODB_REPO@","$global:ARANGODB_REPO"
-    $template = $template -replace "@WINDOWS_NAME_SERVER_EXE@","$($package_server.Name)"
-    $template = $template -replace "@WINDOWS_SIZE_SERVER_EXE@","$([math]::Round($((Get-Item $package_server.FullName).Length / 1MB)))"
-    $template = $template -replace "@WINDOWS_SHA256_SERVER_EXE@","$((Get-FileHash -Algorithm SHA256 -Path $package_server.FullName).Hash)"
-    $template = $template -replace "@WINDOWS_NAME_CLIENT_EXE@","$($package_client.Name)"
-    $template = $template -replace "@WINDOWS_SIZE_CLIENT_EXE@","$([math]::Round($((Get-Item $package_client.FullName).Length / 1MB)))"
-    $template = $template -replace "@WINDOWS_SHA256_CLIENT_EXE@","$((Get-FileHash -Algorithm SHA256 -Path $package_client.FullName).Hash)"
-    $template = $template -replace "@WINDOWS_NAME_SERVER_ZIP@","$($package_zip.Name)"
-    $template = $template -replace "@WINDOWS_SIZE_SERVER_ZIP@","$([math]::Round($((Get-Item $package_zip.FullName).Length / 1MB)))"
-    $template = $template -replace "@WINDOWS_SHA256_SERVER_ZIP@","$((Get-FileHash -Algorithm SHA256 -Path $package_zip.FullName).Hash)"
-    $template | Out-File -FilePath $snippet
-    comm
-}
-
 Function packageWindows
 {
     Push-Location $pwd
@@ -989,7 +943,6 @@ Function signWindows
         Write-Host "Sign: signtool.exe sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
         proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$PACKAGE-sign" -priority "Normal"
     }
-    generateSnippets
     Pop-Location
 }
 
@@ -1117,12 +1070,6 @@ Function moveResultsToWorkspace
     }
     Write-Host "build* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "build*"))
-    {
-        Write-Host "Move $INNERWORKDIR\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
-    }
-    Write-Host "snippets ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*.html"))
     {
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm

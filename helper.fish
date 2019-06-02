@@ -270,7 +270,7 @@ function oskar8
 end
 
 ## #############################################################################
-## release
+## set release version variables in CMakeLists.txt
 ## #############################################################################
 
 function setNightlyRelease
@@ -318,7 +318,6 @@ function makeSourceRelease
 
   buildSourcePackage $SOURCE_TAG
   and signSourcePackage $SOURCE_TAG
-  and buildSourceSnippet $SOURCE_TAG
 end
 
 function buildSourcePackage
@@ -349,53 +348,6 @@ function buildSourcePackage
   and zip -q -r ArangoDB-$SOURCE_TAG.zip ArangoDB-$SOURCE_TAG
   and popd
   or begin ; popd ; return 1 ; end
-end
-
-function buildSourceSnippet
-  if test (count $argv) -lt 1
-    echo "Need source tag as parameter"
-    exit 1
-  end
-
-  transformSourceSnippet $argv[1]
-  or return 1
-end
-
-function transformSourceSnippet
-  pushd $WORKDIR
-  
-  set -l SOURCE_TAR_GZ "ArangoDB-$argv[1].tar.gz"
-  set -l SOURCE_TAR_BZ2 "ArangoDB-$argv[1].tar.bz2"
-  set -l SOURCE_ZIP "ArangoDB-$argv[1].zip"
-
-  if test ! -f "work/$SOURCE_TAR_GZ"; echo "Source package '$SOURCE_TAR_GZ' is missing"; return 1; end
-  if test ! -f "work/$SOURCE_TAR_BZ2"; echo "Source package '$SOURCE_TAR_BZ2"' is missing"; return 1; end
-  if test ! -f "work/$SOURCE_ZIP"; echo "Source package '$SOURCE_ZIP"' is missing"; return 1; end
-
-  set -l SOURCE_SIZE_TAR_GZ (expr (wc -c < work/$SOURCE_TAR_GZ) / 1024 / 1024)
-  set -l SOURCE_SIZE_TAR_BZ2 (expr (wc -c < work/$SOURCE_TAR_BZ2) / 1024 / 1024)
-  set -l SOURCE_SIZE_ZIP (expr (wc -c < work/$SOURCE_ZIP) / 1024 / 1024)
-
-  set -l SOURCE_SHA256_TAR_GZ (shasum -a 256 -b < work/$SOURCE_TAR_GZ | awk '{print $1}')
-  set -l SOURCE_SHA256_TAR_BZ2 (shasum -a 256 -b < work/$SOURCE_TAR_BZ2 | awk '{print $1}')
-  set -l SOURCE_SHA256_ZIP (shasum -a 256 -b < work/$SOURCE_ZIP | awk '{print $1}')
-
-  set -l n "work/download-source.html"
-
-  sed -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
-      -e "s|@SOURCE_SIZE_TAR_GZ@|$SOURCE_SIZE_TAR_GZ|g" \
-      -e "s|@SOURCE_SHA256_TAR_GZ@|$SOURCE_SHA256_TAR_GZ|g" \
-      -e "s|@SOURCE_TAR_BZ2@|$SOURCE_TAR_BZ2|g" \
-      -e "s|@SOURCE_SIZE_TAR_BZ2@|$SOURCE_SIZE_TAR_BZ2|g" \
-      -e "s|@SOURCE_SHA256_TAR_BZ2@|$SOURCE_SHA256_TAR_BZ2|g" \
-      -e "s|@SOURCE_ZIP@|$SOURCE_ZIP|g" \
-      -e "s|@SOURCE_SIZE_ZIP@|$SOURCE_SIZE_ZIP|g" \
-      -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      < snippets/$ARANGODB_SNIPPETS/source.html.in > $n
-
-  echo "Source Snippet: $n"
-  popd
 end
 
 ## #############################################################################
@@ -440,6 +392,506 @@ function buildTarGzPackageHelper
   and mv "$name-$v" install
   and popd
   and return $s 
+end
+
+## #############################################################################
+## release snippets
+## #############################################################################
+
+function makeSnippets
+  if test (count $argv) -lt 1
+    echo "usage: makeSnippets <dir>"
+    return 1
+  end
+
+  findArangoDBVersion
+
+  set DIR $argv[1]
+
+  community
+  and buildSourceSnippet $DIR
+  and buildDebianSnippet $DIR
+  and buildRPMSnippet $DIR
+  and buildTarGzSnippet $DIR
+  and buildBundleSnippet $DIR
+  and buildWindowsSnippet $DIR
+  and buildDockerSnippet $DIR
+
+  and enterprise
+  and buildDebianSnippet $DIR
+  and buildRPMSnippet $DIR
+  and buildTarGzSnippet $DIR
+  and buildBundleSnippet $DIR
+  and buildWindowsSnippet $DIR
+  and buildDockerSnippet $DIR
+end
+
+## #############################################################################
+## source snippets
+## #############################################################################
+
+function buildSourceSnippet
+  set -l SOURCE_TAR_GZ "ArangoDB-$ARANGODB_VERSION.tar.gz"
+  set -l SOURCE_TAR_BZ2 "ArangoDB-$ARANGODB_VERSION.tar.bz2"
+  set -l SOURCE_ZIP "ArangoDB-$ARANGODB_VERSION.zip"
+
+  set IN $argv[1]/release/source
+  set OUT $argv[1]/release/snippets
+
+  if test ! -f "$IN/$SOURCE_TAR_GZ"; echo "Source package '$SOURCE_TAR_GZ' is missing"; return 1; end
+  if test ! -f "$IN/$SOURCE_TAR_BZ2"; echo "Source package '$SOURCE_TAR_BZ2"' is missing"; return 1; end
+  if test ! -f "$IN/$SOURCE_ZIP"; echo "Source package '$SOURCE_ZIP"' is missing"; return 1; end
+
+  set -l SOURCE_SIZE_TAR_GZ (expr (wc -c < $IN/$SOURCE_TAR_GZ) / 1024 / 1024)
+  set -l SOURCE_SIZE_TAR_BZ2 (expr (wc -c < $IN/$SOURCE_TAR_BZ2) / 1024 / 1024)
+  set -l SOURCE_SIZE_ZIP (expr (wc -c < $IN/$SOURCE_ZIP) / 1024 / 1024)
+
+  set -l SOURCE_SHA256_TAR_GZ (shasum -a 256 -b < $IN/$SOURCE_TAR_GZ | awk '{print $1}')
+  set -l SOURCE_SHA256_TAR_BZ2 (shasum -a 256 -b < $IN/$SOURCE_TAR_BZ2 | awk '{print $1}')
+  set -l SOURCE_SHA256_ZIP (shasum -a 256 -b < $IN/$SOURCE_ZIP | awk '{print $1}')
+
+  set -l n "$OUT/download-source.html"
+
+  sed -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
+      -e "s|@SOURCE_SIZE_TAR_GZ@|$SOURCE_SIZE_TAR_GZ|g" \
+      -e "s|@SOURCE_SHA256_TAR_GZ@|$SOURCE_SHA256_TAR_GZ|g" \
+      -e "s|@SOURCE_TAR_BZ2@|$SOURCE_TAR_BZ2|g" \
+      -e "s|@SOURCE_SIZE_TAR_BZ2@|$SOURCE_SIZE_TAR_BZ2|g" \
+      -e "s|@SOURCE_SHA256_TAR_BZ2@|$SOURCE_SHA256_TAR_BZ2|g" \
+      -e "s|@SOURCE_ZIP@|$SOURCE_ZIP|g" \
+      -e "s|@SOURCE_SIZE_ZIP@|$SOURCE_SIZE_ZIP|g" \
+      -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/source.html.in > $n
+
+  echo "Source Snippet: $n"
+end
+
+## #############################################################################
+## debian snippets
+## #############################################################################
+
+function buildDebianSnippet
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
+
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "/enterprise-download"
+    else
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
+    end
+  else
+    set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
+    set DOWNLOAD_LINK ""
+  end
+
+  set -l DEBIAN_VERSION "$ARANGODB_DEBIAN_UPSTREAM""-$ARANGODB_DEBIAN_REVISION"
+  set -l DEBIAN_NAME_CLIENT "$ARANGODB_PKG_NAME""-client_$DEBIAN_VERSION""_amd64.deb"
+  set -l DEBIAN_NAME_SERVER "$ARANGODB_PKG_NAME""_$DEBIAN_VERSION""_amd64.deb"
+  set -l DEBIAN_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-dbg_$DEBIAN_VERSION""_amd64.deb"
+
+  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/Linux/
+  set -l OUT $argv[1]/release/snippets
+
+  if test ! -f "$IN/$DEBIAN_NAME_SERVER"; echo "Debian package '$DEBIAN_NAME_SERVER' is missing"; return 1; end
+  if test ! -f "$IN/$DEBIAN_NAME_CLIENT"; echo "Debian package '$DEBIAN_NAME_CLIENT' is missing"; return 1; end
+  if test ! -f "$IN/$DEBIAN_NAME_DEBUG_SYMBOLS"; echo "Debian package '$DEBIAN_NAME_DEBUG_SYMBOLS' is missing"; return 1; end
+
+  set -l DEBIAN_SIZE_SERVER (expr (wc -c < $IN/$DEBIAN_NAME_SERVER) / 1024 / 1024)
+  set -l DEBIAN_SIZE_CLIENT (expr (wc -c < $IN/$DEBIAN_NAME_CLIENT) / 1024 / 1024)
+  set -l DEBIAN_SIZE_DEBUG_SYMBOLS (expr (wc -c < $IN/$DEBIAN_NAME_DEBUG_SYMBOLS) / 1024 / 1024)
+
+  set -l DEBIAN_SHA256_SERVER (shasum -a 256 -b < $IN/$DEBIAN_NAME_SERVER | awk '{print $1}')
+  set -l DEBIAN_SHA256_CLIENT (shasum -a 256 -b < $IN/$DEBIAN_NAME_CLIENT | awk '{print $1}')
+  set -l DEBIAN_SHA256_DEBUG_SYMBOLS (shasum -a 256 -b < $IN/$DEBIAN_NAME_DEBUG_SYMBOLS | awk '{print $1}')
+
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+
+  if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
+
+  set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
+  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
+
+  set -l n "$OUT/download-$ARANGODB_PKG_NAME-debian.html"
+
+  sed -e "s|@DEBIAN_NAME_SERVER@|$DEBIAN_NAME_SERVER|g" \
+      -e "s|@DEBIAN_NAME_CLIENT@|$DEBIAN_NAME_CLIENT|g" \
+      -e "s|@DEBIAN_NAME_DEBUG_SYMBOLS@|$DEBIAN_NAME_DEBUG_SYMBOLS|g" \
+      -e "s|@DEBIAN_SIZE_SERVER@|$DEBIAN_SIZE_SERVER|g" \
+      -e "s|@DEBIAN_SIZE_CLIENT@|$DEBIAN_SIZE_CLIENT|g" \
+      -e "s|@DEBIAN_SIZE_DEBUG_SYMBOLS@|$DEBIAN_SIZE_DEBUG_SYMBOLS|g" \
+      -e "s|@DEBIAN_SHA256_SERVER@|$DEBIAN_SHA256_SERVER|g" \
+      -e "s|@DEBIAN_SHA256_CLIENT@|$DEBIAN_SHA256_CLIENT|g" \
+      -e "s|@DEBIAN_SHA256_DEBUG_SYMBOLS@|$DEBIAN_SHA256_DEBUG_SYMBOLS|g" \
+      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
+
+  echo "Debian Snippet: $n"
+end
+
+## #############################################################################
+## RPM snippets
+## #############################################################################
+
+function buildRPMSnippet
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
+
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "/enterprise-download"
+    else
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
+    end
+  else
+    set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
+    set DOWNLOAD_LINK ""
+  end
+
+  set -l RPM_VERSION "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION"
+  set -l RPM_NAME_CLIENT "$ARANGODB_PKG_NAME-client-$RPM_VERSION.x86_64.rpm"
+  set -l RPM_NAME_SERVER "$ARANGODB_PKG_NAME-$RPM_VERSION.x86_64.rpm"
+  set -l RPM_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-debuginfo-$RPM_VERSION.x86_64.rpm"
+
+  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/Linux/
+  set -l OUT $argv[1]/release/snippets
+
+  if test ! -f "$IN/$RPM_NAME_SERVER"; echo "RPM package '$RPM_NAME_SERVER' is missing"; return 1; end
+  if test ! -f "$IN/$RPM_NAME_CLIENT"; echo "RPM package '$RPM_NAME_CLIENT' is missing"; return 1; end
+  if test ! -f "$IN/$RPM_NAME_DEBUG_SYMBOLS"; echo "RPM package '$RPM_NAME_DEBUG_SYMBOLS' is missing"; return 1; end
+
+  set -l RPM_SIZE_SERVER (expr (wc -c < $IN/$RPM_NAME_SERVER) / 1024 / 1024)
+  set -l RPM_SIZE_CLIENT (expr (wc -c < $IN/$RPM_NAME_CLIENT) / 1024 / 1024)
+  set -l RPM_SIZE_DEBUG_SYMBOLS (expr (wc -c < $IN/$RPM_NAME_DEBUG_SYMBOLS) / 1024 / 1024)
+
+  set -l RPM_SHA256_SERVER (shasum -a 256 -b < $IN/$RPM_NAME_SERVER | awk '{print $1}')
+  set -l RPM_SHA256_CLIENT (shasum -a 256 -b < $IN/$RPM_NAME_CLIENT | awk '{print $1}')
+  set -l RPM_SHA256_DEBUG_SYMBOLS (shasum -a 256 -b < $IN/$RPM_NAME_DEBUG_SYMBOLS | awk '{print $1}')
+
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+
+  if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
+
+  set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
+  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
+
+  set -l n "$OUT/download-$ARANGODB_PKG_NAME-rpm.html"
+
+  sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
+      -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
+      -e "s|@RPM_NAME_DEBUG_SYMBOLS@|$RPM_NAME_DEBUG_SYMBOLS|g" \
+      -e "s|@RPM_SIZE_SERVER@|$RPM_SIZE_SERVER|g" \
+      -e "s|@RPM_SIZE_CLIENT@|$RPM_SIZE_CLIENT|g" \
+      -e "s|@RPM_SIZE_DEBUG_SYMBOLS@|$RPM_SIZE_DEBUG_SYMBOLS|g" \
+      -e "s|@RPM_SHA256_SERVER@|$RPM_SHA256_SERVER|g" \
+      -e "s|@RPM_SHA256_CLIENT@|$RPM_SHA256_CLIENT|g" \
+      -e "s|@RPM_SHA256_DEBUG_SYMBOLS@|$RPM_SHA256_DEBUG_SYMBOLS|g" \
+      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
+
+  echo "RPM Snippet: $n"
+
+  set -l n "$OUT/download-$ARANGODB_PKG_NAME-suse.html"
+
+  sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
+      -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
+      -e "s|@RPM_NAME_DEBUG_SYMBOLS@|$RPM_NAME_DEBUG_SYMBOLS|g" \
+      -e "s|@RPM_SIZE_SERVER@|$RPM_SIZE_SERVER|g" \
+      -e "s|@RPM_SIZE_CLIENT@|$RPM_SIZE_CLIENT|g" \
+      -e "s|@RPM_SIZE_DEBUG_SYMBOLS@|$RPM_SIZE_DEBUG_SYMBOLS|g" \
+      -e "s|@RPM_SHA256_SERVER@|$RPM_SHA256_SERVER|g" \
+      -e "s|@RPM_SHA256_CLIENT@|$RPM_SHA256_CLIENT|g" \
+      -e "s|@RPM_SHA256_DEBUG_SYMBOLS@|$RPM_SHA256_DEBUG_SYMBOLS|g" \
+      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
+
+  cp $n "$OUT/download-$ARANGODB_PKG_NAME-sle.html"
+
+  echo "SUSE Snippet: $n"
+end
+
+## #############################################################################
+## TAR snippets
+## #############################################################################
+
+function buildTarGzSnippet
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
+
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "/enterprise-download"
+    else
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
+    end
+  else
+    set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
+    set DOWNLOAD_LINK ""
+  end
+
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_VERSION.tar.gz"
+
+  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/Linux/
+  set -l OUT $argv[1]/release/snippets
+
+  if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
+
+  set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
+  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
+
+  set -l n "$OUT/download-$ARANGODB_PKG_NAME-linux.html"
+
+  sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
+
+  echo "TarGZ Snippet: $n"
+end
+
+## #############################################################################
+## bundle snippets
+## #############################################################################
+
+function buildBundleSnippet
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
+
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "/enterprise-download"
+    else
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
+    end
+  else
+    set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
+    set DOWNLOAD_LINK ""
+  end
+
+  set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
+
+  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/MacOSX/
+  set -l OUT $argv[1]/release/snippets
+
+  if test ! -f "$IN/$BUNDLE_NAME_SERVER"; echo "DMG package '$BUNDLE_NAME_SERVER' is missing"; return 1; end
+
+  set -l BUNDLE_SIZE_SERVER (expr (wc -c < $IN/$BUNDLE_NAME_SERVER | tr -d " ") / 1024 / 1024)
+  set -l BUNDLE_SHA256_SERVER (shasum -a 256 -b < $IN/$BUNDLE_NAME_SERVER | awk '{print $1}')
+
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macosx-$ARANGODB_VERSION.tar.gz"
+
+  if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
+
+  set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
+  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
+
+  set -l n "$OUT/download-$ARANGODB_PKG_NAME-macosx.html"
+
+  sed -e "s|@BUNDLE_NAME_SERVER@|$BUNDLE_NAME_SERVER|g" \
+      -e "s|@BUNDLE_SIZE_SERVER@|$BUNDLE_SIZE_SERVER|g" \
+      -e "s|@BUNDLE_SHA256_SERVER@|$BUNDLE_SHA256_SERVER|g" \
+      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/macosx.html.in > $n
+
+  echo "MacOSX Bundle Snippet: $n"
+end
+
+## #############################################################################
+## windows snippets
+## #############################################################################
+
+function buildWindowsSnippet
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_EDITION_LC "enterprise"
+    set ARANGODB_PKG_NAME "ArangoDB3e"
+
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "/enterprise-download"
+    else
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
+    end
+  else
+    set ARANGODB_EDITION "Community"
+    set ARANGODB_EDITION_LC "community"
+    set ARANGODB_PKG_NAME "ArangoDB3"
+    set DOWNLOAD_LINK ""
+  end
+
+  set -l WINDOWS_NAME_SERVER_EXE "$ARANGODB_PKG_NAME-$ARANGODB_VERSION""_win64.exe"
+  set -l WINDOWS_NAME_SERVER_ZIP "$ARANGODB_PKG_NAME-$ARANGODB_VERSION""_win64.zip"
+  set -l WINDOWS_NAME_CLIENT_EXE "$ARANGODB_PKG_NAME-client-$ARANGODB_VERSION""_win64.exe"
+
+  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/Windows/
+  set -l OUT $argv[1]/release/snippets
+
+  if test ! -f "$IN/$WINDOWS_NAME_SERVER_EXE"; echo "Windows server exe package '$WINDOWS_NAME_SERVER_EXE' is missing"; return 1; end
+  if test ! -f "$IN/$WINDOWS_NAME_SERVER_ZIP"; echo "Windows server zip package '$WINDOWS_NAME_SERVER_ZIP' is missing"; return 1; end
+  if test ! -f "$IN/$WINDOWS_NAME_CLIENT_EXE"; echo "Windows client exe package '$WINDOWS_NAME_CLIENT_EXE' is missing"; return 1; end
+
+  set -l WINDOWS_SIZE_SERVER_EXE (expr (wc -c < $IN/$WINDOWS_NAME_SERVER_EXE | tr -d " ") / 1024 / 1024)
+  set -l WINDOWS_SHA256_SERVER_EXE (shasum -a 256 -b < $IN/$WINDOWS_NAME_SERVER_EXE | awk '{print $1}')
+
+  set -l WINDOWS_SIZE_SERVER_ZIP (expr (wc -c < $IN/$WINDOWS_NAME_SERVER_ZIP | tr -d " ") / 1024 / 1024)
+  set -l WINDOWS_SHA256_SERVER_ZIP (shasum -a 256 -b < $IN/$WINDOWS_NAME_SERVER_ZIP | awk '{print $1}')
+
+  set -l WINDOWS_SIZE_CLIENT_EXE (expr (wc -c < $IN/$WINDOWS_NAME_CLIENT_EXE | tr -d " ") / 1024 / 1024)
+  set -l WINDOWS_SHA256_CLIENT_EXE (shasum -a 256 -b < $IN/$WINDOWS_NAME_CLIENT_EXE | awk '{print $1}')
+
+  set -l n "$OUT/download-windows-$ARANGODB_EDITION_LC.html"
+
+  sed -e "s|@WINDOWS_NAME_SERVER_EXE@|$WINDOWS_NAME_SERVER_EXE|g" \
+      -e "s|@WINDOWS_SIZE_SERVER_EXE@|$WINDOWS_SIZE_SERVER_EXE|g" \
+      -e "s|@WINDOWS_SHA256_SERVER_EXE@|$WINDOWS_SHA256_SERVER_EXE|g" \
+      -e "s|@WINDOWS_NAME_SERVER_ZIP@|$WINDOWS_NAME_SERVER_ZIP|g" \
+      -e "s|@WINDOWS_SIZE_SERVER_ZIP@|$WINDOWS_SIZE_SERVER_ZIP|g" \
+      -e "s|@WINDOWS_SHA256_SERVER_ZIP@|$WINDOWS_SHA256_SERVER_ZIP|g" \
+      -e "s|@WINDOWS_NAME_CLIENT_EXE@|$WINDOWS_NAME_CLIENT_EXE|g" \
+      -e "s|@WINDOWS_SIZE_CLIENT_EXE@|$WINDOWS_SIZE_CLIENT_EXE|g" \
+      -e "s|@WINDOWS_SHA256_CLIENT_EXE@|$WINDOWS_SHA256_CLIENT_EXE|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/windows.html.in > $n
+
+  echo "Windows Snippet: $n"
+end
+
+## #############################################################################
+## docker snippets
+## #############################################################################
+
+function buildDockerSnippet
+  if test "$ENTERPRISEEDITION" = "On"
+    set edition enterprise
+    set repo enterprise
+  else
+    set edition community
+    set repo arangodb
+  end
+
+  if test "$RELEASE_TYPE" = "stable"
+    set DOCKER_IMAGE arangodb/$repo:$DOCKER_TAG
+  else
+    set DOCKER_IMAGE arangodb/$repo-preview:$DOCKER_TAG
+  end
+
+  transformDockerSnippet $edition $DOCKER_IMAGE $argv[1]
+  and transformK8SSnippet $edition $DOCKER_IMAGE $argv[1]
+end
+
+function transformDockerSnippet
+  set -l edition "$argv[1]"
+  set -l DOCKER_IMAGE "$argv[2]"
+  set -l OUT "$argv[3]/release/snippets"
+  set -l ARANGODB_LICENSE_KEY_BASE64 (echo -n "$ARANGODB_LICENSE_KEY" | base64 -w 0)
+
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
+  else
+    set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3e"
+  end
+
+  set -l n "$OUT/download-docker-$edition.html"
+
+  sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
+      -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
+      -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/docker.$edition.html.in > $n
+
+  echo "Docker Snippet: $n"
+end
+
+function transformK8SSnippet
+  set -l edition "$argv[1]"
+  set -l DOCKER_IMAGE "$argv[2]"
+  set -l OUT "$argv[3]/release/snippets"
+  set -l ARANGODB_LICENSE_KEY_BASE64 (echo -n "$ARANGODB_LICENSE_KEY" | base64 -w 0)
+
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
+  else
+    set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
+  end
+
+  set -l n "$OUT/download-k8s-$edition.html"
+
+  sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
+      -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
+      -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/k8s.$edition.html.in > $n
+
+  echo "Kubernetes Snippet: $n"
 end
 
 ## #############################################################################

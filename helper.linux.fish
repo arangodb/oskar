@@ -302,21 +302,6 @@ function signSourcePackage
 end
 
 ## #############################################################################
-## release snippets
-## #############################################################################
-
-function makeSnippets
-  community
-  and buildDebianSnippet
-  and buildRPMSnippet
-  and buildTarGzSnippet
-  and enterprise
-  and buildDebianSnippet
-  and buildRPMSnippet
-  and buildTarGzSnippet
-end
-
-## #############################################################################
 ## linux release
 ## #############################################################################
 
@@ -326,9 +311,6 @@ function buildPackage
   buildDebianPackage
   and buildRPMPackage
   and buildTarGzPackage
-  and buildDebianSnippet
-  and buildRPMSnippet
-  and buildTarGzSnippet
 end
 
 function buildEnterprisePackage
@@ -429,86 +411,6 @@ function buildDebianPackage
   end
 end
 
-function buildDebianSnippet
-  # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
-  # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
-  if test "$ENTERPRISEEDITION" = "On"
-    transformDebianSnippet "arangodb3e" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM"
-    or return 1
-  else
-    transformDebianSnippet "arangodb3" "$ARANGODB_DEBIAN_UPSTREAM-$ARANGODB_DEBIAN_REVISION" "$ARANGODB_TGZ_UPSTREAM"
-    or return 1
-  end
-end
-
-function transformDebianSnippet
-  pushd $WORKDIR
-  
-  set -l DEBIAN_VERSION "$argv[2]"
-  set -l DEBIAN_NAME_CLIENT "$argv[1]-client_$DEBIAN_VERSION""_amd64.deb"
-  set -l DEBIAN_NAME_SERVER "$argv[1]_$DEBIAN_VERSION""_amd64.deb"
-  set -l DEBIAN_NAME_DEBUG_SYMBOLS "$argv[1]-dbg_$DEBIAN_VERSION""_amd64.deb"
-
-  if test "$ENTERPRISEEDITION" = "On"
-    set ARANGODB_EDITION "Enterprise"
-    set ARANGODB_PKG_NAME "arangodb3e"
-    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
-      set DOWNLOAD_LINK "/enterprise-download"
-    else
-      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
-    end
-  else
-    set ARANGODB_EDITION "Community"
-    set ARANGODB_PKG_NAME "arangodb3"
-    set DOWNLOAD_LINK ""
-  end
-
-  if test ! -f "work/$DEBIAN_NAME_SERVER"; echo "Debian package '$DEBIAN_NAME_SERVER' is missing"; return 1; end
-  if test ! -f "work/$DEBIAN_NAME_CLIENT"; echo "Debian package '$DEBIAN_NAME_CLIENT' is missing"; return 1; end
-  if test ! -f "work/$DEBIAN_NAME_DEBUG_SYMBOLS"; echo "Debian package '$DEBIAN_NAME_DEBUG_SYMBOLS' is missing"; return 1; end
-
-  set -l DEBIAN_SIZE_SERVER (expr (wc -c < work/$DEBIAN_NAME_SERVER) / 1024 / 1024)
-  set -l DEBIAN_SIZE_CLIENT (expr (wc -c < work/$DEBIAN_NAME_CLIENT) / 1024 / 1024)
-  set -l DEBIAN_SIZE_DEBUG_SYMBOLS (expr (wc -c < work/$DEBIAN_NAME_DEBUG_SYMBOLS) / 1024 / 1024)
-
-  set -l DEBIAN_SHA256_SERVER (shasum -a 256 -b < work/$DEBIAN_NAME_SERVER | awk '{print $1}')
-  set -l DEBIAN_SHA256_CLIENT (shasum -a 256 -b < work/$DEBIAN_NAME_CLIENT | awk '{print $1}')
-  set -l DEBIAN_SHA256_DEBUG_SYMBOLS (shasum -a 256 -b < work/$DEBIAN_NAME_DEBUG_SYMBOLS | awk '{print $1}')
-
-  set -l TARGZ_NAME_SERVER "$argv[1]-linux-$argv[3].tar.gz"
-
-  if test ! -f "work/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
-
-  set -l TARGZ_SIZE_SERVER (expr (wc -c < work/$TARGZ_NAME_SERVER) / 1024 / 1024)
-  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < work/$TARGZ_NAME_SERVER | awk '{print $1}')
-
-  set -l n "work/download-$argv[1]-debian.html"
-
-  sed -e "s|@DEBIAN_NAME_SERVER@|$DEBIAN_NAME_SERVER|g" \
-      -e "s|@DEBIAN_NAME_CLIENT@|$DEBIAN_NAME_CLIENT|g" \
-      -e "s|@DEBIAN_NAME_DEBUG_SYMBOLS@|$DEBIAN_NAME_DEBUG_SYMBOLS|g" \
-      -e "s|@DEBIAN_SIZE_SERVER@|$DEBIAN_SIZE_SERVER|g" \
-      -e "s|@DEBIAN_SIZE_CLIENT@|$DEBIAN_SIZE_CLIENT|g" \
-      -e "s|@DEBIAN_SIZE_DEBUG_SYMBOLS@|$DEBIAN_SIZE_DEBUG_SYMBOLS|g" \
-      -e "s|@DEBIAN_SHA256_SERVER@|$DEBIAN_SHA256_SERVER|g" \
-      -e "s|@DEBIAN_SHA256_CLIENT@|$DEBIAN_SHA256_CLIENT|g" \
-      -e "s|@DEBIAN_SHA256_DEBUG_SYMBOLS@|$DEBIAN_SHA256_DEBUG_SYMBOLS|g" \
-      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
-      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
-      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
-      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
-      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
-      < snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
-
-  echo "Debian Snippet: $n"
-  popd
-end
-
 ## #############################################################################
 ## redhat release
 ## #############################################################################
@@ -539,106 +441,6 @@ function buildRPMPackage
   and runInContainer $CENTOSPACKAGINGIMAGE $SCRIPTSDIR/buildRPMPackage.fish
 end
 
-function buildRPMSnippet
-  # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
-  # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
-  if test "$ENTERPRISEEDITION" = "On"
-    transformRPMSnippet "arangodb3e" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM"
-    or return 1
-  else
-    transformRPMSnippet "arangodb3" "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION" "$ARANGODB_TGZ_UPSTREAM"
-    or return 1
-  end
-end
-
-function transformRPMSnippet
-  pushd $WORKDIR
-
-  set -l RPM_NAME_CLIENT "$argv[1]-client-$argv[2].x86_64.rpm"
-  set -l RPM_NAME_SERVER "$argv[1]-$argv[2].x86_64.rpm"
-  set -l RPM_NAME_DEBUG_SYMBOLS "$argv[1]-debuginfo-$argv[2].x86_64.rpm"
-
-  if test "$ENTERPRISEEDITION" = "On"
-    set ARANGODB_EDITION "Enterprise"
-    set ARANGODB_PKG_NAME "arangodb3e"
-    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
-      set DOWNLOAD_LINK "/enterprise-download"
-    else
-      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
-    end
-  else
-    set ARANGODB_EDITION "Community"
-    set ARANGODB_PKG_NAME "arangodb3"
-    set DOWNLOAD_LINK ""
-  end
-
-  if test ! -f "work/$RPM_NAME_SERVER"; echo "RPM package '$RPM_NAME_SERVER' is missing"; return 1; end
-  if test ! -f "work/$RPM_NAME_CLIENT"; echo "RPM package '$RPM_NAME_CLIENT' is missing"; return 1; end
-  if test ! -f "work/$RPM_NAME_DEBUG_SYMBOLS"; echo "RPM package '$RPM_NAME_DEBUG_SYMBOLS' is missing"; return 1; end
-
-  set -l RPM_SIZE_SERVER (expr (wc -c < work/$RPM_NAME_SERVER) / 1024 / 1024)
-  set -l RPM_SIZE_CLIENT (expr (wc -c < work/$RPM_NAME_CLIENT) / 1024 / 1024)
-  set -l RPM_SIZE_DEBUG_SYMBOLS (expr (wc -c < work/$RPM_NAME_DEBUG_SYMBOLS) / 1024 / 1024)
-
-  set -l RPM_SHA256_SERVER (shasum -a 256 -b < work/$RPM_NAME_SERVER | awk '{print $1}')
-  set -l RPM_SHA256_CLIENT (shasum -a 256 -b < work/$RPM_NAME_CLIENT | awk '{print $1}')
-  set -l RPM_SHA256_DEBUG_SYMBOLS (shasum -a 256 -b < work/$RPM_NAME_DEBUG_SYMBOLS | awk '{print $1}')
-
-  set -l TARGZ_NAME_SERVER "$argv[1]-linux-$argv[3].tar.gz"
-
-  if test ! -f "work/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
-
-  set -l TARGZ_SIZE_SERVER (expr (wc -c < work/$TARGZ_NAME_SERVER) / 1024 / 1024)
-  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < work/$TARGZ_NAME_SERVER | awk '{print $1}')
-
-  set -l n "work/download-$argv[1]-rpm.html"
-
-  sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
-      -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
-      -e "s|@RPM_NAME_DEBUG_SYMBOLS@|$RPM_NAME_DEBUG_SYMBOLS|g" \
-      -e "s|@RPM_SIZE_SERVER@|$RPM_SIZE_SERVER|g" \
-      -e "s|@RPM_SIZE_CLIENT@|$RPM_SIZE_CLIENT|g" \
-      -e "s|@RPM_SIZE_DEBUG_SYMBOLS@|$RPM_SIZE_DEBUG_SYMBOLS|g" \
-      -e "s|@RPM_SHA256_SERVER@|$RPM_SHA256_SERVER|g" \
-      -e "s|@RPM_SHA256_CLIENT@|$RPM_SHA256_CLIENT|g" \
-      -e "s|@RPM_SHA256_DEBUG_SYMBOLS@|$RPM_SHA256_DEBUG_SYMBOLS|g" \
-      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
-      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
-      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
-      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
-      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      < snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
-
-  set -l n "work/download-$argv[1]-suse.html"
-
-  sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
-      -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
-      -e "s|@RPM_NAME_DEBUG_SYMBOLS@|$RPM_NAME_DEBUG_SYMBOLS|g" \
-      -e "s|@RPM_SIZE_SERVER@|$RPM_SIZE_SERVER|g" \
-      -e "s|@RPM_SIZE_CLIENT@|$RPM_SIZE_CLIENT|g" \
-      -e "s|@RPM_SIZE_DEBUG_SYMBOLS@|$RPM_SIZE_DEBUG_SYMBOLS|g" \
-      -e "s|@RPM_SHA256_SERVER@|$RPM_SHA256_SERVER|g" \
-      -e "s|@RPM_SHA256_CLIENT@|$RPM_SHA256_CLIENT|g" \
-      -e "s|@RPM_SHA256_DEBUG_SYMBOLS@|$RPM_SHA256_DEBUG_SYMBOLS|g" \
-      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
-      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
-      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
-      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
-      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      < snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
-
-  echo "RPM Snippet: $n"
-  popd
-end
-
 ## #############################################################################
 ## TAR release
 ## #############################################################################
@@ -650,59 +452,6 @@ function buildTarGzPackage
   end
 
   buildTarGzPackageHelper "linux"
-end
-
-function buildTarGzSnippet
-  # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
-  # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
-  if test "$ENTERPRISEEDITION" = "On"
-    transformTarGzSnippet "arangodb3e" "$ARANGODB_TGZ_UPSTREAM"
-    or return 1
-  else
-    transformTarGzSnippet "arangodb3" "$ARANGODB_TGZ_UPSTREAM"
-    or return 1
-  end
-end
-
-function transformTarGzSnippet
-  pushd $WORKDIR
-
-  set -l TARGZ_NAME_SERVER "$argv[1]-linux-$argv[2].tar.gz"
-
-  if test "$ENTERPRISEEDITION" = "On"
-    set ARANGODB_EDITION "Enterprise"
-    set ARANGODB_PKG_NAME "arangodb3e"
-    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
-      set DOWNLOAD_LINK "/enterprise-download"
-    else
-      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
-    end
-  else
-    set ARANGODB_EDITION "Community"
-    set ARANGODB_PKG_NAME "arangodb3"
-    set DOWNLOAD_LINK ""
-  end
-
-  if test ! -f "work/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
-
-  set -l TARGZ_SIZE_SERVER (expr (wc -c < work/$TARGZ_NAME_SERVER) / 1024 / 1024)
-  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < work/$TARGZ_NAME_SERVER | awk '{print $1}')
-
-  set -l n "work/download-$argv[1]-linux.html"
-
-  sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
-      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
-      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
-      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
-      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      < snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
-
-  echo "TarGZ Snippet: $n"
-  popd
 end
 
 ## #############################################################################
@@ -723,10 +472,8 @@ function makeDockerRelease
 
   community
   and buildDockerRelease $DOCKER_TAG
-  and buildDockerSnippet
   and enterprise
   and buildDockerRelease $DOCKER_TAG
-  and buildDockerSnippet
 end
 
 function makeDockerCommunityRelease
@@ -738,7 +485,6 @@ function makeDockerCommunityRelease
 
   community
   and buildDockerRelease $DOCKER_TAG
-  and buildDockerSnippet
 end
 
 function makeDockerEnterpriseRelease
@@ -755,7 +501,6 @@ function makeDockerEnterpriseRelease
 
   enterprise
   and buildDockerRelease $DOCKER_TAG
-  and buildDockerSnippet
 end
 
 function buildDockerRelease
@@ -841,87 +586,6 @@ function buildDockerImage
   pushd $WORKDIR/containers/arangodb.docker
   and docker build --pull -t $imagename .
   or begin ; popd ; return 1 ; end
-  popd
-end
-
-function buildDockerSnippet
-  set -l name arangodb3.docker
-  set -l edition community
-
-  if test "$ENTERPRISEEDITION" = "On"
-    set name arangodb3e.docker
-    set edition enterprise
-  end
-
-  if test ! -f $WORKDIR/work/$name
-    echo "docker image name file '$name' not found"
-    exit 1
-  end
-
-  set -l DOCKER_IMAGE (cat $WORKDIR/work/$name)
-  transformDockerSnippet $edition $DOCKER_IMAGE
-  and transformK8SSnippet $edition $DOCKER_IMAGE
-end
-
-function transformDockerSnippet
-  pushd $WORKDIR
-  
-  set -l edition "$argv[1]"
-  set -l DOCKER_IMAGE "$argv[2]"
-  set -l ARANGODB_LICENSE_KEY_BASE64 (echo -n "$ARANGODB_LICENSE_KEY" | base64 -w 0)
-
-  if test "$ENTERPRISEEDITION" = "On"
-    set ARANGODB_EDITION "Enterprise"
-    set ARANGODB_PKG_NAME "arangodb3e"
-  else
-    set ARANGODB_EDITION "Community"
-    set ARANGODB_PKG_NAME "arangodb3e"
-  end
-
-  set -l n "work/download-docker-$edition.html"
-
-  sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
-      -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
-      -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
-      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
-      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      < snippets/$ARANGODB_SNIPPETS/docker.$edition.html.in > $n
-
-  echo "Docker Snippet: $n"
-  popd
-end
-
-function transformK8SSnippet
-  pushd $WORKDIR
-  
-  set -l edition "$argv[1]"
-  set -l DOCKER_IMAGE "$argv[2]"
-  set -l ARANGODB_LICENSE_KEY_BASE64 (echo -n "$ARANGODB_LICENSE_KEY" | base64 -w 0)
-
-  if test "$ENTERPRISEEDITION" = "On"
-    set ARANGODB_EDITION "Enterprise"
-    set ARANGODB_PKG_NAME "arangodb3e"
-  else
-    set ARANGODB_EDITION "Community"
-    set ARANGODB_PKG_NAME "arangodb3"
-  end
-
-  set -l n "work/download-k8s-$edition.html"
-
-  sed -e "s|@DOCKER_IMAGE@|$DOCKER_IMAGE|g" \
-      -e "s|@ARANGODB_LICENSE_KEY@|$ARANGODB_LICENSE_KEY|g" \
-      -e "s|@ARANGODB_LICENSE_KEY_BASE64@|$ARANGODB_LICENSE_KEY_BASE64|g" \
-      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
-      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      < snippets/$ARANGODB_SNIPPETS/k8s.$edition.html.in > $n
-
-  echo "Kubernetes Snippet: $n"
   popd
 end
 

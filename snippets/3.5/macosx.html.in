@@ -1,19 +1,35 @@
 <div>
   <p>
+    The release candidate is feature complete and contains all enhancements that
+    will be released with the GA. However, there are known issues, see
+    <a href="https://www.arangodb.com/docs/devel/release-notes-known-issues35.html">
+      known issues in the Release Candidate @ARANGODB_VERSION_RELEASE_NUMBER@ of ArangoDB 3.5
+    </a>.
+
+    Especially, when you are testing the candidate on an existing dataset follow
+    the instruction in the link above and always use a copy of your data! Never
+    try it on a productive dataset.
+
+    In case that your data from ArangoDB 3.4 contains views, you need to delete
+    the views first. Do not use the automatic update procedure.
+  </p>
+  <p>
     The following packages are for macOS Sierra or higher.
   </p>
   <p>
-    The processor(s) must support the SSE 4.2 instruction set
-    (Intel Nehalem or better, AMD Bulldozer or better, etc.)
+    The processor(s) must support the SSE 4.2 instruction set (Intel
+    Nehalem or better, AMD Bulldozer or better, etc.)
   </p>
   <p>
-    We provide a single package containing the server and the client tools. For a
-    standard server setup, download the <strong>Server</strong> package and
-    install it using the package manager.
+    We provide a single package containing the server and the client
+    tools. For a standard server setup, download
+    the <strong>Server</strong> package and install it using the
+    package manager.
   </p>
   <p>
-    As an alternative there is a <strong>Tar</strong> package containing the server and
-    client tools, which can be unpacked in any location.
+    As an alternative there is a <strong>Tar</strong> package
+    containing the server and client tools, which can be unpacked in
+    any location.
   </p>
   <hr/>
   <p><strong>DMG</strong> package</p>
