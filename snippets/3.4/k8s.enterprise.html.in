@@ -1,5 +1,9 @@
 <div>
   <p>
+    <string>Note that</strong> ArangoDB 3.4.6 has been revoked, until 3.4.6.1 is available.
+    Please check <a href="https://www.arangodb.com/alerts/tech05/">Alert #5</a>.
+  </p>
+  <p>
     ArangoDB is available for Kubernetes.
   </p>
   <p>

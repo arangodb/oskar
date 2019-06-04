@@ -61,6 +61,7 @@ and cp -av $WS_SNIPPETS/download-arangodb3-macosx.html   $SP_SNIPPETS_CO/downloa
 and cp -av $WS_SNIPPETS/download-docker-community.html   $SP_SNIPPETS_CO/download-docker.html
 and cp -av $WS_SNIPPETS/download-k8s-community.html      $SP_SNIPPETS_CO/download-k8s.html
 and cp -av $WS_SNIPPETS/download-source.html             $SP_SNIPPETS_CO/download-source.html
+and cp -av $WS_SNIPPETS/download-windows-community.html  $SP_SNIPPETS_CO/download-windows.html
 
 and cp -av $WS_SNIPPETS/download-arangodb3e-debian.html  $SP_SNIPPETS_EN/download-debian.html
 and cp -av $WS_SNIPPETS/download-arangodb3e-debian.html  $SP_SNIPPETS_EN/download-ubuntu.html
@@ -73,6 +74,7 @@ and cp -av $WS_SNIPPETS/download-arangodb3e-linux.html   $SP_SNIPPETS_EN/downloa
 and cp -av $WS_SNIPPETS/download-arangodb3e-macosx.html  $SP_SNIPPETS_EN/download-macosx.html
 and cp -av $WS_SNIPPETS/download-docker-enterprise.html  $SP_SNIPPETS_EN/download-docker.html
 and cp -av $WS_SNIPPETS/download-k8s-enterprise.html     $SP_SNIPPETS_EN/download-k8s.html
+and cp -av $WS_SNIPPETS/download-windows-enterprise.html $SP_SNIPPETS_EN/download-windows.html
 
 # and recode UTF16..latin1 < $WS_SNIPPETS/download-windows-enterprise.html > $SP_SNIPPETS_EN/download-windows.html
 # and recode UTF16..latin1 < $WS_SNIPPETS/download-windows-community.html  > $SP_SNIPPETS_CO/download-windows.html
