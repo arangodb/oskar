@@ -45,9 +45,9 @@ and echo "creating source destination directory '$SP_SOURCE'"
 and mkdir -p $SP_SOURCE
 
 and echo "========== COPYING PACKAGES =========="
-and tar -C $SRC/release -c -f - packages | tar -C $DST -x -v -f -p -
+and tar -C $SRC/release -c -f - packages | tar -C $DST -x -v -f -
 and echo "========== COPYING SOURCE =========="
-and tar -C $WS_SOURCE -c -f - . | tar -C $SP_SOURCE -x -v -f -p -
+and tar -C $WS_SOURCE -c -f - . | tar -C $SP_SOURCE -x -v -f -
 and echo "========== COPYING SNIPPETS =========="
 and cp -av $WS_SNIPPETS/download-arangodb3-debian.html   $SP_SNIPPETS_CO/download-debian.html
 and cp -av $WS_SNIPPETS/download-arangodb3-debian.html   $SP_SNIPPETS_CO/download-ubuntu.html
