@@ -32,3 +32,9 @@ ensure_oskar "$version" "$incoming" "$repo" \
             "amd64" "deb"
 
 chown -R $UID.$GID $repo
+
+cd $repo/Community/Debian
+gpg2 --armor --export info@arangodb.com  > Release.key
+
+cd $repo/Enterprise/Debian
+gpg2 --armor --export info@arangodb.com  > Release.key
