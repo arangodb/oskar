@@ -15,11 +15,6 @@ If(-Not(Test-Path -PathType Container -Path "$dest/packages/Enterprise/Windows")
   New-Item -ItemType Directory -Path "$dest/packages/Enterprise/Windows"
 }
 
-If(-Not(Test-Path -PathType Container -Path "$dest/snippets"))
-{
-  New-Item -ItemType Directory -Path "$dest/snippets"
-}
-
 echo $pwd
 dir
 
