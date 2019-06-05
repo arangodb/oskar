@@ -1022,6 +1022,7 @@ Function buildArangoDB
        If(Test-Path -PathType Container -Path "$global:ARANGODIR\build")
        {
           Remove-Item -Recurse -Force -Path "$global:ARANGODIR\build"
+          Write-Host "Delete Builddir OK."
        }
     }
     configureWindows
