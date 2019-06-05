@@ -152,6 +152,47 @@ Function unlockDirectory
 # Configure Oskar
 ################################################################################
 
+Function trimCache
+{
+    If($CLCACHE -eq "On")
+    {
+        If($env:CLCACHE_CL)
+        {
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-c" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+        }
+        Else
+        {
+            Write-Host "No clcache installed!"
+        }
+    }
+    Else
+    {
+        Write-Host "Clcache usage is disabled!"
+    }
+}
+
+Function clearCache
+{
+    If($CLCACHE -eq "On")
+    {
+        If($env:CLCACHE_CL)
+        {
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-C" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-z" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+        }
+        Else
+        {
+            Write-Host "No clcache installed!"
+        }
+    }
+    Else
+    {
+        Write-Host "Clcache usage is disabled!"
+    }
+}
+
 Function configureCache
 {
     If($CLCACHE -eq "On")
