@@ -17,7 +17,7 @@ $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
 $env:CLCACHE_DIR="$INNERWORKDIR\.clcache.windows"
-$env:CLCACHE_LOG = 1
+$env:CLCACHE_LOG = 0
 $env:CLCACHE_HARDLINK = 1
 
 $global:GENERATOR = "Visual Studio 15 2017 Win64"
