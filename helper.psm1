@@ -985,7 +985,7 @@ Function signWindows
     ForEach($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
         Write-Host "Sign: signtool.exe sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
-        proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$PACKAGE-sign" -priority "Normal"
+        proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign" -priority "Normal"
     }
     Pop-Location
 }
@@ -996,7 +996,7 @@ Function storeSymbols
     {
         Push-Location $pwd
         Set-Location "$global:ARANGODIR\build\"
-        If(-not((Get-SmbMapping -LocalPath S:).Status -eq "OK"))
+        If(-not((Get-SmbMapping -LocalPath S: -ErrorAction SilentlyContinue).Status -eq "OK"))
         {
             New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true
         }

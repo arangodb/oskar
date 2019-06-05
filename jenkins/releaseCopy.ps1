@@ -1,4 +1,4 @@
-If(-not((Get-SmbMapping -LocalPath B:).Status -eq "OK"))
+If(-not((Get-SmbMapping -LocalPath B: -ErrorAction SilentlyContinue).Status -eq "OK"))
 {
     New-PSDrive –Name "B" –PSProvider FileSystem –Root "\\nas02.arangodb.biz\buildfiles" –Persist
 }
