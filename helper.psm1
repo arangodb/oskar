@@ -201,6 +201,7 @@ Function configureCache
         {
             proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
             proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+            
         }
         Else
         {
@@ -219,7 +220,9 @@ Function showCacheStats
     {
         If($env:CLCACHE_CL)
         {
+            $tmp_stats = $global:ok
             proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+            $global:ok = $tmp_stats
         }
         Else
         {
