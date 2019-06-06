@@ -34,7 +34,7 @@ ensure_oskar "$version" "$incoming" "$repo" \
 chown -R $UID.$GID $repo
 
 cd $repo/Community/Debian
-gpg2 --armor --export info@arangodb.com  > Release.key
+gpg2 --no-permission-warning --armor --export info@arangodb.com  > Release.key
 
 cd $repo/Enterprise/Debian
-gpg2 --armor --export info@arangodb.com  > Release.key
+gpg2 --no-permission-warning --armor --export info@arangodb.com  > Release.key

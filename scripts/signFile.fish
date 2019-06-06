@@ -18,6 +18,7 @@ and for i in (seq 1 (count $argv))
     echo "signing file $file"
     and gpg2 \
       --homedir=~/.gnupg \
+      --no-permission-warning \
       --armor \
       --detach-sign \
       --sign \

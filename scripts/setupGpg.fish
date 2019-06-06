@@ -5,8 +5,8 @@ set -l passphrase (mktemp)
 set -x GPG_TTY (tty)
 
 gpgconf --kill gpg-agent
-and gpg2 --homedir=~/.gnupg --import ~/.gnupg/secring.gpg
-and gpg2 --homedir=~/.gnupg --import ~/.gnupg/pubring.gpg
+and gpg2 --homedir=~/.gnupg --no-permission-warning --import ~/.gnupg/secring.gpg
+and gpg2 --homedir=~/.gnupg --no-permission-warning --import ~/.gnupg/pubring.gpg
 and begin
   cd /tmp/
   and echo "this is a test" > $test_file
@@ -16,6 +16,7 @@ and begin
   and echo "$ARANGO_SIGN_PASSWD" >> $passphrase
   and gpg2 \
 	--homedir=~/.gnupg \
+        --no-permission-warning \
         --armor \
 	--detach-sign \
 	--sign \
