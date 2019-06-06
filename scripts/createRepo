@@ -198,9 +198,9 @@ create_repo_rpm(){
         if cmp -s "$file" "$repo/x86_64/${noext}.rpm"; then
 	  echo "file already exists '$file'"
 	else
+	  "$script_dir"/rpmSign.exp "$file" || ferr "failed to sign $file"
 	  cp "$file" "$repo/x86_64/${noext}.rpm" \
 	      || { echo "could not move $file" to "$repo"; exit 1;  }
-	  "$script_dir"/rpmSign.exp "$repo/x86_64/${noext}.rpm" || ferr "failed to sign $file"
 	fi
     done
 
