@@ -919,6 +919,7 @@ function downloadSyncer
 end
 
 function copyRclone
+  echo Copying rclone from rclone/rclone-arangodb-linux to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
   cp rclone/rclone-arangodb-linux $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
