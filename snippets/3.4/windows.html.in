@@ -1,4 +1,4 @@
-<div>
+<div>@ARANGODB_DOWNLOAD_WARNING@
   <p>
     The following packages are for Windows 7 (Service Pack 1),
     Windows 10 (1803 and higher), Windows Server 2008 R2 and higher.

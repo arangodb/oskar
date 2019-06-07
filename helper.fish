@@ -463,6 +463,7 @@ function buildSourceSnippet
       -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/source.html.in > $n
 
   and echo "Source Snippet: $n"
@@ -536,6 +537,7 @@ function buildDebianSnippet
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
 
@@ -610,6 +612,7 @@ function buildRPMSnippet
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
 
   and echo "RPM Snippet: $n"
@@ -635,6 +638,7 @@ function buildRPMSnippet
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
 
   and echo "SUSE Snippet: $n"
@@ -682,6 +686,7 @@ function buildTarGzSnippet
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
 
   and echo "TarGZ Snippet: $n"
@@ -739,6 +744,7 @@ function buildBundleSnippet
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/macosx.html.in > $n
 
   and echo "MacOSX Bundle Snippet: $n"
@@ -804,6 +810,7 @@ function buildWindowsSnippet
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/windows.html.in > $n
 
   and echo "Windows Snippet: $n"
@@ -857,6 +864,7 @@ function transformDockerSnippet
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/docker.$edition.html.in > $n
 
   and echo "Docker Snippet: $n"
@@ -887,6 +895,7 @@ function transformK8SSnippet
       -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/k8s.$edition.html.in > $n
 
   and echo "Kubernetes Snippet: $n"
