@@ -1,6 +1,6 @@
 set -gx INNERWORKDIR /work
-set -gx THIRDPARTY_BIN $INNERWORKDIR/ArangoDB/build/install/usr/bin
-set -gx THIRDPARTY_SBIN $INNERWORKDIR/ArangoDB/build/install/usr/sbin
+set -gx THIRDPARTY_BIN ArangoDB/build/install/usr/bin
+set -gx THIRDPARTY_SBIN ArangoDB/build/install/usr/sbin
 set -gx SCRIPTSDIR /scripts
 set -gx PLATFORM linux
 set -gx ARCH (uname -m)
@@ -329,6 +329,7 @@ function buildEnterprisePackage
   and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
   and downloadStarter
   and downloadSyncer
+  and copyRclone
   and buildPackage
 
   if test $status -ne 0
@@ -549,6 +550,7 @@ function buildDockerRelease
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
     downloadSyncer
+    copyRclone
   end
   and buildDockerImage $IMAGE_NAME1
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
@@ -905,15 +907,20 @@ function updateOskar
 end
 
 function downloadStarter
-  mkdir -p $WORKDIR$THIRDPARTY_BIN
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/downloadStarter.fish $THIRDPARTY_BIN $argv
+  mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
+  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
 end
 
 function downloadSyncer
-  mkdir -p $WORKDIR$THIRDPARTY_SBIN
+  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
   rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-  runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $UBUNTUBUILDIMAGE $SCRIPTSDIR/downloadSyncer.fish $THIRDPARTY_SBIN $argv
+  runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $UBUNTUBUILDIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
   ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+end
+
+function copyRclone
+  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+  cp rclone/rclone-arangodb-linux $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 ## #############################################################################
