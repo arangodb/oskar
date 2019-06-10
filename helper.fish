@@ -1026,7 +1026,7 @@ function findArangoDBVersion
   set -l CMAKELIST "$WORKDIR/work/ArangoDB/CMakeLists.txt"
   set -l AV "set(ARANGODB_VERSION"
   set -l APR "set(ARANGODB_PACKAGE_REVISION"
-  set -l SEDFIX 's/.*"\([0-9a-zA-Z]*\)".*$/\1/'
+  set -l SEDFIX 's/.*"\([0-9a-zA-Z]*\(\.\([0-9a-zA-Z]*\)\)*\)".*$/\1/'
 
   set -xg ARANGODB_VERSION_MAJOR (grep "$AV""_MAJOR" $CMAKELIST | sed -e $SEDFIX)
   set -xg ARANGODB_VERSION_MINOR (grep "$AV""_MINOR" $CMAKELIST | sed -e $SEDFIX)
