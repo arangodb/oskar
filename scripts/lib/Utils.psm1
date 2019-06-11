@@ -193,6 +193,11 @@ Function launchTest($which) {
     $global:launcheableTests[$which]['pid'] = $process.Id
     $global:launcheableTests[$which]['running'] = $true
     $global:launcheableTests[$which]['launchDate'] = $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))
+    If(-not($process.ExitCode -eq $null))
+    {
+        Write-Host "Error: Launching Test"
+        $process | Format-List -Property *
+    }
 
     $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
     Write-Host $str
