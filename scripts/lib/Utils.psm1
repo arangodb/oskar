@@ -281,7 +281,8 @@ Function LaunchController($seconds)
     $nextLauncheableTest = 0
     $currentScore = 0
     $currentRunning = 1
-    While (($seconds -gt 0) -and ($currentRunning -gt 0)) {
+    $maxLauncheableTests = $global:launcheableTests.Length
+    While (($seconds -gt 0) -and (($currentRunning -gt 0) -or ($nextLauncheableTest -lt $maxLauncheableTests))) {
         while (($currentScore -lt $global:numberSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
             Write-Host "Launching $nextLauncheableTest '" $global:launcheableTests[$nextLauncheableTest ]['identifier'] "'"
             launchTest $nextLauncheableTest 
