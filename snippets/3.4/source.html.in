@@ -1,4 +1,4 @@
-<div>
+<div>@ARANGODB_DOWNLOAD_WARNING@
   <p>
     The source code lives on
     <a href="https://github.com/arangodb/arangodb" target="_blank">GitHub</a>.

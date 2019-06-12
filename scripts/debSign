@@ -2,11 +2,6 @@
 script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 . "$script_dir/lib/oskar.bash" || exit 1
 
-#setup_gpg #should have already been called
-
-#debsigs --sign=origin -k $KEYNAME "$@"
-#setp 7 - create asc for each deb
-
 debSign(){
     local file="$1"
     asc="$file.asc"
@@ -16,13 +11,13 @@ debSign(){
         echo "signing file $file"
         rm -f "$asc"
 
-        if gpg2 --pinentry-mode=loopback --digest-algo SHA512 --passphrase-fd 0 --armor --detach-sign -u "$KEYNAME" "$file" <<<"$ARANGO_SIGN_PASSWD"; then
+        if gpg2 --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 --passphrase-fd 0 --armor --detach-sign -u "$KEYNAME" "$file" <<<"$ARANGO_SIGN_PASSWD"; then
             return 0
         else
             echo "retry"
             setup_gpg
             file="$1"
-            gpg2 --pinentry-mode=loopback --digest-algo SHA512 --passphrase-fd 0 --armor --detach-sign -u "$KEYNAME" "$file" <<<"$ARANGO_SIGN_PASSWD"
+            gpg2 --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 --passphrase-fd 0 --armor --detach-sign -u "$KEYNAME" "$file" <<<"$ARANGO_SIGN_PASSWD"
         fi
     fi
     return $?
@@ -33,4 +28,4 @@ exit $?
 
 
 # backwards compatibility for docker builds:
-#gpg2 --armor --export info@arangodb.com  > Release.key
+# gpg2 --armor --export info@arangodb.com  > Release.key

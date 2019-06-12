@@ -135,7 +135,6 @@ create_repo_deb(){
 
     # sign files
     cd "$in" || { echo "can not enter source dir"; exit 1; }
-    local update=false
     for file in "$in"/*"$version"*.deb; do
         fbase="${file%.deb}"
         noext="${fbase##*/}"
@@ -147,11 +146,8 @@ create_repo_deb(){
 	  cp "$file" "$repo/amd64/${noext}.deb" \
 	      || { echo "could not move $file" to "$repo"; exit 1;  }
 	  "$script_dir"/debSign "$repo/amd64/${noext}.deb" || ferr "failed to sign $repo/amd64/${noext}.deb"
-	  update=true
         fi
     done
-
-    $update || { echo "nothing to do"; return; }
 
     cd "$repo" || { echo "can not enter repo"; exit 1; }
     echo
@@ -177,7 +173,7 @@ create_repo_deb(){
 
     #sign release
     echo "sign release"
-        gpg2 --pinentry-mode=loopback --digest-algo SHA512 \
+        gpg2 --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
          --passphrase-fd 0 --yes -abs -u "$KEYNAME" \
          -o Release.gpg Release <<<"arangodb" || ferr "failed to sign Release"
 
@@ -196,21 +192,17 @@ create_repo_rpm(){
 
     # sign files
     cd "$in" || { echo "can not enter source dir"; exit 1; }
-    local update=false
     for file in "$in"/*"$version"*.rpm; do
         fbase="${file%.rpm}"
         noext="${fbase##*/}"
         if cmp -s "$file" "$repo/x86_64/${noext}.rpm"; then
 	  echo "file already exists '$file'"
 	else
+	  "$script_dir"/rpmSign.exp "$file" || ferr "failed to sign $file"
 	  cp "$file" "$repo/x86_64/${noext}.rpm" \
 	      || { echo "could not move $file" to "$repo"; exit 1;  }
-	  "$script_dir"/rpmSign.exp "$repo/x86_64/${noext}.rpm" || ferr "failed to sign $file"
-	  update=true
 	fi
     done
-
-    $update || { echo "nothing to do"; return; }
 
     cd "$repo" || { echo "can not enter repo"; exit 1; }
     echo
@@ -218,9 +210,9 @@ create_repo_rpm(){
     echo
 
     ensure createrepo --update --verbose "$repo" || ferr "failed to create repo"
-    gpg2 --armor --export info@arangodb.com  > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
+    gpg2 --no-permission-warning --armor --export info@arangodb.com  > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
     rm -fr "$repo/repodata/repomd.xml.asc" || ferr "failed to delete old signature"
-    gpg2 -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
+    gpg2 --no-permission-warning -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
 
     cat <<EOF > "${repo}/arangodb.repo"
 [arangodb]

@@ -29,25 +29,15 @@ and set -g WS_PACKAGES $SRC/release/packages
 and set -g WS_SNIPPETS $SRC/release/snippets
 and set -g WS_SOURCE $SRC/release/source
 
-and echo "checking packages source directory '$WS_PACKAGES'"
-and test -d $WS_PACKAGES
 and echo "checking snippets source directory '$WS_SNIPPETS'"
 and test -d $WS_SNIPPETS
-and echo "checking source source directory '$WS_SOURCE'"
-and test -d $WS_SOURCE
 and echo "creating destination directory '$DST'"
 and mkdir -p $DST
 and echo "creating community snippets destination directory '$SP_SNIPPETS_CO'"
 and mkdir -p $SP_SNIPPETS_CO
 and echo "creating enterprise snippets destination directory '$SP_SNIPPETS_EN'"
 and mkdir -p $SP_SNIPPETS_EN
-and echo "creating source destination directory '$SP_SOURCE'"
-and mkdir -p $SP_SOURCE
 
-and echo "========== COPYING PACKAGES =========="
-and tar -C $SRC/release -c -f - packages | tar -C $DST -x -v -f -
-and echo "========== COPYING SOURCE =========="
-and tar -C $WS_SOURCE -c -f - . | tar -C $SP_SOURCE -x -v -f -
 and echo "========== COPYING SNIPPETS =========="
 and cp -av $WS_SNIPPETS/download-arangodb3-debian.html   $SP_SNIPPETS_CO/download-debian.html
 and cp -av $WS_SNIPPETS/download-arangodb3-debian.html   $SP_SNIPPETS_CO/download-ubuntu.html

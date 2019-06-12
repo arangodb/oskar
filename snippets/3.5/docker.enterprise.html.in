@@ -1,10 +1,24 @@
 <div>
   <p>
+    The release candidate is feature complete and contains all enhancements that
+    will be released with the GA. However, there are known issues, see
+    <a href="https://www.arangodb.com/docs/devel/release-notes-known-issues35.html">
+      known issues in the Release Candidate @ARANGODB_VERSION_RELEASE_NUMBER@ of ArangoDB 3.5
+    </a>.
+
+    Especially, when you are testing the candidate on an existing dataset follow
+    the instruction in the link above and always use a copy of your data! Never
+    try it on a productive dataset.
+
+    In case that your data from ArangoDB 3.4 contains views, you need to delete
+    the views first. Do not use the automatic update procedure.
+  </p>
+  <p>
     ArangoDB is available as Docker container.
   </p>
   <p>
-    The processor(s) must support the SSE 4.2 instruction set
-    (Intel Nehalem or better, AMD Bulldozer or better, etc.)
+    The processor(s) must support the SSE 4.2 instruction set (Intel
+    Nehalem or better, AMD Bulldozer or better, etc.)
   </p>
   <p>
     In order to install the stand-alone version use
@@ -12,7 +26,9 @@
   </p>
   <p>
     See the
-    <a href="https://docs.arangodb.com/@ARANGODB_PACKAGES@/Manual/Deployment/Docker/" target="_blank">Docker Deployment</a>
+    <a href="https://docs.arangodb.com/@ARANGODB_PACKAGES@/Manual/Deployment/Docker/" target="_blank">
+      Docker Deployment
+    </a>
     section in the documentation about running ArangoDB in containers
     and how to persist your data under Docker.
   </p>

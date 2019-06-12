@@ -1,22 +1,36 @@
 <div>
   <p>
-    The following packages are for Windows 7 (Service Pack 1),
-    Windows 10 (1803 and higher), Windows Server 2008 R2 and higher.
+    The release candidate is feature complete and contains all enhancements that
+    will be released with the GA. However, there are known issues, see
+    <a href="https://www.arangodb.com/docs/devel/release-notes-known-issues35.html">
+      known issues in the Release Candidate @ARANGODB_VERSION_RELEASE_NUMBER@ of ArangoDB 3.5
+    </a>.
+
+    Especially, when you are testing the candidate on an existing dataset follow
+    the instruction in the link above and always use a copy of your data! Never
+    try it on a productive dataset.
+
+    In case that your data from ArangoDB 3.4 contains views, you need to delete
+    the views first. Do not use the automatic update procedure.
   </p>
   <p>
-    The processor(s) must support the SSE 4.2 instruction set
-    (Intel Nehalem or better, AMD Bulldozer or better, etc.)
+    The following packages are for Windows 7 (Service Pack 1), Windows 10 (1803
+    and higher), Windows Server 2008 R2 and higher.
   </p>
   <p>
-    We provide a single package containing the server and the client tools.
-    For a standard server setup, download the <strong>Server</strong> package
-    and run the NSIS installer.
+    The processor(s) must support the SSE 4.2 instruction set (Intel Nehalem or
+    better, AMD Bulldozer or better, etc.)
+  </p>
+  <p>
+    We provide a single package containing the server and the client tools.  For
+    a standard server setup, download the <strong>Server</strong> package and
+    run the NSIS installer.
   </p>
   <p>
     The <strong>Client Tools</strong> package only contain the tools, like
-    arangosh and arangodump, but not the server. Use this in case you are already running
-    ArangoDB on a different machine and want to connect to that server from a
-    client machine.
+    arangosh and arangodump, but not the server. Use this in case you are
+    already running ArangoDB on a different machine and want to connect to that
+    server from a client machine.
   </p>
   <p>
     As an alternative there is a <strong>Zip</strong> package containing the

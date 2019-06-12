@@ -176,7 +176,6 @@ function buildEnterprisePackage
       -DTHIRDPARTY_BIN=$THIRDPARTY_BIN/arangodb \
       -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
-  and buildBundleSnippet
 
   if test $status != 0
     echo Building enterprise release failed, stopping.
@@ -201,7 +200,6 @@ function buildCommunityPackage
       -DTHIRDPARTY_BIN=$THIRDPARTY_BIN/arangodb \
       -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
-  and buildBundleSnippet
 
   if test $status != 0
     echo Building community release failed.
@@ -222,69 +220,6 @@ function buildTarGzPackage
   and buildTarGzPackageHelper "macosx"
   or begin ; popd ; return 1 ; end
   popd
-end
-
-function transformBundleSnippet
-  pushd $WORKDIR
-  set -l BUNDLE_NAME_SERVER "$argv[1]-$argv[2].x86_64.dmg"
-
-  if test "$ENTERPRISEEDITION" = "On"
-    set ARANGODB_EDITION "Enterprise"
-    set ARANGODB_PKG_NAME "arangodb3e"
-    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
-      set DOWNLOAD_LINK "/enterprise-download/"
-    else
-      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
-    end
-  else
-    set ARANGODB_EDITION "Community"
-    set ARANGODB_PKG_NAME "arangodb3"
-    set DOWNLOAD_LINK ""
-  end
-
-  if test ! -f "work/$BUNDLE_NAME_SERVER"; echo "DMG package '$BUNDLE_NAME_SERVER' is missing"; return 1; end
-
-  set -l BUNDLE_SIZE_SERVER (expr (wc -c < work/$BUNDLE_NAME_SERVER | tr -d " ") / 1024 / 1024)
-  set -l BUNDLE_SHA256_SERVER (shasum -a 256 -b < work/$BUNDLE_NAME_SERVER | awk '{print $1}')
-
-  set -l TARGZ_NAME_SERVER "$argv[1]-macosx-$argv[3].tar.gz"
-
-  if test ! -f "work/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
-
-  set -l TARGZ_SIZE_SERVER (expr (wc -c < work/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
-  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < work/$TARGZ_NAME_SERVER | awk '{print $1}')
-
-  set -l n "work/download-$argv[1]-macosx.html"
-
-  sed -e "s|@BUNDLE_NAME_SERVER@|$BUNDLE_NAME_SERVER|g" \
-      -e "s|@BUNDLE_SIZE_SERVER@|$BUNDLE_SIZE_SERVER|g" \
-      -e "s|@BUNDLE_SHA256_SERVER@|$BUNDLE_SHA256_SERVER|g" \
-      -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
-      -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
-      -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
-      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
-      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
-      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      < snippets/$ARANGODB_SNIPPETS/macosx.html.in > $n
-
-  echo "MacOSX Bundle Snippet: $n"
-  popd
-end
-
-function buildBundleSnippet
-  # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
-  # ARANGODB_SNIPPETS, for example by running findArangoDBVersion.
-
-  if test "$ENTERPRISEEDITION" = "On"
-    transformBundleSnippet "arangodb3e" "$ARANGODB_DARWIN_UPSTREAM" "$ARANGODB_TGZ_UPSTREAM"
-    or return 1
-  else
-    transformBundleSnippet "arangodb3" "$ARANGODB_DARWIN_UPSTREAM" "$ARANGODB_TGZ_UPSTREAM"
-    or return 1
-  end
 end
 
 ## #############################################################################

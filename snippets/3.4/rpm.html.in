@@ -1,4 +1,4 @@
-<div>
+<div>@ARANGODB_DOWNLOAD_WARNING@
   <p>
     The following packages are for Red Hat-based Linux distributions.
   </p>
@@ -57,7 +57,7 @@
   <p>
     Run the following as root in a terminal:
   <pre>cd /etc/yum.repos.d/
-curl -OL https://download.arangodb.com/@ARANGODB_REPO@/RPM/arangodb.repo
+curl -OL https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/RPM/arangodb.repo
 yum -y install @ARANGODB_PKG_NAME@-@ARANGODB_VERSION@</pre>
   </p>
   <p>

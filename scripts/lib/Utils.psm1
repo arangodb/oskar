@@ -193,6 +193,11 @@ Function launchTest($which) {
     $global:launcheableTests[$which]['pid'] = $process.Id
     $global:launcheableTests[$which]['running'] = $true
     $global:launcheableTests[$which]['launchDate'] = $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))
+    If(-not($process.ExitCode -eq $null))
+    {
+        Write-Host "Error: Launching Test"
+        $process | Format-List -Property *
+    }
 
     $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
     Write-Host $str
@@ -238,7 +243,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $testWeight = $weight
         }
         
-        $testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY"
+        $testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
 
         New-Item -Path "$env:TMP\$output.out" -ItemType Directory
 

@@ -2,14 +2,16 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\prepareOskar.ps1" $pwd
 . "$pwd\prepareOskar.ps1"
 
 . $env:EDITION
-. $env:STATICEXECUTABLES
-. $env:SKIPPACKAGING
-. $env:MAINTAINER
-. $env:BUILDMODE
+
+skipPackagingOn
+staticExecutablesOn
+parallelism ([int]$env:NUMBER_OF_PROCESSORS)
+releaseMode
 
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok) 
 {
+    clcacheOn
     buildArangoDB
 }
 $s = $global:ok

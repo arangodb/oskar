@@ -1,4 +1,4 @@
-If(-not((Get-SmbMapping -LocalPath B:).Status -eq "OK"))
+If(-not((Get-SmbMapping -LocalPath B: -ErrorAction SilentlyContinue).Status -eq "OK"))
 {
     New-PSDrive –Name "B" –PSProvider FileSystem –Root "\\nas02.arangodb.biz\buildfiles" –Persist
 }
@@ -13,11 +13,6 @@ If(-Not(Test-Path -PathType Container -Path "$dest/packages/Community/Windows"))
 If(-Not(Test-Path -PathType Container -Path "$dest/packages/Enterprise/Windows"))
 {
   New-Item -ItemType Directory -Path "$dest/packages/Enterprise/Windows"
-}
-
-If(-Not(Test-Path -PathType Container -Path "$dest/snippets"))
-{
-  New-Item -ItemType Directory -Path "$dest/snippets"
 }
 
 echo $pwd

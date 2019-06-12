@@ -1,4 +1,4 @@
-<div>
+<div>@ARANGODB_DOWNLOAD_WARNING@
   <p>
     The following packages are for openSUSE and SUSE Enterprise Linux (SLE).
   </p>

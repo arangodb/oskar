@@ -16,9 +16,10 @@ $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
-$env:CLCACHE_DIR="$INNERWORKDIR\.clcache.windows"
-$env:CLCACHE_LOG = 1
+$env:CLCACHE_DIR = "$INNERWORKDIR\.clcache.windows"
+$env:CLCACHE_LOG = 0
 $env:CLCACHE_HARDLINK = 1
+$env:CLCACHE_OBJECT_CACHE_TIMEOUT_MS = 120000
 
 $global:GENERATOR = "Visual Studio 15 2017 Win64"
 
@@ -152,6 +153,47 @@ Function unlockDirectory
 # Configure Oskar
 ################################################################################
 
+Function trimCache
+{
+    If($CLCACHE -eq "On")
+    {
+        If($env:CLCACHE_CL)
+        {
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-c" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+        }
+        Else
+        {
+            Write-Host "No clcache installed!"
+        }
+    }
+    Else
+    {
+        Write-Host "Clcache usage is disabled!"
+    }
+}
+
+Function clearCache
+{
+    If($CLCACHE -eq "On")
+    {
+        If($env:CLCACHE_CL)
+        {
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-C" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-z" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+        }
+        Else
+        {
+            Write-Host "No clcache installed!"
+        }
+    }
+    Else
+    {
+        Write-Host "Clcache usage is disabled!"
+    }
+}
+
 Function configureCache
 {
     If($CLCACHE -eq "On")
@@ -160,6 +202,7 @@ Function configureCache
         {
             proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
             proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+            
         }
         Else
         {
@@ -178,7 +221,9 @@ Function showCacheStats
     {
         If($env:CLCACHE_CL)
         {
+            $tmp_stats = $global:ok
             proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+            $global:ok = $tmp_stats
         }
         Else
         {
@@ -918,52 +963,6 @@ Function buildWindows
     Pop-Location
 }
 
-Function generateSnippets
-{   
-    findArangoDBVersion | Out-Null
-    Set-Location "$global:ARANGODIR\build\" 
-    
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        $snippet = "$INNERWORKDIR\download-windows-enterprise.html"
-        $package_server = Get-ChildItem -Filter ArangoDB3e-*.exe | Where-Object {$_.Name -notmatch "client"}
-        $package_client = Get-ChildItem -Filter ArangoDB3e-client-*.exe
-        $package_zip = Get-ChildItem -Filter ArangoDB3e-*.zip
-    }
-    Else
-    {
-        $snippet = "$INNERWORKDIR\download-windows-community.html"
-        $package_server = Get-ChildItem -Filter ArangoDB3-*.exe | Where-Object {$_.Name -notmatch "client"}
-        $package_client = Get-ChildItem -Filter ArangoDB3-client-*.exe
-        $package_zip = Get-ChildItem -Filter ArangoDB3-*.zip
-    }
-  
-    $template = Get-Content "$global:WORKDIR\snippets\$global:ARANGODB_VERSION_MAJOR.$global:ARANGODB_VERSION_MINOR\windows.html.in"
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        $template = $template -replace "@DOWNLOAD_LINK@","/$env:ENTERPRISE_DOWNLOAD_KEY"
-        $template = $template -replace "@ARANGODB_EDITION@","Enterprise"
-    }
-    Else
-    {
-        $template = $template -replace "@DOWNLOAD_LINK@",""
-        $template = $template -replace "@ARANGODB_EDITION@","Community"
-    }
-    $template = $template -replace "@ARANGODB_VERSION@","$global:ARANGODB_FULL_VERSION"
-    $template = $template -replace "@ARANGODB_REPO@","$global:ARANGODB_REPO"
-    $template = $template -replace "@WINDOWS_NAME_SERVER_EXE@","$($package_server.Name)"
-    $template = $template -replace "@WINDOWS_SIZE_SERVER_EXE@","$([math]::Round($((Get-Item $package_server.FullName).Length / 1MB)))"
-    $template = $template -replace "@WINDOWS_SHA256_SERVER_EXE@","$((Get-FileHash -Algorithm SHA256 -Path $package_server.FullName).Hash)"
-    $template = $template -replace "@WINDOWS_NAME_CLIENT_EXE@","$($package_client.Name)"
-    $template = $template -replace "@WINDOWS_SIZE_CLIENT_EXE@","$([math]::Round($((Get-Item $package_client.FullName).Length / 1MB)))"
-    $template = $template -replace "@WINDOWS_SHA256_CLIENT_EXE@","$((Get-FileHash -Algorithm SHA256 -Path $package_client.FullName).Hash)"
-    $template = $template -replace "@WINDOWS_NAME_SERVER_ZIP@","$($package_zip.Name)"
-    $template = $template -replace "@WINDOWS_SIZE_SERVER_ZIP@","$([math]::Round($((Get-Item $package_zip.FullName).Length / 1MB)))"
-    $template = $template -replace "@WINDOWS_SHA256_SERVER_ZIP@","$((Get-FileHash -Algorithm SHA256 -Path $package_zip.FullName).Hash)"
-    $template | Out-File -FilePath $snippet
-    comm
-}
-
 Function packageWindows
 {
     Push-Location $pwd
@@ -987,9 +986,8 @@ Function signWindows
     ForEach($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
         Write-Host "Sign: signtool.exe sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
-        proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$PACKAGE-sign" -priority "Normal"
+        proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign" -priority "Normal"
     }
-    generateSnippets
     Pop-Location
 }
 
@@ -999,7 +997,7 @@ Function storeSymbols
     {
         Push-Location $pwd
         Set-Location "$global:ARANGODIR\build\"
-        If(-not((Get-SmbMapping -LocalPath S:).Status -eq "OK"))
+        If(-not((Get-SmbMapping -LocalPath S: -ErrorAction SilentlyContinue).Status -eq "OK"))
         {
             New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true
         }
@@ -1009,7 +1007,7 @@ Function storeSymbols
             Write-Host "Symbol: symstore.exe add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress"
             proc -process "symstore.exe" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
         }
-        uploadSymbols
+        #uploadSymbols
         Pop-Location
     }
 }
@@ -1028,6 +1026,7 @@ Function buildArangoDB
        If(Test-Path -PathType Container -Path "$global:ARANGODIR\build")
        {
           Remove-Item -Recurse -Force -Path "$global:ARANGODIR\build"
+          Write-Host "Delete Builddir OK."
        }
     }
     configureWindows
@@ -1117,12 +1116,6 @@ Function moveResultsToWorkspace
     }
     Write-Host "build* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "build*"))
-    {
-        Write-Host "Move $INNERWORKDIR\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
-    }
-    Write-Host "snippets ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*.html"))
     {
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
