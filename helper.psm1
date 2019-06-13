@@ -922,6 +922,7 @@ Function noteStartAndRepoState
 
 Function getCacheID
 {
+    Write-Host $env:CMAKE_CONFIGURE_DIR
     if ([System.IO.File]::Exists($env:CMAKE_CONFIGURE_DIR))
     {
        New-Item -Path "c:\" -Name "$env:CMAKE_CONFIGURE_DIR" -ItemType "directory" 
