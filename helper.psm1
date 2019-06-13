@@ -943,11 +943,6 @@ Function getCacheID
     return $hashStr
 }
 
-Function createCacheZip($ZipName, $path)
-{
-  7zip -Path $path -DestinationPath $ZipName; comm
-}
-
 ################################################################################
 # Compiling & package generation
 ################################################################################
@@ -991,7 +986,7 @@ Function configureWindows
     }
     if(!$haveCache)
     {
-      createCacheZip $cacheZipFN "$global:ARANGODIR\build\*"
+      7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN; comm
     }
     Write-Host "Clcache Statistics"
     showCacheStats
