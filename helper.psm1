@@ -926,7 +926,7 @@ Function getCacheID
 {
     Write-Host $env:CMAKE_CONFIGURE_DIR
     Convert-Path .
-    if (!Test-Path -Path $env:CMAKE_CONFIGURE_DIR)
+    if (-Not(Test-Path -Path $env:CMAKE_CONFIGURE_DIR))
     {
        Write-Host "blarg"
        New-Item  -ItemType "directory" -Path "$env:CMAKE_CONFIGURE_DIR"
@@ -979,8 +979,8 @@ Function configureWindows
     {
         if($haveCache)
         {
-          Write-Host "Extracting cache: $(cacheZipFN)"
-          7unzip $cacheZipFN $global:ARANGODIR\build
+          Write-Host "Extracting cache: ${cacheZipFN}"
+          7unzip $cacheZipFN
         }
         downloadStarter
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
