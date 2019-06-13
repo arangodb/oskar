@@ -19,11 +19,17 @@ set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
 # suppressions
 if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
   set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
-  set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
-  set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
 end
 
-if test -f tsan_arangodb_suppressions.txt
+if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
+  set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt"
+end
+
+if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
+  set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt"
+end
+
+if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
   set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
 end
 
