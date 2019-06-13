@@ -973,7 +973,6 @@ Function configureWindows
         {
           Write-Host "Extracting cache: ${cacheZipFN}"
           7unzip $cacheZipFN
-          Exit
         }
         downloadStarter
         downloadSyncer
@@ -988,7 +987,6 @@ Function configureWindows
         {
           Write-Host "Extracting cache: ${cacheZipFN}"
           7unzip $cacheZipFN
-          Exit
         }
         downloadStarter
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
@@ -997,12 +995,12 @@ Function configureWindows
     }
     if(!$haveCache)
     {
+      Write-Host "Filling cache zip: ${cacheZipFN}"
       7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN; comm
     }
     Write-Host "Clcache Statistics"
     showCacheStats
     Pop-Location
-    Exit
 }
 
 Function buildWindows 
