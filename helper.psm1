@@ -85,10 +85,10 @@ Function comm
     Set-Variable -Name "ok" -Value $? -Scope global
 }
 
-Function 7zip($Path,$DestinationPath)
+Function 7zip($Path,$DestinationPath,$moreArgs)
 {
-    Write-Host "7za.exe" -argument "a -mx9 $DestinationPath $Path" -logfile $false -priority "Normal" 
-    proc -process "7za.exe" -argument "a -mx9 $DestinationPath $Path" -logfile $false -priority "Normal" 
+    Write-Host "7za.exe" -argument "a -mx9 $DestinationPath $Path $moreArgs" -logfile $false -priority "Normal" 
+    proc -process "7za.exe" -argument "a -mx9 $DestinationPath $Path $moreArgs" -logfile $false -priority "Normal" 
 }
 
 Function 7unzip($zip)
@@ -924,11 +924,16 @@ Function noteStartAndRepoState
 
 Function getCacheID
 {
+    if (-Not(Test-Path -Path $env:TMP))
+    {
+      New-Item -ItemType "directory" -Path "$env:TMP"
+    }
     if (-Not(Test-Path -Path $env:CMAKE_CONFIGURE_DIR))
     {
-       Write-Host "blarg"
-       New-Item  -ItemType "directory" -Path "$env:CMAKE_CONFIGURE_DIR"
-    }       
+      Write-Host "blarg"
+      New-Item  -ItemType "directory" -Path "$env:CMAKE_CONFIGURE_DIR"
+    }
+       
     If ($ENTERPRISEEDITION -eq "On")
     {
         Get-ChildItem -Filter CMakeLists.txt -Recurse |get-filehash > $env:TMP\allHashes.txt
@@ -996,7 +1001,7 @@ Function configureWindows
     if(!$haveCache)
     {
       Write-Host "Filling cache zip: ${cacheZipFN}"
-      7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN; comm
+      7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-x *.exe"; comm
     }
     Write-Host "Clcache Statistics"
     showCacheStats
