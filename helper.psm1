@@ -942,9 +942,9 @@ Function getCacheID
     return $hashStr
 }
 
-Function createCacheZip($ZipName)
+Function createCacheZip($ZipName, $path)
 {
-  7zip -Path . -DestinationPath $ZipName; comm
+  7zip -Path $path -DestinationPath $ZipName; comm
 }
 
 ################################################################################
@@ -995,7 +995,7 @@ Function configureWindows
     Write-Host "Clcache Statistics"
     showCacheStats
     Pop-Location
-    aoesoeahnoeanthseouanths
+    Exit
 }
 
 Function buildWindows 
