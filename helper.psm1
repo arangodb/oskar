@@ -946,7 +946,6 @@ Function getCacheID
     Write-Host "-------------------"
     Write-Host "${hashStr}"
     Write-Host "-------------------"
-    Exit
     Remove-Item -Force $env:TMP\allHashes.txt
     return $hashStr
 }
