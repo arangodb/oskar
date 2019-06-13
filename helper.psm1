@@ -93,6 +93,7 @@ Function 7zip($Path,$DestinationPath)
 
 Function 7unzip($Path,$DestinationPath)
 {
+    Write-Host "7za.exe" -argument "x $DestinationPath $Path" -logfile $false -priority "Normal" 
     proc -process "7za.exe" -argument "x $DestinationPath $Path" -logfile $false -priority "Normal" 
 }
 
@@ -964,7 +965,7 @@ Function configureWindows
     {
         if($haveCache)
         {
-          Write-Host "Extracting cache: $(cacheZipFN)"
+          Write-Host "Extracting cache: ${cacheZipFN}"
           7unzip $cacheZipFN $global:ARANGODIR\build
         }
         downloadStarter
