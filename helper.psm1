@@ -967,6 +967,7 @@ Function configureWindows
     }
 
     configureCache
+    getCacheID |fl
     $cacheZipFN = getCacheID
     $haveCache = $(Test-Path -Path $cacheZipFN)
     Write-Host "${haveCache} ${cacheZipFN}"
