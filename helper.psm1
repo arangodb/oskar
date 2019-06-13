@@ -33,6 +33,16 @@ $global:hasTestCrashes = "false"
 
 $global:ok = $true
 
+if (-Not(Test-Path -Path $env:TMP))
+{
+  New-Item -ItemType "directory" -Path "$env:TMP"
+}
+if (-Not(Test-Path -Path $env:CMAKE_CONFIGURE_DIR))
+{
+  Write-Host "blarg"
+  New-Item  -ItemType "directory" -Path "$env:CMAKE_CONFIGURE_DIR"
+}
+
 ################################################################################
 # Utilities
 ################################################################################
@@ -924,15 +934,6 @@ Function noteStartAndRepoState
 
 Function getCacheID
 {
-    if (-Not(Test-Path -Path $env:TMP))
-    {
-      New-Item -ItemType "directory" -Path "$env:TMP"
-    }
-    if (-Not(Test-Path -Path $env:CMAKE_CONFIGURE_DIR))
-    {
-      Write-Host "blarg"
-      New-Item  -ItemType "directory" -Path "$env:CMAKE_CONFIGURE_DIR"
-    }
        
     If ($ENTERPRISEEDITION -eq "On")
     {
