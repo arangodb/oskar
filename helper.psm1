@@ -91,10 +91,10 @@ Function 7zip($Path,$DestinationPath)
     proc -process "7za.exe" -argument "a -mx9 $DestinationPath $Path" -logfile $false -priority "Normal" 
 }
 
-Function 7unzip($Path,$DestinationPath)
+Function 7unzip($zip)
 {
-    Write-Host "7za.exe" -argument "x $DestinationPath" -logfile $false -priority "Normal" 
-    proc -process "7za.exe" -argument "x $DestinationPath" -logfile $false -priority "Normal" 
+    Write-Host "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
+    proc -process "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
 }
 
 Function hostKey
@@ -967,6 +967,7 @@ Function configureWindows
         {
           Write-Host "Extracting cache: ${cacheZipFN}"
           7unzip $cacheZipFN
+          Exit
         }
         downloadStarter
         downloadSyncer
@@ -981,6 +982,7 @@ Function configureWindows
         {
           Write-Host "Extracting cache: ${cacheZipFN}"
           7unzip $cacheZipFN
+          Exit
         }
         downloadStarter
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
