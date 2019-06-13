@@ -963,8 +963,11 @@ Function configureWindows
 
     configureCache
     $cacheZipFN = getCacheID
+    Write-Host "--------------------------------------------------------------------------------"
     Write-Host ($cacheZipFN | Format-Table | Out-String)
+    Write-Host "--------------------------------------------------------------------------------"
     $haveCache = $(Test-Path -Path $cacheZipFN)
+    Write-Host "--------------------------------------------------------------------------------"
     Write-Host "${haveCache} ${cacheZipFN}"
     Exit
     Push-Location $pwd
