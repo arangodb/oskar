@@ -945,13 +945,7 @@ Function getCacheID
     }
     
     $hash = "$((get-filehash $env:TMP\allHashes.txt).Hash)"
-    Write-Host "-------------------"
-    Write-Host "${hash}"
-    Write-Host "-------------------"
     $hashStr = "$env:CMAKE_CONFIGURE_DIR\${hash}-EP_${ENTERPRISEEDITION}.zip"
-    Write-Host "-------------------"
-    Write-Host "${hashStr}"
-    Write-Host "-------------------"
     Remove-Item -Force $env:TMP\allHashes.txt
     return $hashStr
 }
@@ -968,10 +962,8 @@ Function configureWindows
     }
 
     configureCache
-    getCacheID |fl
     $cacheZipFN = getCacheID
     $haveCache = $(Test-Path -Path $cacheZipFN)
-    Write-Host "${haveCache} ${cacheZipFN}"
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     If($ENTERPRISEEDITION -eq "On")
