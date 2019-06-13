@@ -936,11 +936,12 @@ Function getCacheID
        
     If ($ENTERPRISEEDITION -eq "On")
     {
-        Get-ChildItem -Filter CMakeLists.txt -Recurse |get-filehash > $env:TMP\allHashes.txt
+        Get-ChildItem -Filter CMakeLists.txt -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } |get-filehash > $env:TMP\allHashes.txt
     }
     else
     {
-        Get-ChildItem -Filter CMakeLists.txt -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | get-filehash > $env:TMP\allHashes.txt
+        # if there happenes to be an enterprise directory, we ignore it.
+        Get-ChildItem -Filter CMakeLists.txt -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | get-filehash > $env:TMP\allHashes.txt
     }
     
     $hash = "$((get-filehash $env:TMP\allHashes.txt).Hash)"
