@@ -3,8 +3,8 @@ set -gx PLATFORM darwin
 set -gx UID (id -u)
 set -gx GID (id -g)
 set -gx INNERWORKDIR $WORKDIR/work
-set -gx THIRDPARTY_BIN $INNERWORKDIR/third_party/bin
-set -gx THIRDPARTY_SBIN $INNERWORKDIR/third_party/sbin
+set -gx THIRDPARTY_BIN third_party/bin
+set -gx THIRDPARTY_SBIN third_party/sbin
 set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
@@ -122,13 +122,19 @@ function updateOskar
 end
 
 function downloadStarter
-  mkdir -p $THIRDPARTY_BIN
-  runLocal $SCRIPTSDIR/downloadStarter.fish $THIRDPARTY_BIN $argv
+  mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
+  runLocal $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
 end
 
 function downloadSyncer
-  mkdir -p $THIRDPARTY_SBIN
-  runLocal $SCRIPTSDIR/downloadSyncer.fish $THIRDPARTY_SBIN $argv
+  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+  runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+end
+
+function copyRclone
+  echo Copying rclone from rclone/rclone-arangodb-osx to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+  cp rclone/rclone-arangodb-osx $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 function buildPackage
@@ -148,8 +154,8 @@ function buildPackage
 end
 
 function cleanupThirdParty
-  rm -rf $THIRDPARTY_BIN
-  rm -rf $THIRDPARTY_SBIN
+  rm -rf $WORKDIR/work/$THIRDPARTY_BIN
+  rm -rf $WORKDIR/work/$THIRDPARTY_SBIN
 end
 
 function buildEnterprisePackage
@@ -168,12 +174,13 @@ function buildEnterprisePackage
   and cleanupThirdParty
   and downloadStarter
   and downloadSyncer
+  and copyRclone
   and buildArangoDB \
       -DTARGET_ARCHITECTURE=nehalem \
       -DPACKAGING=Bundle \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DTHIRDPARTY_SBIN=$THIRDPARTY_SBIN/arangosync \
-      -DTHIRDPARTY_BIN=$THIRDPARTY_BIN/arangodb \
+      -DTHIRDPARTY_SBIN=$WORKDIR/work/$THIRDPARTY_SBIN/arangosync \
+      -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
       -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
 
@@ -197,7 +204,7 @@ function buildCommunityPackage
       -DTARGET_ARCHITECTURE=nehalem \
       -DPACKAGING=Bundle \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DTHIRDPARTY_BIN=$THIRDPARTY_BIN/arangodb \
+      -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
       -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
 
