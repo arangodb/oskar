@@ -934,7 +934,7 @@ Function getCacheID
     {
         Get-ChildItem -Filter CMakeLists.txt -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | get-filehash > $env:TMP\allHashes.txt
     }
-    hashStr = "$env:CMAKE_CONFIGURE_DIR\$((get-filehash $env:TMP\allHashes.txt).Hash)-EP_$($ENTERPRISEEDITION}.zip"
+    hashStr = "$env:CMAKE_CONFIGURE_DIR\$((get-filehash $env:TMP\allHashes.txt).Hash)-EP_$($ENTERPRISEEDITION).zip"
     Remove-Item -Force $env:TMP\allHashes.txt
     return hashStr
 }
