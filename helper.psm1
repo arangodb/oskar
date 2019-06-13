@@ -926,6 +926,7 @@ Function getCacheID
     Convert-Path .
     if (![System.IO.File]::Exists($env:CMAKE_CONFIGURE_DIR))
     {
+       Write-Host "blarg"
        New-Item -Path "$env:CMAKE_CONFIGURE_DIR" -ItemType "directory" 
     }       
     If ($ENTERPRISEEDITION -eq "On")
