@@ -990,7 +990,7 @@ Function configureWindows
     if(!$haveCache)
     {
         Write-Host "Filling cache zip: ${cacheZipFN}"
-        7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-x *.exe"; comm
+        7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-xr!*.exe"; comm
     }
     Write-Host "Clcache Statistics"
     showCacheStats
