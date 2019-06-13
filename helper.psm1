@@ -925,7 +925,7 @@ Function getCacheID
 {
     Write-Host $env:CMAKE_CONFIGURE_DIR
     Convert-Path .
-    if (![System.IO.File]::Exists($env:CMAKE_CONFIGURE_DIR))
+    if (!Test-Path -Path $env:CMAKE_CONFIGURE_DIR)
     {
        Write-Host "blarg"
        New-Item  -ItemType "directory" -Path "$env:CMAKE_CONFIGURE_DIR"
@@ -956,7 +956,7 @@ Function configureWindows
 
     configureCache
     $cacheZipFN = getCacheID
-    $haveCache = [System.IO.File]::Exists($cacheZipFN)
+    $haveCache = Test-Path -Path $cacheZipFN
     Write-Host "${haveCache} ${cacheZipFN}"
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
