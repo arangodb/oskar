@@ -39,7 +39,6 @@ if (-Not(Test-Path -Path $env:TMP))
 }
 if (-Not(Test-Path -Path $env:CMAKE_CONFIGURE_DIR))
 {
-  Write-Host "blarg"
   New-Item  -ItemType "directory" -Path "$env:CMAKE_CONFIGURE_DIR"
 }
 
@@ -964,22 +963,16 @@ Function configureWindows
 
     configureCache
     $cacheZipFN = getCacheID
-    Write-Host "--------------------------------------------------------------------------------"
-    Write-Host ($cacheZipFN | Format-Table | Out-String)
-    Write-Host "--------------------------------------------------------------------------------"
     $haveCache = $(Test-Path -Path $cacheZipFN)
-    Write-Host "--------------------------------------------------------------------------------"
-    Write-Host "${haveCache} ${cacheZipFN}"
-    Exit
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
+    if($haveCache)
+    {
+        Write-Host "Extracting cache: ${cacheZipFN}"
+        7unzip $cacheZipFN
+    }
     If($ENTERPRISEEDITION -eq "On")
     {
-        if($haveCache)
-        {
-          Write-Host "Extracting cache: ${cacheZipFN}"
-          7unzip $cacheZipFN
-        }
         downloadStarter
         downloadSyncer
         copyRclone
@@ -989,11 +982,6 @@ Function configureWindows
     }
     Else
     {
-        if($haveCache)
-        {
-          Write-Host "Extracting cache: ${cacheZipFN}"
-          7unzip $cacheZipFN
-        }
         downloadStarter
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
         Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
@@ -1001,8 +989,8 @@ Function configureWindows
     }
     if(!$haveCache)
     {
-      Write-Host "Filling cache zip: ${cacheZipFN}"
-      7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-x *.exe"; comm
+        Write-Host "Filling cache zip: ${cacheZipFN}"
+        7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-x *.exe"; comm
     }
     Write-Host "Clcache Statistics"
     showCacheStats
