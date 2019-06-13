@@ -956,7 +956,7 @@ Function configureWindows
 
     configureCache
     $cacheZipFN = getCacheID
-    $haveCache = Test-Path -Path $cacheZipFN
+    $haveCache = $(Test-Path -Path $cacheZipFN)
     Write-Host "${haveCache} ${cacheZipFN}"
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
