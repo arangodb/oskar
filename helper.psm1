@@ -957,13 +957,14 @@ Function configureWindows
     configureCache
     $cacheZipFN = getCacheID
     $haveCache = [System.IO.File]::Exists($cacheZipFN)
-
+    Write-Host $haveCache
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     If($ENTERPRISEEDITION -eq "On")
     {
         if($haveCache)
         {
+          Write-Host "Extracting cache: $(cacheZipFN)"
           7unzip $cacheZipFN $global:ARANGODIR\build
         }
         downloadStarter
@@ -977,6 +978,7 @@ Function configureWindows
     {
         if($haveCache)
         {
+          Write-Host "Extracting cache: $(cacheZipFN)"
           7unzip $cacheZipFN $global:ARANGODIR\build
         }
         downloadStarter
