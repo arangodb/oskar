@@ -995,6 +995,7 @@ Function configureWindows
     Write-Host "Clcache Statistics"
     showCacheStats
     Pop-Location
+    aoesoeahnoeanthseouanths
 }
 
 Function buildWindows 
