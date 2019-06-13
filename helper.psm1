@@ -957,7 +957,7 @@ Function configureWindows
     configureCache
     $cacheZipFN = getCacheID
     $haveCache = [System.IO.File]::Exists($cacheZipFN)
-    Write-Host $haveCache
+    Write-Host "$(haveCache) $(cacheZipFN)"
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     If($ENTERPRISEEDITION -eq "On")
