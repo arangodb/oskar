@@ -941,8 +941,9 @@ Function getCacheID
     }
     
     $hash = "$((get-filehash $env:TMP\allHashes.txt).Hash)"
+    Write-Host "-------------------"
     Write-Host "${hash}"
-    $hashStr = "$env:CMAKE_CONFIGURE_DIR\${hash}-EP_$($ENTERPRISEEDITION).zip"
+    $hashStr = "$env:CMAKE_CONFIGURE_DIR\${hash}-EP_${ENTERPRISEEDITION}.zip"
     Write-Host "${hashStr}"
     Exit
     Remove-Item -Force $env:TMP\allHashes.txt
