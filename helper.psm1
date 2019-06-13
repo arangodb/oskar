@@ -924,8 +924,6 @@ Function noteStartAndRepoState
 
 Function getCacheID
 {
-    Write-Host $env:CMAKE_CONFIGURE_DIR
-    Convert-Path .
     if (-Not(Test-Path -Path $env:CMAKE_CONFIGURE_DIR))
     {
        Write-Host "blarg"
@@ -943,8 +941,11 @@ Function getCacheID
     $hash = "$((get-filehash $env:TMP\allHashes.txt).Hash)"
     Write-Host "-------------------"
     Write-Host "${hash}"
+    Write-Host "-------------------"
     $hashStr = "$env:CMAKE_CONFIGURE_DIR\${hash}-EP_${ENTERPRISEEDITION}.zip"
+    Write-Host "-------------------"
     Write-Host "${hashStr}"
+    Write-Host "-------------------"
     Exit
     Remove-Item -Force $env:TMP\allHashes.txt
     return $hashStr
