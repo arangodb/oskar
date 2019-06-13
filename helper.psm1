@@ -923,7 +923,8 @@ Function noteStartAndRepoState
 Function getCacheID
 {
     Write-Host $env:CMAKE_CONFIGURE_DIR
-    if ([System.IO.File]::Exists($env:CMAKE_CONFIGURE_DIR))
+    Write-Host Convert-Path .
+    if (![System.IO.File]::Exists($env:CMAKE_CONFIGURE_DIR))
     {
        New-Item -Path "c:\" -Name "$env:CMAKE_CONFIGURE_DIR" -ItemType "directory" 
     }       
@@ -935,9 +936,9 @@ Function getCacheID
     {
         Get-ChildItem -Filter CMakeLists.txt -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | get-filehash > $env:TMP\allHashes.txt
     }
-    hashStr = "$env:CMAKE_CONFIGURE_DIR\$((get-filehash $env:TMP\allHashes.txt).Hash)-EP_$($ENTERPRISEEDITION).zip"
+    $hashStr = "$env:CMAKE_CONFIGURE_DIR\$((get-filehash $env:TMP\allHashes.txt).Hash)-EP_$($ENTERPRISEEDITION).zip"
     Remove-Item -Force $env:TMP\allHashes.txt
-    return hashStr
+    return $hashStr
 }
 
 Function createCacheZip($ZipName)
