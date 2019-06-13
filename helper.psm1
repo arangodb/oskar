@@ -964,6 +964,8 @@ Function configureWindows
     configureCache
     $cacheZipFN = getCacheID
     $haveCache = $(Test-Path -Path $cacheZipFN)
+    Write-Host "${haveCache} ${cacheZipFN}"
+    Exit
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     If($ENTERPRISEEDITION -eq "On")
