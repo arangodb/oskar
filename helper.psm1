@@ -17,6 +17,7 @@ $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
 $env:CLCACHE_DIR = "$INNERWORKDIR\.clcache.windows"
+$env:CMAKE_CONFIGURE_DIR = "$INNERWORKDIR\.cmake.windows"
 $env:CLCACHE_LOG = 0
 $env:CLCACHE_HARDLINK = 1
 $env:CLCACHE_OBJECT_CACHE_TIMEOUT_MS = 120000
@@ -31,6 +32,15 @@ $global:result = "GOOD"
 $global:hasTestCrashes = "false"
 
 $global:ok = $true
+
+if (-Not(Test-Path -Path $env:TMP))
+{
+  New-Item -ItemType "directory" -Path "$env:TMP"
+}
+if (-Not(Test-Path -Path $env:CMAKE_CONFIGURE_DIR))
+{
+  New-Item  -ItemType "directory" -Path "$env:CMAKE_CONFIGURE_DIR"
+}
 
 ################################################################################
 # Utilities
@@ -84,9 +94,16 @@ Function comm
     Set-Variable -Name "ok" -Value $? -Scope global
 }
 
-Function 7zip($Path,$DestinationPath)
+Function 7zip($Path,$DestinationPath,$moreArgs)
 {
-    proc -process "7za.exe" -argument "a -mx9 $DestinationPath $Path" -logfile $false -priority "Normal" 
+    Write-Host "7za.exe" -argument "a -mx9 $DestinationPath $Path $moreArgs" -logfile $false -priority "Normal" 
+    proc -process "7za.exe" -argument "a -mx9 $DestinationPath $Path $moreArgs" -logfile $false -priority "Normal" 
+}
+
+Function 7unzip($zip)
+{
+    Write-Host "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
+    proc -process "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
 }
 
 Function hostKey
@@ -244,6 +261,7 @@ Function showConfig
     Write-Host "Use cache      : "$CLCACHE
     Write-Host "Cache          : "$env:CLCACHE_CL
     Write-Host "Cachedir       : "$env:CLCACHE_DIR
+    Write-Host "CMakeConfigureCache      : "$env:CMAKE_CONFIGURE_DIR
     Write-Host " "
     Write-Host "Build Configuration"
     Write-Host "Buildmode      : "$BUILDMODE
@@ -912,6 +930,26 @@ Function noteStartAndRepoState
     }
 }
 
+
+Function getCacheID
+{
+       
+    If ($ENTERPRISEEDITION -eq "On")
+    {
+        Get-ChildItem -Filter CMakeLists.txt -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } |get-filehash > $env:TMP\allHashes.txt
+    }
+    else
+    {
+        # if there happenes to be an enterprise directory, we ignore it.
+        Get-ChildItem -Filter CMakeLists.txt -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | get-filehash > $env:TMP\allHashes.txt
+    }
+    
+    $hash = "$((get-filehash $env:TMP\allHashes.txt).Hash)"
+    $hashStr = "$env:CMAKE_CONFIGURE_DIR\${hash}-EP_${ENTERPRISEEDITION}.zip"
+    Remove-Item -Force $env:TMP\allHashes.txt
+    return $hashStr
+}
+
 ################################################################################
 # Compiling & package generation
 ################################################################################
@@ -924,9 +962,15 @@ Function configureWindows
     }
 
     configureCache
-
+    $cacheZipFN = getCacheID
+    $haveCache = $(Test-Path -Path $cacheZipFN)
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
+    if($haveCache)
+    {
+        Write-Host "Extracting cache: ${cacheZipFN}"
+        7unzip $cacheZipFN
+    }
     If($ENTERPRISEEDITION -eq "On")
     {
         downloadStarter
@@ -942,6 +986,11 @@ Function configureWindows
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
         Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
         proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+    }
+    if(!$haveCache)
+    {
+        Write-Host "Filling cache zip: ${cacheZipFN}"
+        7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-xr!*.exe"; comm
     }
     Write-Host "Clcache Statistics"
     showCacheStats
