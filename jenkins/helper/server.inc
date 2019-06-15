@@ -93,7 +93,7 @@ fi
 
 count=0
 
-while [ "$count" -lt 120 ]; do
+while [ "$count" -lt 240 ]; do
   responseCode=`curl -s -I $CURL_USER http://127.0.0.1:$ARANGO_PORT/_api/version | head -n 1 | cut -d$' ' -f2`
   if [ -n "${responseCode}" ];
   then
@@ -109,7 +109,7 @@ while [ "$count" -lt 120 ]; do
   sleep 2s
 done
 
-if [ $count -ge 120 ]; then
+if [ $count -ge 240 ]; then
     echo "docker logs:"
     docker logs $ARANGO_DOCKER_NAME
 
