@@ -1359,4 +1359,6 @@ Function makeRelease
     makeEnterpriseRelease
 }
 
+parallelism ([int]$env:NUMBER_OF_PROCESSORS)
+
 $global:SYSTEM_IS_WINDOWS=$true

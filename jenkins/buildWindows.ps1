@@ -5,7 +5,6 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\prepareOskar.ps1" $pwd
 
 skipPackagingOn
 staticExecutablesOn
-parallelism ([int]$env:NUMBER_OF_PROCESSORS)
 releaseMode
 
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
