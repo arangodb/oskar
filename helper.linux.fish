@@ -928,4 +928,4 @@ end
 ## set PARALLELISM in a sensible way
 ## #############################################################################
 
-parallelism (math (grep processor /proc/cpuinfo | wc -l) "*" 2)
+parallelism (nproc)

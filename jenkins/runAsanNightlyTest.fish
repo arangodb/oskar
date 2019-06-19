@@ -6,7 +6,6 @@ lockDirectory ; updateOskar ; clearResults
 eval $EDITION ; eval $STORAGE_ENGINE ; eval $TEST_SUITE ; skipGrey
 
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and parallelism 8
 and compiler "$COMPILER_VERSION"
 and asanOn
 and oskar1
