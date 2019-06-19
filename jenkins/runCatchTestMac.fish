@@ -5,7 +5,6 @@ lockDirectory ; updateOskar ; clearResults
 
 eval $EDITION
 catchtest
-parallelism 24
 
 echo "--------------------------------------------------------------------------------"
 showConfig

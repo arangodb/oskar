@@ -5,7 +5,6 @@ lockDirectory ; updateOskar ; clearResults
 rocksdb ; cluster ; maintainerOn
 
 eval $EDITION
-parallelism 8
 
 echo "--------------------------------------------------------------------------------"
 showConfig

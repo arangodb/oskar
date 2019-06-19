@@ -5,12 +5,7 @@ lockDirectory ; updateOskar ; clearResults
 
 eval $EDITION ; eval $STORAGE_ENGINE ; eval $TEST_SUITE ; skipGrey
 
-if test -z "$PARALLELISM_FULL_TEST"
-  set -g PARALLELISM_FULL_TEST 20
-end
-
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and parallelism "$PARALLELISM_FULL_TEST"
 and compiler "$COMPILER_VERSION"
 and oskar1Full
 

@@ -4,8 +4,6 @@ source jenkins/helper.jenkins.fish ; prepareOskar
 lockDirectory ; updateOskar ; clearResults
 
 eval $EDITION ; eval $STORAGE_ENGINE ; eval $TEST_SUITE ; skipGrey
-set logical_cores (sysctl -n hw.ncpu)
-parallelism (math "$logical_cores*2")
 
 echo "--------------------------------------------------------------------------------"
 showConfig
