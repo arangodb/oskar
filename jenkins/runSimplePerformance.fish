@@ -17,7 +17,7 @@ and releaseMode
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 
 and rm -rf work/database
-and docker run -it \
+and docker run \
   -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
   -v (pwd)/work/ArangoDB:/ArangoDB \
   -v (pwd)/work:/data \
