@@ -17,6 +17,22 @@ and releaseMode
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 
 and rm -rf work/database
+and echo "==== starting performance run ===="
+and echo docker run \
+  -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
+  -v (pwd)/work/ArangoDB:/ArangoDB \
+  -v (pwd)/work:/data \
+  -v $simple:/performance \
+  arangodb/arangodb \
+  sh -c 'cd /performance && \
+    /ArangoDB/build/bin/arangod \
+      -c none \
+      --javascript.app-path /tmp/app \
+      --javascript.startup-directory /ArangoDB/js \
+      --server.rest-server false \
+      --javascript.module-directory `pwd` \
+      /data/database \
+      --javascript.script run-small-edges.js'
 and docker run \
   -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
   -v (pwd)/work/ArangoDB:/ArangoDB \
