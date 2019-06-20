@@ -36,7 +36,7 @@ and docker run \
       --javascript.script run-small-edges.js'
 and awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
-  > "$HOME/$NODE_NAME/$OSKAR/results-$ARANGODB_BRANCH-$datetime.csv"
+  > "/mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
