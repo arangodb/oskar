@@ -20,7 +20,7 @@ and maintainerOff
 and releaseMode
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 
-and rm -rf work/database
+and rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="
 and docker run \
   -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
@@ -38,10 +38,11 @@ and docker run \
       --log.foreground-tty \
       /data/database \
       --javascript.script $ARANGODB_TEST_CONFIG"
-and awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
-  < $simple/results.csv \
-  > "/mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
 
 set -l s $status
+echo "storing results in /mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
+awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
+  < $simple/results.csv \
+  > "/mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s
