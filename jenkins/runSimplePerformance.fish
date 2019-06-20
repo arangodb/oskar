@@ -3,6 +3,10 @@ set -xg simple (pwd)/performance
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
 
+if test -z "$ARANGODB_TEST_CONFIG"
+  set -xg ARANGODB_TEST_CONFIG run-small-edges.js
+end
+
 source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults
@@ -24,7 +28,7 @@ and docker run \
   -v (pwd)/work:/data \
   -v $simple:/performance \
   arangodb/arangodb \
-  sh -c 'cd /performance && \
+  sh -c "cd /performance && \
     /ArangoDB/build/bin/arangod \
       -c none \
       --javascript.app-path /tmp/app \
@@ -33,7 +37,7 @@ and docker run \
       --javascript.module-directory `pwd` \
       --log.foreground-tty \
       /data/database \
-      --javascript.script run-small-edges.js'
+      --javascript.script $ARANGODB_TEST_CONFIG"
 and awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
   > "/mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
