@@ -4,9 +4,11 @@ mkdir -p work/total
 mkdir -p work/images
 
 set -l gp work/generate.gnuplot
+set -l desc work/description.html
 set -l d /mnt/buildfiles/performance
 
 echo > $gp
+echo > $desc
 begin
   echo 'set yrange [0:]'
   echo 'set format x "%12.0f"'
@@ -34,6 +36,9 @@ for test in $tests
 
   echo >> $gp
   echo >> $gp
+
+  echo "<h1>$test</h1>" >> $desc
+  echo "<img src=\"ws/work/images/$test.png\"></img>" >> $desc
 end
 
 if test (count work/images/*.png) -gt 0
