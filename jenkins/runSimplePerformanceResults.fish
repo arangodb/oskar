@@ -25,11 +25,13 @@ for test in $tests
   echo -n 'plot ' >> $gp
   set -l sep ""
 
-  for v in 3.4 3.5 devel
+  for vc in 3.4,black 3.5,blue devel,red
+    string split , $vc | begin read v; read c; end;
+
     awk -F, "\$1 == \"$v\" && \$3 == \"$test\" {print \$2 \" \" \$5}" $d/results-*.csv > work/total/$v-$test.csv
 
     if test -s work/total/$v-$test.csv
-      echo -n "$sep\"work/total/$v-$test.csv\" with linespoints linewidth 3 title '$v'" >> $gp
+      echo -n "$sep\"work/total/$v-$test.csv\" with linespoints linewidth 3 lc rgb '$c' title '$v'" >> $gp
       set sep ", "
     end
   end
