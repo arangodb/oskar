@@ -1005,7 +1005,7 @@ Function buildWindows
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
     $targets = @("zlib", "snappy", "s2", "rocksdb", "libcurl", "fuerte")
     $i = 0
-    while (($CLCACHE -eq "On") -and ($i -lt $targets.Count) -a ($global:ok))
+    while (($CLCACHE -eq "On") -and ($i -lt $targets.Count) -and ($global:ok))
     {
         proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -target $targets[$i] -priority "Normal"
     }
