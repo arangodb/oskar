@@ -259,7 +259,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           weight=$testWeight;
         testname=$testname;
         identifier=$output;
-          commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams";
+          commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams --ruby $global:RUBY";
           StandardOutput="$global:ARANGODIR\$output.stdout.log";
           StandardError="$global:ARANGODIR\$output.stderr.log";
           pid=-1;

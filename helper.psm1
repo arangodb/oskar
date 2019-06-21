@@ -10,7 +10,7 @@ If(-Not(Test-Path -PathType Container -Path "work"))
 {
     New-Item -ItemType Directory -Path "work"
 }
-
+$global:RUBY = (get-command ruby.exe).Path
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
@@ -1008,6 +1008,7 @@ Function buildWindows
     while (($CLCACHE -eq "On") -and ($i -lt $targets.Count) -and ($global:ok))
     {
         proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -target $targets[$i] -priority "Normal"
+        $i++
     }
     If($global:ok)
     {
