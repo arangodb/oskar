@@ -15,6 +15,13 @@ echo Working on branch $ARANGODB_BRANCH of main repository and
 echo on branch $ENTERPRISE_BRANCH of enterprise repository.
 
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and if echo "$ARANGODB_BRANCH" | grep -q "^v"
+  pushd work/ArangoDB
+  set -xg date (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-8)
+  set -xg datetime (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-12)
+  echo "==== date $datetime ===="
+  popd
+end
 and enterprise
 and maintainerOff
 and releaseMode
