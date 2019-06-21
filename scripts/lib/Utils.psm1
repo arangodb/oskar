@@ -243,13 +243,13 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $testWeight = $weight
         }
         
-        $testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
+        $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
 
         New-Item -Path "$env:TMP\$output.out" -ItemType Directory
 
-        $testparams = $testparams+" --testOutput $env:TMP\$output.out"
-        
+        $testparams = $testparams + " --testOutput $env:TMP\$output.out"
         $testparams = $testparams + " " + $moreParams
+        $testparams = $testparams + " --ruby " + $global:RUBY
         
         $PORT=Get-Random -Minimum 20000 -Maximum 65535
         $i = $global:testCount
@@ -259,7 +259,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           weight=$testWeight;
         testname=$testname;
         identifier=$output;
-          commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams --ruby $global:RUBY";
+          commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams";
           StandardOutput="$global:ARANGODIR\$output.stdout.log";
           StandardError="$global:ARANGODIR\$output.stderr.log";
           pid=-1;
