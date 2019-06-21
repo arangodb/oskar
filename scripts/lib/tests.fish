@@ -281,6 +281,10 @@ function resetLaunch
   set -g launchFactor $argv[1]
   set -g portBase 10000
   set -g launchCount 0
+  if $launchFactor > 1 and $PARALLELISM < $launchFactor*2
+    parallelism ($PARALLELISM*2)
+    echo "Extend small parallelism for launchFactor > 1: $PARALLELISM"
+  end
   echo Launching tests...
 end
 
