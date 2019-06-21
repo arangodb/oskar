@@ -1006,8 +1006,8 @@ Function buildWindows
     $i = 0
     while (($CLCACHE -eq "On") -and ($i -lt $targets.Count) -and ($global:ok))
     {
-        Write-Host "Build: cmake --build . --config `"$BUILDMODE`" -target `"$targets[$i]`"
-        proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" -target `"$targets[$i]`" -logfile "$INNERWORKDIR\build" -priority "Normal"
+        Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$($targets[$i])`"
+        proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --target `"$($targets[$i])`" -logfile "$INNERWORKDIR\build" -priority "Normal"
         $i++
     }
     If($global:ok)
