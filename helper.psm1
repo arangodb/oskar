@@ -1002,16 +1002,17 @@ Function buildWindows
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
     $targets = @("zlib", "snappy", "s2", "rocksdb", "libcurl", "fuerte")
     $i = 0
     while (($CLCACHE -eq "On") -and ($i -lt $targets.Count) -and ($global:ok))
     {
-        proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -target $targets[$i] -priority "Normal"
+        Write-Host "Build: cmake --build . --config `"$BUILDMODE`" -target `"$targets[$i]`"
+        proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" -target `"$targets[$i]`" -logfile "$INNERWORKDIR\build" -priority "Normal"
         $i++
     }
     If($global:ok)
     {
+        Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
         proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
         If($global:ok)
         {
