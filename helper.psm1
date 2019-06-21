@@ -1003,13 +1003,22 @@ Function buildWindows
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
-    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
+    $targets = @("zlib", "snappy", "s2", "rocksdb", "libcurl", "fuerte")
+    $i = 0
+    while (($CLCACHE -eq "On") -a ($i -lt $targets.Count) -a ($global:ok))
+    {
+        proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -target $targets[$i] -priority "Normal"
+    }
     If($global:ok)
     {
-        Copy-Item "$global:ARANGODIR\build\bin\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\bin\"; comm
-        If(Test-Path -PathType Container -Path "$global:ARANGODIR\build\tests\$BUILDMODE")
+        proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
+        If($global:ok)
         {
-          Copy-Item "$global:ARANGODIR\build\tests\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\tests\"; comm
+            Copy-Item "$global:ARANGODIR\build\bin\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\bin\"; comm
+            If(Test-Path -PathType Container -Path "$global:ARANGODIR\build\tests\$BUILDMODE")
+            {
+              Copy-Item "$global:ARANGODIR\build\tests\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\tests\"; comm
+            }
         }
     }
     Write-Host "Clcache Statistics"
