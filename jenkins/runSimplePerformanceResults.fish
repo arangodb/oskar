@@ -29,7 +29,7 @@ for test in $tests
     string split , $vc | begin read v; read c; end;
     set -l vv (echo $v | awk -F. '{ if ($1 == "devel") print "^devel$"; else print "^v?" $1 "\\\\." $2 "(\\\\..*)?$"; }')
 
-    awk -F, "\$1 ~ /$vv/ && \$3 == \"$test\" {print \$2 \" \" \$5}" $d/results-*.csv > work/total/$v-$test.csv
+    awk -F, "\$1 ~ /$vv/ && \$3 == \"$test\" {print \$2 \" \" \$5}" $d/results-*.csv | sort > work/total/$v-$test.csv
 
     if test -s work/total/$v-$test.csv
       echo -n "$sep\"work/total/$v-$test.csv\" with linespoints linewidth 3 lc rgb '$c' title '$v'" >> $gp
