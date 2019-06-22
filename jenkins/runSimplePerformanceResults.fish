@@ -13,6 +13,7 @@ begin
   echo 'set yrange [0:]'
   echo 'set format x "%12.0f"'
   echo 'set term png size 2048,800'
+  echo 'set key left bottom'
   echo
 end >> $gp
 
