@@ -7,17 +7,28 @@ set -l gp work/generate.gnuplot
 set -l desc work/description.html
 set -l d /mnt/buildfiles/performance
 
+set -l dates (cat /mnt/buildfiles/performance/results-*.csv | awk -F, '{print $2}' | sort | uniq)
+
 echo > $gp
-echo > $desc
 begin
   echo 'set yrange [0:]'
   echo 'set format x "%12.0f"'
   echo 'set term png size 2048,800'
   echo 'set key left bottom'
-  echo
+  echo -n 'set xtics ('
+  set -l c 0
+  set -l sep ""
+  for i in $dates
+    set c (expr $c + 1)
+    echo -n $sep'"'$i'" '$c
+    set sep ", "
+  end
+  echo ')'
 end >> $gp
 
 set -l tests (awk -F, '{print $3}' $d/results-*.csv | sort | uniq)
+
+echo > $desc
 
 for test in $tests
   echo "Test $test"
