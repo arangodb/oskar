@@ -21,15 +21,6 @@ begin
   echo 'set yrange [0:]'
   echo 'set term png size 2048,800'
   echo 'set key left bottom'
-  echo -n 'set xtics ('
-  set -l c 0
-  set -l sep ""
-  for i in $dates
-    set c (expr $c + 1)
-    echo -n $sep'"'$i'" '$c
-    set sep ", "
-  end
-  echo ')'
 end >> $gp
 
 set -l tests (awk -F, '{print $3}' $results | sort | uniq)
