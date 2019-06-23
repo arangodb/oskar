@@ -21,6 +21,7 @@ begin
   echo 'set yrange [0:]'
   echo 'set term png size 2048,800'
   echo 'set key left bottom'
+  echo 'set format x "%12.0f"'
 end >> $gp
 
 set -l tests (awk -F, '{print $3}' $results | sort | uniq)
