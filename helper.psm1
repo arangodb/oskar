@@ -969,7 +969,11 @@ Function configureWindows
     Set-Location "$global:ARANGODIR\build"
     if($haveCache)
     {
-        Write-Host "Extracting cache: ${cacheZipFN}"
+        Write-Host "Extracting cmake configure zip: ${cacheZipFN}"
+        # Touch the file, so a cleanup job sees its used:
+        $file = Get-Item $cacheZipFN
+        $file.LastWriteTime = (get-Date)
+        # extract it
         7unzip $cacheZipFN
     }
     If($ENTERPRISEEDITION -eq "On")
@@ -990,7 +994,7 @@ Function configureWindows
     }
     if(!$haveCache)
     {
-        Write-Host "Filling cache zip: ${cacheZipFN}"
+        Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
         7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-xr!*.exe"; comm
     }
     Write-Host "Clcache Statistics"
