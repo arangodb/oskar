@@ -16,6 +16,12 @@ end
 
 set -l dates (cat $results | awk -F, '{print $2}' | sort | uniq)
 
+for i in $dates
+  set -l secs (date -d $i +%s)
+
+  sed -i "1,\$s:,$i,:,$secs,:" $results
+end
+
 echo > $gp
 begin
   echo 'set yrange [0:]'
@@ -26,7 +32,10 @@ begin
   echo -n 'set xtics ('
   set -l sep ""
   for i in $dates
-    echo -n $sep$i
+    set -l secs (date -d $i +%s)
+    set -l iso (date -I -d $i)
+
+    echo -n $sep\"$iso\" $secs
     set sep ", "
   end
   echo ')'
