@@ -27,7 +27,7 @@ begin
   echo 'set yrange [0:]'
   echo 'set term png size 2048,800'
   echo 'set key left bottom'
-  echo 'set xtics nomirror rotate by 45 right'
+  echo 'set xtics nomirror rotate by 90 right font ",8"'
   echo -n 'set xtics ('
   set -l sep ""
   for i in $dates
@@ -47,6 +47,7 @@ echo > $desc
 for test in $tests
   echo "Test $test"
 
+  echo "set title \"$test\"" >> $gp
   echo "set output \"work/images/$test.png\"" >> $gp
   echo -n 'plot ' >> $gp
   set -l sep ""
@@ -66,7 +67,7 @@ for test in $tests
   echo >> $gp
   echo >> $gp
 
-  echo "<h1>$test</h1>" >> $desc
+  echo "<br/>" >> $desc
   echo "<img src=\"ws/work/images/$test.png\"></img>" >> $desc
 end
 
