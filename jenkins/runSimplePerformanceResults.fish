@@ -27,7 +27,6 @@ begin
   echo 'set yrange [0:]'
   echo 'set term png size 2048,800'
   echo 'set key left bottom'
-  echo 'set format x "%12.0f"'
   echo 'set xtics nomirror rotate by 45 right'
   echo -n 'set xtics ('
   set -l sep ""
