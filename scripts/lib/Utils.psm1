@@ -243,15 +243,16 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $testWeight = $weight
         }
         
-        $testparams = $testparams+" --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
+        $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
 
         New-Item -Path "$env:TMP\$output.out" -ItemType Directory
-
-        $testparams = $testparams+" --testOutput $env:TMP\$output.out"
-        
+        $testparams = $testparams + " --testOutput $env:TMP\$output.out"
         $testparams = $testparams + " " + $moreParams
+        If (-Not ([string]::IsNullOrEmpty($global:RUBY))) {
+          $testparams = $testparams + " --ruby " + $global:RUBY
+        }
         
-        $PORT=Get-Random -Minimum 20000 -Maximum 65535
+        $PORT = Get-Random -Minimum 20000 -Maximum 65535
         $i = $global:testCount
         $global:testCount = $global:testCount+1
         $global:launcheableTests += @{

@@ -11,6 +11,7 @@ If(-Not(Test-Path -PathType Container -Path "work"))
     New-Item -ItemType Directory -Path "work"
 }
 
+$global:RUBY = (Get-Command ruby.exe).Path
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
