@@ -51,5 +51,6 @@ echo "storing results in /mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$d
 awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
   > "/mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
+rm -rf work/database
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s
