@@ -33,6 +33,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_client"
     registerTest -testname "shell_client_aql"
     registerTest -testname "shell_replication" -weight 2
+    registerTest -testname "permissions_server"
     registerTest -testname "BackupAuthNoSysTests"
     registerTest -testname "BackupAuthSysTests"
     registerTest -testname "BackupNoAuthNoSysTests"
