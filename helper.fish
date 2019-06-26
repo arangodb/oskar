@@ -388,8 +388,29 @@ function buildTarGzPackageHelper
   or begin ; popd ; return 1 ; end
 
   tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" --exclude "etc" --exclude "var" "$name-$v"
-  and set s $status
-  and mv "$name-$v" install
+  set s $status
+
+  if test "$s" -eq 0
+    tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" \
+      --exclude "etc" \
+      --exclude "var" \
+      --exclude "*.initd" \
+      --exclude "*.services" \
+      --exclude "*.logrotate" \
+      --exclude "arangodb.8" \
+      --exclude "arangod.8" \
+      --exclude "arango-dfdb.8" \
+      --exclude "rcarangod.8" \
+      --exclude "$name-$v/bin/arangodb" \
+      --exclude "$name-$v/usr/sbin" \
+      --exclude "$name-$v/usr/bin/arangodb" \
+      --exclude "$name-$v/usr/share/arangodb3/arangodb-update-db" \
+      --exclude "$name-$v/usr/share/arangodb3/js/server" \
+      "$name-$v"
+    set s $status
+  end
+
+  mv "$name-$v" install
   and popd
   and return $s 
 end
