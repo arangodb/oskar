@@ -283,8 +283,9 @@ Function LaunchController($seconds)
     $currentScore = 0
     $currentRunning = 1
     $maxLauncheableTests = $global:launcheableTests.Length
+    $numberTestsSlots = [math]::Round($global:numberSlots * 0.9) # Should leave 10% of slots free for $global:numberSlots > 4
     While (($seconds -gt 0) -and (($currentRunning -gt 0) -or ($nextLauncheableTest -lt $maxLauncheableTests))) {
-        while (($currentScore -lt $global:numberSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
+        while (($currentScore -lt $numberTestsSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
             Write-Host "Launching $nextLauncheableTest '" $global:launcheableTests[$nextLauncheableTest ]['identifier'] "'"
             launchTest $nextLauncheableTest 
             $currentScore = $currentScore+$global:launcheableTests[$nextLauncheableTest ]['weight']
