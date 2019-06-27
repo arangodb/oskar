@@ -12,7 +12,7 @@ switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 or begin unlockDirectory ; exit 1 ; end
 
-set -l SOURCE /mnt/buildfiles/stage2/nightly/virus
+set -l SOURCE /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages
 
 function unpack
   set -l filename $argv[1]
