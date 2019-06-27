@@ -23,32 +23,39 @@ function unpack
   switch $filename
     case '*.tar.gz'
       cp $filename work/sandbox
+      or exit 1
 
     case '*.tar'
       cp $filename work/sandbox
+      or exit 1
 
     case '*.zip'
       cp $filename work/sandbox
+      or exit 1
 
     case '*.exe'
       cp $filename work/sandbox
+      or exit 1
 
     case '*.dmg'
       cp $filename work/sandbox
+      or exit 1
 
     case '*.deb'
       pushd work/sandbox
         ar x $filename
+        or exit 1
       popd
 
     case '*.rpm'
       pushd work/sandbox
-        rpm2cpio $filename | cpio -i -d
-        ls -l
+        begin rpm2cpio $filename | cpio -i -d; end
+        or exit 1
       popd
 
     case '*.html'
       cp $filename work/sandbox
+      or exit 1
 
     case '*'
       echo "FATAL: unknown file type in '$filename'"
@@ -94,6 +101,9 @@ function scan
         echo $shaf
         echo
         clamscan -r -v --max-scansize=2000M --max-filesize=1000M --max-recursion=10 work/sandbox
+        if test $status -gt 1
+           exit 1
+        end
       end > $signature
 
       rm -rf work/sandbox
