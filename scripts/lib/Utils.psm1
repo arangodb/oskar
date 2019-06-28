@@ -238,6 +238,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         if ($testname -eq "agency")
         {
             $dumpAgencyOnError = "true"
+            $testWeight = 2
         }
         if ($weight) {
           $testWeight = $weight
