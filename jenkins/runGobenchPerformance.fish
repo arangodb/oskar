@@ -4,10 +4,6 @@ set -xg gobenchdir (pwd)/gobench
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
 
-if test -z "$ARANGODB_TEST_CONFIG"
-  set -xg ARANGODB_TEST_CONFIG run-small-edges.js
-end
-
 source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults
@@ -26,7 +22,7 @@ end
 and enterprise
 and maintainerOff
 and releaseMode
-nd buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 
 # clone gobench
 and git clone git@github.com:arangodb/gobench.git
@@ -45,7 +41,15 @@ and docker run \
   -v $simple:/performance \
   -v $gobenchdir:/gobench \
   arangodb/arangodb \
-  sh -c "cd /performance && \
+  sh -c "
+      wait_for_arango() {
+        echo '...waiting for curl -s http://127.0.0.1:8529/_api/version'
+        while ! wget -q http://127.0.0.1:8529/_api/version 2>/dev/null
+        do
+            sleep 0.1
+        done
+    };
+    cd /performance && \
     /ArangoDB/build/bin/arangod \
       -c none \
       --javascript.app-path /tmp/app \
@@ -56,8 +60,8 @@ and docker run \
       --server.authentication false \
       --log.foreground-tty \
       /data/database & \
-      echo 'Waiting 15s for ArangoDB' && \
-      sleep 15 &&
+      echo 'Waiting for ArangoDB' && \
+      wait_for_arango &&
       echo 'Now executing go bench suite' && \
       cd /gobench && \
       ls && \
@@ -70,5 +74,5 @@ awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
   > "/mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
 rm -rf work/database
-cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
+cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
