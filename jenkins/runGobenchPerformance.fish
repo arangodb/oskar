@@ -65,7 +65,7 @@ and docker run \
       echo 'Now executing go bench suite' && \
       cd /gobench && \
       ls && \
-      ./gobench \
+      ./gobench -auth.user root -testcase all -endpoint http://127.0.0.1:8529 -outputFormat=csv -branch=devel > output.csv \
       "
 
 set -l s $status
