@@ -537,6 +537,13 @@ function buildDebianSnippet
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+
+  if test ! -f "$IN/$TARGZ_NAME_CLIENT"; echo "TAR.GZ '$TARGZ_NAME_CLIENT' is missing"; return 1; end
+
+  set -l TARGZ_SIZE_CLIENT (expr (wc -c < $IN/$TARGZ_NAME_CLIENT) / 1024 / 1024)
+  set -l TARGZ_SHA256_CLIENT (shasum -a 256 -b < $IN/$TARGZ_NAME_CLIENT | awk '{print $1}')
+
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-debian.html"
 
   sed -e "s|@DEBIAN_NAME_SERVER@|$DEBIAN_NAME_SERVER|g" \
@@ -551,6 +558,9 @@ function buildDebianSnippet
       -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
+      -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
+      -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
@@ -612,6 +622,13 @@ function buildRPMSnippet
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+
+  if test ! -f "$IN/$TARGZ_NAME_CLIENT"; echo "TAR.GZ '$TARGZ_NAME_CLIENT' is missing"; return 1; end
+
+  set -l TARGZ_SIZE_CLIENT (expr (wc -c < $IN/$TARGZ_NAME_CLIENT) / 1024 / 1024)
+  set -l TARGZ_SHA256_CLIENT (shasum -a 256 -b < $IN/$TARGZ_NAME_CLIENT | awk '{print $1}')
+
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-rpm.html"
 
   sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
@@ -626,6 +643,9 @@ function buildRPMSnippet
       -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
+      -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
+      -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
@@ -654,6 +674,9 @@ function buildRPMSnippet
       -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
+      -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
+      -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
@@ -699,11 +722,21 @@ function buildTarGzSnippet
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+
+  if test ! -f "$IN/$TARGZ_NAME_CLIENT"; echo "TAR.GZ '$TARGZ_NAME_CLIENT' is missing"; return 1; end
+
+  set -l TARGZ_SIZE_CLIENT (expr (wc -c < $IN/$TARGZ_NAME_CLIENT) / 1024 / 1024)
+  set -l TARGZ_SHA256_CLIENT (shasum -a 256 -b < $IN/$TARGZ_NAME_CLIENT | awk '{print $1}')
+
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-linux.html"
 
   sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
+      -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
+      -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
@@ -754,6 +787,13 @@ function buildBundleSnippet
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+
+  if test ! -f "$IN/$TARGZ_NAME_CLIENT"; echo "TAR.GZ '$TARGZ_NAME_CLIENT' is missing"; return 1; end
+
+  set -l TARGZ_SIZE_CLIENT (expr (wc -c < $IN/$TARGZ_NAME_CLIENT) / 1024 / 1024)
+  set -l TARGZ_SHA256_CLIENT (shasum -a 256 -b < $IN/$TARGZ_NAME_CLIENT | awk '{print $1}')
+
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-macosx.html"
 
   sed -e "s|@BUNDLE_NAME_SERVER@|$BUNDLE_NAME_SERVER|g" \
@@ -762,6 +802,9 @@ function buildBundleSnippet
       -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
       -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+      -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
+      -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
+      -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
       -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
