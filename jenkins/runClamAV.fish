@@ -100,6 +100,9 @@ function scan
       begin
         echo $shaf
         echo
+        echo "Filename: " (basename $filename)
+        echo "Date: " (date)
+        echo
         clamscan -r -v --max-scansize=2000M --max-filesize=1000M --max-recursion=10 work/sandbox
         if test $status -gt 1
            exit 1
