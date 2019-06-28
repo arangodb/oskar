@@ -122,7 +122,7 @@ function scan
   end
 end
 
-for i in (find $SOURCE ! -name "*.clamav" -a ! -name "*.asc" -a ! -name ".revoked")
+for i in (find $SOURCE ! -name "*.clamav" -a ! -name "*.asc" -a -type f | fgrep -v .revoked)
   scan $i
 end
 
