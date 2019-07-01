@@ -60,7 +60,7 @@ Function createReport
             }
     }
     $global:result | Add-Content "$env:TMP\testProtocol.txt"
-    If(Get-ChildItem -Path "$env:TMP" -Filter "core_*" -Recurse -ErrorAction SilentlyContinue -Force)
+    If(Get-ChildItem -Path "$env:TMP" -Filter "core_*" -Recurse -ErrorAction Continue -Force)
     {
         Write-Host "7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe "-DestinationPath "$INNERWORKDIR\crashreport-$date.zip
         7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe" -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
