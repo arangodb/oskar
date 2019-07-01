@@ -68,7 +68,7 @@ and docker run \
       ./gobench -auth.user root -testcase all -endpoint http://127.0.0.1:8529 -outputFormat=csv -branch=$ARANGO_BRANCH > /performance/results.csv "
 
 set -l s $status
-echo "storing results in /mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
+echo "storing results in /mnt/buildfiles/performance/Linux/Gobench/RAW/results-$ARANGODB_BRANCH-$datetime.csv"
 awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
   > "/mnt/buildfiles/performance/Linux/Gobench/RAW/results-$ARANGODB_BRANCH-$datetime.csv"
