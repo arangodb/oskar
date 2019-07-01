@@ -65,7 +65,6 @@ and docker run \
       wait_for_arango &&
       echo 'Now executing go bench suite' && \
       cd /gobench && \
-      ls && \
       ./gobench -auth.user root -testcase all -endpoint http://127.0.0.1:8529 -outputFormat=csv -branch=$ARANGO_BRANCH > output.csv \
       "
 
