@@ -4,7 +4,7 @@ set -xg gobenchdir (pwd)/gobench
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
 
-source jenkins/helper.jenkins.fish ; prepareOskar
+#source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults
 
@@ -36,6 +36,7 @@ and echo "docker run  -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY  -v (pwd)/work
 
 and docker run \
   -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
+  -e ARANGO_BRANCH=$ARANGODB_BRANCH \
   -v (pwd)/work/ArangoDB:/ArangoDB \
   -v (pwd)/work:/data \
   -v $simple:/performance \
@@ -65,7 +66,7 @@ and docker run \
       echo 'Now executing go bench suite' && \
       cd /gobench && \
       ls && \
-      ./gobench -auth.user root -testcase all -endpoint http://127.0.0.1:8529 -outputFormat=csv -branch=devel > output.csv \
+      ./gobench -auth.user root -testcase all -endpoint http://127.0.0.1:8529 -outputFormat=csv -branch=$ARANGO_BRANCH > output.csv \
       "
 
 set -l s $status
