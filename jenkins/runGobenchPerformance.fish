@@ -71,7 +71,7 @@ set -l s $status
 echo "storing results in /mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
 awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
-  > "/mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
+  > "/mnt/buildfiles/performance/Linux/Gobench/RAW/results-$ARANGODB_BRANCH-$datetime.csv"
 rm -rf work/database
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
