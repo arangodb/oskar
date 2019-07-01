@@ -24,11 +24,10 @@ and maintainerOff
 and releaseMode
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 
-# clone gobench
-and git clone git@github.com:arangodb/gobench.git
-and cd gobench
+# make gobench
+and pushd $gobenchdir
 and make
-and cd ..
+and popd
 
 and rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="
