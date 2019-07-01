@@ -52,7 +52,7 @@ for test in $tests
   echo -n 'plot ' >> $gp
   set -l sep ""
 
-  for vc in 3.4,grey 3.5,blue devel,red
+  for vc in 3.4,black 3.5,blue devel,red
     string split , $vc | begin read v; read c; end;
     set -l vv (echo $v | awk -F. '{ if ($1 == "devel") print "^devel$"; else print "^v?" $1 "\\\\." $2 "(\\\\..*)?$"; }')
 
