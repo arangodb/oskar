@@ -38,7 +38,7 @@ Function global:registerSingleTests()
     registerTest -testname "BackupAuthSysTests"
     registerTest -testname "BackupNoAuthNoSysTests"
     registerTest -testname "BackupNoAuthSysTests"
-    registerTest -testname "agency"
+    registerTest -testname "agency" -weight 2
     registerTest -testname "active_failover"
     registerTest -testname "arangosh"
     registerTest -testname "authentication"
