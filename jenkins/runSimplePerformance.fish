@@ -2,7 +2,7 @@
 set -xg simple (pwd)/performance
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
-set -xg dest /mnt/buildfiles/performance/Linux/Simple
+set -xg dest /mnt/buildfiles/performance/Linux/Simple/RAW
 
 if test -z "$ARANGODB_TEST_CONFIG"
   set -xg ARANGODB_TEST_CONFIG run-small-edges.js

@@ -6,7 +6,7 @@ mkdir -p work/images
 set -l gp work/generate.gnuplot
 set -l results work/results.csv
 set -l desc work/description.html
-set -l src /mnt/buildfiles/performance/Linux/Simple
+set -l src /mnt/buildfiles/performance/Linux/Simple/RAW
 
 if test -z "$DAYS_AGO"
   cat $src/results-*.csv > $results
