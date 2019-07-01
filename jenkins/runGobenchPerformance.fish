@@ -4,7 +4,7 @@ set -xg gobenchdir (pwd)/gobench
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
 
-#source jenkins/helper.jenkins.fish ; prepareOskar
+source jenkins/helper.jenkins.fish ; prepareOskar
 
 lockDirectory ; updateOskar ; clearResults
 
