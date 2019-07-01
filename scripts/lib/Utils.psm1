@@ -326,13 +326,14 @@ Function LaunchController($seconds)
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-before.txt
     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have "$currentRunning" tests that timed out! Currently running processes:"
     ForEach ($test in $global:launcheableTests) {
-        if ($test['pid'] -gt 0) {
+        $SessionId = [System.Diagnostics.Process]::GetCurrentProcess().SessionId
+        if ($test['pid'] -gt 0) { # TODO:  $test['running']
           Write-Host "Testrun timeout:"
           $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
           Write-Host $str
-          ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-            ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-              ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
+          ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
+            ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
+              ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
                 Write-Host "killing child3: "
                 $str=$childChildChildProcesses | Out-String
                 Write-Host $str
