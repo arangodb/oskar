@@ -6,12 +6,12 @@ mkdir -p work/images
 set -l gp work/generate.gnuplot
 set -l results work/results.csv
 set -l desc work/description.html
-set -l d /mnt/buildfiles/performance
+set -l src /mnt/buildfiles/performance/Linux/Simple
 
 if test -z "$DAYS_AGO"
-  cat /mnt/buildfiles/performance/results-*.csv > $results
+  cat $src/results-*.csv > $results
 else
-  cat /mnt/buildfiles/performance/results-*.csv | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") '$2 >= start {print $0}' > $results
+  cat $src/results-*.csv | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") '$2 >= start {print $0}' > $results
 end
 
 set -l dates (cat $results | awk -F, '{print $2}' | sort | uniq)
