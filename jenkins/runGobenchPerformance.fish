@@ -72,8 +72,8 @@ and for protocol in VST HTTP
           -auth.user root \
           -testcase all \
           -nrRequests 1000000 \
-          -nrConnections 64 \
-          -parallelism 64 \
+          -nrConnections 6 \
+          -parallelism 6 \
           -protocol $protocol \
           -endpoint http://127.0.0.1:8529 \
           -outputFormat=csv > /performance/results.csv"
