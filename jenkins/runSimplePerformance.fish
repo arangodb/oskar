@@ -28,7 +28,7 @@ and maintainerOff
 and releaseMode
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 
-and rm -rf work/database $simple/results.csv
+and sudo rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="
 and docker run \
   -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
@@ -52,6 +52,6 @@ echo "storing results in $dest/results-$ARANGODB_BRANCH-$datetime.csv"
 awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
   > "$dest/results-$ARANGODB_BRANCH-$datetime.csv"
-rm -rf work/database
+sudo rm -rf work/database
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s

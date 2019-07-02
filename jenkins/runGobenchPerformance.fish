@@ -3,6 +3,7 @@ set -xg simple (pwd)/performance
 set -xg gobenchdir (pwd)/gobench
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
+set -l s 0
 
 source jenkins/helper.jenkins.fish ; prepareOskar
 
@@ -29,48 +30,64 @@ and pushd $gobenchdir
 and make
 and popd
 
-and rm -rf work/database $simple/results.csv
+and sudo rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="
 and echo "docker run  -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY  -v (pwd)/work/ArangoDB:/ArangoDB  -v (pwd)/work:/data  -v $simple:/performance  -v $gobenchdir:/gobench"
 
-and docker run \
-  -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
-  -e ARANGO_BRANCH=$ARANGODB_BRANCH \
-  -v (pwd)/work/ArangoDB:/ArangoDB \
-  -v (pwd)/work:/data \
-  -v $simple:/performance \
-  -v $gobenchdir:/gobench \
-  arangodb/arangodb \
-  sh -c "
+and for protocol in VST HTTP
+  echo "Protocoll: " $protocol
+  docker run \
+    --cap-add SYS_NICE \
+    -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
+    -e ARANGO_BRANCH=$ARANGODB_BRANCH \
+    -v (pwd)/work/ArangoDB:/ArangoDB \
+    -v (pwd)/work:/data \
+    -v $simple:/performance \
+    -v $gobenchdir:/gobench \
+    arangodb/arangodb \
+    sh -c "
       wait_for_arango() {
         echo '...waiting for curl -s http://127.0.0.1:8529/_api/version'
         while ! wget -q http://127.0.0.1:8529/_api/version 2>/dev/null
         do
-            sleep 1
+          sleep 1
         done
-    };
-    cd /performance && \
-    /ArangoDB/build/bin/arangod \
-      -c none \
-      --javascript.app-path /tmp/app \
-      --javascript.startup-directory /ArangoDB/js \
-      --server.rest-server true \
-      --server.endpoint tcp://0.0.0.0:8529 \
-      --javascript.module-directory `pwd` \
-      --server.authentication false \
-      --log.foreground-tty \
-      /data/database & \
-      echo 'Waiting for ArangoDB' && \
-      wait_for_arango &&
-      echo 'Now executing go bench suite' && \
-      cd /gobench && \
-      ./gobench -auth.user root -testcase all -endpoint http://127.0.0.1:8529 -outputFormat=csv -branch=$ARANGO_BRANCH > /performance/results.csv "
+      };
+      cd /performance && \
+      /ArangoDB/build/bin/arangod \
+        -c none \
+        --javascript.app-path /tmp/app \
+        --javascript.startup-directory /ArangoDB/js \
+        --server.rest-server true \
+        --server.endpoint tcp://0.0.0.0:8529 \
+        --javascript.module-directory `pwd` \
+        --server.authentication false \
+        --log.foreground-tty \
+        /data/database & \
+        echo 'Waiting for ArangoDB' && \
+        wait_for_arango && \
+        echo 'Now executing go bench suite' && \
+        cd /gobench && \
+        ./gobench \
+          -auth.user root \
+          -testcase all \
+          -nrRequests 1000000 \
+          -nrConnections 64 \
+          -parallelism 64 \
+          -protocol $protocol \
+          -endpoint http://127.0.0.1:8529 \
+          -outputFormat=csv > /performance/results.csv"
 
-set -l s $status
-echo "storing results in /mnt/buildfiles/performance/Linux/Gobench/RAW/results-$ARANGODB_BRANCH-$datetime.csv"
-awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
-  < $simple/results.csv \
-  > "/mnt/buildfiles/performance/Linux/Gobench/RAW/results-$ARANGODB_BRANCH-$datetime.csv"
-rm -rf work/database
+  if test $status -gt 0
+    set s 1
+  else
+    echo "storing results in /mnt/buildfiles/performance/Linux/Gobench/RAW/results-$protocol-$ARANGODB_BRANCH-$datetime.csv"
+    awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
+      < $simple/results.csv \
+      > "/mnt/buildfiles/performance/Linux/Gobench/RAW/results-$protocol-$ARANGODB_BRANCH-$datetime.csv"
+    sudo rm -rf work/database
+  end
+end
+
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
