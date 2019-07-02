@@ -24,6 +24,7 @@ end
 
 echo > $gp
 begin
+  echo 'set ylabel "seconds"'
   echo 'set yrange [0:]'
   echo 'set term png size 2048,800'
   echo 'set key left bottom'
