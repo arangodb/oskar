@@ -35,7 +35,7 @@ and echo "==== starting performance run ===="
 and echo "docker run  -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY  -v (pwd)/work/ArangoDB:/ArangoDB  -v (pwd)/work:/data  -v $simple:/performance  -v $gobenchdir:/gobench"
 
 and for protocol in VST HTTP
-  echo "Protocoll: " $protocol
+  echo "Protocol: " $protocol
   docker run \
     --cap-add SYS_NICE \
     -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
@@ -72,8 +72,8 @@ and for protocol in VST HTTP
           -auth.user root \
           -testcase all \
           -nrRequests 1000000 \
-          -nrConnections 6 \
-          -parallelism 6 \
+          -nrConnections 12 \
+          -parallelism 12 \
           -protocol $protocol \
           -endpoint http://127.0.0.1:8529 \
           -outputFormat=csv > /performance/results.csv"
@@ -82,7 +82,7 @@ and for protocol in VST HTTP
     set s 1
   else
     echo "storing results in /mnt/buildfiles/performance/Linux/Gobench/RAW/results-$protocol-$ARANGODB_BRANCH-$datetime.csv"
-    awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
+    awk "{print \"$ARANGODB_BRANCH,$date,\" \$0 \"$protocol\"}" \
       < $simple/results.csv \
       > "/mnt/buildfiles/performance/Linux/Gobench/RAW/results-$protocol-$ARANGODB_BRANCH-$datetime.csv"
     sudo rm -rf work/database
