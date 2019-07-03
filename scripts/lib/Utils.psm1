@@ -245,7 +245,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
 
         if ($sniff) {
           $tshark = $global:WIRESHARKPATH/tshark.exe
-          (./$tshark -D  |Select-String -SimpleMatch Npcap ) -match '^(\d).*'
+          ($tshark -D  |Select-String -SimpleMatch Npcap ) -match '^(\d).*'
           $dumpDevice = $Matches[1]
           $testparams = $testparams + " --sniff true --sniffProgram $tshark --sniffDevice $dumpDevice"
         }
