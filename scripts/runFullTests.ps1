@@ -51,7 +51,7 @@ Function global:registerSingleTests()
     registerTest -testname "BackupNoAuthNoSysTests"
     registerTest -testname "BackupNoAuthSysTests"
     registerTest -testname "active_failover"
-    registerTest -testname "agency"
+    registerTest -testname "agency" -weight 2
     registerTest -testname "arangobench"
     registerTest -testname "arangosh"
     registerTest -testname "audit"
@@ -70,7 +70,7 @@ Function global:registerSingleTests()
     registerTest -testname "export"
     registerTest -testname "foxx_manager"
     registerTest -testname "http_replication" -weight 2
-    registerTest -testname "http_server"
+    registerTest -testname "http_server" -sniff true
     registerTest -testname "importing"
     registerTest -testname "queryCacheAuthorization"
     registerTest -testname "readOnly"
@@ -103,7 +103,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "resilience_sharddist"
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
-    registerTest -cluster $true -testname "http_server"
+    registerTest -cluster $true -testname "http_server" -sniff true
     registerTest -cluster $true -testname "ssl_server"
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
@@ -115,7 +115,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "dump_multiple"
     registerTest -cluster $true -testname "server_http"
-    # registerTest -cluster $true -testname "agency"
+    # registerTest -cluster $true -testname "agency" -weight 2
     comm
 }
 
