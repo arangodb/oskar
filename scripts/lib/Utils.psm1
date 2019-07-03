@@ -247,7 +247,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $tshark = $global:WIRESHARKPATH/tshark.exe
           (./$tshark -D  |Select-String -SimpleMatch Npcap ) -match '^(\d).*'
           $dumpDevice = $Matches[1]
-          $testparams = $testparams + " --sniff true --sniffProgramm $tshark --sniffDevice $dumpDevice"
+          $testparams = $testparams + " --sniff true --sniffProgram $tshark --sniffDevice $dumpDevice"
         }
         
         $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
