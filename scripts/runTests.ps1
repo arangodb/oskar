@@ -49,7 +49,7 @@ Function global:registerSingleTests()
     registerTest -testname "dump_multiple"
     registerTest -testname "endpoints"
     registerTest -testname "http_replication" -weight 2
-    registerTest -testname "http_server"
+    registerTest -testname "http_server" -sniff true
     registerTest -testname "ssl_server"
     registerTest -testname "version"
     comm
@@ -68,7 +68,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_authentication"
     registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "dump_multiple"
-    registerTest -cluster $true -testname "http_server"
+    registerTest -cluster $true -testname "http_server"  -sniff true
     registerTest -cluster $true -testname "resilience_move"
     registerTest -cluster $true -testname "resilience_failover"
     registerTest -cluster $true -testname "resilience_sharddist"
