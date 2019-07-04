@@ -42,7 +42,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_server_aql" -index "3" -bucket "5/3"
     registerTest -testname "shell_server_aql" -index "4" -bucket "5/4"
     registerTest -testname "server_http"
-    registerTest -testname "ssl_server"
+    registerTest -testname "ssl_server"  -sniff true
     registerTest -testname "shell_client"
     registerTest -testname "shell_client_aql"
     registerTest -testname "shell_replication" -weight 2
@@ -104,7 +104,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "http_server" -sniff true
-    registerTest -cluster $true -testname "ssl_server"
+    registerTest -cluster $true -testname "ssl_server" -sniff true
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
     registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"
