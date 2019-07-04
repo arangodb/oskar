@@ -254,7 +254,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
              Set-Variable -Name "ok" -Value $false -Scope global
              return
           }
-          $testparams = $testparams + " --sniff true --sniffProgram '$tsharkx' --sniffDevice $dumpDevice"
+          $testparams = $testparams + " --sniff true --sniffProgram `"$tsharkx`" --sniffDevice $dumpDevice"
         }
         
         $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
