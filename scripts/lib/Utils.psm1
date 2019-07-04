@@ -248,6 +248,12 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $tshark = "$tsharkx" -replace ' ', '` '
           (Invoke-Expression "$tshark -D"  |Select-String -SimpleMatch Npcap ) -match '^(\d).*'
           $dumpDevice = $Matches[1]
+          if ($dumpDevice -notmatch '\d+') {
+             Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
+             Invoke-Expression $tshark -D
+             Set-Variable -Name "ok" -Value $false -Scope global
+             return
+          }
           $testparams = $testparams + " --sniff true --sniffProgram '$tsharkx' --sniffDevice $dumpDevice"
         }
         
