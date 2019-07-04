@@ -205,7 +205,7 @@ Function launchTest($which) {
     Pop-Location
 }
 
-Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight)
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
     If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $testname))
@@ -241,6 +241,13 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         }
         if ($weight) {
           $testWeight = $weight
+        }
+
+        if ($sniff) {
+          $tshark = $global:WIRESHARKPATH/tshark.exe
+          ($tshark -D  |Select-String -SimpleMatch Npcap ) -match '^(\d).*'
+          $dumpDevice = $Matches[1]
+          $testparams = $testparams + " --sniff true --sniffProgram $tshark --sniffDevice $dumpDevice"
         }
         
         $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
