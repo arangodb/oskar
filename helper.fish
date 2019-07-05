@@ -515,7 +515,7 @@ function buildDebianSnippet
   set -l DEBIAN_NAME_SERVER "$ARANGODB_PKG_NAME""_$DEBIAN_VERSION""_amd64.deb"
   set -l DEBIAN_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-dbg_$DEBIAN_VERSION""_amd64.deb"
 
-  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/Linux/
+  set -l IN $argv[1]/packages/$ARANGODB_EDITION/Linux/
   set -l OUT $argv[1]/release/snippets
 
   if test ! -f "$IN/$DEBIAN_NAME_SERVER"; echo "Debian package '$DEBIAN_NAME_SERVER' is missing"; return 1; end
@@ -600,7 +600,7 @@ function buildRPMSnippet
   set -l RPM_NAME_SERVER "$ARANGODB_PKG_NAME-$RPM_VERSION.x86_64.rpm"
   set -l RPM_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-debuginfo-$RPM_VERSION.x86_64.rpm"
 
-  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/Linux/
+  set -l IN $argv[1]/packages/$ARANGODB_EDITION/Linux/
   set -l OUT $argv[1]/release/snippets
 
   if test ! -f "$IN/$RPM_NAME_SERVER"; echo "RPM package '$RPM_NAME_SERVER' is missing"; return 1; end
@@ -714,7 +714,7 @@ function buildTarGzSnippet
 
   set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_VERSION.tar.gz"
 
-  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/Linux/
+  set -l IN $argv[1]/packages/$ARANGODB_EDITION/Linux/
   set -l OUT $argv[1]/release/snippets
 
   if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
@@ -772,7 +772,7 @@ function buildBundleSnippet
 
   set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
 
-  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/MacOSX/
+  set -l IN $argv[1]/packages/$ARANGODB_EDITION/MacOSX/
   set -l OUT $argv[1]/release/snippets
 
   if test ! -f "$IN/$BUNDLE_NAME_SERVER"; echo "DMG package '$BUNDLE_NAME_SERVER' is missing"; return 1; end
@@ -844,7 +844,7 @@ function buildWindowsSnippet
   set -l WINDOWS_NAME_SERVER_ZIP "$ARANGODB_PKG_NAME-$ARANGODB_VERSION""_win64.zip"
   set -l WINDOWS_NAME_CLIENT_EXE "$ARANGODB_PKG_NAME-client-$ARANGODB_VERSION""_win64.exe"
 
-  set -l IN $argv[1]/release/packages/$ARANGODB_EDITION/Windows/
+  set -l IN $argv[1]/packages/$ARANGODB_EDITION/Windows/
   set -l OUT $argv[1]/release/snippets
 
   if test ! -f "$IN/$WINDOWS_NAME_SERVER_EXE"; echo "Windows server exe package '$WINDOWS_NAME_SERVER_EXE' is missing"; return 1; end
