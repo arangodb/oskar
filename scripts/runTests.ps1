@@ -69,6 +69,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "dump_multiple"
     registerTest -cluster $true -testname "http_server"  -sniff true
+    registerTest -cluster $true -testname "permissions_server"
     registerTest -cluster $true -testname "resilience_move"
     registerTest -cluster $true -testname "resilience_failover"
     registerTest -cluster $true -testname "resilience_sharddist"

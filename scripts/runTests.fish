@@ -117,6 +117,7 @@ set CT "$CT""1500,runClusterTest1 shell_server_aql 13 --testBuckets 16/13 --dump
 set CT "$CT""1500,runClusterTest1 shell_server_aql 14 --testBuckets 16/14 --dumpAgencyOnError true\n"
 set CT "$CT""1500,runClusterTest1 shell_server_aql 15 --testBuckets 16/15 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 server_http - --dumpAgencyOnError true\n"
+set CT "$CT""1000,runClusterTest1 permissions_server - --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 ssl_server - --dumpAgencyOnError true\n"
 set CT "$CT""600,runClusterTest1 resilience_move - --dumpAgencyOnError true\n"
 set CT "$CT""750,runClusterTest1 resilience_failover - --dumpAgencyOnError true\n"
