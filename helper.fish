@@ -420,31 +420,32 @@ end
 ## #############################################################################
 
 function makeSnippets
-  if test (count $argv) -lt 1
-    echo "usage: makeSnippets <dir>"
+  if test (count $argv) -lt 2
+    echo "usage: makeSnippets <stage2> <stage1>"
     return 1
   end
 
   findArangoDBVersion
 
-  set DIR $argv[1]
+  set IN $argv[1]
+  set OUT $argv[2]
 
   community
-  and buildSourceSnippet $DIR
-  and buildDebianSnippet $DIR
-  and buildRPMSnippet $DIR
-  and buildTarGzSnippet $DIR
-  and buildBundleSnippet $DIR
-  and buildWindowsSnippet $DIR
-  and buildDockerSnippet $DIR
+  and buildSourceSnippet $IN $OUT
+  and buildDebianSnippet $IN $OUT
+  and buildRPMSnippet $IN $OUT
+  and buildTarGzSnippet $IN $OUT
+  and buildBundleSnippet $IN $OUT
+  and buildWindowsSnippet $IN $OUT
+  and buildDockerSnippet $OUT
 
   and enterprise
-  and buildDebianSnippet $DIR
-  and buildRPMSnippet $DIR
-  and buildTarGzSnippet $DIR
-  and buildBundleSnippet $DIR
-  and buildWindowsSnippet $DIR
-  and buildDockerSnippet $DIR
+  and buildDebianSnippet $IN $OUT
+  and buildRPMSnippet $IN $OUT
+  and buildTarGzSnippet $IN $OUT
+  and buildBundleSnippet $IN $OUT
+  and buildWindowsSnippet $IN $OUT
+  and buildDockerSnippet $OUT
 end
 
 ## #############################################################################
@@ -456,8 +457,8 @@ function buildSourceSnippet
   set -l SOURCE_TAR_BZ2 "ArangoDB-$ARANGODB_VERSION.tar.bz2"
   set -l SOURCE_ZIP "ArangoDB-$ARANGODB_VERSION.zip"
 
-  set IN $argv[1]/release/source
-  set OUT $argv[1]/release/snippets
+  set IN $argv[1]/$ARANGODB_PACKAGES/source
+  set OUT $argv[2]/release/snippets
 
   if test ! -f "$IN/$SOURCE_TAR_GZ"; echo "Source package '$SOURCE_TAR_GZ' is missing"; return 1; end
   if test ! -f "$IN/$SOURCE_TAR_BZ2"; echo "Source package '$SOURCE_TAR_BZ2"' is missing"; return 1; end
@@ -515,8 +516,8 @@ function buildDebianSnippet
   set -l DEBIAN_NAME_SERVER "$ARANGODB_PKG_NAME""_$DEBIAN_VERSION""_amd64.deb"
   set -l DEBIAN_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-dbg_$DEBIAN_VERSION""_amd64.deb"
 
-  set -l IN $argv[1]/packages/$ARANGODB_EDITION/Linux/
-  set -l OUT $argv[1]/release/snippets
+  set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Linux/
+  set -l OUT $argv[2]/release/snippets
 
   if test ! -f "$IN/$DEBIAN_NAME_SERVER"; echo "Debian package '$DEBIAN_NAME_SERVER' is missing"; return 1; end
   if test ! -f "$IN/$DEBIAN_NAME_CLIENT"; echo "Debian package '$DEBIAN_NAME_CLIENT' is missing"; return 1; end
@@ -600,8 +601,8 @@ function buildRPMSnippet
   set -l RPM_NAME_SERVER "$ARANGODB_PKG_NAME-$RPM_VERSION.x86_64.rpm"
   set -l RPM_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-debuginfo-$RPM_VERSION.x86_64.rpm"
 
-  set -l IN $argv[1]/packages/$ARANGODB_EDITION/Linux/
-  set -l OUT $argv[1]/release/snippets
+  set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Linux/
+  set -l OUT $argv[2]/release/snippets
 
   if test ! -f "$IN/$RPM_NAME_SERVER"; echo "RPM package '$RPM_NAME_SERVER' is missing"; return 1; end
   if test ! -f "$IN/$RPM_NAME_CLIENT"; echo "RPM package '$RPM_NAME_CLIENT' is missing"; return 1; end
@@ -714,8 +715,8 @@ function buildTarGzSnippet
 
   set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_VERSION.tar.gz"
 
-  set -l IN $argv[1]/packages/$ARANGODB_EDITION/Linux/
-  set -l OUT $argv[1]/release/snippets
+  set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Linux/
+  set -l OUT $argv[2]/release/snippets
 
   if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
@@ -772,8 +773,8 @@ function buildBundleSnippet
 
   set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
 
-  set -l IN $argv[1]/packages/$ARANGODB_EDITION/MacOSX/
-  set -l OUT $argv[1]/release/snippets
+  set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/MacOSX/
+  set -l OUT $argv[2]/release/snippets
 
   if test ! -f "$IN/$BUNDLE_NAME_SERVER"; echo "DMG package '$BUNDLE_NAME_SERVER' is missing"; return 1; end
 
@@ -844,8 +845,8 @@ function buildWindowsSnippet
   set -l WINDOWS_NAME_SERVER_ZIP "$ARANGODB_PKG_NAME-$ARANGODB_VERSION""_win64.zip"
   set -l WINDOWS_NAME_CLIENT_EXE "$ARANGODB_PKG_NAME-client-$ARANGODB_VERSION""_win64.exe"
 
-  set -l IN $argv[1]/packages/$ARANGODB_EDITION/Windows/
-  set -l OUT $argv[1]/release/snippets
+  set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Windows/
+  set -l OUT $argv[2]/release/snippets
 
   if test ! -f "$IN/$WINDOWS_NAME_SERVER_EXE"; echo "Windows server exe package '$WINDOWS_NAME_SERVER_EXE' is missing"; return 1; end
   if test ! -f "$IN/$WINDOWS_NAME_SERVER_ZIP"; echo "Windows server zip package '$WINDOWS_NAME_SERVER_ZIP' is missing"; return 1; end
