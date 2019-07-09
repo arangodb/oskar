@@ -10,9 +10,13 @@ set -l src /mnt/buildfiles/performance/Linux/Simple/RAW
 
 if test -z "$DAYS_AGO"
   cat $src/results-*.csv > $results
+  set dst /mnt/userfiles/jenkins/performance/simple/ALL
 else
   cat $src/results-*.csv | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") '$2 >= start {print $0}' > $results
+  set $dst /mnt/userfiles/jenkins/performance/simple/$DAYS_AGO
 end
+
+mkdir -p $dst
 
 set -l dates (cat $results | awk -F, '{print $2}' | sort | uniq)
 
@@ -78,3 +82,5 @@ end
 
 echo "Generating images"
 docker run -v (pwd)/work:/work pavlov99/gnuplot gnuplot $gp
+
+cp work/images/*.png $dst
