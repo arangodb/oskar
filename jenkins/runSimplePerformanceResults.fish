@@ -13,7 +13,7 @@ if test -z "$DAYS_AGO"
   set dst /mnt/userfiles/jenkins/performance/simple/ALL
 else
   cat $src/results-*.csv | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") '$2 >= start {print $0}' > $results
-  set $dst /mnt/userfiles/jenkins/performance/simple/$DAYS_AGO
+  set dst /mnt/userfiles/jenkins/performance/simple/$DAYS_AGO
 end
 
 mkdir -p $dst
