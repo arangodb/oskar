@@ -33,7 +33,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_client"
     registerTest -testname "shell_client_aql"
     registerTest -testname "shell_replication" -weight 2
-    registerTest -testname "permissions_server"
+    registerTest -testname "server_permissions"
     registerTest -testname "BackupAuthNoSysTests"
     registerTest -testname "BackupAuthSysTests"
     registerTest -testname "BackupNoAuthNoSysTests"
@@ -69,7 +69,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "dump_multiple"
     registerTest -cluster $true -testname "http_server"  -sniff true
-    registerTest -cluster $true -testname "permissions_server"
+    registerTest -cluster $true -testname "server_permissions"
     registerTest -cluster $true -testname "resilience_move"
     registerTest -cluster $true -testname "resilience_failover"
     registerTest -cluster $true -testname "resilience_sharddist"
