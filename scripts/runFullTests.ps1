@@ -91,31 +91,31 @@ Function global:registerClusterTests()
 
     $global:TESTSUITE_TIMEOUT = 12600
 
-    registerTest -cluster $true -testname "load_balancing"
-    registerTest -cluster $true -testname "load_balancing_auth"
-    registerTest -cluster $true -testname "resilience_move"
-    registerTest -cluster $true -testname "resilience_move_view"
-    registerTest -cluster $true -testname "resilience_repair"
-    registerTest -cluster $true -testname "resilience_failover"
-    registerTest -cluster $true -testname "resilience_failover_failure"
-    registerTest -cluster $true -testname "resilience_failover_view"
-    registerTest -cluster $true -testname "resilience_transactions"
-    registerTest -cluster $true -testname "resilience_sharddist"
-    registerTest -cluster $true -testname "shell_client"
-    registerTest -cluster $true -testname "shell_server"
-    registerTest -cluster $true -testname "http_server" -sniff true
-    registerTest -cluster $true -testname "server_permissions"
-    registerTest -cluster $true -testname "ssl_server" -sniff true
-    registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
-    registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
-    registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"
-    registerTest -cluster $true -testname "shell_server_aql" -index "3" -bucket "5/3"
-    registerTest -cluster $true -testname "shell_server_aql" -index "4" -bucket "5/4"
-    registerTest -cluster $true -testname "shell_client_aql"
-    registerTest -cluster $true -testname "dump"
-    registerTest -cluster $true -testname "dump_maskings"
-    registerTest -cluster $true -testname "dump_multiple"
-    registerTest -cluster $true -testname "server_http"
+    registerTest -cluster $true -testname "load_balancing" -weight 5
+    registerTest -cluster $true -testname "load_balancing_auth" -weight 5
+    registerTest -cluster $true -testname "resilience_move" -weight 5
+    registerTest -cluster $true -testname "resilience_move_view" -weight 5
+    registerTest -cluster $true -testname "resilience_repair" -weight 5
+    registerTest -cluster $true -testname "resilience_failover" -weight 5
+    registerTest -cluster $true -testname "resilience_failover_failure" -weight 5
+    registerTest -cluster $true -testname "resilience_failover_view" -weight 5
+    registerTest -cluster $true -testname "resilience_transactions" -weight 5
+    registerTest -cluster $true -testname "resilience_sharddist" -weight 5
+    registerTest -cluster $true -testname "shell_client" -weight 5
+    registerTest -cluster $true -testname "shell_server" -weight 5
+    registerTest -cluster $true -testname "http_server" -sniff true -weight 5
+    registerTest -cluster $true -testname "server_permissions" -weight 5
+    registerTest -cluster $true -testname "ssl_server" -sniff true -weight 5
+    registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0" -weight 5
+    registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1" -weight 5
+    registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2" -weight 5
+    registerTest -cluster $true -testname "shell_server_aql" -index "3" -bucket "5/3" -weight 5
+    registerTest -cluster $true -testname "shell_server_aql" -index "4" -bucket "5/4" -weight 5
+    registerTest -cluster $true -testname "shell_client_aql" -weight 5
+    registerTest -cluster $true -testname "dump" -weight 5
+    registerTest -cluster $true -testname "dump_maskings" -weight 5
+    registerTest -cluster $true -testname "dump_multiple" -weight 5
+    registerTest -cluster $true -testname "server_http" -weight 5
     # registerTest -cluster $true -testname "agency" -weight 3
     comm
 }
