@@ -38,7 +38,7 @@ Function global:registerSingleTests()
     registerTest -testname "BackupAuthSysTests"
     registerTest -testname "BackupNoAuthNoSysTests"
     registerTest -testname "BackupNoAuthSysTests"
-    registerTest -testname "agency" -weight 2
+    registerTest -testname "agency" -weight 3
     registerTest -testname "active_failover"
     registerTest -testname "arangosh"
     registerTest -testname "authentication"
@@ -62,7 +62,7 @@ Function global:registerClusterTests()
 
     $global:TESTSUITE_TIMEOUT = 3600
 
-    registerTest -cluster $true -testname "agency"
+    registerTest -cluster $true -testname "agency" -weight 3
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "dump"
     registerTest -cluster $true -testname "dump_authentication"

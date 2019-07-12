@@ -226,7 +226,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         }
         if ($cluster -eq $true)
         {
-            $testWeight = 4
+            $testWeight = 5
             $cluster = "true"
             $dumpAgencyOnError = "true"
         }
