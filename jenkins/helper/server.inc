@@ -27,7 +27,10 @@ done
 echo "NAME: $ARANGO_DOCKER_NAME"
 
 if [ "$ARANGO_MODE" == "cluster" ]; then
-  if [[ -v ARANGO_PORTS && ${#ARANGO_PORTS[@]} > 0 ]]; then
+  if [[ -v ARANGO_PORTS ]]; then
+    IFS=', ' read -r -a ARANGO_PORTS <<< "$ARANGO_PORTS"
+  fi
+  if [[ ${#ARANGO_PORTS[@]} > 0 ]]; then
     #port_shift=29
     for i in "${ARANGO_PORTS[@]}"; do
       echo "PORT $i to export"
