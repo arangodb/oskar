@@ -52,6 +52,8 @@ Function global:registerSingleTests()
     registerTest -testname "http_server" -sniff true
     registerTest -testname "ssl_server"
     registerTest -testname "version"
+    registerTest -testname "audit_client"
+    registerTest -testname "audit_server"
     comm
 }
 
