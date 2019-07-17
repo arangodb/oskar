@@ -26,8 +26,21 @@ done
 
 echo "NAME: $ARANGO_DOCKER_NAME"
 
-EXPORT_PORTS="-p $ARANGO_PORT:8529"
-
+if [ "$ARANGO_MODE" == "cluster" ]; then
+  if [[ -v ARANGO_PORTS && ${#ARANGO_PORTS[@]} > 0 ]]; then
+    #port_shift=29
+    for i in "${ARANGO_PORTS[@]}"; do
+      echo "PORT $i to export"
+      EXPORT_PORTS="$EXPORT_PORTS -p $i:$i"
+      #EXPORT_PORTS="$EXPORT_PORTS -p $i:$(expr 8500 + $port_shift)"
+      #port_shift=$(expr $port_shift + 10)
+    done
+  else 
+    EXPORT_PORTS="-p $ARANGO_PORT:$ARANGO_PORT"
+  fi
+else
+  EXPORT_PORTS="-p $ARANGO_PORT:8529"
+fi
 echo "PORTS: $EXPORT_PORTS"
 echo "MODE: $ARANGO_MODE"
 echo "ENGINE: $ARANGO_STORAGE_ENGINE"
@@ -46,6 +59,7 @@ mkdir $OUTDIR
 DOCKER_AUTH=""
 STARTER_AUTH=""
 DOCKER_CMD="docker run --cap-add SYS_NICE --name $ARANGO_DOCKER_NAME -d $EXPORT_PORTS -v $OUTDIR:/testrun"
+#DOCKER_IMAGE="registry.arangodb.biz:5000/arangodb/linux-${ARANGO_EDITION}-maintainer:$ARANGO_BRANCH"
 STARTER_CMD="arangodb --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun"
 STARTER_MODE=""
 
@@ -60,6 +74,11 @@ fi
 
 if [ "$ARANGO_MODE" == "cluster" ]; then
   STARTER_MODE="--starter.mode cluster"
+  if [[ "$ARANGO_MODE" == "cluster" && -v ARANGO_PORTS && ${#ARANGO_PORTS[@]} > 0 ]]; then
+    STARTER_MODE="$STARTER_MODE --starter.port $(expr ${ARANGO_PORTS[0]} - 1)"
+  else
+    STARTER_MODE="$STARTER_MODE --starter.port $(expr $ARANGO_PORT - 1)"
+  fi
 elif [ "$ARANGO_MODE" == "singleserver" ]; then
   STARTER_MODE="--starter.mode single" 
 else
