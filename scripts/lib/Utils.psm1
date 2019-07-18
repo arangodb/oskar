@@ -60,7 +60,7 @@ Function createReport
             }
     }
     $global:result | Add-Content "$env:TMP\testProtocol.txt"
-    If(Get-ChildItem -Path "$env:TMP" -Filter "core_*" -Recurse -ErrorAction SilentlyContinue -Force)
+    If(Get-ChildItem -Path "$env:TMP" -Filter "core_*" -Recurse -ErrorAction Continue -Force)
     {
         Write-Host "7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe "-DestinationPath "$INNERWORKDIR\crashreport-$date.zip
         7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe" -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
@@ -205,7 +205,7 @@ Function launchTest($which) {
     Pop-Location
 }
 
-Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight)
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
     If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $testname))
@@ -241,6 +241,20 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         }
         if ($weight) {
           $testWeight = $weight
+        }
+
+        if ($sniff) {
+          $tsharkx = "$global:WIRESHARKPATH\tshark.exe"
+          $tshark = "$tsharkx" -replace ' ', '` '
+          (Invoke-Expression "$tshark -D"  |Select-String -SimpleMatch Npcap ) -match '^(\d).*'
+          $dumpDevice = $Matches[1]
+          if ($dumpDevice -notmatch '\d+') {
+             Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
+             Invoke-Expression $tshark -D
+             Set-Variable -Name "ok" -Value $false -Scope global
+             return
+          }
+          $testparams = $testparams + " --sniff true --sniffProgram `"$tsharkx`" --sniffDevice $dumpDevice"
         }
         
         $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
@@ -325,14 +339,15 @@ Function LaunchController($seconds)
   
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-before.txt
     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have "$currentRunning" tests that timed out! Currently running processes:"
+    $SessionId = [System.Diagnostics.Process]::GetCurrentProcess().SessionId
     ForEach ($test in $global:launcheableTests) {
-        if ($test['pid'] -gt 0) {
+        if ($test['pid'] -gt 0) { # TODO:  $test['running']
           Write-Host "Testrun timeout:"
           $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
           Write-Host $str
-          ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-            ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
-              ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid']})) {
+          ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
+            ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
+              ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
                 Write-Host "killing child3: "
                 $str=$childChildChildProcesses | Out-String
                 Write-Host $str

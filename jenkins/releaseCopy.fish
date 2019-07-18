@@ -22,7 +22,7 @@ end
 
 set -g s 0
 
-for pattern in "arangodb3_*.deb" "arangodb3-*.deb" "arangodb3-*.rpm" "arangodb3-linux-*.tar.gz"
+for pattern in "arangodb3_*.deb" "arangodb3-*.deb" "arangodb3-*.rpm" "arangodb3-linux-*.tar.gz" "arangodb3-client-linux-*.tar.gz"
   set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
   for file in $files
     cp -a $SRC/$file $DST/release/packages/Community/Linux ; or set -g s 1
@@ -43,7 +43,7 @@ for pattern in "ArangoDB3-*.exe" "ArangoDB3-*.zip"
   end
 end
 
-for pattern in "arangodb3e_*.deb" "arangodb3e-*.deb" "arangodb3e-*.rpm" "arangodb3e-linux-*.tar.gz"
+for pattern in "arangodb3e_*.deb" "arangodb3e-*.deb" "arangodb3e-*.rpm" "arangodb3e-linux-*.tar.gz" "arangodb3e-client-linux-*.tar.gz"
   set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
   for file in $files
     cp -a $SRC/$file $DST/release/packages/Enterprise/Linux ; or set -g s 1

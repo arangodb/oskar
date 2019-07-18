@@ -58,6 +58,7 @@ function runAnyTest
     echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
   else
     set -l arguments $t \
+      (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true")\
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic "$SKIPNONDETERMINISTIC" \
@@ -282,7 +283,7 @@ function resetLaunch
   set -g portBase 10000
   set -g launchCount 0
   if test $launchFactor -gt 1 -a $PARALLELISM -lt (math "$launchFactor*2")
-    parallelism (math "$PARALLELISM*2")
+    set -g $PARALLELISM (math "$PARALLELISM*2")
     echo "Extend small parallelism for launchFactor > 1: $PARALLELISM"
   end
   echo Launching tests...

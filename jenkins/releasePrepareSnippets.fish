@@ -10,7 +10,7 @@ lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
 
 switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
-and makeSnippets /mnt/buildfiles/stage1/$RELEASE_TAG
+and makeSnippets /mnt/buildfiles/stage2 /mnt/buildfiles/stage1/$RELEASE_TAG
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory

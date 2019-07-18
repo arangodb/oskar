@@ -42,7 +42,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_server_aql" -index "3" -bucket "5/3"
     registerTest -testname "shell_server_aql" -index "4" -bucket "5/4"
     registerTest -testname "server_http"
-    registerTest -testname "ssl_server"
+    registerTest -testname "ssl_server"  -sniff true
     registerTest -testname "shell_client"
     registerTest -testname "shell_client_aql"
     registerTest -testname "shell_replication" -weight 2
@@ -51,7 +51,7 @@ Function global:registerSingleTests()
     registerTest -testname "BackupNoAuthNoSysTests"
     registerTest -testname "BackupNoAuthSysTests"
     registerTest -testname "active_failover"
-    registerTest -testname "agency"
+    registerTest -testname "agency" -weight 2
     registerTest -testname "arangobench"
     registerTest -testname "arangosh"
     registerTest -testname "audit"
@@ -70,7 +70,7 @@ Function global:registerSingleTests()
     registerTest -testname "export"
     registerTest -testname "foxx_manager"
     registerTest -testname "http_replication" -weight 2
-    registerTest -testname "http_server"
+    registerTest -testname "http_server" -sniff true
     registerTest -testname "importing"
     registerTest -testname "queryCacheAuthorization"
     registerTest -testname "readOnly"
@@ -79,7 +79,7 @@ Function global:registerSingleTests()
     registerTest -testname "audit_client"
     registerTest -testname "audit_server"
     registerTest -testname "permissions"
-    registerTest -testname "permissions_server"
+    registerTest -testname "server_permissions"
     registerTest -testname "paths_server"    
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that
@@ -95,7 +95,7 @@ Function global:registerClusterTests()
     noteStartAndRepoState
     Write-Host "Registering tests..."
 
-    $global:TESTSUITE_TIMEOUT = 10800
+    $global:TESTSUITE_TIMEOUT = 12600
 
     registerTest -cluster $true -testname "load_balancing"
     registerTest -cluster $true -testname "load_balancing_auth"
@@ -109,8 +109,9 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "resilience_sharddist"
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
-    registerTest -cluster $true -testname "http_server"
-    registerTest -cluster $true -testname "ssl_server"
+    registerTest -cluster $true -testname "http_server" -sniff true
+    registerTest -cluster $true -testname "server_permissions"
+    registerTest -cluster $true -testname "ssl_server" -sniff true
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
     registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"
@@ -121,7 +122,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "dump_multiple"
     registerTest -cluster $true -testname "server_http"
-    # registerTest -cluster $true -testname "agency"
+    # registerTest -cluster $true -testname "agency" -weight 2
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that
     # the testing framework does not support automatic restarts of instances

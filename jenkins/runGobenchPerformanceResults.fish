@@ -6,17 +6,13 @@ mkdir -p work/images
 set -l gp work/generate.gnuplot
 set -l results work/results.csv
 set -l desc work/description.html
-set -l src /mnt/buildfiles/performance/Linux/Simple/RAW
+set -l src /mnt/buildfiles/performance/Linux/Gobench/RAW
 
 if test -z "$DAYS_AGO"
   cat $src/results-*.csv > $results
-  set dst /mnt/userfiles/SL/performance/simple/ALL
 else
   cat $src/results-*.csv | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") '$2 >= start {print $0}' > $results
-  set dst /mnt/userfiles/SL/performance/simple/$DAYS_AGO
 end
-
-mkdir -p $dst
 
 set -l dates (cat $results | awk -F, '{print $2}' | sort | uniq)
 
@@ -28,7 +24,6 @@ end
 
 echo > $gp
 begin
-  echo 'set ylabel "seconds"'
   echo 'set yrange [0:]'
   echo 'set term png size 2048,800'
   echo 'set key left bottom'
@@ -51,21 +46,26 @@ echo > $desc
 
 for test in $tests
   echo "Test $test"
+  set -l testname (echo $test | tr " " "_")
 
   echo "set title \"$test\"" >> $gp
-  echo "set output \"work/images/$test.png\"" >> $gp
+  echo "set output \"work/images/$testname.png\"" >> $gp
   echo -n 'plot ' >> $gp
   set -l sep ""
 
-  for vc in 3.4,black 3.5,blue devel,red
-    string split , $vc | begin read v; read c; end;
-    set -l vv (echo $v | awk -F. '{ if ($1 == "devel") print "^devel$"; else print "^v?" $1 "\\\\." $2 "(\\\\..*)?$"; }')
+  for pl in HTTP,1 VST,3
+    string split , $pl | begin read p; read l; end;
 
-    awk -F, "\$1 ~ /$vv/ && \$3 == \"$test\" {print \$2 \" \" \$5}" $results | sort > work/total/$v-$test.csv
+    for vc in 3.4,black 3.5,blue devel,red
+      string split , $vc | begin read v; read c; end;
+      set -l vv (echo $v | awk -F. '{ if ($1 == "devel") print "^devel$"; else print "^v?" $1 "\\\\." $2 "(\\\\..*)?$"; }')
 
-    if test -s work/total/$v-$test.csv
-      echo -n "$sep\"work/total/$v-$test.csv\" with linespoints linewidth 3 lc rgb '$c' title '$v'" >> $gp
-      set sep ", "
+      awk -F, "\$1 ~ /$vv/ && \$3 == \"$test\" && \$9 == \"$p\" {print \$2 \" \" \$5}" $results | sort > work/total/$v-$p-$testname.csv
+
+      if test -s work/total/$v-$p-$testname.csv
+        echo -n "$sep\"work/total/$v-$p-$testname.csv\" with linespoints linewidth 3 lc rgb '$c' dt $l title '$v $p'" >> $gp
+        set sep ", "
+      end
     end
   end
 
@@ -73,7 +73,7 @@ for test in $tests
   echo >> $gp
 
   echo "<br/>" >> $desc
-  echo "<img src=\"ws/work/images/$test.png\"></img>" >> $desc
+  echo "<img src=\"ws/work/images/$testname.png\"></img>" >> $desc
 end
 
 if test (count work/images/*.png) -gt 0
@@ -82,5 +82,3 @@ end
 
 echo "Generating images"
 docker run -v (pwd)/work:/work pavlov99/gnuplot gnuplot $gp
-
-cp work/images/*.png $dst

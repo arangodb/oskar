@@ -2,6 +2,7 @@
 set -xg simple (pwd)/performance
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
+set -xg dest /mnt/buildfiles/performance/Linux/Simple/RAW
 
 if test -z "$ARANGODB_TEST_CONFIG"
   set -xg ARANGODB_TEST_CONFIG run-small-edges.js
@@ -27,7 +28,7 @@ and maintainerOff
 and releaseMode
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 
-and rm -rf work/database $simple/results.csv
+and sudo rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="
 and docker run \
   -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
@@ -47,10 +48,10 @@ and docker run \
       --javascript.script $ARANGODB_TEST_CONFIG"
 
 set -l s $status
-echo "storing results in /mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
+echo "storing results in $dest/results-$ARANGODB_BRANCH-$datetime.csv"
 awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
-  > "/mnt/buildfiles/performance/results-$ARANGODB_BRANCH-$datetime.csv"
-rm -rf work/database
+  > "$dest/results-$ARANGODB_BRANCH-$datetime.csv"
+sudo rm -rf work/database
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s

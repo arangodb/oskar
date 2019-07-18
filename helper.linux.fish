@@ -301,6 +301,17 @@ function signSourcePackage
   or begin ; popd ; return 1 ; end
 end
 
+function createCompleteTar
+  set -l RELEASE_TAG $argv[1]
+
+  pushd $WORKDIR/work
+  and runInContainer \
+	$UBUNTUBUILDIMAGE $SCRIPTSDIR/createCompleteTar.fish \
+	$RELEASE_TAG
+  and popd
+  or begin ; popd ; return 1 ; end
+end
+
 ## #############################################################################
 ## linux release
 ## #############################################################################
