@@ -102,7 +102,7 @@ Function createReport
         Remove-Item -Force "$INNERWORKDIR\testfailures.log"
     }
 
-    Add-Content $global:oskarErrorMessage "$INNERWORKDIR\testfailures.log"
+    $global:oskarErrorMessage | Add-Content "$INNERWORKDIR\testfailures.log"
     ForEach($file in (Get-ChildItem -Path $env:TMP -Filter "testfailures.txt" -Recurse).FullName)
     {
         Get-Content $file | Add-Content "$INNERWORKDIR\testfailures.log"; comm
