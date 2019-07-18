@@ -60,6 +60,7 @@ Function global:registerSingleTests()
     # and hot_backup currently needs a server restart on a restore operation
     # on Windows. On Linux and Mac we use an exec operation for this to
     # restart without changing the PID, which is not possible on Windows.
+    # registerTest -testname "hot_backup"
     comm
 }
 
@@ -95,6 +96,7 @@ Function global:registerClusterTests()
     # and hot_backup currently needs a server restart on a restore operation
     # on Windows. On Linux and Mac we use an exec operation for this to
     # restart without changing the PID, which is not possible on Windows.
+    # registerTest -cluster $true -testname "hot_backup"
     comm
 }
 
