@@ -101,6 +101,8 @@ Function createReport
     {
         Remove-Item -Force "$INNERWORKDIR\testfailures.log"
     }
+
+    $global:oskarErrorMessage | Add-Content "$INNERWORKDIR\testfailures.log"
     ForEach($file in (Get-ChildItem -Path $env:TMP -Filter "testfailures.txt" -Recurse).FullName)
     {
         Get-Content $file | Add-Content "$INNERWORKDIR\testfailures.log"; comm
@@ -342,6 +344,9 @@ Function LaunchController($seconds)
     $SessionId = [System.Diagnostics.Process]::GetCurrentProcess().SessionId
     ForEach ($test in $global:launcheableTests) {
         if ($test['pid'] -gt 0) { # TODO:  $test['running']
+          if ($test['running']) {
+             $global:oskarErrorMessage = $global:oskarErrorMessage + "Oskar is killing this test due to timeout:\n" + $( format-list $test['running'] )
+          }
           Write-Host "Testrun timeout:"
           $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
           Write-Host $str

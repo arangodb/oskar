@@ -41,11 +41,14 @@ set ST "$ST""250,runSingleTest1 shell_server_aql 3 --testBuckets 5/3\n"
 set ST "$ST""250,runSingleTest1 shell_server_aql 4 --testBuckets 5/4\n"
 set ST "$ST""500,runSingleTest1 ssl_server -\n"
 set ST "$ST""250,runSingleTest1 version -\n"
+set ST "$ST""500,runSingleTest1 audit_client -\n"
+set ST "$ST""500,runSingleTest1 audit_server -\n"
 set ST "$ST""500,runSingleTest2 replication_ongoing -\n"
 set ST "$ST""250,runSingleTest2 replication_ongoing_frompresent -\n"
 set ST "$ST""500,runSingleTest2 replication_ongoing_global -\n"
 set ST "$ST""250,runSingleTest2 replication_ongoing_global_spec -\n"
 set ST "$ST""500,runSingleTest2 replication_sync -\n"
+set ST "$ST""250,runSingleTest1 hot_backup -\n"
 
 set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g STL (count $STS)
@@ -128,6 +131,7 @@ set CT "$CT""50,runClusterTest1 dump_authentication - --dumpAgencyOnError true\n
 set CT "$CT""250,runClusterTest1 dump_maskings - --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 dump_multiple - --dumpAgencyOnError true\n"
 set CT "$CT""750,runClusterTest1 http_server - --dumpAgencyOnError true\n"
+set CT "$CT""250,runClusterTest1 hot_backup -\n"
 
 set -g CTS (echo -e $CT | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g CTL (count $CTS)

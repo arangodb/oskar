@@ -80,7 +80,14 @@ Function global:registerSingleTests()
     registerTest -testname "audit_server"
     registerTest -testname "permissions"
     registerTest -testname "server_permissions"
-    registerTest -testname "paths_server"    
+    registerTest -testname "paths_server"
+    # Note that we intentionally do not register the hot_backup test here,
+    # since it is currently not supported on Windows. The reason is that
+    # the testing framework does not support automatic restarts of instances
+    # and hot_backup currently needs a server restart on a restore operation
+    # on Windows. On Linux and Mac we use an exec operation for this to
+    # restart without changing the PID, which is not possible on Windows.
+    # registerTest -testname "hot_backup"
     comm
 }
 
@@ -117,6 +124,13 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_multiple"
     registerTest -cluster $true -testname "server_http"
     # registerTest -cluster $true -testname "agency" -weight 2
+    # Note that we intentionally do not register the hot_backup test here,
+    # since it is currently not supported on Windows. The reason is that
+    # the testing framework does not support automatic restarts of instances
+    # and hot_backup currently needs a server restart on a restore operation
+    # on Windows. On Linux and Mac we use an exec operation for this to
+    # restart without changing the PID, which is not possible on Windows.
+    # registerTest -cluster $true -testname "hot_backup"
     comm
 }
 
