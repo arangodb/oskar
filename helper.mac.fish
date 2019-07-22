@@ -8,6 +8,7 @@ set -gx THIRDPARTY_SBIN third_party/sbin
 set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
+set -xg MACOSX_DEPLOYMENT_TARGET 10.12
 
 set -gx SYSTEM_IS_MACOSX true
 

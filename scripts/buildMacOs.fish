@@ -44,6 +44,12 @@ set -g FULLARGS $argv \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
       -DOPENSSL_USE_STATIC_LIBS=On
 
+if test "$argv" = ""
+  echo "using default architecture 'nehalem'"
+  set -g FULLARGS $FULLARGS \
+    -DTARGET_ARCHITECTURE=nehalem
+end
+
 if test "$MAINTAINER" != "On"
   set -g FULLARGS $FULLARGS \
     -DUSE_CATCH_TESTS=Off \
