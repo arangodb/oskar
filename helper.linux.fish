@@ -789,7 +789,7 @@ function runInContainer
              -e SKIPGREY="$SKIPGREY" \
              -e ONLYGREY="$ONLYGREY" \
              -e TEST="$TEST" \
-             -e ARANGO_DOCS_BRANCH="$ARANGO_DOCS_BRANCH"\
+             -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH"\
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c" ; docker stop $c >/dev/null ; end
