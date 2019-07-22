@@ -143,6 +143,9 @@ set -gx WORKDIR (pwd)
 if test ! -d scripts ; echo "cannot find scripts directory" ; exit 1 ; end
 if test ! -d work ; mkdir work ; end
 
+if test -z "$ARANGO_DOCS_BRANCH" ; set -gx ARANGO_DOCS_BRANCH "master"
+else ; set -gx ARANGO_DOCS_BRANCH $ARANGO_DOCS_BRANCH ; end
+
 ## #############################################################################
 ## test
 ## #############################################################################

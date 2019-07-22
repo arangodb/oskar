@@ -3,7 +3,11 @@ pushd $INNERWORKDIR/ArangoDB
 and if test -d docs
   rm -rf docs
 end
-and git clone ssh://git@github.com/arangodb/docs
+and if test -n "$ARANGODB_DOCS_BRANCH"
+  git clone -b $ARANGODB_DOCS_BRANCH --single-branch ssh://git@github.com/arangodb/docs
+else
+  git clone ssh://git@github.com/arangodb/docs
+end
 and begin
   set -l CMAKELIST "CMakeLists.txt"
   set -l AV "set(ARANGODB_VERSION"
