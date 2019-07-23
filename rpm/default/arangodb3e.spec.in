@@ -198,7 +198,7 @@ Enable ArangoDB service:
   > systemctl enable arangodb3.service
 "
 
-export ARANGODB_DEFAULT_ROOT_PASSWORD=`(uname -a ; cat /etc/hostname) | md5sum | awk '{print $1}'`
+export ARANGODB_DEFAULT_ROOT_PASSWORD=`dd if=/dev/urandom bs=1024 count=1 | md5sum | awk '{print $1}'`
 
 echo "SECURITY HINT:"
 echo "run 'arango-secure-installation' to set a root password"
