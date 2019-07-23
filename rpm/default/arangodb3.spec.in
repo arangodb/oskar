@@ -223,13 +223,13 @@ exit 0
 %pre
 # create arangodb group only if it doesn't already exist
 if ! getent group arangodb >/dev/null 2>&1; then
-        /usr/sbin/groupadd -r arangodb
+  /usr/sbin/groupadd -r arangodb
 fi
 
 # create arangodb user only if it doesn't already exist
 if ! getent passwd arangodb >/dev/null 2>&1; then
-        /usr/sbin/useradd -r -g arangodb --home %{_localstatedir}/arangodb arangodb
-        /usr/sbin/usermod -c "Arango Server" arangodb
+  /usr/sbin/useradd -r -g arangodb --home %{_localstatedir}/arangodb arangodb
+  /usr/sbin/usermod -c "Arango Server" arangodb
 fi
 
 # check if the arangodb group was added locally in /etc/group
@@ -253,15 +253,17 @@ fi
 ## -----------------------------------------------------------------------------
 
 %preun
-if rpm -q --quiet systemd ; then
-  systemctl stop arangodb3
-  rm %{_sysconfdir}/systemd/system/arangodb3.service
-  systemctl daemon-reload
-else
-  chkconfig --level 2345 arangodb3 off
-  rm %{_sysconfdir}/init.d/arangodb3
+if test "$1" -eq 0; then
+  if rpm -q --quiet systemd ; then
+    systemctl stop arangodb3
+    rm %{_sysconfdir}/systemd/system/arangodb3.service
+    systemctl daemon-reload
+  else
+    chkconfig --level 2345 arangodb3 off
+    rm %{_sysconfdir}/init.d/arangodb3
+  fi
+  rm %{_sysconfdir}/logrotate.d/arangodb3
 fi
-rm %{_sysconfdir}/logrotate.d/arangodb3
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                         changelog
