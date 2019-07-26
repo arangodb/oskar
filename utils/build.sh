@@ -19,7 +19,7 @@ Switch into this directory.
 
 Run the script with the archive as sole argument
 
-    ./build.sh ./build.sh ArangoDB-3.3.23.zip
+    ./build.sh ArangoDB-3.3.23.zip
 
 This will generated the RPM, Debian and TAR archives for the given version.
 EOF
