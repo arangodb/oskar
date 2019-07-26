@@ -1,15 +1,17 @@
-FROM ubuntu:18.04
+FROM golang:1.10.3-alpine
 MAINTAINER ArangoDB <info@arangodb.com>
 
-RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y git fish sudo curl unzip docker.io psmisc make gcc pkg-config librdkafka-dev && \
-    apt-get clean && \
-    (cd /tmp ; curl -O https://dl.google.com/go/go1.12.6.linux-amd64.tar.gz) && \
-    (cd /tmp ; tar -xf go1.12.6.linux-amd64.tar.gz) && \
-    (cd /tmp ; mv go /usr/local)
+RUN \
+    apk update && \
+    apk add openssl-dev python zlib-dev lz4-dev g++ bash musl-dev make gcc git docker fish sudo openssh-client && \
+    mkdir -p /usr/src && \
+    cd /usr/src && \
+    git clone -b v0.11.5 https://github.com/edenhill/librdkafka.git && \
+    cd librdkafka && \
+    sed -i -e "s|_GNU_SOURCE|_NOT_DEFINED|" "src/rdposix.h" && \
+    ./configure --prefix /usr && \
+    make && \
+    make install
 
 RUN cd / && git clone https://github.com/arangodb/oskar && rm -rf oskar/.git
 
