@@ -1,13 +1,8 @@
-FROM alpine:3.8
+FROM alpine:3.10
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
-RUN apk add --no-cache pwgen nodejs npm binutils && \
-    npm install -g foxx-cli && \
-    wget http://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/numactl-2.0.12-r2.apk && \
-    wget http://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/numactl-tools-2.0.12-r2.apk && \
-    apk add ./numactl-2.0.12-r2.apk && \
-    apk add ./numactl-tools-2.0.12-r2.apk && \
-    rm -rf /root/.npm numactl-2.0.12-r2.apk numactl-tools-2.0.12-r2.apk
+RUN apk add --no-cache pwgen nodejs npm binutils numactl numactl-tools
+RUN npm install -g foxx-cli
 
 ADD install.tar.gz /
 COPY setup.sh /setup.sh

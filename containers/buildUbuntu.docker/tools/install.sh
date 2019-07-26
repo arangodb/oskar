@@ -15,7 +15,7 @@ update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
 update-alternatives --set c++ /usr/bin/g++
 
 # Compile openssl1.1 library:
-export OPENSSLVERSION=1.1.0j
+export OPENSSLVERSION=1.1.0k
 cd /tmp
 curl -O https://www.openssl.org/source/openssl-$OPENSSLVERSION.tar.gz
 tar xzf openssl-$OPENSSLVERSION.tar.gz

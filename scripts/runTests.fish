@@ -182,7 +182,7 @@ switch $TESTSUITE
   case "catchtest"
     resetLaunch 1
     and if test "$ASAN" = "On"
-      waitOrKill 14400 launchCatchTest
+      waitOrKill 7200 launchCatchTest
     else
       waitOrKill 1800 launchCatchTest
     end
