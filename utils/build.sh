@@ -31,14 +31,12 @@ if test "$#" -ne 1; then
   exit 1
 fi
 
-NAME=$1
+NAME="$1"
 
 if test ! -f "$NAME"; then
   echo "FATAL: archive '$NAME' not found"
   exit 1
 fi
-
-if false; then
 
 rm -rf builddir
 mkdir builddir
@@ -49,11 +47,11 @@ mkdir builddir
   case $NAME in
     *.zip)
       echo "INFO: extracting archive $NAME"
-      unzip -q -x ../$NAME
+      unzip -q -x "../$NAME"
       ;;
     *.tar.gz)
       echo "INFO: extracting archive $NAME"
-      tar xvf ../$NAME
+      tar xvf "../$NAME"
       ;;
     *)
       echo "FATAL: unknown archive type '$NAME'"
@@ -61,14 +59,12 @@ mkdir builddir
   esac
 )
 
-fi
+ARANGODB_FILE=$(basename builddir/ArangoDB-*)
+STARTER_FILE=$(basename builddir/ArangoDBStarter-*)
+SYNCER_FILE=$(basename builddir/arangosync-*)
 
-ARANGODB_FILE=`basename builddir/ArangoDB-*`
-STARTER_FILE=`basename builddir/ArangoDBStarter-*`
-SYNCER_FILE=`basename builddir/arangosync-*`
-
-STARTER_VERSION=`basename builddir/ArangoDBStarter-* | awk -F- '{print $2}'`
-SYNCER_VERSION=`basename builddir/arangosync-* | awk -F- '{print $2}'`
+STARTER_VERSION=$(basename builddir/ArangoDBStarter-* | awk -F- '{print $2}')
+SYNCER_VERSION=$(basename builddir/arangosync-* | awk -F- '{print $2}')
 
 echo "INFO: ArangoDB Version: $ARANGODB_FILE"
 echo "INFO: Starter Version:  $STARTER_FILE"
@@ -78,35 +74,35 @@ echo "INFO: cleaning old directories 'work' and 'oskar'"
 
 docker run \
   --privileged \
-  -v `pwd`:/data \
+  -v "$(pwd):/data" \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  $DOCKER_IMAGE fish -c "rm -rf /data/oskar  /data/work"
+  "$DOCKER_IMAGE" fish -c "rm -rf /data/oskar  /data/work"
 
 mkdir work
 mkdir oskar
 
 echo "INFO: copying 'work/ArangoDB'"
-cp -a builddir/$ARANGODB_FILE work/ArangoDB
+cp -a "builddir/$ARANGODB_FILE" "work/ArangoDB"
 
 echo "INFO: copying 'work/starter'"
-cp -a builddir/$STARTER_FILE work/starter
+cp -a "builddir/$STARTER_FILE" "work/starter"
 
 echo "INFO: copying 'work/syncer'"
-cp -a builddir/$SYNCER_FILE work/syncer
+cp -a "builddir/$SYNCER_FILE" "work/syncer"
 
 cat > work/createPackage.fish <<'EOF'
 
-mkdir -p $OSKAR_HOME/oskar/work
+mkdir -p "$OSKAR_HOME/oskar/work"
 
-cp -a /oskar/* $OSKAR_HOME/oskar
-cp -a /work/ArangoDB $OSKAR_HOME/oskar/work
-cp -a /work/starter $OSKAR_HOME/oskar/work/
-cp -a /work/syncer $OSKAR_HOME/oskar/work/
+cp -a /oskar/* "$OSKAR_HOME/oskar"
+cp -a /work/ArangoDB "$OSKAR_HOME/oskar/work"
+cp -a /work/starter "$OSKAR_HOME/oskar/work/"
+cp -a /work/syncer "$OSKAR_HOME/oskar/work/"
 
-mkdir -p $OSKAR_HOME/oskar/work/ArangoDB/upgrade-data-tests
+mkdir -p "$OSKAR_HOME/oskar/work/ArangoDB/upgrade-data-tests"
 
 function createPackage
-  cd $OSKAR_HOME/oskar
+  cd "$OSKAR_HOME/oskar"
   source helper.fish
 
   findArangoDBVersion
@@ -119,20 +115,20 @@ function createPackage
   and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
   and echo "INFO: finished building 'ArangoDB'"
   and mkdir -p work/ArangoDB/build/install/usr/bin
-  and cp $OSKAR_HOME/oskar/work/starter/arangodb work/ArangoDB/build/install/usr/bin
-  and cp $OSKAR_HOME/oskar/work/syncer/arangosync work/ArangoDB/build/install/usr/sbin
+  and cp "$OSKAR_HOME/oskar/work/starter/arangodb" "work/ArangoDB/build/install/usr/bin"
+  and cp "$OSKAR_HOME/oskar/work/syncer/arangosync" "work/ArangoDB/build/install/usr/sbin"
   and copyRclone
   and echo "INFO: building package"
   and buildPackage
 
-  if test $status -ne 0
+  if test "$status" -ne 0
     echo "FATAL: Building enterprise release failed, stopping."
     return 1
   end
 end
 
 function createStarter
-  pushd $OSKAR_HOME/oskar/work/starter
+  pushd "$OSKAR_HOME/oskar/work/starter"
   and set -xg GOPATH (pwd)/.gobuild
   and echo "INFO: building 'Starter' $STARTER_VERSION"
   and echo "INFO: ignore ANY git error messages"
@@ -174,13 +170,13 @@ EOF
 docker run \
   --privileged \
   -it \
-  -e OSKAR_HOME=`pwd` \
-  -e STARTER_VERSION=$STARTER_VERSION \
-  -e SYNCER_VERSION=$SYNCER_VERSION \
-  -v `pwd`/work:/work \
-  -v `pwd`/oskar:`pwd`/oskar \
+  -e "OSKAR_HOME=$(pwd)" \
+  -e "STARTER_VERSION=$STARTER_VERSION" \
+  -e "SYNCER_VERSION=$SYNCER_VERSION" \
+  -v "$(pwd)/work:/work" \
+  -v "$(pwd)/oskar:$(pwd)/oskar" \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  $DOCKER_IMAGE fish /work/createPackage.fish
+  "$DOCKER_IMAGE" fish /work/createPackage.fish
 
 cp oskar/work/arangodb3*{rpm,deb,gz} .
 
