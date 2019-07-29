@@ -3,15 +3,7 @@ set -e
 
 # Install some packages:
 apk update
-apk add groff g++ bison flex make cmake ccache python libldap git linux-vanilla-dev linux-headers vim boost-dev ctags man gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo
-
-(
-    cd /tmp
-    wget http://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/musl-1.1.22-r0.apk
-    wget http://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/musl-utils-1.1.22-r0.apk
-    wget http://dl-cdn.alpinelinux.org/alpine/edge/main/x86_64/musl-dev-1.1.22-r0.apk
-    apk add ./musl-1.1.22-r0.apk ./musl-utils-1.1.22-r0.apk ./musl-dev-1.1.22-r0.apk
-)
+apk add groff g++ bison flex make cmake ccache python libldap git linux-vanilla-dev linux-headers vim boost-dev ctags man gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static
 
 # Compile newer GCC versions
 # mkdir /gcc
