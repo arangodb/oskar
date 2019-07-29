@@ -10,7 +10,7 @@ Function global:registerSingleTests()
 
     Write-Host "Registering tests..."
 
-    $global:TESTSUITE_TIMEOUT = 3600
+    $global:TESTSUITE_TIMEOUT = 3900
 
     registerTest -testname "replication_static" -weight 2
     registerTest -testname "shell_server"
@@ -69,7 +69,7 @@ Function global:registerClusterTests()
     noteStartAndRepoState
     Write-Host "Registering tests..."
 
-    $global:TESTSUITE_TIMEOUT = 3600
+    $global:TESTSUITE_TIMEOUT = 4200
 
     registerTest -cluster $true -testname "agency"
     registerTest -cluster $true -testname "shell_server"
