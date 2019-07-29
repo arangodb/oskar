@@ -53,6 +53,7 @@ end
 for pattern in "arangodb3e-*.dmg" "arangodb3e-macosx-*.tar.gz"
   set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
   for file in $files
+    rm -f $DST/release/packages/Enterprise/MacOSX
     cp -a $SRC/$file $DST/release/packages/Enterprise/MacOSX ; or set -g s 1
   end
 end
