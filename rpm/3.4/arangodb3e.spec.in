@@ -214,7 +214,7 @@ Enable ArangoDB service:
 "
 
 if test "$1" -eq 1; then
-  export ARANGODB_DEFAULT_ROOT_PASSWORD=`dd if=/dev/urandom bs=1024 count=1 | md5sum | awk '{print $1}'`
+  export ARANGODB_DEFAULT_ROOT_PASSWORD=`dd if=/dev/urandom bs=1024 count=1 2> /dev/null | md5sum | awk '{print $1}'`
 
   echo "SECURITY HINT:"
   echo "run 'arango-secure-installation' to set a root password"
