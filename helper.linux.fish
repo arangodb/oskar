@@ -124,8 +124,20 @@ function checkoutEnterprise
 end
 
 function switchBranches
+  set -l force_clean false
+
+  if test (count $argv) -eq 3
+    set force_clean $argv[3]
+  end
+
+  if test $force_clean = "true"
+    if test ! -d $WORKDIR/ArangoDB/.git
+      rm -rf $INNERWORKDIR/ArangoDB/.git
+    end
+  end
+
   checkoutIfNeeded
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/switchBranches.fish $argv
+  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/switchBranches.fish $argv
 end
 
 ## #############################################################################
