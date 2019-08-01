@@ -91,7 +91,7 @@ if [ -x %{buildroot}/usr/sbin/arangosync ] ; then
   mv %{buildroot}/usr/sbin/arangosync /tmp
 fi
 
-#- -----------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 ## --SECTION--                                                             check
 ## -----------------------------------------------------------------------------
 
@@ -158,7 +158,13 @@ fi
 %{_datadir}/arangodb3/icudtl.dat
 
 ## -----------------------------------------------------------------------------
-## --SECTION--                                                              post
+## --SECTION--                                                         changelog
+## -----------------------------------------------------------------------------
+
+%changelog
+
+## -----------------------------------------------------------------------------
+## --SECTION--                                                           scripts
 ## -----------------------------------------------------------------------------
 
 %post
@@ -198,38 +204,32 @@ Enable ArangoDB service:
   > systemctl enable arangodb3.service
 "
 
-export ARANGODB_DEFAULT_ROOT_PASSWORD=`(uname -a ; cat /etc/hostname) | md5sum | awk '{print $1}'`
+if test "$1" -eq 1; then
+  export ARANGODB_DEFAULT_ROOT_PASSWORD=`dd if=/dev/urandom bs=1024 count=1 | md5sum | awk '{print $1}'`
 
-echo "SECURITY HINT:"
-echo "run 'arango-secure-installation' to set a root password"
-echo "the current password is '$ARANGODB_DEFAULT_ROOT_PASSWORD'"
-echo "(You should do this for a FRESH install! For an UPGRADE the password does not need to be changed)"
+  echo "SECURITY HINT:"
+  echo "run 'arango-secure-installation' to set a root password"
+  echo "the current password is '$ARANGODB_DEFAULT_ROOT_PASSWORD'"
+  echo "(You should do this for a FRESH install! For an UPGRADE the password does not need to be changed)"
 
-/usr/sbin/arango-init-database --uid arangodb --gid arangodb --server.rest-server false --server.statistics false --foxx.queues false || true
+  /usr/sbin/arango-init-database --uid arangodb --gid arangodb --server.rest-server false --server.statistics false --foxx.queues false || true
+fi
 
 exit 0
 
-## -----------------------------------------------------------------------------
-## --SECTION--                                                            postun
-## -----------------------------------------------------------------------------
-
 %postun
-# Nothing here
-
-## -----------------------------------------------------------------------------
-## --SECTION--                                                               pre
-## -----------------------------------------------------------------------------
+exit 0
 
 %pre
 # create arangodb group only if it doesn't already exist
 if ! getent group arangodb >/dev/null 2>&1; then
-        /usr/sbin/groupadd -r arangodb
+  /usr/sbin/groupadd -r arangodb
 fi
 
 # create arangodb user only if it doesn't already exist
 if ! getent passwd arangodb >/dev/null 2>&1; then
-        /usr/sbin/useradd -r -g arangodb --home %{_localstatedir}/arangodb arangodb
-        /usr/sbin/usermod -c "Arango Server" arangodb
+  /usr/sbin/useradd -r -g arangodb --home %{_localstatedir}/arangodb arangodb
+  /usr/sbin/usermod -c "Arango Server" arangodb
 fi
 
 # check if the arangodb group was added locally in /etc/group
@@ -248,24 +248,19 @@ else
   fi
 fi
 
-## -----------------------------------------------------------------------------
-## --SECTION--                                                             preun
-## -----------------------------------------------------------------------------
+exit 0
 
 %preun
-if rpm -q --quiet systemd ; then
-  systemctl stop arangodb3
-  rm %{_sysconfdir}/systemd/system/arangodb3.service
-  systemctl daemon-reload
-else
-  chkconfig --level 2345 arangodb3 off
-  rm %{_sysconfdir}/init.d/arangodb3
+if test "$1" -eq 0; then
+  if rpm -q --quiet systemd ; then
+    systemctl stop arangodb3
+    rm -f %{_sysconfdir}/systemd/system/arangodb3.service
+    systemctl daemon-reload
+  else
+    chkconfig --level 2345 arangodb3 off
+    rm -f %{_sysconfdir}/init.d/arangodb3
+  fi
+  rm -f %{_sysconfdir}/logrotate.d/arangodb3
 fi
-rm %{_sysconfdir}/logrotate.d/arangodb3
 
-## -----------------------------------------------------------------------------
-## --SECTION--                                                         changelog
-## -----------------------------------------------------------------------------
-
-%changelog
-
+exit 0
