@@ -138,6 +138,7 @@ fi
 %config(noreplace) %{_cfgdir}/arangosh.conf
 %config(noreplace) %{_cfgdir}/arangovpack.conf
 %config(noreplace) %{_cfgdir}/foxx-manager.conf
+%{_bindir}/arangobackup*
 %{_bindir}/arangobench
 %{_bindir}/arangodump
 %{_bindir}/arangoexp*
