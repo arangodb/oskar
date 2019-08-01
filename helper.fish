@@ -414,6 +414,7 @@ function buildTarGzPackageHelper
   end
 
   mv "$name-$v" install
+  and rm -rf install/bin
   and popd
   and return $s 
 end

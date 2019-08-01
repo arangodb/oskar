@@ -89,6 +89,9 @@ and cd install
 and if test -z "$NOSTRIP"
   echo Stripping executables...
   strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
+  if test -f usr/bin/arangobackup
+    strip usr/bin/arangobackup
+  end
 end
 
 and echo "Finished at "(date)
