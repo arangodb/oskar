@@ -4,12 +4,7 @@ if test -z "$RELEASE_TAG"
   exit 1
 end
 
-if test "$RELEASE_TYPE" = "preview"
-  echo "building an preview, not updating snippets"
-  exit 0
-end
-
-if test "$RELEASE_IS_HEAD" != "true"
+if test "$RELEASE_TYPE" != "preview" -a "$RELEASE_IS_HEAD" != "true"
   echo "building an older release, not updating snippets"
   exit 0
 end
@@ -27,8 +22,13 @@ function upload
   set -l HOST live.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f@appserver.live.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f.drush.in
   set -l SSL "ssh -o StrictHostkeyChecking=false -i $HOME/.ssh/pantheon -p 2222"
 
-  rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-current/
-  and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/
+  if test "$RELEASE_TYPE" = "preview"
+    rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-technical-preview/
+    and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-technical-preview-enterprise/
+  else
+    rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-current/
+    and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/
+  end
 end
 
 # there might be internet hickups
