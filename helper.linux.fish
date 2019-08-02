@@ -11,6 +11,7 @@ set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH
 set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH
 set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH
 set -gx DOCIMAGE arangodb/arangodb-documentation
+set -gx CPPCHECKIMAGE arangodb/cppcheck
 set -xg IONICE "ionice -t -n 7"
 
 set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
@@ -726,6 +727,15 @@ end
 function pushDocumentationImage ; docker push $DOCIMAGE ; end
 function pullDocumentationImage ; docker pull $DOCIMAGE ; end
 
+function buildCppcheckImage
+  pushd $WORKDIR/containers/cppcheck.docker
+  and docker build --pull -t $CPPCHECKIMAGE .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+function pushCppcheckImage ; docker push $CPPCHECKIMAGE ; end
+function pullCppcheckImage ; docker pull $CPPCHECKIMAGE ; end
+
 function remakeImages
   set -l s 0
 
@@ -738,6 +748,7 @@ function remakeImages
   buildCentosPackagingImage ; or set -l s 1
   pushCentosPackagingImage ; or set -l s 1
   buildDocumentationImage ; or set -l s 1
+  buildCppcheckImage ; or set -l s 1
 
   return $s
 end
@@ -911,6 +922,8 @@ function pushOskar
   and pushCentosPackagingImage
   and buildDocumentationImage
   and pushDocumentationImage
+  and buildCppcheckImage
+  and pushCppcheckImage
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -926,6 +939,7 @@ function updateOskar
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
   and pullDocumentationImage
+  and pullCppcheckImage
   or begin ; popd ; return 1 ; end
   popd
 end
