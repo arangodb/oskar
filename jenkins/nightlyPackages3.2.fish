@@ -1,9 +1,8 @@
 #!/usr/bin/fish
-source jenkins/helper.jenkins.fish ; prepareOskar
+source jenkins/helper/jenkins.fish
 
-lockDirectory ; updateOskar ; clearResults
-
-switchBranches 3.2 3.2 true
+cleanPrepareOskarLockUpdateClear
+and switchBranches 3.2 3.2 true
 and makeRelease
 
 set -l s $status

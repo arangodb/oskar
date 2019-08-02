@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+source jenkins/helper/jenkins.fish
+
 if test -z "$RELEASE_TAG"
   echo "RELEASE_TAG required"
   exit 1
@@ -9,11 +11,9 @@ if test -z "$ENTERPRISE_DOWNLOAD_KEY"
   exit 1
 end
 
-source jenkins/helper.jenkins.fish ; prepareOskar
-
-lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
-
-switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
+cleanPrepareOskarLockUpdateClear
+and cleanWorkspace
+and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 or begin unlockDirectory ; exit 1 ; end
 

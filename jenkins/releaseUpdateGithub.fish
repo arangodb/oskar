@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+source jenkins/helper/jenkins.fish
+
 if test -z "$RELEASE_TAG"
   echo "RELEASE_TAG required"
   exit 1
@@ -18,8 +20,6 @@ if test "$RELEASE_IS_HEAD" != "true"
   exit 0
 end
 
-source jenkins/helper.jenkins.fish ; prepareOskar
-
 set -xg GIT_SSH_COMMAND "ssh -i ~/.ssh/id_rsa" 
 
 function updateRepository
@@ -34,9 +34,9 @@ function updateRepository
   or begin git merge --abort ; and return 1 ; end
 end
 
-lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
-
-switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
+cleanPrepareLockUpdateClear
+and cleanWorkspace
+and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 and cd $WORKDIR/work/ArangoDB
 and updateRepository

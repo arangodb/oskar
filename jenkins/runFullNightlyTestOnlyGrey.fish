@@ -1,11 +1,13 @@
 #!/usr/bin/env fish
-source jenkins/helper.jenkins.fish ; prepareOskar
+source jenkins/helper/jenkins.fish
 
-lockDirectory ; updateOskar ; clearResults
-
-eval $EDITION ; eval $STORAGE_ENGINE ; eval $TEST_SUITE ; onlyGreyOn
-
-switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+cleanPrepareOskarLockUpdateClear
+and eval $EDITION
+and eval $STORAGE_ENGINE
+and eval $TEST_SUITE
+and onlyGreyOn
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and showConfig
 and compiler "$COMPILER_VERSION"
 and oskar1Full
 

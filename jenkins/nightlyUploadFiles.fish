@@ -1,14 +1,12 @@
 #!/usr/bin/env fish
+source jenkins/helper/jenkins.fish
+
 if test -z "$ARANGODB_PACKAGES"
   echo "ARANGODB_PACKAGES required"
   exit 1
 end
 
 set -xg PACKAGES "$ARANGODB_PACKAGES"
-
-source jenkins/helper.jenkins.fish ; prepareOskar
-
-lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
 
 function createIndex
   pushd $WORKSPACE/file-browser
@@ -39,7 +37,9 @@ function upload
   and gsutil rsync -d -r $PACKAGES gs://download.arangodb.com/nightly/$PACKAGES
 end
 
-switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+cleanPrepareOskarLockUpdateClear
+and cleanWorkspace
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and createIndex
 and begin
   # there might be internet hickups

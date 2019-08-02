@@ -1410,6 +1410,10 @@ function moveResultsToWorkspace
   end
 end
 
+function cleanBranchName
+  echo $argv[1] | sed -e 's:[^-a-zA-Z0-9_/#.+]::g'
+end
+
 ## #############################################################################
 ## include the specifics for the platform
 ## #############################################################################

@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+source jenkins/helper/jenkins.fish
+
 if test -z "$DOCKER_TAG"
   echo "DOCKER_TAG required"
   exit 1
@@ -14,15 +16,10 @@ set -xg REG_COMMUNITY "$REG/linux-community-maintainer:$TAG"
 set -xg REG_ENTERPRISE1 "$REG/linux-enterprise-maintainer:$TAG"
 set -xg REG_ENTERPRISE2 "$REG/arangodb-preview:$TAG-$KEY"
 
-source jenkins/helper.jenkins.fish ; prepareOskar
-
-lockDirectory ; updateOskar ; clearResults
-
-rm -rf $WORKSPACE/imagenames.log
-
-community
-
-switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+cleanPrepareLockUpdateClear
+and rm -rf $WORKSPACE/imagenames.log
+and community
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
@@ -43,8 +40,7 @@ if test $status -ne 0
 end
 
 enterprise
-
-switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem

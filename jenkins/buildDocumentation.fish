@@ -1,23 +1,14 @@
 #!/usr/bin/env fish
-#source helper.fish
-source jenkins/helper.jenkins.fish
-and prepareOskar; and lockDirectory; and updateOskar; and clearResults
-and rocksdb; and cluster; and maintainerOff
-
-if test $status -ne 0
-    echo "failed to prepare environement"
-    exit 1
-end
-
-echo "--------------------------------------------------------------------------------"
-showConfig
+source jenkins/helper/jenkins.fish
 
 set -xg ARANGO_IN_JENKINS true
 
-echo Working on branch $ARANGODB_BRANCH of main repository
-echo on branch $ENTERPRISE_BRANCH of enterprise repository.
-
-switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+cleanPrepareLockUpdateClear
+and rocksdb
+and cluster
+and maintainerOff
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and showConfig
 and buildStaticArangoDB
 and if test $ALLFORMATS = "true"
     buildDocumentationForRelease
