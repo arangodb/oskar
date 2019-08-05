@@ -1,7 +1,7 @@
 #!/usr/bin/fish
 source jenkins/helper/jenkins.fish
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and switchBranches 3.3 3.3 true
 and makeRelease
 

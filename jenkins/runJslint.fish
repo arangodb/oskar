@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 source jenkins/helper/jenkins.fish
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and rm -f work/test.log
 and jslint > work/test.log

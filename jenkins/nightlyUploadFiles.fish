@@ -37,7 +37,7 @@ function upload
   and gsutil rsync -d -r $PACKAGES gs://download.arangodb.com/nightly/$PACKAGES
 end
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and createIndex

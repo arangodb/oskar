@@ -13,7 +13,7 @@ end
 
 umask 000
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion

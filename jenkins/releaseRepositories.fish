@@ -6,7 +6,7 @@ if test -z "$RELEASE_TAG"
   exit 1
 end
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and createRepositories

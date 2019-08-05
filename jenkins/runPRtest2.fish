@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 source jenkins/helper/jenkins.fish
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and eval $EDITION
 and eval $STORAGE_ENGINE
 and eval $TEST_SUITE

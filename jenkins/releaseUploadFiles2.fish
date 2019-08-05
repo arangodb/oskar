@@ -11,7 +11,7 @@ if test -z "$ENTERPRISE_DOWNLOAD_KEY"
   exit 1
 end
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion

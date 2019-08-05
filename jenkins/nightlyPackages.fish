@@ -42,7 +42,7 @@ function movePackagesToStage2
   return $s
 end
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and makeRelease

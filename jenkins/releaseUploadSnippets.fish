@@ -16,7 +16,7 @@ if test "$RELEASE_IS_HEAD" != "true"
   exit 0
 end
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion

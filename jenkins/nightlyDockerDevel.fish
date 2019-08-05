@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 source jenkins/helper/jenkins.fish
 
-cleanPrepareOskarLockUpdateClear
+cleanPrepareLockUpdateClear
 and community
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
