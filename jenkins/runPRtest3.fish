@@ -7,7 +7,6 @@ and eval $STORAGE_ENGINE
 and eval $TEST_SUITE
 and skipGrey
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and showConfig
 and oskar1
 and buildDocumentationInPR
 
