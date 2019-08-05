@@ -35,6 +35,10 @@ function prepareOskar
   end
 end
 
+function cleanBranchName
+  echo $argv[1] | sed -e 's:[^-a-zA-Z0-9_/#.+]::g'
+end
+
 function cleanJenkinsParameter
   set -l cleaned (cleanBranchName $ARANGODB_BRANCH);   set -xg ARANGODB_BRANCH   $cleaned
   set -l cleaned (cleanBranchName $ENTERPRISE_BRANCH); set -xg ENTERPRISE_BRANCH $cleaned
