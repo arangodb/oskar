@@ -22,6 +22,19 @@ If(-Not(Test-Path -PathType Container -Path "$HDD\$env:NODE_NAME"))
 $OSKARDIR = "$HDD\$env:NODE_NAME"
 Set-Location $OSKARDIR
 
+If($env:OSKAR_BRANCH)
+{
+    $env:OSKAR_BRANCH = $env:OSKAR_BRANCH.-replace '[^a-zA-Z0-9#/+_-]', ''
+}
+If($env:ARANGODB_BRANCH)
+{
+    $env:ARANGODB_BRANCH = $env:ARANGODB_BRANCH.-replace '[^a-zA-Z0-9#/+_-]', ''
+}
+If($env:ENTERPRISE_BRANCH)
+{
+    $env:ENTERPRISE_BRANCH = $env:ENTERPRISE_BRANCH.-replace '[^a-zA-Z0-9#/+_-]', ''
+}
+
 If(-Not($env:OSKAR_BRANCH))
 {
     $env:OSKAR_BRANCH = "master"
