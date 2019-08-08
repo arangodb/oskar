@@ -1,5 +1,5 @@
 #!/bin/bash
-TIMEOUT=180 # in minutes
+TIMEOUT=360 # in minutes
 PORTDIR=/var/tmp/ports
 
 mkdir -p $PORTDIR
@@ -21,9 +21,18 @@ INCR=1
 
 find $PORTDIR -type f -cmin +$TIMEOUT -exec rm "{}" ";"
 
-while ! ((set -o noclobber ; date > $PORTDIR/$port) 2> /dev/null); do
+if test "$1" == "--cluster" ; then
+  while ! ((set -o noclobber ; date > $PORTDIR/$port && date > $PORTDIR/`expr $port + 10` && date > $PORTDIR/`expr $port + 20`) 2> /dev/null); do
     sleep 1
     port=`expr $port + $INCR`
-done
+  done
 
-echo $port
+  echo "$port `expr $port + 10` `expr $port + 20`"
+else
+  while ! ((set -o noclobber ; date > $PORTDIR/$port) 2> /dev/null); do
+    sleep 1
+    port=`expr $port + $INCR`
+  done
+
+  echo $port
+fi
