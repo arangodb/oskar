@@ -1,8 +1,7 @@
 #!/usr/bin/env fish
-source jenkins/helper.jenkins.fish ; prepareOskar
+source jenkins/helper/jenkins.fish
 
-lockDirectory ; updateOskar ; clearResults
-
+cleanPrepareLockUpdateClear
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and buildStaticArangoDB
 and cppcheckArangoDB
