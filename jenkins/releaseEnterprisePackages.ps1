@@ -1,4 +1,4 @@
-Copy-Item -Force "$env:WORKSPACE\jenkins\prepareOskar.ps1" $pwd
+Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 . "$pwd\prepareOskar.ps1"
 
 switchBranches $env:RELEASE_TAG $env:RELEASE_TAG

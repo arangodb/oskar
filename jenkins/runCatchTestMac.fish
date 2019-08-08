@@ -1,18 +1,11 @@
 #!/usr/bin/env fish
-source jenkins/helper.jenkins.fish ; prepareOskar
+source jenkins/helper/jenkins.fish
 
-lockDirectory ; updateOskar ; clearResults
-
-eval $EDITION
-catchtest
-
-echo "--------------------------------------------------------------------------------"
-showConfig
-
-echo Working on branch $ARANGODB_BRANCH of main repository and
-echo on branch $ENTERPRISE_BRANCH of enterprise repository.
-
-switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+cleanPrepareLockUpdateClear
+and eval $EDITION
+and catchtest
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and showConfig
 and oskar1
 
 set -l s $status

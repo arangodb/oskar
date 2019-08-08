@@ -1,24 +1,20 @@
 #!/usr/bin/env fish
-source jenkins/helper.jenkins.fish ; prepareOskar
+source jenkins/helper/jenkins.fish
 
-lockDirectory ; updateOskar ; clearResults
-
-echo "--------------------------------------------------------------------------------"
-showConfig
-
-echo Working on branch $ARANGODB_BRANCH of main repository and
-echo on branch $ENTERPRISE_BRANCH of enterprise repository.
-
-switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+cleanPrepareLockUpdateClear
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 or begin
   echo switchBranches error, giving up.
   unlockDirectory
   exit 1
 end
 
-enterprise ; rocksdb ; cluster ; skipGrey
-
-oskar1
+enterprise
+and rocksdb
+and cluster
+and skipGrey
+and showConfig
+and oskar1
 or begin
   echo Errors in enterprise/rocksdb/cluster, stopping.
   moveResultsToWorkspace
@@ -31,9 +27,12 @@ mv cmakeArangoDB.log cmakeArangoDBEnterprise.log
 mv buildArangoDB.log buildArangoDBEnterprise.log
 moveResultsToWorkspace
 
-community ; mmfiles ; single ; skipGrey
-
-oskar1
+community
+and mmfiles
+and single
+and skipGrey
+and showConfig
+and oskar1
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 

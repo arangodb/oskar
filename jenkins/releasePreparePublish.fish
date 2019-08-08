@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+source jenkins/helper/jenkins.fish
+
 if test (count $argv) -lt 1
   echo usage: (status current-filename) "<destination>"
   exit 1
@@ -11,15 +13,14 @@ end
 
 umask 000
 
-source jenkins/helper.jenkins.fish ; prepareOskar
+cleanPrepareLockUpdateClear
+and cleanWorkspace
 
-lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
-
-switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
+and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 
-set -xg SRC $argv[1]/stage1/$RELEASE_TAG
-set -xg DST $argv[1]/stage2/$ARANGODB_PACKAGES
+and set -xg SRC $argv[1]/stage1/$RELEASE_TAG
+and set -xg DST $argv[1]/stage2/$ARANGODB_PACKAGES
 
 and set -g SP_PACKAGES $DST
 and set -g SP_SOURCE $DST/source

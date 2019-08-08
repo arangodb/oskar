@@ -1,14 +1,12 @@
 #!/usr/bin/env fish
+source jenkins/helper/jenkins.fish
+
 if test -z "$ARANGODB_PACKAGES"
   echo "ARANGODB_PACKAGES required"
   exit 1
 end
 
 set -xg PACKAGES "$ARANGODB_PACKAGES"
-
-source jenkins/helper.jenkins.fish ; prepareOskar
-
-lockDirectory ; updateOskar ; clearResults
 
 set -xg SRC work
 set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
@@ -44,7 +42,8 @@ function movePackagesToStage2
   return $s
 end
 
-switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+cleanPrepareLockUpdateClear
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and makeRelease
 and movePackagesToStage2
