@@ -204,7 +204,10 @@ function buildStaticArangoDB
 end
 
 function makeStaticArangoDB
-  runInContainer (findBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
+  if test "$COMPILER_VERSION" = ""
+    findRequiredCompiler
+  end
+  and runInContainer (findBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -815,7 +818,10 @@ function runInContainer
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH"\
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
-    if test -n "$c" ; docker stop $c >/dev/null ; end
+    if test -n "$c"
+      docker stop $c >/dev/null
+      docker rm $c >/dev/null
+    end
   end
   docker logs -f $c          # print output to stdout
   docker stop $c >/dev/null  # happens when the previous command gets a SIGTERM
