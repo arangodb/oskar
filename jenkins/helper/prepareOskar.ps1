@@ -24,15 +24,15 @@ Set-Location $OSKARDIR
 
 If($env:OSKAR_BRANCH)
 {
-    $env:OSKAR_BRANCH = $env:OSKAR_BRANCH -replace '[^a-zA-Z0-9#/+_-]', ''
+    $env:OSKAR_BRANCH = $env:OSKAR_BRANCH -replace '[^a-zA-Z0-9#/+_.-]', ''
 }
 If($env:ARANGODB_BRANCH)
 {
-    $env:ARANGODB_BRANCH = $env:ARANGODB_BRANCH -replace '[^a-zA-Z0-9#/+_-]', ''
+    $env:ARANGODB_BRANCH = $env:ARANGODB_BRANCH -replace '[^a-zA-Z0-9#/+_.-]', ''
 }
 If($env:ENTERPRISE_BRANCH)
 {
-    $env:ENTERPRISE_BRANCH = $env:ENTERPRISE_BRANCH -replace '[^a-zA-Z0-9#/+_-]', ''
+    $env:ENTERPRISE_BRANCH = $env:ENTERPRISE_BRANCH -replace '[^a-zA-Z0-9#/+_.-]', ''
 }
 
 If(-Not($env:OSKAR_BRANCH))
