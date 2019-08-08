@@ -807,6 +807,7 @@ function runInContainer
              -e BUILDMODE="$BUILDMODE" \
              -e COMPILER_VERSION="$COMPILER_VERSION" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
+             -e CPPCHECK_ABS="$HOME/$NODE_NAME/$OSKAR"
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
