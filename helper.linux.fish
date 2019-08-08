@@ -299,6 +299,23 @@ function jslint
 end
 
 ## #############################################################################
+## cppcheck
+## #############################################################################
+
+function cppcheckArangoDB
+  checkoutIfNeeded
+  and pushd $WORKDIR/work/ArangoDB
+  or begin popd; return 1; end
+
+  set -l s 0
+  runInContainer $CPPCHECKIMAGE /scripts/cppcheck.sh
+  set s $status
+
+  popd
+  return $s
+end
+
+## #############################################################################
 ## source release
 ## #############################################################################
 
