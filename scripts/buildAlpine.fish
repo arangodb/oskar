@@ -66,6 +66,12 @@ end
 
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
+else if test "$COVERAGE" = "On"
+  echo "Building with Coverage"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
+    -DCMAKE_C_FLAGS="-fno-stack-protector -fprofile-arcs -ftest-coverage" \
+    -DCMAKE_CXX_FLAGS="-fno-stack-protector -fprofile-arcs -ftest-coverage"
 else
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
