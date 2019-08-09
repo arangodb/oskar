@@ -10,11 +10,4 @@ cat cppcheck.xml \
   > cppcheck.xml.tmp
 mv cppcheck.xml.tmp cppcheck.xml
 
-
-(
-  cd $WORKSPACE
-  rm -rf work
-  ln -s $CPPCHECK_ABS/work work
-)
-
 exit $status
