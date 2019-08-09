@@ -6,7 +6,7 @@ cd /work/ArangoDB
 status=$?
 
 cat cppcheck.xml \
-  | sed -e "s:file=\":file=\"$CPPCHECK_ABS/:g" \
+  | sed -e "s:file=\":file=\"$CPPCHECK_ABS:g" \
   > cppcheck.xml.tmp
 mv cppcheck.xml.tmp cppcheck.xml
 
