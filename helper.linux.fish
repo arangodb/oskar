@@ -215,6 +215,11 @@ function makeStaticArangoDB
   end
 end
 
+function buildStaticCoverage
+  coverageOn
+  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On
+end
+
 function buildExamples
   checkoutIfNeeded
   and if test "$NO_RM_BUILD" != 1
@@ -803,11 +808,11 @@ function runInContainer
              -v "$WORKDIR/scripts":"/scripts" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ASAN="$ASAN" \
+             -e COVERAGE="$COVERAGE" \
              -e IONICE="$IONICE" \
              -e BUILDMODE="$BUILDMODE" \
              -e COMPILER_VERSION="$COMPILER_VERSION" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
-             -e CPPCHECK_ABS="$HOME/$NODE_NAME/$OSKAR" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \

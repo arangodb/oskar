@@ -65,6 +65,11 @@ function releaseMode ; set -gx BUILDMODE RelWithDebInfo ; end
 if test -z "$BUILDMODE" ; releaseMode
 else ; set -gx BUILDMODE $BUILDMODE ; end
 
+function coverageOn ; set -gx COVERAGE On ; debugMode ; end
+function coverageOff ; set -gx COVERAGE Off ; end
+if test -z "$COVERAGE" ; coverageOff
+else ; set -gx COVERAGE $COVERAGE ; end
+
 function community ; set -gx ENTERPRISEEDITION Off ; end
 function enterprise ; set -gx ENTERPRISEEDITION On ; end
 if test -z "$ENTERPRISEEDITION" ; enterprise
@@ -998,6 +1003,7 @@ function showConfig
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
   printf $fmt3 'ASAN'       $ASAN                '(asanOn/Off)'
+  printf $fmt3 'Coverage'   $COVERAGE            '(coverageOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'   "$compiler_version"  '(compiler x.y.z)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'

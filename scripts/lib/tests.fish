@@ -38,6 +38,9 @@ echo "LSAN: $LSAN_OPTIONS"
 echo "UBSAN: $UBSAN_OPTIONS"
 echo "TSAN: $TSAN_OPTIONS"
 
+set -xg GCOV_PREFIX /work/gcov
+set -xg GCOV_PREFIX_STRIP 3
+
 function runAnyTest
   set -l t $argv[1]
   set -l tt $argv[2]

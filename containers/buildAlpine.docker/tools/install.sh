@@ -3,7 +3,7 @@ set -e
 
 # Install some packages:
 apk update
-apk add groff g++ bison flex make cmake ccache python libldap git linux-vanilla-dev linux-headers vim boost-dev ctags man gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo
+apk add groff g++ bison flex make cmake ccache python libldap git linux-vanilla-dev linux-headers vim boost-dev ctags man gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo gcovr py-setuptools
 
 # Compile openssl1.1 library:
 export OPENSSLVERSION=1.1.0k
