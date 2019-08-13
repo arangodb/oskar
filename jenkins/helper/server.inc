@@ -42,7 +42,7 @@ if [ "$ARANGO_MODE" == "cluster" ]; then
     EXPORT_PORTS="-p $ARANGO_PORT:$ARANGO_PORT"
   fi
 else
-  EXPORT_PORTS="-p $ARANGO_PORT:8529"
+  EXPORT_PORTS="-p $ARANGO_PORT:$ARANGO_PORT"
 fi
 echo "PORTS: $EXPORT_PORTS"
 echo "MODE: $ARANGO_MODE"
@@ -83,7 +83,7 @@ if [ "$ARANGO_MODE" == "cluster" ]; then
     STARTER_MODE="$STARTER_MODE --starter.port $(expr $ARANGO_PORT - 1)"
   fi
 elif [ "$ARANGO_MODE" == "singleserver" ]; then
-  STARTER_MODE="--starter.mode single" 
+  STARTER_MODE="--starter.mode single --starter.port $(expr $ARANGO_PORT - 1)"
 else
     echo "unknown mode $ARANGO_MODE"
     exit 1
