@@ -9,9 +9,18 @@ and skipGrey
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On
 and begin
+  set -x NOSTRIP 1
   rm -rf /work/gcov
-  and oskar1
-  or set s $status
+
+  enterprise
+
+  rocksdb
+  cluster ; oskar ; or set s $status
+  single  ; oskar ; or set s $status
+
+  mmfiles
+  cluster ; oskar ; or set s $status
+  single  ; oskar ; or set s $status
 
   begin
     set -l c 0
