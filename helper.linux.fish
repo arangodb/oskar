@@ -309,15 +309,20 @@ end
 
 function cppcheckArangoDB
   checkoutIfNeeded
-  and pushd $WORKDIR/work/ArangoDB
-  or begin popd; return 1; end
 
-  set -l s 0
   runInContainer $CPPCHECKIMAGE /scripts/cppcheck.sh
-  set s $status
+  return $status
+end
 
-  popd
-  return $s
+## #############################################################################
+## coverage
+## #############################################################################
+
+function collectCoverage
+  findRequiredCompiler
+
+  runInContainer (findBuildImage) /scripts/coverage.fish
+  return $status
 end
 
 ## #############################################################################
