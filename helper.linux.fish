@@ -811,39 +811,40 @@ function runInContainer
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
+             -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ASAN="$ASAN" \
-             -e COVERAGE="$COVERAGE" \
-             -e IONICE="$IONICE" \
              -e BUILDMODE="$BUILDMODE" \
-             -e COMPILER_VERSION="$COMPILER_VERSION" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
+             -e COMPILER_VERSION="$COMPILER_VERSION" \
+             -e COVERAGE="$COVERAGE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
              -e INNERWORKDIR="$INNERWORKDIR" \
-             -e SHOW_DETAILS="$SHOW_DETAILS" \
+             -e IONICE="$IONICE" \
+             -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
              -e MAINTAINER="$MAINTAINER" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
+             -e NODE_NAME="$NODE_NAME" \
+             -e ONLYGREY="$ONLYGREY" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
+             -e SHOW_DETAILS="$SHOW_DETAILS" \
+             -e SKIPGREY="$SKIPGREY" \
+             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
+             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
              -e SSH_AUTH_SOCK=/ssh-agent \
              -e STORAGEENGINE="$STORAGEENGINE" \
+             -e TEST="$TEST" \
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
-             -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
-             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
-             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
-             -e SKIPGREY="$SKIPGREY" \
-             -e ONLYGREY="$ONLYGREY" \
-             -e TEST="$TEST" \
-             -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH"\
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"

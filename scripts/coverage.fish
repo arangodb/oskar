@@ -38,4 +38,11 @@ and popd
 and echo "copying gcno files"
 and tar x -f /tmp/gcno.tar -C /work/combined/result
 
-and gcovr --root /work/ArangoDB -x --exclude-directories 3rdParty -o combined/coverage.xml
+and gcovr --root /work/ArangoDB -x -e 3rdParty/ -o combined/coverage.xml
+
+and begin
+  cat combined/coverage.xml \
+    | sed -e "s:filename=\":filename=\"/home/jenkins/$NODE_NAME/oskar/work/ArangoDB/:g" \
+    > combined/coverage.xml.tmp
+  and mv combined/coverage.xml.tmp combined/coverage.xml
+end
