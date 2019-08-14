@@ -18,8 +18,8 @@ else
 end
 
 cd $INNERWORKDIR
-mkdir -p .ccache.alpine
-set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine
+mkdir -p .ccache.alpine2
+set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine2
 if test "$CCACHEBINPATH" = ""
   set -xg CCACHEBINPATH /usr/lib/ccache/bin
 end
