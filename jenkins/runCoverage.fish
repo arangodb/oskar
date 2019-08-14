@@ -14,12 +14,12 @@ and begin
   rm -rf /work/gcov
 
   rocksdb
-  // cluster ; oskar ; or set s $status
-  // single  ; oskar ; or set s $status
+  # cluster ; oskar ; or set s $status
+  # single  ; oskar ; or set s $status
 
   mmfiles
-  // cluster ; oskar ; or set s $status
-  // single  ; oskar ; or set s $status
+  # cluster ; oskar ; or set s $status
+  # single  ; oskar ; or set s $status
 
   collectCoverage
   or set s $status
