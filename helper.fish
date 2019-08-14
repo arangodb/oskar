@@ -1391,15 +1391,17 @@ function moveResultsToWorkspace
     end
 
     for x in buildArangoDB.log cmakeArangoDB.log
-      if test -f "$WORKDIR/work/$x" ; mv $WORKDIR/work/$x $WORKSPACE ; end
+      if test -f $WORKDIR/work/$x ; mv $WORKDIR/work/$x $WORKSPACE ; end
     end
 
     for x in cppcheck.xml
-      if test -f "$WORKDIR/work/ArangoDB/$x" ; mv $WORKDIR/work/ArangoDB/$x $WORKSPACE ; end
+      if test -f $WORKDIR/work/ArangoDB/$x
+        mv $WORKDIR/work/ArangoDB/$x $WORKSPACE
+      end
     end
 
-    for x in coverage.xml
-      if test -f "$WORKDIR/work/combined/$x" ; mv $WORKDIR/work/combined/$x $WORKSPACE ; end
+    if test -d "$WORKDIR/work/coverage"
+      mv $WORKDIR/work/coverage $WORKSPACE
     end
 
     set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html}
