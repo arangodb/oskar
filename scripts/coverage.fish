@@ -38,4 +38,4 @@ and popd
 and echo "copying gcno files"
 and tar x -f /tmp/gcno.tar -C /work/combined/result
 
-and gcovr --root /work/ArangoDB -x -e 3rdParty -o combined/coverage.xml
+and gcovr --root /work/ArangoDB -x --exclude-directories 3rdParty -o combined/coverage.xml
