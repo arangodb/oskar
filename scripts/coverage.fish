@@ -41,6 +41,10 @@ and tar x -f /tmp/gcno.tar -C /work/combined/result
 and rm -rf coverage
 and mkdir coverage
 and gcovr --root /work/ArangoDB -x --exclude-directories ".*3rdParty.*" -o coverage/coverage.xml
+and cat coverage/coverage.xml \
+      | sed -e "s:filename=\":file=\"./coverage/:g" \
+      > coverage/coverage.xml.tmp
+and mv coverage/coverage.xml.tmp coverage/coverage.xml
 and for d in lib arangosh arangod
   cp -a /work/ArangoDB/$d coverage/$d
 end
