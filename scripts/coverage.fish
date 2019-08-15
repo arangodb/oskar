@@ -40,11 +40,12 @@ and tar x -f /tmp/gcno.tar -C /work/combined/result
 
 and rm -rf coverage
 and mkdir coverage
+and mkdir coverage/enterprise
 and gcovr --root /work/ArangoDB -x -e 3rdParty/ -e build/ -e /usr -e /work/ArangoDB/3rdParty -e tests/ -o coverage/coverage.xml /work/combined/result
 and cat coverage/coverage.xml \
       | sed -e "s:filename=\":filename=\"./coverage/:g" \
       > coverage/coverage.xml.tmp
 and mv coverage/coverage.xml.tmp coverage/coverage.xml
-and for d in lib arangosh arangod
+and for d in lib arangosh arangod enterprise/Enterprise
   cp -a /work/ArangoDB/$d coverage/$d
 end
