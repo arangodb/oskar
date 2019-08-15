@@ -15,11 +15,11 @@ and begin
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
 
   rocksdb
-  # cluster ; oskar ; or set s $status
-  # single  ; oskar ; or set s $status
+  cluster ; oskar ; or set s $status
+  single  ; oskar ; or set s $status
 
   mmfiles
-  # cluster ; oskar ; or set s $status
+  cluster ; oskar ; or set s $status
   single  ; oskar ; or set s $status
 
   collectCoverage
