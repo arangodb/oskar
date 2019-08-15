@@ -630,8 +630,14 @@ function buildDockerImage
 
   set -l imagename $argv[1]
 
+  findArangoDBVersion ; or return 1
   pushd $WORKDIR/work/ArangoDB/build/install
-  and tar czf $WORKDIR/containers/arangodb.docker/install.tar.gz *
+
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.docker
+  if not test -d $containerpath
+    set containerpath $WORKDIR/containers/arangodbDevel.docker
+  end
+  and tar czf $containerpath/install.tar.gz *
   if test $status -ne 0
     echo Could not create install tarball!
     popd
@@ -639,7 +645,7 @@ function buildDockerImage
   end
   popd
 
-  pushd $WORKDIR/containers/arangodb.docker
+  pushd $containerpath
   and docker build --pull -t $imagename .
   or begin ; popd ; return 1 ; end
   popd
