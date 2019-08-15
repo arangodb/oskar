@@ -40,7 +40,7 @@ and tar x -f /tmp/gcno.tar -C /work/combined/result
 
 and rm -rf coverage
 and mkdir coverage
-and gcovr --root /work/ArangoDB -x --exclude-directories ".*3rdParty.*" -o coverage/coverage.xml
+and gcovr --root /work/ArangoDB -x -e 3rdParty/ -e build/ -e /usr -e /work/ArangoDB/3rdParty -o coverage/coverage.xml /work/combined/result
 and cat coverage/coverage.xml \
       | sed -e "s:filename=\":filename=\"./coverage/:g" \
       > coverage/coverage.xml.tmp
