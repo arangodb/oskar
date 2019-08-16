@@ -5,12 +5,15 @@ set s 0
 
 cleanPrepareLockUpdateClear
 and enterprise
+and maintainerOn
+and asanOff
 and coverageOn
 and skipGrey
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On
+and set -gx NOSTRIP 1
+and showConfig
+and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DTARGET_ARCHITECTURE=nehalem
 and begin
-  set -x NOSTRIP 1
   rm -rf $WORKDIR/work/gcov.old
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
 
