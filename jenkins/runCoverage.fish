@@ -25,6 +25,10 @@ and begin
   cluster ; oskarFull ; or set s $status
   single  ; oskarFull ; or set s $status
 
+  resilience
+  cluster ; oskarFull ; or set s $status
+  single  ; oskarFull ; or set s $status
+
   collectCoverage
   or set s $status
 end
