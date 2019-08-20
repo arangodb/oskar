@@ -172,7 +172,7 @@ function createReport
     echo "<table>"; echo "Test,Runtime,Status" | sed -e 's/^/<tr><th>/' -e 's/,/<\/th><th>/g' -e 's/$/<\/th><\/tr>/'
     cat testRuns.txt \
       | sed -e 's/^/<tr><td>/' -e 's/,/<\/td><td align="right">/g' -e 's/$/<\/td><\/tr>/' \
-      | sed -e 's/^<tr>\(.*BAD.*\)$/<tr style="background-color: red; color: white;">\1/'
+      | sed -e 's/^<tr>\(.*BAD.*\)$/<tr style="background-color: red;color: white;">\1/'
     echo "</table>"
   end > testRuns.html
 
