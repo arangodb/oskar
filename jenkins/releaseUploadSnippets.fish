@@ -11,7 +11,7 @@ if test "$RELEASE_TYPE" != "preview" -a "$RELEASE_IS_HEAD" != "true"
   exit 0
 end
 
-if test -z "$PANTHEON_SITE" -o "$PANTHEON_SITE" != "dev" -o "$PANTHEON_SITE" != "live"
+if test -z "$PANTHEON_SITE" -o "$PANTHEON_SITE" != "dev" -a "$PANTHEON_SITE" != "live"
   echo "`dev` or `live` pantheon.io should be chosen!"
   exit 1
 end
