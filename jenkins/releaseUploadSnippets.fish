@@ -11,6 +11,11 @@ if test "$RELEASE_TYPE" != "preview" -a "$RELEASE_IS_HEAD" != "true"
   exit 0
 end
 
+if test -z "$PANTHEON_SITE" -o "$PANTHEON_SITE" != "dev" -a "$PANTHEON_SITE" != "live"
+  echo "`dev` or `live` pantheon.io should be chosen!"
+  exit 1
+end
+
 cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
@@ -19,7 +24,7 @@ or begin unlockDirectory ; exit 1 ; end
 
 function upload
   cd /mnt/buildfiles/stage2
-  set -l HOST live.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f@appserver.live.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f.drush.in
+  set -l HOST "$PANTHEON_SITE.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f@appserver.$PANTHEON_SITE.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f.drush.in"
   set -l SSL "ssh -o StrictHostkeyChecking=false -i $HOME/.ssh/pantheon -p 2222"
 
   if test "$RELEASE_TYPE" = "preview"
@@ -27,7 +32,7 @@ function upload
     and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-technical-preview-enterprise/
   else
     rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-current/
-    and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/
+    and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/$ARANGODB_REPO
   end
 end
 
