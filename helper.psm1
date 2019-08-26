@@ -11,7 +11,7 @@ If(-Not(Test-Path -PathType Container -Path "work"))
     New-Item -ItemType Directory -Path "work"
 }
 
-$global:TSHARK = (Get-ChildItem -Recurse "$env:ProgramFiles" tshark.exe).FullName | Select-Object -Last 1
+$global:TSHARK = (Get-ChildItem -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1
          
 (Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*'
 $global:dumpDevice = $Matches[1]
