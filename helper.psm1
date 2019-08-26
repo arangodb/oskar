@@ -12,7 +12,8 @@ If(-Not(Test-Path -PathType Container -Path "work"))
 }
 
 $global:TSHARK = (Get-ChildItem -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1
-         
+$global:TSHARK -replace ' ', '` '
+
 (Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*'
 $global:dumpDevice = $Matches[1]
 if ($global:dumpDevice -notmatch '\d+') {
