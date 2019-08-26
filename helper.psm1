@@ -11,7 +11,16 @@ If(-Not(Test-Path -PathType Container -Path "work"))
     New-Item -ItemType Directory -Path "work"
 }
 
-$global:WIRESHARKPATH = "c:\Program Files\Wireshark"
+$global:TSHARK = (Get-ChildItem -Recurse 'C:\Program Files\' tshark.exe).FullName | Select-Object -Last 1
+         
+(Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*'
+$global:dumpDevice = $Matches[1]
+if ($global:dumpDevice -notmatch '\d+') {
+    Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
+    Invoke-Expression $global:TSHARK -D
+    Exit 1
+}
+
 $global:RUBY = (Get-Command ruby.exe).Path
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"

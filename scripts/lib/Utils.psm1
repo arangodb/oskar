@@ -246,17 +246,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         }
 
         if ($sniff) {
-          $tsharkx = "$global:WIRESHARKPATH\tshark.exe"
-          $tshark = "$tsharkx" -replace ' ', '` '
-          (Invoke-Expression "$tshark -D"  |Select-String -SimpleMatch Npcap ) -match '^(\d).*'
-          $dumpDevice = $Matches[1]
-          if ($dumpDevice -notmatch '\d+') {
-             Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
-             Invoke-Expression $tshark -D
-             Set-Variable -Name "ok" -Value $false -Scope global
-             return
-          }
-          $testparams = $testparams + " --sniff true --sniffProgram `"$tsharkx`" --sniffDevice $dumpDevice"
+          $testparams = $testparams + " --sniff true --sniffProgram `"$global:TSHARK`" --sniffDevice $global:dumpDevice"
         }
         
         $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
