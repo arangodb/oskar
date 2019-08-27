@@ -20,6 +20,9 @@ if ($global:dumpDevice -notmatch '\d+') {
     Invoke-Expression $global:TSHARK -D
     Exit 1
 }
+Else {
+$global:TSHARK = $global:TSHARK -replace '` ', ' '
+}
 
 $global:RUBY = (Get-Command ruby.exe).Path
 $global:INNERWORKDIR = "$WORKDIR\work"
