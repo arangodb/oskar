@@ -43,6 +43,29 @@ function compiler
   end
 end
 
+function opensslVersion
+  set -l oversion $argv[1]
+
+  if test "$oversion" = ""
+    set -e OPENSSL_VERSION
+    return 0
+  end
+
+  switch $oversion
+    case '1.0.0'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '1.1.0'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '1.1.1'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '*'
+      echo "unknown compiler version $oversion"
+  end
+end
+
 function findBuildImage
   if test "$COMPILER_VERSION" = ""
       echo $ALPINEBUILDIMAGE
@@ -100,6 +123,31 @@ function findRequiredCompiler
   else
     echo "Using compiler '$v' from '$f'"
     compiler $v
+  end
+end
+
+function findRequiredOpenSSL
+  set -l f $WORKDIR/work/ArangoDB/VERSIONS
+
+  test -f $f
+  or begin
+    echo "Cannot find $f; make sure source is checked out"
+    return 1
+  end
+
+  if test "$OPENSSL_VERSION" != ""
+    echo "OpenSSL version already set to '$OPENSSL_VERSION'"
+    return 0
+  end
+
+  set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    echo "$f: no OPENSSL_LINUX specified, using 1.1.0"
+    opensslVersion 1.1.0
+  else
+    echo "Using OpenSLL version '$v' from '$f'"
+    opensslVersion $v
   end
 end
 
@@ -833,10 +881,11 @@ function runInContainer
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
              -e MAINTAINER="$MAINTAINER" \
+             -e NODE_NAME="$NODE_NAME" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
-             -e NODE_NAME="$NODE_NAME" \
              -e ONLYGREY="$ONLYGREY" \
+             -e OPENSSL_VERSION="$OPENSSL_VERSION" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
@@ -917,6 +966,10 @@ end
 
 function findCompilerVersion
   echo $COMPILER_VERSION
+end
+
+function findOpenSSLVersion
+  echo $OPENSSL_VERSION
 end
 
 function clearWorkDir

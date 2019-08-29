@@ -1000,12 +1000,19 @@ function showConfig
     set compiler_version "["(findCompilerVersion)"]"
   end
 
+  set -l openssl_version $OPENSSL_VERSION
+
+  if test -z "$OPENSSL_VERSION"
+    set openssl_version "["(findOpenSSLVersion)"]"
+  end
+
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
   printf $fmt3 'ASAN'       $ASAN                '(asanOn/Off)'
   printf $fmt3 'Coverage'   $COVERAGE            '(coverageOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'   "$compiler_version"  '(compiler x.y.z)'
+  printf $fmt3 'OpenSSL'    "$openssl_version"   '(opensslVersion x.y.z)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
