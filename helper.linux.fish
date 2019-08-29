@@ -119,7 +119,8 @@ function findRequiredCompiler
   set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
   if test "$v" = ""
-    echo "$f: no GCC_LINUX specified, using default"
+    echo "$f: no GCC_LINUX specified, using 6.4.0"
+    compiler 6.4.0
   else
     echo "Using compiler '$v' from '$f'"
     compiler $v
