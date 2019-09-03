@@ -18,14 +18,12 @@ and begin
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
 
   rocksdb
-  cluster    ; oskarFull ; or set s $status
   single     ; oskarFull ; or set s $status
-  resilience ; oskarFull ; or set s $status
+  cluster    ; oskarFull ; or set s $status
 
   mmfiles
-  cluster ; oskarFull ; or set s $status
-  single  ; oskarFull ; or set s $status
-  resilience ; oskarFull ; or set s $status
+  single     ; oskarFull ; or set s $status
+  cluster    ; oskarFull ; or set s $status
 
   collectCoverage
   or set s $status
