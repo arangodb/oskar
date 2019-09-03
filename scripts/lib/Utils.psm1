@@ -60,7 +60,7 @@ Function createReport
             }
     }
     $global:result | Add-Content "$env:TMP\testProtocol.txt"
-    If(Get-ChildItem -Path "$env:TMP" -Filter "core_*" -Recurse -ErrorAction Continue -Force)
+    If(Get-ChildItem -Path "$global:COREDIR" -Filter "arango*.dmp" -Recurse -ErrorAction Continue -Force)
     {
         Write-Host "7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe "-DestinationPath "$INNERWORKDIR\crashreport-$date.zip
         7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe" -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
@@ -249,7 +249,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $testparams = $testparams + " --sniff true --sniffProgram `"$global:TSHARK`" --sniffDevice $global:dumpDevice"
         }
         
-        $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
+        $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE --disableMonitor true"
 
         New-Item -Path "$env:TMP\$output.out" -ItemType Directory
         $testparams = $testparams + " --testOutput $env:TMP\$output.out"
