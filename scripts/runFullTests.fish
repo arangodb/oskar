@@ -166,6 +166,8 @@ set CT "$CT""500,runClusterTest1 authentication 2 --testBuckets 3/2 --dumpAgency
 set CT "$CT""750,runClusterTest1 http_server - --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 server_permissions - --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 ssl_server - --dumpAgencyOnError true\n"
+set CT "$CT""250,runClusterTest1 audit_client - --dumpAgencyOnError true\n"
+set CT "$CT""250,runClusterTest1 audit_server - --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 server_http - --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 dump - --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 client_resilience - --dumpAgencyOnError true\n"
