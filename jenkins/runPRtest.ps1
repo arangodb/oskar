@@ -15,8 +15,7 @@ If ($global:ok)
 {
     setPDBsToWorkspaceOnCrashOnly
     clcacheOn
-    # FIXME:
-    disableDumpsToReport
+    enableDumpsToReport
     oskar1
 }
 
