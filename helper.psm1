@@ -11,7 +11,28 @@ If(-Not(Test-Path -PathType Container -Path "work"))
     New-Item -ItemType Directory -Path "work"
 }
 
-$global:WIRESHARKPATH = "c:\Program Files\Wireshark"
+$global:TSHARK = ((Get-ChildItem -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1) -replace ' ', '` '
+
+(Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*'
+$global:dumpDevice = $Matches[1]
+if ($global:dumpDevice -notmatch '\d+') {
+    Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
+    Invoke-Expression $global:TSHARK -D
+    Exit 1
+}
+Else {
+$global:TSHARK = $global:TSHARK -replace '` ', ' '
+}
+$global:REG_WER = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
+$global:COREDIR = "$env:WORKSPACE\core"
+if (-Not(Test-Path -Path $global:COREDIR))
+{
+  New-Item -ItemType "directory" -Path "$global:COREDIR"
+}
+else
+{
+  Remove-Item "$global:COREDIR\*" -Recurse -Force
+}
 $global:RUBY = (Get-Command ruby.exe).Path
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
@@ -116,6 +137,22 @@ Function hostKey
     }
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false -priority "Normal"
+}
+
+Function clearWER
+{
+    Remove-Item "$global:REG_WER" -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item "$global:REG_WER" -Force
+}
+
+Function configureWER($executable, $path)
+{
+    $regPath = "$global:REG_WER\$executable"
+    Remove-Item "$regPath" -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item "$regPath" -Force
+    New-ItemProperty "$regPath" -Name DumpFolder -PropertyType ExpandString -Value "$path" -Force
+    New-ItemProperty "$regPath" -Name DumpCount -PropertyType DWord -Value 100 -Force
+    New-ItemProperty "$regPath" -Name DumpType -PropertyType DWord -Value 2 -Force
 }
 
 ################################################################################
@@ -1234,11 +1271,22 @@ Function moveResultsToWorkspace
 # Oskar entry points
 ################################################################################
 
+Function configureDumpsArangoDB
+{
+    clearWER
+    ForEach($executable in (Get-ChildItem -File -Filter "arango*.exe" -Path "$global:ARANGODIR\build\bin\$BUILDMODE"))
+    {
+        configureWER -executable $executable -path $global:COREDIR
+    }
+    comm
+}
+
 Function oskar
 {
     checkoutIfNeeded
     if($global:ok)
     {
+        configureDumpsArangoDB
         & "$global:SCRIPTSDIR\runTests.ps1"
     }
 }
@@ -1248,6 +1296,7 @@ Function oskarFull
     checkoutIfNeeded
     if($global:ok)
     {
+        configureDumpsArangoDB
         & "$global:SCRIPTSDIR\runFullTests.ps1"
     }
 }

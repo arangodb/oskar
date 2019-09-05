@@ -4,26 +4,35 @@ source jenkins/helper/jenkins.fish
 set s 0
 
 cleanPrepareLockUpdateClear
-and enterprise
 and maintainerOn
 and asanOff
 and coverageOn
 and skipGrey
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and set -gx NOSTRIP 1
-and showConfig
-and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DTARGET_ARCHITECTURE=nehalem
 and begin
   rm -rf $WORKDIR/work/gcov.old
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
 
-  rocksdb
-  single     ; oskarFull ; or set s $status
-  cluster    ; oskarFull ; or set s $status
+  enterprise
+  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DTARGET_ARCHITECTURE=nehalem
+  and showConfig
 
-  mmfiles
-  single     ; oskarFull ; or set s $status
-  cluster    ; oskarFull ; or set s $status
+  and begin
+    rocksdb
+    cluster ; oskar ; or set s $status
+    single  ; oskar ; or set s $status
+  end
+
+  and community
+  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DTARGET_ARCHITECTURE=nehalem
+  and showConfig 
+
+  and begin
+    mmfiles
+    cluster ; oskar ; or set s $status
+    single  ; oskar ; or set s $status
+  end
 
   collectCoverage
   or set s $status
