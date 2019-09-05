@@ -13,6 +13,8 @@ If ($global:ok)
 {
     setPDBsToWorkspaceOnCrashOnly
     clcacheOn
+    # FIXME:
+    disableDumpsToReport
     oskar1Full
 }
 $s = $global:ok
