@@ -15,7 +15,6 @@ If ($global:ok)
 {
     setPDBsToWorkspaceOnCrashOnly
     clcacheOn
-    enableDumpsToReport
     oskar1
 }
 
