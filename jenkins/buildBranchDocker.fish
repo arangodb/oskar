@@ -1,7 +1,8 @@
 #!/usr/bin/env fish
 source jenkins/helper/jenkins.fish
 
-enterprise
+cleanPrepareLockUpdateClear
+and enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and findArangoDBVersion
