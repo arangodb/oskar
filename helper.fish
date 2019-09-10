@@ -1288,6 +1288,31 @@ function findArangoDBVersion
 end
 
 ## #############################################################################
+## CHECK USELESS MACROS
+## #############################################################################
+
+function checkMacros
+  checkoutIfNeeded
+  and pushd $WORKDIR/work/ArangoDB
+  or begin popd; return 1; end
+
+  set -l wrong (find lib arangod arangosh enterprise tests -name "*.cpp" -o -name "*.h" \
+    | xargs grep -P -n '# *ifdef +(WIN32|(TRI_ENABLE_|ARANGODB_USE_|USE_)MAINTAINER_MODE)') 
+  
+  set -l s 0
+
+  if test "$wrong" != ""
+    echo -e "Wrong macros:\n$wrong"
+    set s 1
+  else
+    echo "Wrong macros: NONE"
+  end
+
+  popd
+  return $s
+end
+
+## #############################################################################
 ## LOG ID
 ## #############################################################################
 
