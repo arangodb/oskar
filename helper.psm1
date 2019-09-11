@@ -318,6 +318,7 @@ Function showConfig
     Write-Host "Failure tests  : "$USEFAILURETESTS
     Write-Host "Keep build     : "$KEEPBUILD
     Write-Host "PDBs workspace : "$PDBS_TO_WORKSPACE
+    Write-Host "DMP workspace  : "$ENABLE_REPORT_DUMPS
     Write-Host " "
     Write-Host "Test Configuration"
     Write-Host "Storage engine : "$STORAGEENGINE
@@ -614,6 +615,20 @@ If(-Not($WORKSPACE_PDB_CRASH_ONLY))
     $global:PDBS_TO_WORKSPACE = "always"
 }
 
+Function disableDumpsToReport
+{
+    $global:ENABLE_REPORT_DUMPS = "off"
+}
+
+Function enableDumpsToReport
+{
+    $global:ENABLE_REPORT_DUMPS = "on"
+}
+
+If(-Not($ENABLE_REPORT_DUMPS))
+{
+    enableDumpsToReport
+}
 
 # ##############################################################################
 # Version detection
