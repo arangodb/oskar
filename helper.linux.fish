@@ -828,6 +828,8 @@ function remakeImages
   pushUbuntuBuildImage ; or set -l s 1
   buildAlpineBuildImage ; or set -l s 1
   pushAlpineBuildImage ; or set -l s 1
+  buildAlpineBuildImage2 ; or set -l s 1
+  pushAlpineBuildImage2 ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
   pushUbuntuPackagingImage ; or set -l s 1
   buildCentosPackagingImage ; or set -l s 1
