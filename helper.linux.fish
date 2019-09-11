@@ -5,13 +5,13 @@ set -gx SCRIPTSDIR /scripts
 set -gx PLATFORM linux
 set -gx ARCH (uname -m)
 
-set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH:1
-set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
-set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH:1
-set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH:1
-set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH:1
-set -gx DOCIMAGE arangodb/arangodb-documentation:1
-set -gx CPPCHECKIMAGE arangodb/cppcheck:1
+set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH
+set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH
+set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH
+set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH
+set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH
+set -gx DOCIMAGE arangodb/arangodb-documentation
+set -gx CPPCHECKIMAGE arangodb/cppcheck
 set -xg IONICE "ionice -t -n 7"
 
 set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
