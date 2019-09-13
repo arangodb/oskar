@@ -22,7 +22,6 @@ override_dh_auto_install:
 	cd build/install ; for i in arangoimp; do cp -a --parents usr/bin/$$i ../../debian/@EDITION@-client; done
 	cd build/install ; cp -a --parents usr/share/arangodb3/icudtl.dat ../../debian/@EDITION@-client
 	cd build/install ; if test -d usr/share/arangodb3/js/common; then cp -a --parents usr/share/arangodb3/js/common usr/share/arangodb3/js/client usr/share/arangodb3/js/node ../../debian/@EDITION@-client; else cp -a --parents usr/share/arangodb3/js/*/common usr/share/arangodb3/js/*/client usr/share/arangodb3/js/*/node ../../debian/@EDITION@-client; fi
-	cd build/install ; if test -x usr/bin/arangobackup ; then cp -a --parents etc/arangodb3/arangobackup.conf usr/bin/arangobackup ../../debian/@EDITION@-client ; fi
 
 override_dh_strip:
 	dh_strip --exclude usr/bin/arangodb --exclude usr/sbin/arangosync --dbg-package @EDITION@-dbg
