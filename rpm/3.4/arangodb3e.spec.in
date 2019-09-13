@@ -91,15 +91,6 @@ if [ -x %{buildroot}/usr/sbin/arangosync ] ; then
   mv %{buildroot}/usr/sbin/arangosync /tmp
 fi
 
-## EXTRA_BACKUP_FILES=$RPM_BUILD_ROOT/ExtraFiles.list
-## touch ${EXTRA_BACKUP_FILES}
-## 
-## if test -f $RPM_BUILD_ROOT%{_cfgdir}/arangobackup.conf; then
-##   echo '%config(noreplace) %{_cfgdir}/arangobackup.conf' >> ${EXTRA_BACKUP_FILES}
-##   echo '%{_bindir}/arangobackup' >> ${EXTRA_BACKUP_FILES}
-##   echo '%{_mandir}/*/arangobackup*' >> ${EXTRA_BACKUP_FILES}
-## fi
-
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                             check
 ## -----------------------------------------------------------------------------
@@ -138,8 +129,7 @@ fi
 %files client
 %defattr(-,root,root,0755)
 
-# This is for arangobench.conf and arangobackup.conf (if the latter is present)
-%config(noreplace) %{_cfgdir}/arangob*.conf
+%config(noreplace) %{_cfgdir}/arangobench.conf
 %config(noreplace) %{_cfgdir}/arangodump.conf
 %config(noreplace) %{_cfgdir}/arangoexp*.conf
 %config(noreplace) %{_cfgdir}/arangoimp*.conf
@@ -148,8 +138,8 @@ fi
 %config(noreplace) %{_cfgdir}/arangosh.conf
 %config(noreplace) %{_cfgdir}/arangovpack.conf
 %config(noreplace) %{_cfgdir}/foxx-manager.conf
-# This is for arangobench and arangobackup (if the latter is present)
-%{_bindir}/arangob*
+%{_bindir}/arangobench
+%{_bindir}/arangodump
 %{_bindir}/arangoexp*
 %{_bindir}/arangoimp*
 %{_bindir}/arangoinspect

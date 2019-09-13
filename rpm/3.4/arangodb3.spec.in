@@ -129,8 +129,7 @@ fi
 %files client
 %defattr(-,root,root,0755)
 
-# This is for arangobench.conf and arangobackup.conf (if the latter is present)
-%config(noreplace) %{_cfgdir}/arangob*.conf
+%config(noreplace) %{_cfgdir}/arangobench.conf
 %config(noreplace) %{_cfgdir}/arangodump.conf
 %config(noreplace) %{_cfgdir}/arangoexp*.conf
 %config(noreplace) %{_cfgdir}/arangoimp*.conf
@@ -139,8 +138,7 @@ fi
 %config(noreplace) %{_cfgdir}/arangosh.conf
 %config(noreplace) %{_cfgdir}/arangovpack.conf
 %config(noreplace) %{_cfgdir}/foxx-manager.conf
-# This is for arangobench and arangobackup (if the latter is present)
-%{_bindir}/arangob*
+%{_bindir}/arangobench
 %{_bindir}/arangodump
 %{_bindir}/arangoexp*
 %{_bindir}/arangoimp*
