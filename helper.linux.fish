@@ -5,12 +5,13 @@ set -gx SCRIPTSDIR /scripts
 set -gx PLATFORM linux
 set -gx ARCH (uname -m)
 
-set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH
-set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH
-set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH
-set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH
-set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH
-set -gx DOCIMAGE arangodb/arangodb-documentation
+set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH:1
+set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
+set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH:1
+set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH:1
+set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH:1
+set -gx DOCIMAGE arangodb/arangodb-documentation:1
+set -gx CPPCHECKIMAGE arangodb/cppcheck:1
 set -xg IONICE "ionice -t -n 7"
 
 set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
@@ -124,8 +125,20 @@ function checkoutEnterprise
 end
 
 function switchBranches
+  set -l force_clean false
+
+  if test (count $argv) -eq 3
+    set force_clean $argv[3]
+  end
+
+  if test $force_clean = "true"
+    if test ! -d $WORKDIR/ArangoDB/.git
+      rm -rf $INNERWORKDIR/ArangoDB/.git
+    end
+  end
+
   checkoutIfNeeded
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/switchBranches.fish $argv
+  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/switchBranches.fish $argv
 end
 
 ## #############################################################################
@@ -191,12 +204,20 @@ function buildStaticArangoDB
 end
 
 function makeStaticArangoDB
-  runInContainer (findBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
+  if test "$COMPILER_VERSION" = ""
+    findRequiredCompiler
+  end
+  and runInContainer (findBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
     return $s
   end
+end
+
+function buildStaticCoverage
+  coverageOn
+  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On
 end
 
 function buildExamples
@@ -280,6 +301,28 @@ function jslint
 
   popd
   return $s
+end
+
+## #############################################################################
+## cppcheck
+## #############################################################################
+
+function cppcheckArangoDB
+  checkoutIfNeeded
+
+  runInContainer $CPPCHECKIMAGE /scripts/cppcheck.sh
+  return $status
+end
+
+## #############################################################################
+## coverage
+## #############################################################################
+
+function collectCoverage
+  findRequiredCompiler
+
+  runInContainer (findBuildImage) /scripts/coverage.fish
+  return $status
 end
 
 ## #############################################################################
@@ -587,8 +630,14 @@ function buildDockerImage
 
   set -l imagename $argv[1]
 
+  findArangoDBVersion ; or return 1
   pushd $WORKDIR/work/ArangoDB/build/install
-  and tar czf $WORKDIR/containers/arangodb.docker/install.tar.gz *
+
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.docker
+  if not test -d $containerpath
+    set containerpath $WORKDIR/containers/arangodbDevel.docker
+  end
+  and tar czf $containerpath/install.tar.gz *
   if test $status -ne 0
     echo Could not create install tarball!
     popd
@@ -596,7 +645,7 @@ function buildDockerImage
   end
   popd
 
-  pushd $WORKDIR/containers/arangodb.docker
+  pushd $containerpath
   and docker build --pull -t $imagename .
   or begin ; popd ; return 1 ; end
   popd
@@ -714,6 +763,15 @@ end
 function pushDocumentationImage ; docker push $DOCIMAGE ; end
 function pullDocumentationImage ; docker pull $DOCIMAGE ; end
 
+function buildCppcheckImage
+  pushd $WORKDIR/containers/cppcheck.docker
+  and docker build --pull -t $CPPCHECKIMAGE .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+function pushCppcheckImage ; docker push $CPPCHECKIMAGE ; end
+function pullCppcheckImage ; docker pull $CPPCHECKIMAGE ; end
+
 function remakeImages
   set -l s 0
 
@@ -721,11 +779,14 @@ function remakeImages
   pushUbuntuBuildImage ; or set -l s 1
   buildAlpineBuildImage ; or set -l s 1
   pushAlpineBuildImage ; or set -l s 1
+  buildAlpineBuildImage2 ; or set -l s 1
+  pushAlpineBuildImage2 ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
   pushUbuntuPackagingImage ; or set -l s 1
   buildCentosPackagingImage ; or set -l s 1
   pushCentosPackagingImage ; or set -l s 1
   buildDocumentationImage ; or set -l s 1
+  buildCppcheckImage ; or set -l s 1
 
   return $s
 end
@@ -758,41 +819,46 @@ function runInContainer
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
+             -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ASAN="$ASAN" \
-             -e IONICE="$IONICE" \
              -e BUILDMODE="$BUILDMODE" \
-             -e COMPILER_VERSION="$COMPILER_VERSION" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
+             -e COMPILER_VERSION="$COMPILER_VERSION" \
+             -e COVERAGE="$COVERAGE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
              -e INNERWORKDIR="$INNERWORKDIR" \
-             -e SHOW_DETAILS="$SHOW_DETAILS" \
+             -e IONICE="$IONICE" \
+             -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
              -e MAINTAINER="$MAINTAINER" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
+             -e NODE_NAME="$NODE_NAME" \
+             -e ONLYGREY="$ONLYGREY" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
+             -e SHOW_DETAILS="$SHOW_DETAILS" \
+             -e SKIPGREY="$SKIPGREY" \
+             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
+             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
              -e SSH_AUTH_SOCK=/ssh-agent \
              -e STORAGEENGINE="$STORAGEENGINE" \
+             -e TEST="$TEST" \
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
-             -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
-             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
-             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
-             -e SKIPGREY="$SKIPGREY" \
-             -e ONLYGREY="$ONLYGREY" \
-             -e TEST="$TEST" \
-             -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH"\
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
-    if test -n "$c" ; docker stop $c >/dev/null ; end
+    if test -n "$c"
+      docker stop $c >/dev/null
+      docker rm $c >/dev/null
+    end
   end
   docker logs -f $c          # print output to stdout
   docker stop $c >/dev/null  # happens when the previous command gets a SIGTERM
@@ -899,6 +965,8 @@ function pushOskar
   and pushCentosPackagingImage
   and buildDocumentationImage
   and pushDocumentationImage
+  and buildCppcheckImage
+  and pushCppcheckImage
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -914,6 +982,7 @@ function updateOskar
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
   and pullDocumentationImage
+  and pullCppcheckImage
   or begin ; popd ; return 1 ; end
   popd
 end

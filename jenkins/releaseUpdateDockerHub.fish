@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+source jenkins/helper/jenkins.fish
+
 if test -z "$RELEASE_TAG"
   echo "RELEASE_TAG required"
   exit 1
@@ -13,8 +15,6 @@ else
   echo "unknown RELEASE_TYPE '$RELEASE_TYPE'"
   exit 1
 end
-
-source jenkins/helper.jenkins.fish ; prepareOskar
 
 function updateDockerHub
   set -l to $argv[1]
@@ -32,9 +32,9 @@ function updateDockerHub
   end
 end
 
-lockDirectory ; updateOskar ; clearResults ; cleanWorkspace
-
-switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
+cleanPrepareLockUpdateClear
+and cleanWorkspace
+and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 and updateDockerHub arangodb $DOCKER_TAG
 and updateDockerHub enterprise $DOCKER_TAG

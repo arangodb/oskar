@@ -1,6 +1,6 @@
 Write-Host "PWD: $pwd"
 Write-Host "WORKSPACE: $env:WORKSPACE"
-Copy-Item -Force "$env:WORKSPACE\jenkins\prepareOskar.ps1" $pwd
+Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 . "$pwd\prepareOskar.ps1"
 
 switchBranches "3.4" "3.4"

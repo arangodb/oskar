@@ -60,11 +60,11 @@ Function createReport
             }
     }
     $global:result | Add-Content "$env:TMP\testProtocol.txt"
-    If(Get-ChildItem -Path "$env:TMP" -Filter "core_*" -Recurse -ErrorAction Continue -Force)
+    If($global:ENABLE_REPORT_DUMPS -eq "on" -and (Get-ChildItem -Path "$global:COREDIR" -Filter "arango*.dmp" -Recurse -ErrorAction Continue -Force))
     {
         Write-Host "7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe "-DestinationPath "$INNERWORKDIR\crashreport-$date.zip
         7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe" -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
-        ForEach($core in (Get-ChildItem -Path "$env:TMP" -Filter "core_*" -Recurse -ErrorAction SilentlyContinue))
+        ForEach($core in (Get-ChildItem -Path "$global:COREDIR" -Filter "arango*.dmp" -Recurse -ErrorAction SilentlyContinue))
         {
             Write-Host "7zip -Path $($core.FullName) -DestinationPath `"$INNERWORKDIR\crashreport-$date.zip`""   
             7zip -Path $($core.FullName) -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
@@ -246,20 +246,10 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         }
 
         if ($sniff) {
-          $tsharkx = "$global:WIRESHARKPATH\tshark.exe"
-          $tshark = "$tsharkx" -replace ' ', '` '
-          (Invoke-Expression "$tshark -D"  |Select-String -SimpleMatch Npcap ) -match '^(\d).*'
-          $dumpDevice = $Matches[1]
-          if ($dumpDevice -notmatch '\d+') {
-             Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
-             Invoke-Expression $tshark -D
-             Set-Variable -Name "ok" -Value $false -Scope global
-             return
-          }
-          $testparams = $testparams + " --sniff true --sniffProgram `"$tsharkx`" --sniffDevice $dumpDevice"
+          $testparams = $testparams + " --sniff true --sniffProgram `"$global:TSHARK`" --sniffDevice $global:dumpDevice"
         }
         
-        $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE"
+        $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE --disableMonitor true"
 
         New-Item -Path "$env:TMP\$output.out" -ItemType Directory
         $testparams = $testparams + " --testOutput $env:TMP\$output.out"

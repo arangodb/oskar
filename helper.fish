@@ -65,6 +65,11 @@ function releaseMode ; set -gx BUILDMODE RelWithDebInfo ; end
 if test -z "$BUILDMODE" ; releaseMode
 else ; set -gx BUILDMODE $BUILDMODE ; end
 
+function coverageOn ; set -gx COVERAGE On ; debugMode ; end
+function coverageOff ; set -gx COVERAGE Off ; end
+if test -z "$COVERAGE" ; coverageOff
+else ; set -gx COVERAGE $COVERAGE ; end
+
 function community ; set -gx ENTERPRISEEDITION Off ; end
 function enterprise ; set -gx ENTERPRISEEDITION On ; end
 if test -z "$ENTERPRISEEDITION" ; enterprise
@@ -487,6 +492,7 @@ function buildSourceSnippet
       -e "s|@SOURCE_ZIP@|$SOURCE_ZIP|g" \
       -e "s|@SOURCE_SIZE_ZIP@|$SOURCE_SIZE_ZIP|g" \
       -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
@@ -999,6 +1005,7 @@ function showConfig
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
   printf $fmt3 'ASAN'       $ASAN                '(asanOn/Off)'
+  printf $fmt3 'Coverage'   $COVERAGE            '(coverageOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'   "$compiler_version"  '(compiler x.y.z)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
@@ -1282,6 +1289,31 @@ function findArangoDBVersion
 end
 
 ## #############################################################################
+## CHECK USELESS MACROS
+## #############################################################################
+
+function checkMacros
+  checkoutIfNeeded
+  and pushd $WORKDIR/work/ArangoDB
+  or begin popd; return 1; end
+
+  set -l wrong (find lib arangod arangosh enterprise tests -name "*.cpp" -o -name "*.h" \
+    | xargs grep -P -n '# *ifdef +(WIN32|(TRI_ENABLE_|ARANGODB_USE_|USE_)MAINTAINER_MODE)') 
+  
+  set -l s 0
+
+  if test "$wrong" != ""
+    echo -e "Wrong macros:\n$wrong"
+    set s 1
+  else
+    echo "Wrong macros: NONE"
+  end
+
+  popd
+  return $s
+end
+
+## #############################################################################
 ## LOG ID
 ## #############################################################################
 
@@ -1341,7 +1373,7 @@ function checkoutIfNeeded
       checkoutArangoDB
     end
   end
-  if test ! -d $WORKDIR/ArangoDB/upgrade-data-tests
+  and if test ! -d $WORKDIR/ArangoDB/upgrade-data-tests
     checkoutUpgradeDataTests
   end
 end
@@ -1384,14 +1416,26 @@ function moveResultsToWorkspace
         mv $WORKDIR/work/testProtocol.txt $WORKSPACE/protocol.log
       end
     end
+
     for x in buildArangoDB.log cmakeArangoDB.log
-      if test -f "$WORKDIR/work/$x" ; mv $WORKDIR/work/$x $WORKSPACE ; end
+      if test -f $WORKDIR/work/$x ; mv $WORKDIR/work/$x $WORKSPACE ; end
+    end
+
+    for x in cppcheck.xml
+      if test -f $WORKDIR/work/ArangoDB/$x
+        mv $WORKDIR/work/ArangoDB/$x $WORKSPACE
+      end
+    end
+
+    if test -d "$WORKDIR/work/coverage"
+      mv $WORKDIR/work/coverage $WORKSPACE
     end
 
     set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html}
     for f in $matches
       echo $f | grep -v testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"      
     end
+
     for f in $WORKDIR/work/asan.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end
 
     if test -f $WORKDIR/work/testfailures.txt

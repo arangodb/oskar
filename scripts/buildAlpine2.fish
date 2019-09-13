@@ -18,8 +18,8 @@ else
 end
 
 cd $INNERWORKDIR
-mkdir -p .ccache.alpine
-set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine
+mkdir -p .ccache.alpine2
+set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine2
 if test "$CCACHEBINPATH" = ""
   set -xg CCACHEBINPATH /usr/lib/ccache/bin
 end
@@ -72,6 +72,12 @@ end
 
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
+else if test "$COVERAGE" = "On"
+  echo "Building with Coverage"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
+    -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
+    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage"
 else
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=$JEMALLOC_OSKAR

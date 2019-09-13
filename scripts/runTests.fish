@@ -44,7 +44,9 @@ set ST "$ST""250,runSingleTest1 version -\n"
 set ST "$ST""500,runSingleTest1 audit_client -\n"
 set ST "$ST""500,runSingleTest1 audit_server -\n"
 set ST "$ST""500,runSingleTest2 replication_ongoing -\n"
+set ST "$ST""500,runSingleTest2 replication_ongoing_32 -\n"
 set ST "$ST""250,runSingleTest2 replication_ongoing_frompresent -\n"
+set ST "$ST""250,runSingleTest2 replication_ongoing_frompresent_32 -\n"
 set ST "$ST""500,runSingleTest2 replication_ongoing_global -\n"
 set ST "$ST""250,runSingleTest2 replication_ongoing_global_spec -\n"
 set ST "$ST""500,runSingleTest2 replication_sync -\n"
@@ -122,6 +124,8 @@ set CT "$CT""1500,runClusterTest1 shell_server_aql 15 --testBuckets 16/15 --dump
 set CT "$CT""500,runClusterTest1 server_http - --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 server_permissions - --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 ssl_server - --dumpAgencyOnError true\n"
+set CT "$CT""250,runClusterTest1 audit_client - --dumpAgencyOnError true\n"
+set CT "$CT""250,runClusterTest1 audit_server - --dumpAgencyOnError true\n"
 set CT "$CT""600,runClusterTest1 resilience_move - --dumpAgencyOnError true\n"
 set CT "$CT""750,runClusterTest1 resilience_failover - --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 resilience_sharddist - --dumpAgencyOnError true\n"
@@ -166,17 +170,17 @@ switch $TESTSUITE
   case "cluster"
     resetLaunch 4
     and if test "$ASAN" = "On"
-      waitOrKill 14400 launchClusterTests
+      waitOrKill 16800 launchClusterTests
     else
-      waitOrKill 3600 launchClusterTests
+      waitOrKill 4200 launchClusterTests
     end
     createReport
   case "single"
     resetLaunch 1
     and if test "$ASAN" = "On"
-      waitOrKill 14400 launchSingleTests
+      waitOrKill 15600 launchSingleTests
     else
-      waitOrKill 3600 launchSingleTests
+      waitOrKill 3900 launchSingleTests
     end
     createReport
   case "catchtest"

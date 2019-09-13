@@ -38,6 +38,9 @@ echo "LSAN: $LSAN_OPTIONS"
 echo "UBSAN: $UBSAN_OPTIONS"
 echo "TSAN: $TSAN_OPTIONS"
 
+set -xg GCOV_PREFIX /work/gcov
+set -xg GCOV_PREFIX_STRIP 3
+
 function runAnyTest
   set -l t $argv[1]
   set -l tt $argv[2]
@@ -167,7 +170,9 @@ function createReport
 
   begin
     echo "<table>"; echo "Test,Runtime,Status" | sed -e 's/^/<tr><th>/' -e 's/,/<\/th><th>/g' -e 's/$/<\/th><\/tr>/'
-    cat testRuns.txt | sed -e 's/^/<tr><td>/' -e 's/,/<\/td><td align="right">/g' -e 's/$/<\/td><\/tr>/'
+    cat testRuns.txt \
+      | sed -e 's/^/<tr><td>/' -e 's/,/<\/td><td align="right">/g' -e 's/$/<\/td><\/tr>/' \
+      | sed -e 's/^<tr>\(.*BAD.*\)$/<tr style="background-color: red;color: white;">\1/'
     echo "</table>"
   end > testRuns.html
 

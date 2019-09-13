@@ -1,8 +1,4 @@
 #!/usr/bin/env fish
-#if test (count $argv) -lt 1
-#  echo usage: (status current-filename) "<destination>"
-#  exit 1
-#end
 if test -z "$RELEASE_TAG"
   echo "RELEASE_TAG required"
   exit 1
@@ -53,6 +49,7 @@ end
 for pattern in "arangodb3e-*.dmg" "arangodb3e-macosx-*.tar.gz"
   set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
   for file in $files
+    rm -f $DST/release/packages/Enterprise/MacOSX/$file
     cp -a $SRC/$file $DST/release/packages/Enterprise/MacOSX ; or set -g s 1
   end
 end

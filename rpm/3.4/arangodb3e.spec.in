@@ -178,7 +178,10 @@ fi
 ## -----------------------------------------------------------------------------
 
 %post
-if rpm -q --quiet systemd ; then
+# $1 == 1: install
+# $1 == 2: upgrade
+
+if rpm -q --quiet systemd; then
   cp /usr/share/arangodb3/arangodb3.service %{_sysconfdir}/systemd/system/arangodb3.service
   systemctl daemon-reload
 else
@@ -207,15 +210,18 @@ Start ArangoDB shell client:
   > %{_bindir}/arangosh
 "
 
+if rpm -q --quiet systemd; then
 echo "Start ArangoDB service:
   > systemctl start arangodb3.service
 
 Enable ArangoDB service:
   > systemctl enable arangodb3.service
 "
+fi
 
+# installing
 if test "$1" -eq 1; then
-  export ARANGODB_DEFAULT_ROOT_PASSWORD=`dd if=/dev/urandom bs=1024 count=1 | md5sum | awk '{print $1}'`
+  export ARANGODB_DEFAULT_ROOT_PASSWORD=`dd if=/dev/urandom bs=1024 count=1 2> /dev/null | md5sum | awk '{print $1}'`
 
   echo "SECURITY HINT:"
   echo "run 'arango-secure-installation' to set a root password"
@@ -228,9 +234,39 @@ fi
 exit 0
 
 %postun
+# $1 == 0: uninstall
+# $1 == 1: upgrade
+
+# Upgrading
+if test "$1" -eq 1; then
+  /usr/sbin/arangod \
+    --uid arangodb --gid arangodb \
+    --server.rest-server false --log.foreground-tty false \
+    --database.check-version
+
+  if test "$?" -eq 11; then
+    BACKUP="/var/lib/arangodb3-$(date +%F-%H-%M-%S)"
+    cp -a /var/lib/arangodb3 "$BACKUP"
+    /usr/sbin/arangod --server.rest-server false --log.level error --database.auto-upgrade
+
+    if test "$?" -eq 0; then
+      rm -rf "$BACKUP"
+    fi
+  fi
+
+  if rpm -q --quiet systemd; then
+    if test -f %{_localstatedir}/lib/rpm-state/arangodb3/restart; then
+      rm -f %{_localstatedir}/lib/rpm-state/arangodb3/restart
+      systemctl start arangodb3.service
+    fi
+  fi
+fi
 exit 0
 
 %pre
+# $1 == 1: install
+# $1 == 2: upgrade
+
 # create arangodb group only if it doesn't already exist
 if ! getent group arangodb >/dev/null 2>&1; then
   /usr/sbin/groupadd -r arangodb
@@ -258,11 +294,26 @@ else
   fi
 fi
 
+# Upgrading
+if test "$1" -eq 2; then
+  if rpm -q --quiet systemd; then
+    if test `systemctl show -p ActiveState arangodb3.service` = "ActiveState=active"; then
+      mkdir -p %{_localstatedir}/lib/rpm-state/arangodb3
+      touch %{_localstatedir}/lib/rpm-state/arangodb3/restart
+      systemctl stop arangodb3.service
+    fi
+  fi
+fi
+
 exit 0
 
 %preun
+# $1 == 0: uninstall
+# $1 == 1: upgrade
+
+# upgrading
 if test "$1" -eq 0; then
-  if rpm -q --quiet systemd ; then
+  if rpm -q --quiet systemd; then
     systemctl stop arangodb3
     rm -f %{_sysconfdir}/systemd/system/arangodb3.service
     systemctl daemon-reload

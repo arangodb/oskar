@@ -1,19 +1,5 @@
 <div>
   <p>
-    The release candidate is feature complete and contains all enhancements that
-    will be released with the GA. However, there are known issues, see
-    <a href="https://www.arangodb.com/docs/devel/release-notes-known-issues35.html">
-      known issues in the Release Candidate @ARANGODB_VERSION_RELEASE_NUMBER@ of ArangoDB 3.5
-    </a>.
-
-    Especially, when you are testing the candidate on an existing dataset follow
-    the instruction in the link above and always use a copy of your data! Never
-    try it on a productive dataset.
-
-    In case that your data from ArangoDB 3.4 contains views, you need to delete
-    the views first. Do not use the automatic update procedure.
-  </p>
-  <p>
     The following packages are for Debian-based Linux distributions.
   </p>
   <p>
