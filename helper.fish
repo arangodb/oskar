@@ -382,7 +382,7 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
-  pushd $WORKDIR/work/ArangoDB/build/install
+  pushd cd
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
   and rm -f "bin/*~" "bin/*.bak"
@@ -391,6 +391,10 @@ function buildTarGzPackageHelper
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
     rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
+  else 
+    if test -f usr/bin/arangobackup
+      strip usr/bin/arangobackup
+    end
   end
   and cd $WORKDIR/work/ArangoDB/build
   and mv install "$name-$v"
