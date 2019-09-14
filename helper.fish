@@ -391,7 +391,7 @@ function buildTarGzPackageHelper
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
     rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
-  else 
+  else
     if test -f usr/bin/arangobackup
       strip usr/bin/arangobackup
     end
@@ -415,8 +415,10 @@ function buildTarGzPackageHelper
       --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
       --exclude "$name-$v/bin/arangodb" \
+      --exclude "$name-$v/bin/arangosync" \
       --exclude "$name-$v/usr/sbin" \
       --exclude "$name-$v/usr/bin/arangodb" \
+      --exclude "$name-$v/usr/bin/arangosync" \
       --exclude "$name-$v/usr/share/arangodb3/arangodb-update-db" \
       --exclude "$name-$v/usr/share/arangodb3/js/server" \
       "$name-$v"
