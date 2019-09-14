@@ -382,7 +382,7 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
-  pushd cd
+  pushd $WORKDIR/work/ArangoDB/build/install
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
   and rm -f "bin/*~" "bin/*.bak"
