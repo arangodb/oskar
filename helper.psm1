@@ -630,6 +630,34 @@ If(-Not($ENABLE_REPORT_DUMPS))
     enableDumpsToReport
 }
 
+Function findUseRclone
+{
+    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
+    {
+        (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "USE_RCLONE")[0] -match 'true|false' | Out-Null
+        
+    }
+    Else
+    {
+        $global:USE_RCLONE = "false"
+    }
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "USE_RCLONE")[0] -match 'true|false' | Out-Null
+    $STARTER_REV = $Matches[0]
+    If($STARTER_REV -eq "latest")
+    {
+        $JSON = Invoke-WebRequest -Uri 'https://api.github.com/repos/arangodb-helper/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
+        $STARTER_REV = $JSON.name
+    }
+    Write-Host "Download: Starter"
+    (New-Object System.Net.WebClient).DownloadFile("https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
+    
+}
+
+If(-Not($USE_RCLONE))
+{
+    findUseRclone
+}
+
 # ##############################################################################
 # Version detection
 # ##############################################################################
@@ -1034,6 +1062,7 @@ Function configureWindows
         downloadStarter
         downloadSyncer
         copyRclone
+        THIRDPARTY_LIST_SBIN=
         if ( $ARANGODB_VERSION_MAJOR -ge 3 -And $ARANGODB_VERSION_MINOR -ge 5 ) {echo "A"}
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
         Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$global:ARANGODIR\build\arangosync.exe`" `"$global:ARANGODIR`""
