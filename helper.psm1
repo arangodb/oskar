@@ -11,18 +11,18 @@ If(-Not(Test-Path -PathType Container -Path "work"))
     New-Item -ItemType Directory -Path "work"
 }
 
-$global:TSHARK = ""#((Get-ChildItem -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1) -replace ' ', '` '
+$global:TSHARK = ((Get-ChildItem -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1) -replace ' ', '` '
 
-#(Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*'
-#$global:dumpDevice = $Matches[1]
-#if ($global:dumpDevice -notmatch '\d+') {
-#    Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
-#    Invoke-Expression $global:TSHARK -D
-#    Exit 1
-#}
-#Else {
-#$global:TSHARK = $global:TSHARK -replace '` ', ' '
-#}
+(Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*'
+$global:dumpDevice = $Matches[1]
+if ($global:dumpDevice -notmatch '\d+') {
+    Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
+    Invoke-Expression $global:TSHARK -D
+    Exit 1
+}
+Else {
+$global:TSHARK = $global:TSHARK -replace '` ', ' '
+}
 $global:REG_WER = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
 $global:COREDIR = "$env:WORKSPACE\core"
 if (-Not(Test-Path -Path $global:COREDIR))
