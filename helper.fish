@@ -157,7 +157,7 @@ function findUseRclone
   test -f $f
   or begin
     #echo "Cannot find $f; make sure source is checked out"
-    rcloneOff
+    set -gx USE_RCLONE "false"
     return 1
   end
 
@@ -165,7 +165,7 @@ function findUseRclone
 
   if test "$v" = ""
     #echo "$f: no USE_RCLONE specified, using false"
-    rcloneOff
+    set -gx USE_RCLONE "false"
   else
     #echo "Using rclone '$v' from '$f'"
     set -gx USE_RCLONE "$v"
