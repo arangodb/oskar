@@ -383,7 +383,7 @@ function buildEnterprisePackage
   and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
   and downloadStarter
   and downloadSyncer
-  and copyRclone
+  and copyRclone "linux"
   and buildPackage
 
   if test $status -ne 0
@@ -604,7 +604,7 @@ function buildDockerRelease
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
     downloadSyncer
-    copyRclone
+    copyRclone "linux"
   end
   and buildDockerImage $IMAGE_NAME1
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
@@ -997,12 +997,6 @@ function downloadSyncer
   rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
   runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $UBUNTUBUILDIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
   ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-end
-
-function copyRclone
-  echo Copying rclone from rclone/rclone-arangodb-linux to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
-  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp rclone/rclone-arangodb-linux $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 ## #############################################################################

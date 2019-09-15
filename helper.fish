@@ -151,6 +151,49 @@ if test ! -d work ; mkdir work ; end
 if test -z "$ARANGODB_DOCS_BRANCH" ; set -gx ARANGODB_DOCS_BRANCH "master"
 else ; set -gx ARANGODB_DOCS_BRANCH $ARANGODB_DOCS_BRANCH ; end
 
+function findUseRclone
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+
+  test -f $f
+  or begin
+    #echo "Cannot find $f; make sure source is checked out"
+    rcloneOff
+    return 1
+  end
+
+  set -l v (fgrep USE_RCLONE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    #echo "$f: no USE_RCLONE specified, using false"
+    rcloneOff
+  else
+    #echo "Using rclone '$v' from '$f'"
+    set -gx USE_RCLONE "$v"
+  end
+end
+
+if test -z "$USE_RCLONE" ; findUseRclone ; end
+
+function copyRclone
+  findUseRclone
+
+  if test "$USE_RCLONE" = "false"
+    echo "Not copying rclone since it's not used!"
+    return
+  end
+
+  set -l os "$argv[1]"
+
+  if test -z "$os"
+    echo "need operating system as first argument"
+    return 1
+  end
+
+  echo Copying rclone from rclone/rclone-arangodb-$os to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+  cp rclone/rclone-arangodb-$os $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+end
+
 ## #############################################################################
 ## test
 ## #############################################################################
@@ -1015,6 +1058,7 @@ function showConfig
   printf $fmt3 'Coverage'   $COVERAGE            '(coverageOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'   "$compiler_version"  '(compiler x.y.z)'
+  printf $fmt3 'Use rclone' $USE_RCLONE          '(rclone true or false)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
