@@ -6,14 +6,18 @@ if test -z "$RELEASE_TAG"
   exit 1
 end
 
-if test "$RELEASE_TYPE" != "preview" -a "$RELEASE_IS_HEAD" != "true"
-  echo "building an older release, not updating snippets"
-  exit 0
-end
-
 if test -z "$PANTHEON_SITE" -o "$PANTHEON_SITE" != "dev" -a "$PANTHEON_SITE" != "live"
   echo "`dev` or `live` pantheon.io should be chosen!"
   exit 1
+end
+
+if test "$RELEASE_TYPE" == "preview" -a "$RELEASE_IS_HEAD" == "true"
+  echo "building a preview release can't be head"
+  exit 1
+end
+
+if test "$RELEASE_TYPE" != "preview" -a "$RELEASE_IS_HEAD" != "true"
+  echo "building an older release, updating only Enterprise snippets"
 end
 
 cleanPrepareLockUpdateClear
@@ -31,8 +35,12 @@ function upload
     rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-technical-preview/
     and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-technical-preview-enterprise/
   else
-    rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-current/
-    and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/$ARANGODB_REPO
+    if test "$RELEASE_IS_HEAD" == "true"
+      rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-current/
+      and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/$ARANGODB_REPO
+    else
+      rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/$ARANGODB_REPO
+    end    
   end
 end
 

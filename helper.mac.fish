@@ -188,12 +188,6 @@ function downloadSyncer
   runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
 end
 
-function copyRclone
-  echo Copying rclone from rclone/rclone-arangodb-osx to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
-  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp rclone/rclone-arangodb-osx $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
-end
-
 function buildPackage
   # This assumes that a build has already happened
   # Must have set ARANGODB_DARWIN_UPSTREAM and ARANGODB_DARWIN_REVISION,
@@ -231,12 +225,16 @@ function buildEnterprisePackage
   and cleanupThirdParty
   and downloadStarter
   and downloadSyncer
-  and copyRclone
+  and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
+  and copyRclone "macos"
+  and if test "$USE_RCLONE" = "true"
+    set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
+  end
   and buildArangoDB \
       -DTARGET_ARCHITECTURE=nehalem \
       -DPACKAGING=Bundle \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DTHIRDPARTY_SBIN=$WORKDIR/work/$THIRDPARTY_SBIN/arangosync \
+      -DTHIRDPARTY_SBIN=$THIRDPARTY_SBIN_LIST \
       -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
       -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
@@ -281,7 +279,7 @@ function buildTarGzPackage
   and mv install/opt/arangodb/share install/usr
   and mv install/opt/arangodb/etc install
   and rm -rf install/opt
-  and buildTarGzPackageHelper "macosx"
+  and buildTarGzPackageHelper "macos"
   or begin ; popd ; return 1 ; end
   popd
 end

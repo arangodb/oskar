@@ -151,6 +151,49 @@ if test ! -d work ; mkdir work ; end
 if test -z "$ARANGODB_DOCS_BRANCH" ; set -gx ARANGODB_DOCS_BRANCH "master"
 else ; set -gx ARANGODB_DOCS_BRANCH $ARANGODB_DOCS_BRANCH ; end
 
+function findUseRclone
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+
+  test -f $f
+  or begin
+    #echo "Cannot find $f; make sure source is checked out"
+    set -gx USE_RCLONE "false"
+    return 1
+  end
+
+  set -l v (fgrep USE_RCLONE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    #echo "$f: no USE_RCLONE specified, using false"
+    set -gx USE_RCLONE "false"
+  else
+    #echo "Using rclone '$v' from '$f'"
+    set -gx USE_RCLONE "$v"
+  end
+end
+
+if test -z "$USE_RCLONE" ; findUseRclone ; end
+
+function copyRclone
+  findUseRclone
+
+  if test "$USE_RCLONE" = "false"
+    echo "Not copying rclone since it's not used!"
+    return
+  end
+
+  set -l os "$argv[1]"
+
+  if test -z "$os"
+    echo "need operating system as first argument"
+    return 1
+  end
+
+  echo Copying rclone from rclone/rclone-arangodb-$os to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+  cp rclone/rclone-arangodb-$os $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+end
+
 ## #############################################################################
 ## test
 ## #############################################################################
@@ -390,6 +433,11 @@ function buildTarGzPackageHelper
   and strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
+    rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
+  else
+    if test -f usr/bin/arangobackup
+      strip usr/bin/arangobackup
+    end
   end
   and cd $WORKDIR/work/ArangoDB/build
   and mv install "$name-$v"
@@ -410,8 +458,10 @@ function buildTarGzPackageHelper
       --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
       --exclude "$name-$v/bin/arangodb" \
+      --exclude "$name-$v/bin/arangosync" \
       --exclude "$name-$v/usr/sbin" \
       --exclude "$name-$v/usr/bin/arangodb" \
+      --exclude "$name-$v/usr/bin/arangosync" \
       --exclude "$name-$v/usr/share/arangodb3/arangodb-update-db" \
       --exclude "$name-$v/usr/share/arangodb3/js/server" \
       "$name-$v"
@@ -419,6 +469,7 @@ function buildTarGzPackageHelper
   end
 
   mv "$name-$v" install
+  and rm -rf install/bin
   and popd
   and return $s 
 end
@@ -1014,6 +1065,7 @@ function showConfig
   printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'   "$compiler_version"  '(compiler x.y.z)'
   printf $fmt3 'OpenSSL'    "$openssl_version"   '(opensslVersion x.y.z)'
+  printf $fmt3 'Use rclone' $USE_RCLONE          '(rclone true or false)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
@@ -1292,6 +1344,31 @@ function findArangoDBVersion
   echo "DOCKER_TAG:                        $DOCKER_TAG"
   echo '------------------------------------------------------------------------------'
   echo
+end
+
+## #############################################################################
+## CHECK USELESS MACROS
+## #############################################################################
+
+function checkMacros
+  checkoutIfNeeded
+  and pushd $WORKDIR/work/ArangoDB
+  or begin popd; return 1; end
+
+  set -l wrong (find lib arangod arangosh enterprise tests -name "*.cpp" -o -name "*.h" \
+    | xargs grep -P -n '# *ifdef +(WIN32|(TRI_ENABLE_|ARANGODB_USE_|USE_)MAINTAINER_MODE)') 
+  
+  set -l s 0
+
+  if test "$wrong" != ""
+    echo -e "Wrong macros:\n$wrong"
+    set s 1
+  else
+    echo "Wrong macros: NONE"
+  end
+
+  popd
+  return $s
 end
 
 ## #############################################################################

@@ -91,15 +91,6 @@ if [ -x %{buildroot}/usr/sbin/arangosync ] ; then
   mv %{buildroot}/usr/sbin/arangosync /tmp
 fi
 
-## EXTRA_BACKUP_FILES=$RPM_BUILD_ROOT/ExtraFiles.list
-## touch ${EXTRA_BACKUP_FILES}
-## 
-## if test -f $RPM_BUILD_ROOT%{_cfgdir}/arangobackup.conf; then
-##   echo '%config(noreplace) %{_cfgdir}/arangobackup.conf' >> ${EXTRA_BACKUP_FILES}
-##   echo '%{_bindir}/arangobackup' >> ${EXTRA_BACKUP_FILES}
-##   echo '%{_mandir}/*/arangobackup*' >> ${EXTRA_BACKUP_FILES}
-## fi
-
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                             check
 ## -----------------------------------------------------------------------------
