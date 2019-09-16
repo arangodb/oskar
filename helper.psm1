@@ -1070,7 +1070,7 @@ Function configureWindows
         $THIRDPARTY_SBIN_LIST="$global:ARANGODIR\build\arangosync.exe"
         If ($global:USE_RCLONE -eq "true")
         {
-            $THIRDPARTY_SBIN_LIST="$$THIRDPARTY_SBIN_LIST\;$global:ARANGODIR\build\rclone-arangodb.exe"
+            $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST\;$global:ARANGODIR\build\rclone-arangodb.exe"
         }
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
         Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$global:ARANGODIR\build\arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`""
