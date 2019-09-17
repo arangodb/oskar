@@ -1,20 +1,20 @@
 #!/usr/bin/env fish
 if test "$PARALLELISM" = ""
-    set -xg PARALLELISM 64
+  set -xg PARALLELISM 64
 end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-    set -xg COMPILER_VERSION 8.3.0
+  set -xg COMPILER_VERSION 8.3.0
 end
 echo "Using compiler version $COMPILER_VERSION"
 
 if test "$COMPILER_VERSION" = "8.3.0"
-    set -xg CC_NAME gcc
-    set -xg CXX_NAME g++
+  set -xg CC_NAME gcc
+  set -xg CXX_NAME g++
 else
-    set -xg CC_NAME gcc-$COMPILER_VERSION
-    set -xg CXX_NAME g++-$COMPILER_VERSION
+  set -xg CC_NAME gcc-$COMPILER_VERSION
+  set -xg CXX_NAME g++-$COMPILER_VERSION
 end
 
 if test "$OPENSSL_VERSION" = ""
