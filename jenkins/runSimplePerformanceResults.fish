@@ -46,6 +46,10 @@ begin
 end >> $gp
 
 set -l tests (awk -F, '{print $3}' $results | sort | uniq)
+set -l branches (awk -F, '{print $1}' $results | sort | uniq)
+
+echo "Included tests: $tests"
+echo "Included branches: $branches"
 
 echo > $desc
 
@@ -57,14 +61,29 @@ for test in $tests
   echo -n 'plot ' >> $gp
   set -l sep ""
 
-  for vc in 3.4,black 3.5,blue devel,red
-    string split , $vc | begin read v; read c; end;
-    set -l vv (echo $v | awk -F. '{ if ($1 == "devel") print "^devel$"; else print "^v?" $1 "\\\\." $2 "(\\\\..*)?$"; }')
+  for branch in $branches
+    set -l bname (echo $branch | tr "/" "_")
+    set -l filename work/total/$bname-$test.csv
+    set -l c ""
 
-    awk -F, "\$1 ~ /$vv/ && \$3 == \"$test\" {print \$2 \" \" \$5}" $results | sort > work/total/$v-$test.csv
+    switch $branch
+      case '3.4'
+        set c black
+      case '3.5'
+        set c blue
+      case 'devel'
+        set c red
+    end
 
-    if test -s work/total/$v-$test.csv
-      echo -n "$sep\"work/total/$v-$test.csv\" with linespoints linewidth 3 lc rgb '$c' title '$v'" >> $gp
+    awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print \$2 \" \" \$5}" $results | sort > $filename
+
+    if test -s $filename
+      if test -n "$c"
+        echo -n "$sep\"$filename\" with linespoints linewidth 3 lc rgb '$c' title '$branch'" >> $gp
+      else
+        echo -n "$sep\"$filename\" with linespoints linewidth 3 title '$branch'" >> $gp
+      end
+
       set sep ", "
     end
   end
