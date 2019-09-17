@@ -41,7 +41,7 @@ function opensslVersion
       set -gx OPENSSL_VERSION $oversion
 
     case '*'
-      echo "unknown compiler version $oversion"
+      echo "unknown openssl version $oversion"
   end
 end
 
@@ -65,7 +65,7 @@ function findRequiredOpenSSL
     echo "$f: no OPENSSL_MACOSX specified, using 1.0.2"
     opensslVersion 1.0.2
   else
-    echo "Using OpenSLL version '$v' from '$f'"
+    echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
   end
 end
