@@ -25,7 +25,7 @@ for pattern in "arangodb3_*.deb" "arangodb3-*.deb" "arangodb3-*.rpm" "arangodb3-
   end
 end
 
-for pattern in "arangodb3-*.dmg" "arangodb3-macosx-*.tar.gz"
+for pattern in "arangodb3-*.dmg" "arangodb3-macos*-*.tar.gz"
   set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
   for file in $files
     cp -a $SRC/$file $DST/release/packages/Community/MacOSX ; or set -g s 1
@@ -46,7 +46,7 @@ for pattern in "arangodb3e_*.deb" "arangodb3e-*.deb" "arangodb3e-*.rpm" "arangod
   end
 end
 
-for pattern in "arangodb3e-*.dmg" "arangodb3e-macosx-*.tar.gz"
+for pattern in "arangodb3e-*.dmg" "arangodb3e-macos*-*.tar.gz"
   set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
   for file in $files
     rm -f $DST/release/packages/Enterprise/MacOSX/$file
