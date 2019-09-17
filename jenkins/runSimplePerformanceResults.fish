@@ -8,11 +8,13 @@ set -l results work/results.csv
 set -l desc work/description.html
 set -l src /mnt/buildfiles/performance/Linux/Simple/RAW
 
+set -l csvfiles (ls -1 $src/results-*.csv | sort -r | awk '{key = substr($NF,9,length($NF)-16); if (a[key] != 1) print $0; a[key] = 1 }' | sort)
+
 if test -z "$DAYS_AGO"
-  cat $src/results-*.csv > $results
+  cat $csvfiles > $results
   set dst /mnt/userfiles/SL/performance/simple/ALL
 else
-  cat $src/results-*.csv | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") '$2 >= start {print $0}' > $results
+  cat $csvfiles | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") '$2 >= start {print $0}' > $results
   set dst /mnt/userfiles/SL/performance/simple/$DAYS_AGO
 end
 
