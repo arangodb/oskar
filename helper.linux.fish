@@ -244,6 +244,7 @@ end
 function buildStaticArangoDB
   checkoutIfNeeded
   and findRequiredCompiler
+  and findRequiredOpenSSL
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -255,6 +256,7 @@ end
 function makeStaticArangoDB
   if test "$COMPILER_VERSION" = ""
     findRequiredCompiler
+    findRequiredOpenSSL
   end
   and runInContainer (findBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   set -l s $status
@@ -369,6 +371,7 @@ end
 
 function collectCoverage
   findRequiredCompiler
+  and findRequiredOpenSSL
 
   runInContainer (findBuildImage) /scripts/coverage.fish
   return $status

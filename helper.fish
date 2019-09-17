@@ -1052,9 +1052,10 @@ function showConfig
     set compiler_version "["(findCompilerVersion)"]"
   end
 
-  set -l openssl_version $OPENSSL_VERSION
+  set -l openssl_version "["(findOpenSSLVersion)"]"
 
   if test -z "$OPENSSL_VERSION"
+    findRequiredOpenSSL > /dev/null 2>&1
     set openssl_version "["(findOpenSSLVersion)"]"
   end
 

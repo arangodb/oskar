@@ -126,6 +126,7 @@ end
 
 function buildArangoDB
   checkoutIfNeeded
+  and findRequiredOpenSSL
   runLocal $SCRIPTSDIR/buildMacOs.fish $argv
   set -l s $status
   if test $s -ne 0
@@ -135,6 +136,7 @@ function buildArangoDB
 end
 
 function makeArangoDB
+  findRequiredOpenSSL
   runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
