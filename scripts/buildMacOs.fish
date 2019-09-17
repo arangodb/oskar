@@ -15,7 +15,7 @@ switch $OPENSSL_VERSION
       set -xg OPENSSL_PATH (brew --prefix)/opt/openssl@1.1
 
   case '*'
-      echo "unknown compiler version $cversion"
+      echo "unknown openssl version $OPENSSL_VERSION"
 end
 echo "Using openssl version $OPENSSL_VERSION and path $OPENSSL_PATH"
 
