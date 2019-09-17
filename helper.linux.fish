@@ -62,7 +62,7 @@ function opensslVersion
       set -gx OPENSSL_VERSION $oversion
 
     case '*'
-      echo "unknown compiler version $oversion"
+      echo "unknown openssl version $oversion"
   end
 end
 
