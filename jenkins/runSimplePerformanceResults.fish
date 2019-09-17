@@ -63,6 +63,7 @@ for test in $tests
 
   for branch in $branches
     set -l bname (echo $branch | tr "/" "_")
+    set -l btitle (echo $branch | tr "/" " " | tr "_" "-")
     set -l filename work/total/$bname-$test.csv
     set -l c ""
 
@@ -79,9 +80,9 @@ for test in $tests
 
     if test -s $filename
       if test -n "$c"
-        echo -n "$sep\"$filename\" with linespoints linewidth 3 lc rgb '$c' title '$branch'" >> $gp
+        echo -n "$sep\"$filename\" with linespoints linewidth 3 lc rgb '$c' title '$btitle'" >> $gp
       else
-        echo -n "$sep\"$filename\" with linespoints linewidth 3 title '$branch'" >> $gp
+        echo -n "$sep\"$filename\" with linespoints linewidth 3 title '$btitle'" >> $gp
       end
 
       set sep ", "
