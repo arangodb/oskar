@@ -32,7 +32,7 @@ function movePackagesToStage2
     or return 1
   end
 
-  for pattern in "arangodb3*-*.dmg" "arangodb3*-macosx-*.tar.gz"
+  for pattern in "arangodb3*-*.dmg" "arangodb3*-mac*-*.tar.gz"
     set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
     for file in $files
       mv $SRC/$file $DST/MacOSX ; or set -g s 1
