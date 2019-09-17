@@ -147,7 +147,7 @@ function findRequiredOpenSSL
     echo "$f: no OPENSSL_LINUX specified, using 1.1.0"
     opensslVersion 1.1.0
   else
-    echo "Using OpenSLL version '$v' from '$f'"
+    echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
   end
 end
