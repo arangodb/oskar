@@ -1,21 +1,26 @@
 #!/usr/bin/env fish
 if test "$PARALLELISM" = ""
-    set -xg PARALLELISM 64
+  set -xg PARALLELISM 64
 end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-    set -xg COMPILER_VERSION 8.3.0
+  set -xg COMPILER_VERSION 8.3.0
 end
 echo "Using compiler version $COMPILER_VERSION"
 
 if test "$COMPILER_VERSION" = "8.3.0"
-    set -xg CC_NAME gcc
-    set -xg CXX_NAME g++
+  set -xg CC_NAME gcc
+  set -xg CXX_NAME g++
 else
-    set -xg CC_NAME gcc-$COMPILER_VERSION
-    set -xg CXX_NAME g++-$COMPILER_VERSION
+  set -xg CC_NAME gcc-$COMPILER_VERSION
+  set -xg CXX_NAME g++-$COMPILER_VERSION
 end
+
+if test "$OPENSSL_VERSION" = ""
+    set -xg OPENSSL_VERSION 1.1.1
+end
+echo "Using openssl version $OPENSSL_VERSION"
 
 cd $INNERWORKDIR
 mkdir -p .ccache.alpine2
@@ -52,7 +57,9 @@ set -g FULLARGS $argv \
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=On \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
- -DUSE_MAINTAINER_MODE=$MAINTAINER
+ -DUSE_MAINTAINER_MODE=$MAINTAINER \
+ -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
+ -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION
 
 if test "$argv" = ""
   echo "using default architecture 'nehalem'"
@@ -93,12 +100,12 @@ else
   end
 end
 
-echo cmake $FULLARGS ..
-echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
+echo cmake $FULLARGS
 
 if test "$SHOW_DETAILS" = "On"
-  cmake $FULLARGS .. ^&1 | tee $INNERWORKDIR/cmakeArangoDB.log
+  cmake $FULLARGS .. ^&1
 else
+  echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
   cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log ^&1
 end
 or exit $status
@@ -112,14 +119,17 @@ if test "$VERBOSEBUILD" = "On"
 end
 
 set -x DESTDIR (pwd)/install
-echo Running make $MAKEFLAGS for static build, output in work/buildArangoDB.log
+echo Running make $MAKEFLAGS for static build
 
 if test "$SHOW_DETAILS" = "On"
-  make $MAKEFLAGS install ^&1 | tee $INNERWORKDIR/buildArangoDB.log
+  make $MAKEFLAGS install ^&1
 else
+  echo make output in work/buildArangoDB.log
   nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
 end
-and cd install
+or exit $status
+
+cd install
 and if test -z "$NOSTRIP"
   echo Stripping executables...
   strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore

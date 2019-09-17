@@ -7,8 +7,8 @@ set -gx ARCH (uname -m)
 
 set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
-set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH:1
-set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH:1
+set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH:3
+set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH:3
 set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH:1
 set -gx DOCIMAGE arangodb/arangodb-documentation:1
 set -gx CPPCHECKIMAGE arangodb/cppcheck:1
@@ -40,6 +40,29 @@ function compiler
 
     case '*'
       echo "unknown compiler version $cversion"
+  end
+end
+
+function opensslVersion
+  set -l oversion $argv[1]
+
+  if test "$oversion" = ""
+    set -e OPENSSL_VERSION
+    return 0
+  end
+
+  switch $oversion
+    case '1.0.0'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '1.1.0'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '1.1.1'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '*'
+      echo "unknown openssl version $oversion"
   end
 end
 
@@ -96,10 +119,36 @@ function findRequiredCompiler
   set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
   if test "$v" = ""
-    echo "$f: no GCC_LINUX specified, using default"
+    echo "$f: no GCC_LINUX specified, using 6.4.0"
+    compiler 6.4.0
   else
     echo "Using compiler '$v' from '$f'"
     compiler $v
+  end
+end
+
+function findRequiredOpenSSL
+  set -l f $WORKDIR/work/ArangoDB/VERSIONS
+
+  test -f $f
+  or begin
+    echo "Cannot find $f; make sure source is checked out"
+    return 1
+  end
+
+  if test "$OPENSSL_VERSION" != ""
+    echo "OpenSSL version already set to '$OPENSSL_VERSION'"
+    return 0
+  end
+
+  set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    echo "$f: no OPENSSL_LINUX specified, using 1.1.0"
+    opensslVersion 1.1.0
+  else
+    echo "Using OpenSSL version '$v' from '$f'"
+    opensslVersion $v
   end
 end
 
@@ -835,10 +884,11 @@ function runInContainer
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
              -e MAINTAINER="$MAINTAINER" \
+             -e NODE_NAME="$NODE_NAME" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
-             -e NODE_NAME="$NODE_NAME" \
              -e ONLYGREY="$ONLYGREY" \
+             -e OPENSSL_VERSION="$OPENSSL_VERSION" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
@@ -919,6 +969,10 @@ end
 
 function findCompilerVersion
   echo $COMPILER_VERSION
+end
+
+function findOpenSSLVersion
+  echo $OPENSSL_VERSION
 end
 
 function clearWorkDir

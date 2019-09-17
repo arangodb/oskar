@@ -15,11 +15,64 @@ end
 
 set -gx SYSTEM_IS_MACOSX true
 
+## #############################################################################
+## config
+## #############################################################################
+
 # disable JEMALLOC for now in oskar on MacOSX, since we never tried it:
 jemallocOff
 
 # disable strange TAR feature from MacOSX
 set -xg COPYFILE_DISABLE 1
+
+function opensslVersion
+  set -l oversion $argv[1]
+
+  if test "$oversion" = ""
+    set -e OPENSSL_VERSION
+    return 0
+  end
+
+  switch $oversion
+    case '1.0.2'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '1.1.1'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '*'
+      echo "unknown openssl version $oversion"
+  end
+end
+
+function findRequiredOpenSSL
+  set -l f $WORKDIR/work/ArangoDB/VERSIONS
+
+  test -f $f
+  or begin
+    echo "Cannot find $f; make sure source is checked out"
+    return 1
+  end
+
+  if test "$OPENSSL_VERSION" != ""
+    echo "OpenSSL version already set to '$OPENSSL_VERSION'"
+    return 0
+  end
+
+  set -l v (fgrep OPENSSL_MACOSX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    echo "$f: no OPENSSL_MACOSX specified, using 1.0.2"
+    opensslVersion 1.0.2
+  else
+    echo "Using OpenSSL version '$v' from '$f'"
+    opensslVersion $v
+  end
+end
+
+## #############################################################################
+## run without docker
+## #############################################################################
 
 function runLocal
   if test -z "$SSH_AUTH_SOCK"
@@ -238,5 +291,13 @@ end
 function findCompilerVersion
   gcc -v ^| tail -1 | awk '{print $3}'
 end
+
+function findOpenSSLVersion
+  echo $OPENSSL_VERSION
+end
+
+## #############################################################################
+## set PARALLELISM in a sensible way
+## #############################################################################
 
 parallelism (sysctl -n hw.logicalcpu)

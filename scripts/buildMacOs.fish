@@ -1,8 +1,23 @@
 #!/usr/bin/env fish
 if test "$PARALLELISM" = ""
-    set -xg PARALLELISM 64
+  set -xg PARALLELISM 64
 end
 echo "Using parallelism $PARALLELISM"
+
+if test "$OPENSSL_VERSION" = ""
+  set -xg OPENSSL_VERSION 1.0.2
+end
+switch $OPENSSL_VERSION
+  case '1.0.2'
+      set -xg OPENSSL_PATH (brew --prefix)/opt/openssl
+
+  case '1.1.1'
+      set -xg OPENSSL_PATH (brew --prefix)/opt/openssl@1.1
+
+  case '*'
+      echo "unknown openssl version $OPENSSL_VERSION"
+end
+echo "Using openssl version $OPENSSL_VERSION and path $OPENSSL_PATH"
 
 cd $INNERWORKDIR
 mkdir -p .ccache.mac
@@ -14,7 +29,6 @@ if test "$CCACHESIZE" = ""
   set -xg CCACHESIZE 100G
 end
 ccache -M $CCACHESIZE
-#ccache -o log_file=$INNERWORKDIR/.ccache.mac.log
 ccache -o cache_dir_levels=1
 cd $INNERWORKDIR/ArangoDB
 
@@ -24,25 +38,26 @@ if test -z "$NO_RM_BUILD"
 end
 
 echo "Starting build at "(date)" on "(hostname)
-test -f $INNERWORKDIR/.ccache.mac.log 
-and mv $INNERWORKDIR/.ccache.mac.log $INNERWORKDIR/.ccache.mac.log.old
+rm -f $INNERWORKDIR/.ccache.mac.log
 ccache --zero-stats
 
 rm -rf build
-mkdir -p build
-cd build
+and mkdir -p build
+and cd build
 
 set -g FULLARGS $argv \
-      -DCMAKE_BUILD_TYPE=$BUILDMODE \
-      -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/g++ \
-      -DCMAKE_C_COMPILER=$CCACHEBINPATH/gcc \
-      -DUSE_MAINTAINER_MODE=$MAINTAINER \
-      -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
-      -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-      -DCMAKE_SKIP_RPATH=On \
-      -DPACKAGING=Bundle \
-      -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DOPENSSL_USE_STATIC_LIBS=On
+ -DCMAKE_BUILD_TYPE=$BUILDMODE \
+ -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/g++ \
+ -DCMAKE_C_COMPILER=$CCACHEBINPATH/gcc \
+ -DUSE_MAINTAINER_MODE=$MAINTAINER \
+ -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
+ -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
+ -DCMAKE_SKIP_RPATH=On \
+ -DPACKAGING=Bundle \
+ -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
+ -DOPENSSL_USE_STATIC_LIBS=On \
+ -DCMAKE_LIBRARY_PATH=$OPENSSL_PATH/lib \
+ -DOPENSSL_ROOT_DIR=$OPENSSL_PATH
 
 if test "$argv" = ""
   echo "using default architecture 'nehalem'"
@@ -61,9 +76,13 @@ if test "$ASAN" = "On"
 end
 
 echo cmake $FULLARGS ..
-echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
 
-cmake $FULLARGS .. ^&1 > $INNERWORKDIR/cmakeArangoDB.log
+if test "$SHOW_DETAILS" = "On"
+  cmake $FULLARGS .. ^&1
+else
+  echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
+  cmake $FULLARGS .. ^&1 > $INNERWORKDIR/cmakeArangoDB.log
+end
 or exit $status
 
 echo "Finished cmake at "(date)", now starting build"
