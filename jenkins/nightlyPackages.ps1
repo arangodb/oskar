@@ -41,9 +41,10 @@ If ($global:ok)
 {
     setNightlyRelease
     makeRelease
-    movePackagesToStage2
 }
 $s = $global:ok
+moveResultsToWorkspace
+movePackagesToStage2
 unlockDirectory
 
 If($s)
