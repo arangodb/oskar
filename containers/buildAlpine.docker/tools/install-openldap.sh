@@ -13,7 +13,7 @@ tar xzvf openldap-$OPENLDAPVERSION.tgz
 cd openldap-$OPENLDAPVERSION
 CPPFLAGS=-I/opt/openssl-$OPENSSLPATH/include \
 LDFLAGS=-L/opt/openssl-$OPENSSLPATH/lib \
-  ./configure  --prefix=/opt/openssl-$OPENSSLPATH --with-tls=openssl --prefix=/usr --enable-static --disable-shared
+  ./configure --prefix=/opt/openssl-$OPENSSLPATH --with-tls=openssl --enable-static --disable-shared
 make depend && make -j64
 make install
 cd /tmp
