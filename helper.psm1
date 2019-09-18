@@ -1446,8 +1446,10 @@ Function makeCommunityRelease
     signPackageOn
     community
     buildArangoDB
-    storeSymbols
-    moveResultsToWorkspace
+    If ($global:ok) 
+    {
+        storeSymbols
+    }
 }
 
 Function makeEnterpriseRelease
@@ -1458,8 +1460,10 @@ Function makeEnterpriseRelease
     signPackageOn
     enterprise
     buildArangoDB
-    storeSymbols
-    moveResultsToWorkspace
+    If ($global:ok) 
+    {
+        storeSymbols
+    }
 }
 
 Function makeRelease
