@@ -54,10 +54,10 @@ function findRequiredOpenSSL
     return 1
   end
 
-  if test "$OPENSSL_VERSION" != ""
-    echo "OpenSSL version already set to '$OPENSSL_VERSION'"
-    return 0
-  end
+  #if test "$OPENSSL_VERSION" != ""
+  #  echo "OpenSSL version already set to '$OPENSSL_VERSION'"
+  #  return 0
+  #end
 
   set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
