@@ -43,8 +43,12 @@ If ($global:ok)
     makeRelease
 }
 $s = $global:ok
-moveResultsToWorkspace
-movePackagesToStage2
+If ($global:ok) 
+{
+    storeSymbols
+    moveResultsToWorkspace
+    movePackagesToStage2
+}
 unlockDirectory
 
 If($s)
