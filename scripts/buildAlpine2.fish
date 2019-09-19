@@ -123,11 +123,31 @@ echo Running make $MAKEFLAGS for static build
 
 if test "$SHOW_DETAILS" = "On"
   make $MAKEFLAGS install ^&1
+  or exit $status
 else
   echo make output in work/buildArangoDB.log
+  set -l ep ""
+
+  if test "$SHOW_DETAILS" = "Ping"
+    fish -c 'while true; sleep 60; echo "== " (date) " =="; test -f $INNERWORKDIR/buildArangoDB.log && tail -2 $INNERWORKDIR/buildArangoDB.log; end' &
+    set ep (jobs -p | tail -1)
+  end
+
   nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+  or begin
+  set -l s $status
+
+    if test -n "$ep"
+      kill $ep
+    end
+
+    exit $s
+  end
+
+  if test -n "$ep"
+    kill $ep
+  end
 end
-or exit $status
 
 cd install
 and if test -z "$NOSTRIP"

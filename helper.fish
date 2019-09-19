@@ -94,6 +94,7 @@ else ; set -gx VERBOSEBUILD $VERBOSEBUILD ; end
 
 function showDetails ; set -gx SHOW_DETAILS On ; end
 function hideDetails ; set -gx SHOW_DETAILS Off ; end
+function pingDetails ; set -gx SHOW_DETAILS Ping ; end
 
 if test -z "$SHOW_DETAILS"
   if isatty 1
@@ -1097,7 +1098,7 @@ function showConfig
   end
   printf $fmt3 'Verbose Build' $VERBOSEBUILD '(verboseBuild/silentBuild)'
   printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR '(verbose/slient)'
-  printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails)'
+  printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
   printf $fmt3 'Logs preserve' $WORKSPACE_LOGS '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
   echo
   echo 'Directories'
