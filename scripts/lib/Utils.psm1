@@ -24,7 +24,7 @@ Function createReport
     new-item $env:TMP\oskar-junit-report -itemtype directory
     ForEach($dir in (Get-ChildItem -Path $env:TMP  -Directory -Filter "*.out"))
     {
-        if ($(Get-ChildItem -filter "*.xml" -path $dir.FullName | Measure-Object | Select -ExpandProperty Count) -gt 0) {
+        If ($(Get-ChildItem -filter "*.xml" -path $dir.FullName | Measure-Object | Select -ExpandProperty Count) -gt 0) {
           Copy-Item -Path "$($dir.FullName)\*.xml" $env:TMP\oskar-junit-report
         }
         Write-Host "Looking at directory $($dir.BaseName)"
@@ -39,7 +39,7 @@ Function createReport
                             $global:badtests = $global:badtests + "Bad result in $file`r`n"
                         }   
             }
-        Elseif(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json")
+        ElseIf(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json")
             {
                         If(-Not($(Get-Content "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json") -eq "false"))
                         {
@@ -184,7 +184,7 @@ Function launchTest($which) {
     Set-Location $global:ARANGODIR; comm
     $arangosh = "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe"
     $test = $global:launcheableTests[$which]
-    Write-Host "Test: " $test['testname'] " - " $test['identifier']
+    Write-Host "Test: " $test['testname'] " - " $test['identIfier']
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host $arangosh " --- " $test['commandline'] 
     Write-Host "-RedirectStandardOutput " $test['StandardOutput']
@@ -207,7 +207,7 @@ Function launchTest($which) {
     Pop-Location
 }
 
-Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff)
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $snIff)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
     If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $testname))
@@ -217,16 +217,16 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         $dumpAgencyOnError = ""
 
         $output = $testname.replace("*", "all")
-        if ($index) {
+        If ($index) {
           $output = $output+"$index"
         }
         If ($filter) {
            $testparams = $testparams+" --test $filter"
         }
-        if ($bucket) {
+        If ($bucket) {
             $testparams = $testparams+" --testBuckets $bucket"
         }
-        if ($cluster -eq $true)
+        If ($cluster -eq $true)
         {
             $testWeight = 4
             $cluster = "true"
@@ -237,16 +237,16 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
             $cluster = "false"
             $dumpAgencyOnError = "false"
         }
-        if ($testname -eq "agency")
+        If ($testname -eq "agency")
         {
             $dumpAgencyOnError = "true"
         }
-        if ($weight) {
+        If ($weight) {
           $testWeight = $weight
         }
 
-        if ($sniff) {
-          $testparams = $testparams + " --sniff true --sniffProgram `"$global:TSHARK`" --sniffDevice $global:dumpDevice"
+        If ($snIff) {
+          $testparams = $testparams + " --snIff true --snIffProgram `"$global:TSHARK`" --snIffDevice $global:dumpDevice"
         }
         
         $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE --disableMonitor true"
@@ -265,7 +265,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           running=$false;
           weight=$testWeight;
         testname=$testname;
-        identifier=$output;
+        identIfier=$output;
           commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams";
           StandardOutput="$global:ARANGODIR\$output.stdout.log";
           StandardError="$global:ARANGODIR\$output.stderr.log";
@@ -306,7 +306,7 @@ Function LaunchController($seconds)
     $numberTestsSlots = [math]::Round($global:numberSlots * 0.9) # Should leave 10% of slots free for $global:numberSlots > 4
     While (($seconds -gt 0) -and (($currentRunning -gt 0) -or ($nextLauncheableTest -lt $maxLauncheableTests))) {
         while (($currentScore -lt $numberTestsSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
-            Write-Host "Launching $nextLauncheableTest '" $global:launcheableTests[$nextLauncheableTest ]['identifier'] "'"
+            Write-Host "Launching $nextLauncheableTest '" $global:launcheableTests[$nextLauncheableTest ]['identIfier'] "'"
             launchTest $nextLauncheableTest 
             $currentScore = $currentScore+$global:launcheableTests[$nextLauncheableTest ]['weight']
             Start-Sleep 20
@@ -316,15 +316,15 @@ Function LaunchController($seconds)
         $currentRunning = 0
         $currentRunningNames = @()
         ForEach ($test in $global:launcheableTests) {
-            if ($test['running']) {
-                if ($test['process'].HasExited) {
+            If ($test['running']) {
+                If ($test['process'].HasExited) {
                     $currentScore = $currentScore - $test['weight']
-                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identifier'] $test['launchdate']
+                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identIfier'] $test['launchdate']
                     $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
                     $test['running'] = $false
                 }
                 Else {
-                    $currentRunningNames += $test['identifier']
+                    $currentRunningNames += $test['identIfier']
                     $currentRunning = $currentRunning+1
                 }
             }
@@ -334,7 +334,7 @@ Function LaunchController($seconds)
         Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - "$seconds" - Running Tests: "$a
         $seconds = $seconds - 5
     }
-    if ($seconds -lt 1) {
+    If ($seconds -lt 1) {
       Write-Host "tests timeout reached. Current state of worker jobs:"
     }
     Else {
@@ -347,25 +347,21 @@ Function LaunchController($seconds)
     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have "$currentRunning" tests that timed out! Currently running processes:"
     $SessionId = [System.Diagnostics.Process]::GetCurrentProcess().SessionId
     ForEach ($test in $global:launcheableTests) {
-        if ($test['pid'] -gt 0) { # TODO:  $test['running']
-          if ($test['running']) {
-             $global:oskarErrorMessage = $global:oskarErrorMessage + "Oskar is killing this test due to timeout:\n" + $( format-list $test['running'] )
-          }
-          Write-Host "Testrun timeout:"
-          $str = $($test | where {($_.Name -ne "commandline")} | Out-String)
-          Write-Host $str
-          Kill-Children $test['pid'] $SessionId
-          }
-          If(Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue)
-          {
-            Stop-Process -Force -Id $test['pid']
-          }
-          Else
-          {
-            Write-Host ("Process with ID {0} was already stopped" -f $test['pid'])
-          }
-          
-          $global:result = "BAD"
+        If ($test['pid'] -gt 0) { # TODO:  $test['running']
+            If ($test['running']) {
+                $global:oskarErrorMessage = $global:oskarErrorMessage + "Oskar is killing this test due to timeout:\n" + $( format-list $test['running'] )
+                Write-Host "Testrun timeout:"
+                $str = $($test | where {($_.Name -ne "commandline")} | Out-String)
+                Write-Host $str
+                Kill-Children $test['pid'] $SessionId
+                If(Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue) {
+                    Stop-Process -Force -Id $test['pid']
+                }
+                Else {
+                    Write-Host ("Process with ID {0} was already stopped" -f $test['pid'])
+                }
+                $global:result = "BAD"
+            }
         }
     }
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-after.txt 
