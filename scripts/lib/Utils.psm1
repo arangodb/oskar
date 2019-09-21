@@ -282,6 +282,20 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     comm
 }
 
+Function Kill-Children ($Pid, $SessionId)
+{
+    Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $Pid -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) }) | ForEach-Object { Kill-Children $_.ProcessId $_.SessionId }
+    If (Get-Process -Id $Pid -ErrorAction SilentlyContinue)
+    {
+        Write-Host "Killing child: $Pid"
+
+        # Try to avoid https://wiki.jenkins.io/display/JENKINS/Spawning+processes+from+build:
+        handle.exe -p $Pid | Where {$_ -match "^\s*([0-9A-F]+): File..*$" } | ForEach { $h = $Matches[1]; handle.exe -c $h -p $Pid -y | Out-Null}
+
+        Stop-Process -Force -Id $Pid
+    }
+}
+
 Function LaunchController($seconds)
 {
     $timeSlept = 0;
@@ -328,7 +342,7 @@ Function LaunchController($seconds)
     }
     $str=$global:launcheableTests | Out-String
     Write-Host $str
-  
+
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-before.txt
     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have "$currentRunning" tests that timed out! Currently running processes:"
     $SessionId = [System.Diagnostics.Process]::GetCurrentProcess().SessionId
@@ -338,9 +352,9 @@ Function LaunchController($seconds)
              $global:oskarErrorMessage = $global:oskarErrorMessage + "Oskar is killing this test due to timeout:\n" + $( format-list $test['running'] )
           }
           Write-Host "Testrun timeout:"
-          $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
+          $str = $($test | where {($_.Name -ne "commandline")} | Out-String)
           Write-Host $str
-          ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
+          Kill-Children $test['pid'] $SessionId
             ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
               ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
                 Write-Host "killing child3: "
@@ -360,7 +374,7 @@ Function LaunchController($seconds)
             Stop-Process -Force -Id $childProcesses.Handle
             $global:result = "BAD"
           }
-          If((Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue) -ne $null)
+          If(Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue)
           {
             Stop-Process -Force -Id $test['pid']
           }
