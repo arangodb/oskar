@@ -355,24 +355,6 @@ Function LaunchController($seconds)
           $str = $($test | where {($_.Name -ne "commandline")} | Out-String)
           Write-Host $str
           Kill-Children $test['pid'] $SessionId
-            ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
-              ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
-                Write-Host "killing child3: "
-                $str=$childChildChildProcesses | Out-String
-                Write-Host $str
-                Stop-Process -Force -Id $childChildChildProcesses.Handle
-              }
-              Write-Host "killing child2: "
-              $str=$childChildProcesses | Out-String
-              Write-Host $str
-              Stop-Process -Force -Id $childChildProcesses.Handle
-            }
-            Write-Host "killing child: "
-            $str=$childProcesses | Out-String
-            Write-Host $str
-
-            Stop-Process -Force -Id $childProcesses.Handle
-            $global:result = "BAD"
           }
           If(Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue)
           {
@@ -382,6 +364,8 @@ Function LaunchController($seconds)
           {
             Write-Host ("Process with ID {0} was already stopped" -f $test['pid'])
           }
+          
+          $global:result = "BAD"
         }
     }
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-after.txt 
