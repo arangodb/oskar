@@ -9,7 +9,6 @@ and onlyGreyOn
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and compiler "$COMPILER_VERSION"
 and pingDetails
-and showConfig
 and oskar1Full
 
 set -l s $status
