@@ -135,13 +135,11 @@ else
 
   nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
   or begin
-  set -l s $status
-
     if test -n "$ep"
       kill $ep
     end
 
-    exit $s
+    exit 1
   end
 
   if test -n "$ep"
