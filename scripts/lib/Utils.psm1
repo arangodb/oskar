@@ -184,7 +184,7 @@ Function launchTest($which) {
     Set-Location $global:ARANGODIR; comm
     $arangosh = "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe"
     $test = $global:launcheableTests[$which]
-    Write-Host "Test: " $test['testname'] " - " $test['identIfier']
+    Write-Host "Test: " $test['testname'] " - " $test['identifier']
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host $arangosh " --- " $test['commandline'] 
     Write-Host "-RedirectStandardOutput " $test['StandardOutput']
@@ -207,7 +207,7 @@ Function launchTest($which) {
     Pop-Location
 }
 
-Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $snIff)
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
     If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $testname))
@@ -245,8 +245,8 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $testWeight = $weight
         }
 
-        If ($snIff) {
-          $testparams = $testparams + " --snIff true --snIffProgram `"$global:TSHARK`" --snIffDevice $global:dumpDevice"
+        If ($sniff) {
+          $testparams = $testparams + " --sniff true --sniffProgram `"$global:TSHARK`" --sniffDevice $global:dumpDevice"
         }
         
         $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE --disableMonitor true"
@@ -265,7 +265,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           running=$false;
           weight=$testWeight;
         testname=$testname;
-        identIfier=$output;
+        identifier=$output;
           commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams";
           StandardOutput="$global:ARANGODIR\$output.stdout.log";
           StandardError="$global:ARANGODIR\$output.stderr.log";
@@ -306,7 +306,7 @@ Function LaunchController($seconds)
     $numberTestsSlots = [math]::Round($global:numberSlots * 0.9) # Should leave 10% of slots free for $global:numberSlots > 4
     While (($seconds -gt 0) -and (($currentRunning -gt 0) -or ($nextLauncheableTest -lt $maxLauncheableTests))) {
         while (($currentScore -lt $numberTestsSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
-            Write-Host "Launching $nextLauncheableTest '" $global:launcheableTests[$nextLauncheableTest ]['identIfier'] "'"
+            Write-Host "Launching $nextLauncheableTest '" $global:launcheableTests[$nextLauncheableTest ]['identifier'] "'"
             launchTest $nextLauncheableTest 
             $currentScore = $currentScore+$global:launcheableTests[$nextLauncheableTest ]['weight']
             Start-Sleep 20
@@ -319,12 +319,12 @@ Function LaunchController($seconds)
             If ($test['running']) {
                 If ($test['process'].HasExited) {
                     $currentScore = $currentScore - $test['weight']
-                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identIfier'] $test['launchdate']
+                    Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identifier'] $test['launchdate']
                     $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
                     $test['running'] = $false
                 }
                 Else {
-                    $currentRunningNames += $test['identIfier']
+                    $currentRunningNames += $test['identifier']
                     $currentRunning = $currentRunning+1
                 }
             }
