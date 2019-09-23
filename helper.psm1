@@ -27,7 +27,7 @@ If((Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -
 }
 Else
 {
-    Write-Host "Check NPCAP Driver !"
+    Write-Host "failed to get loopbackdevice - check NCAP Driver installation"
     Exit 1
 }
 $global:REG_WER = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
