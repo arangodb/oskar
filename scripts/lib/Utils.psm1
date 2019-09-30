@@ -284,7 +284,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
 
 Function Kill-Children ($Pid, $SessionId)
 {
-    Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $Pid -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) }) | ForEach-Object { Kill-Children $_.ProcessId $_.SessionId }
+    Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $Pid -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) } | ForEach-Object { Kill-Children $_.ProcessId $_.SessionId }
     If (Get-Process -Id $Pid -ErrorAction SilentlyContinue)
     {
         Write-Host "Killing child: $Pid"
