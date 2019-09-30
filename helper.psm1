@@ -22,7 +22,7 @@ If((Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -
         Exit 1
     }
     Else {
-    $global:TSHARK = $global:TSHARK -replace '` ', ' '
+        $global:TSHARK = $global:TSHARK -replace '` ', ' '
     }
 }
 Else
@@ -30,6 +30,13 @@ Else
     Write-Host "failed to get loopbackdevice - check NCAP Driver installation"
     Exit 1
 }
+
+$global:HANDLE_EXE = $null
+If (Get-Command handle.exe -ErrorAction SilentlyContinue)
+{
+    $global:HANDLE_EXE = (Get-Command handle.exe).Source -Replace ' ', '` '
+}
+
 $global:REG_WER = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
 $global:COREDIR = "$env:WORKSPACE\core"
 if (-Not(Test-Path -Path $global:COREDIR))

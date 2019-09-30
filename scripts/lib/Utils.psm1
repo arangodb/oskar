@@ -282,15 +282,18 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     comm
 }
 
-Function Kill-Children ($Pid, $SessionId)
+Function Kill-Children ($PidToKill, $SessionId)
 {
-    Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $Pid -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) } | ForEach-Object { Kill-Children $_.ProcessId $_.SessionId }
-    If (Get-Process -Id $Pid -ErrorAction SilentlyContinue)
+    Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $PidToKill -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) } | ForEach-Object { Kill-Children $_.ProcessId $_.SessionId }
+    If (Get-Process -Id $PidToKill -ErrorAction SilentlyContinue)
     {
         Write-Host "Killing child: $Pid"
 
+        If ($global:HANDLE_EXE)
+        {
         # Try to avoid https://wiki.jenkins.io/display/JENKINS/Spawning+processes+from+build:
-        handle.exe -p $Pid | Where {$_ -match "^\s*([0-9A-F]+): File..*$" } | ForEach { $h = $Matches[1]; handle.exe -c $h -p $Pid -y | Out-Null}
+            Invoke-Expression "$global:HANDLE_EXE -p $PidToKill" | Where {$_ -match "^\s*([0-9A-F]+): File..*$" } | ForEach { $h = $Matches[1]; Invoke-Expression "$global:HANDLE_EXE -c $h -p $PidToKill -y" | Out-Null}
+        }
 
         Stop-Process -Force -Id $Pid
     }
