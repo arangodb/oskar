@@ -685,7 +685,8 @@ function buildDockerImage
   findArangoDBVersion ; or return 1
   pushd $WORKDIR/work/ArangoDB/build/install
 
-  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.docker
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
+
   if not test -d $containerpath
     set containerpath $WORKDIR/containers/arangodbDevel.docker
   end
@@ -896,6 +897,7 @@ function runInContainer
              -e PLATFORM="$PLATFORM" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
              -e SHOW_DETAILS="$SHOW_DETAILS" \
+             -e SKIP_MAKE="$SKIP_MAKE" \
              -e SKIPGREY="$SKIPGREY" \
              -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
              -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
