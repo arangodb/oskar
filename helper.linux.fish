@@ -810,7 +810,7 @@ function buildCentosPackagingImage
 end
 
 function pushCentosPackagingImage
-  docker tag $CENTOSPACKAGINGIMAGE CENTOSPACKAGINGIMAGE_NAME:latest
+  docker tag $CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:latest
   and docker push $CENTOSPACKAGINGIMAGE
   and docker push $CENTOSPACKAGINGIMAGE_NAME:latest
 end
