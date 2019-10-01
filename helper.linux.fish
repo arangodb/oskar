@@ -9,7 +9,11 @@ set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH:3
 set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH:3
-set -gx CENTOSPACKAGINGIMAGE arangodb/centospackagearangodb-$ARCH:1
+
+set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
+set -gx CENTOSPACKAGINGIMAGE_TAG 2
+set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
+
 set -gx DOCIMAGE arangodb/arangodb-documentation:1
 set -gx CPPCHECKIMAGE arangodb/cppcheck:1
 set -xg IONICE "ionice -t -n 7"
@@ -805,12 +809,16 @@ function buildCentosPackagingImage
   popd
 end
 
-function pushCentosPackagingImage ; docker push $CENTOSPACKAGINGIMAGE ; end
+function pushCentosPackagingImage
+  docker tag $CENTOSPACKAGINGIMAGE CENTOSPACKAGINGIMAGE_NAME:latest
+  and docker push $CENTOSPACKAGINGIMAGE
+  and docker push $CENTOSPACKAGINGIMAGE_NAME:latest
+end
 
 function pullCentosPackagingImage ; docker pull $CENTOSPACKAGINGIMAGE ; end
 
 function buildDocumentationImage
-    eval "$WORKDIR/scripts/buildContainerDocumentation" "$DOCIMAGE"
+  eval "$WORKDIR/scripts/buildContainerDocumentation" "$DOCIMAGE"
 end
 function pushDocumentationImage ; docker push $DOCIMAGE ; end
 function pullDocumentationImage ; docker pull $DOCIMAGE ; end
