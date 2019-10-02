@@ -65,8 +65,8 @@ function releaseMode ; set -gx BUILDMODE RelWithDebInfo ; end
 if test -z "$BUILDMODE" ; releaseMode
 else ; set -gx BUILDMODE $BUILDMODE ; end
 
-function makeOff ; set -gx SKIP_MAKE Off ; end
-function makeOn ; set -gx SKIP_MAKE On; end
+function makeOff ; set -gx SKIP_MAKE On ; end
+function makeOn ; set -gx SKIP_MAKE Off; end
 makeOn
 
 function coverageOn ; set -gx COVERAGE On ; debugMode ; end
