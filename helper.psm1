@@ -1286,7 +1286,7 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "cmake* ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "cmake*"))
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "cmake*" -File))
     {
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
