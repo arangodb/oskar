@@ -11,21 +11,20 @@ If (!$env:ARANGODB_PACKAGES -or $env:ARANGODB_PACKAGES -eq "")
 
 $PACKAGES="$env:ARANGODB_PACKAGES"
 
-$SRC="$ENV:WORKSPACE"
-Write-Host "SRC: $SRC"
-
-New-PSDrive -Name "T" -PSProvider FileSystem -Root "\\nas02.arangodb.biz\buildfiles\"
-$DST="T:\stage2\nightly\$PACKAGES"
-Write-Host "DST: $DST"
-
 Function movePackagesToStage2
 {
+    $SRC="$ENV:WORKSPACE"
+    Write-Host "SRC: $SRC"
+
+    $DST="\\nas02.arangodb.biz\buildfiles\stage2\nightly\$PACKAGES"
+    Write-Host "DST: $DST"
+
     Write-Host "Windows: $SYSTEM_IS_WINDOWS"
     If ($SYSTEM_IS_WINDOWS)
     {
         Write-Host "Recreate $DST\Windows"
-        rm -Force -Recurse $DST\Windows -ErrorAction SilentlyContinue
-        mkdir -p $DST\Windows
+        rm -Force -Recurse $DST\Windows -ErrorAction SilentlyContinue;comm
+        mkdir -p $DST\Windows;comm
     }
 
     ForEach ($file in $(Get-ChildItem $SRC\* -Include ArangoDB3*-*.zip, ArangoDB3*-*.exe))
@@ -48,6 +47,7 @@ If ($global:ok)
     storeSymbols
     moveResultsToWorkspace
     movePackagesToStage2
+    $s = $global:ok
 }
 unlockDirectory
 
