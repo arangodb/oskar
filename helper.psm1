@@ -13,16 +13,30 @@ If(-Not(Test-Path -PathType Container -Path "work"))
 
 $global:TSHARK = ((Get-ChildItem -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1) -replace ' ', '` '
 
-(Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*'
-$global:dumpDevice = $Matches[1]
-if ($global:dumpDevice -notmatch '\d+') {
-    Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
-    Invoke-Expression $global:TSHARK -D
+If((Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
+{
+    $global:dumpDevice = $Matches[1]
+    if ($global:dumpDevice -notmatch '\d+') {
+        Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
+        Invoke-Expression $global:TSHARK -D
+        Exit 1
+    }
+    Else {
+        $global:TSHARK = $global:TSHARK -replace '` ', ' '
+    }
+}
+Else
+{
+    Write-Host "failed to get loopbackdevice - check NCAP Driver installation"
     Exit 1
 }
-Else {
-$global:TSHARK = $global:TSHARK -replace '` ', ' '
+
+$global:HANDLE_EXE = $null
+If (Get-Command handle.exe -ErrorAction SilentlyContinue)
+{
+    $global:HANDLE_EXE = (Get-Command handle.exe).Source -Replace ' ', '` '
 }
+
 $global:REG_WER = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
 $global:COREDIR = "$env:WORKSPACE\core"
 if (-Not(Test-Path -Path $global:COREDIR))

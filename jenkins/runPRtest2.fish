@@ -7,6 +7,7 @@ and eval $STORAGE_ENGINE
 and eval $TEST_SUITE
 and skipGrey
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and pingDetails
 and oskar1
 
 set -l s $status

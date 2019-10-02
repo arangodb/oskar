@@ -24,7 +24,7 @@ Function createReport
     new-item $env:TMP\oskar-junit-report -itemtype directory
     ForEach($dir in (Get-ChildItem -Path $env:TMP  -Directory -Filter "*.out"))
     {
-        if ($(Get-ChildItem -filter "*.xml" -path $dir.FullName | Measure-Object | Select -ExpandProperty Count) -gt 0) {
+        If ($(Get-ChildItem -filter "*.xml" -path $dir.FullName | Measure-Object | Select -ExpandProperty Count) -gt 0) {
           Copy-Item -Path "$($dir.FullName)\*.xml" $env:TMP\oskar-junit-report
         }
         Write-Host "Looking at directory $($dir.BaseName)"
@@ -39,7 +39,7 @@ Function createReport
                             $global:badtests = $global:badtests + "Bad result in $file`r`n"
                         }   
             }
-        Elseif(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json")
+        ElseIf(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json")
             {
                         If(-Not($(Get-Content "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json") -eq "false"))
                         {
@@ -217,16 +217,16 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         $dumpAgencyOnError = ""
 
         $output = $testname.replace("*", "all")
-        if ($index) {
+        If ($index) {
           $output = $output+"$index"
         }
         If ($filter) {
            $testparams = $testparams+" --test $filter"
         }
-        if ($bucket) {
+        If ($bucket) {
             $testparams = $testparams+" --testBuckets $bucket"
         }
-        if ($cluster -eq $true)
+        If ($cluster -eq $true)
         {
             $testWeight = 4
             $cluster = "true"
@@ -237,15 +237,15 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
             $cluster = "false"
             $dumpAgencyOnError = "false"
         }
-        if ($testname -eq "agency")
+        If ($testname -eq "agency")
         {
             $dumpAgencyOnError = "true"
         }
-        if ($weight) {
+        If ($weight) {
           $testWeight = $weight
         }
 
-        if ($sniff) {
+        If ($sniff) {
           $testparams = $testparams + " --sniff true --sniffProgram `"$global:TSHARK`" --sniffDevice $global:dumpDevice"
         }
         
@@ -282,6 +282,23 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     comm
 }
 
+Function Kill-Children ($PidToKill, $SessionId)
+{
+    Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $PidToKill -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) } | ForEach-Object { Kill-Children $_.ProcessId $_.SessionId }
+    If (Get-Process -Id $PidToKill -ErrorAction SilentlyContinue)
+    {
+        Write-Host "Killing child: $Pid"
+
+        If ($global:HANDLE_EXE)
+        {
+        # Try to avoid https://wiki.jenkins.io/display/JENKINS/Spawning+processes+from+build:
+            Invoke-Expression "$global:HANDLE_EXE -p $PidToKill" | Where {$_ -match "^\s*([0-9A-F]+): File..*$" } | ForEach { $h = $Matches[1]; Invoke-Expression "$global:HANDLE_EXE -c $h -p $PidToKill -y" | Out-Null}
+        }
+
+        Stop-Process -Force -Id $Pid
+    }
+}
+
 Function LaunchController($seconds)
 {
     $timeSlept = 0;
@@ -302,8 +319,8 @@ Function LaunchController($seconds)
         $currentRunning = 0
         $currentRunningNames = @()
         ForEach ($test in $global:launcheableTests) {
-            if ($test['running']) {
-                if ($test['process'].HasExited) {
+            If ($test['running']) {
+                If ($test['process'].HasExited) {
                     $currentScore = $currentScore - $test['weight']
                     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) Testrun finished: "$test['identifier'] $test['launchdate']
                     $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
@@ -320,7 +337,7 @@ Function LaunchController($seconds)
         Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) - Waiting  - "$seconds" - Running Tests: "$a
         $seconds = $seconds - 5
     }
-    if ($seconds -lt 1) {
+    If ($seconds -lt 1) {
       Write-Host "tests timeout reached. Current state of worker jobs:"
     }
     Else {
@@ -328,46 +345,26 @@ Function LaunchController($seconds)
     }
     $str=$global:launcheableTests | Out-String
     Write-Host $str
-  
+
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-before.txt
     Write-Host "$((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ')) we have "$currentRunning" tests that timed out! Currently running processes:"
     $SessionId = [System.Diagnostics.Process]::GetCurrentProcess().SessionId
     ForEach ($test in $global:launcheableTests) {
-        if ($test['pid'] -gt 0) { # TODO:  $test['running']
-          if ($test['running']) {
-             $global:oskarErrorMessage = $global:oskarErrorMessage + "Oskar is killing this test due to timeout:\n" + $( format-list $test['running'] )
-          }
-          Write-Host "Testrun timeout:"
-          $str=$($test | where {($_.Name -ne "commandline")} | Out-String)
-          Write-Host $str
-          ForEach ($childProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
-            ForEach ($childChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
-              ForEach ($childChildChildProcesses in $(Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $test['pid'] -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) })) {
-                Write-Host "killing child3: "
-                $str=$childChildChildProcesses | Out-String
+        If ($test['pid'] -gt 0) { # TODO:  $test['running']
+            If ($test['running'] -Or (Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue)) {
+                $global:oskarErrorMessage = $global:oskarErrorMessage + "Oskar is killing this test due to timeout:\n" + $( format-list $test['running'] )
+                Write-Host "Testrun timeout:"
+                $str = $($test | where {($_.Name -ne "commandline")} | Out-String)
                 Write-Host $str
-                Stop-Process -Force -Id $childChildChildProcesses.Handle
-              }
-              Write-Host "killing child2: "
-              $str=$childChildProcesses | Out-String
-              Write-Host $str
-              Stop-Process -Force -Id $childChildProcesses.Handle
+                Kill-Children $test['pid'] $SessionId
+                If(Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue) {
+                    Stop-Process -Force -Id $test['pid']
+                }
+                Else {
+                    Write-Host ("Process with ID {0} was already stopped" -f $test['pid'])
+                }
+                $global:result = "BAD"
             }
-            Write-Host "killing child: "
-            $str=$childProcesses | Out-String
-            Write-Host $str
-
-            Stop-Process -Force -Id $childProcesses.Handle
-            $global:result = "BAD"
-          }
-          If((Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue) -ne $null)
-          {
-            Stop-Process -Force -Id $test['pid']
-          }
-          Else
-          {
-            Write-Host ("Process with ID {0} was already stopped" -f $test['pid'])
-          }
         }
     }
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-after.txt 

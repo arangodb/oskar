@@ -1393,8 +1393,9 @@ function checkLogId
   or begin popd; return 1; end
 
   set -l ids (find lib arangod arangosh enterprise -name "*.cpp" -o -name "*.h" \
-    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\)("[a-f0-9]*"' \
-    | sed -e 's:^.*LOG_[^(]*("\([a-f0-9]*\)".*:\1:')
+    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\)("[^\"]*"' \
+    | grep -v 'LOG_DEVEL' \
+    | sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
 
   set -l duplicate (echo $ids | tr " " "\n" | sort | uniq -d)
 
