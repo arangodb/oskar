@@ -351,7 +351,7 @@ Function LaunchController($seconds)
     $SessionId = [System.Diagnostics.Process]::GetCurrentProcess().SessionId
     ForEach ($test in $global:launcheableTests) {
         If ($test['pid'] -gt 0) { # TODO:  $test['running']
-            If ($test['running'] -Or (Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue)) {
+            If ($test['running'] -And (Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue)) {
                 $global:oskarErrorMessage = $global:oskarErrorMessage + "Oskar is killing this test due to timeout:\n" + $( format-list $test['running'] )
                 Write-Host "Testrun timeout:"
                 $str = $($test | where {($_.Name -ne "commandline")} | Out-String)
