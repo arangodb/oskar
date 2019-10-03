@@ -1057,7 +1057,11 @@ Function getCacheID
 
 Function configureWindows
 {
-    If(-Not(Test-Path -PathType Container -Path "$global:ARANGODIR\build"))
+    If(Test-Path -PathType Container -Path "$global:ARANGODIR\build")
+    {
+        Remove-Item -Path "$global:ARANGODIR\build\*" -Recurse
+    }
+    Else
     {
         New-Item -ItemType Directory -Path "$global:ARANGODIR\build"
     }
@@ -1286,7 +1290,7 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "cmake* ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "cmake*"))
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "cmake*" -File))
     {
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
