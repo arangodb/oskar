@@ -1057,7 +1057,11 @@ Function getCacheID
 
 Function configureWindows
 {
-    If(-Not(Test-Path -PathType Container -Path "$global:ARANGODIR\build"))
+    If(Test-Path -PathType Container -Path "$global:ARANGODIR\build")
+    {
+        Remove-Item -Path "$global:ARANGODIR\build\*" -Recurse
+    }
+    Else
     {
         New-Item -ItemType Directory -Path "$global:ARANGODIR\build"
     }
