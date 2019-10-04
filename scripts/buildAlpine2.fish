@@ -110,51 +110,55 @@ else
 end
 or exit $status
 
-echo "Finished cmake at "(date)", now starting build"
-
-set -g MAKEFLAGS -j$PARALLELISM 
-if test "$VERBOSEBUILD" = "On"
-  echo "Building verbosely"
-  set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
-end
-
-set -x DESTDIR (pwd)/install
-echo Running make $MAKEFLAGS for static build
-
-if test "$SHOW_DETAILS" = "On"
-  make $MAKEFLAGS install ^&1
-  or exit $status
+if test "$SKIP_MAKE" = "On"
+  echo "Finished cmake at "(date)", skipping build"
 else
-  echo make output in work/buildArangoDB.log
-  set -l ep ""
+  echo "Finished cmake at "(date)", now starting build"
 
-  if test "$SHOW_DETAILS" = "Ping"
-    fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log && tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
-    set ep (jobs -p | tail -1)
+  set -g MAKEFLAGS -j$PARALLELISM 
+  if test "$VERBOSEBUILD" = "On"
+    echo "Building verbosely"
+    set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
   end
 
-  nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
-  or begin
+  set -x DESTDIR (pwd)/install
+  echo Running make $MAKEFLAGS for static build
+
+  if test "$SHOW_DETAILS" = "On"
+    make $MAKEFLAGS install ^&1
+    or exit $status
+  else
+    echo make output in work/buildArangoDB.log
+    set -l ep ""
+
+    if test "$SHOW_DETAILS" = "Ping"
+      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log && tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
+      set ep (jobs -p | tail -1)
+    end
+
+    nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+    or begin
+      if test -n "$ep"
+	kill $ep
+      end
+
+      exit 1
+    end
+
     if test -n "$ep"
       kill $ep
     end
-
-    exit 1
   end
 
-  if test -n "$ep"
-    kill $ep
+  cd install
+  and if test -z "$NOSTRIP"
+    echo Stripping executables...
+    strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
+    if test -f usr/bin/arangobackup
+      strip usr/bin/arangobackup
+    end
   end
+
+  and echo "Finished at "(date)
+  and ccache --show-stats
 end
-
-cd install
-and if test -z "$NOSTRIP"
-  echo Stripping executables...
-  strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
-  if test -f usr/bin/arangobackup
-    strip usr/bin/arangobackup
-  end
-end
-
-and echo "Finished at "(date)
-and ccache --show-stats

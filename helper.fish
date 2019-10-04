@@ -65,6 +65,10 @@ function releaseMode ; set -gx BUILDMODE RelWithDebInfo ; end
 if test -z "$BUILDMODE" ; releaseMode
 else ; set -gx BUILDMODE $BUILDMODE ; end
 
+function makeOff ; set -gx SKIP_MAKE On ; end
+function makeOn ; set -gx SKIP_MAKE Off; end
+makeOn
+
 function coverageOn ; set -gx COVERAGE On ; debugMode ; end
 function coverageOff ; set -gx COVERAGE Off ; end
 if test -z "$COVERAGE" ; coverageOff
@@ -105,6 +109,10 @@ if test -z "$SHOW_DETAILS"
 else
   set -gx SHOW_DETAILS $SHOW_DETAILS
 end
+
+function ubiDockerImage ; set -gx DOCKER_DISTRO ubi ; end
+function alpineDockerImage ; set -gx DOCKER_DISTRO "" ; end
+alpineDockerImage
 
 function skipNondeterministic ; set -gx SKIPNONDETERMINISTIC true ; end
 function includeNondeterministic ; set -gx SKIPNONDETERMINISTIC false ; end
@@ -1071,6 +1079,7 @@ function showConfig
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
+  printf $fmt3 'Skip MAKE'  $SKIP_MAKE           '(makeOn/Off)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
@@ -1090,6 +1099,7 @@ function showConfig
   echo
   echo 'Package Configuration'
   printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
+  printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'

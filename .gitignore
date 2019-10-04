@@ -4,8 +4,5 @@ repo_complete
 repo_incoming
 *~
 config/environment.fish
-containers/arangodb33.docker/install.tar.gz
-containers/arangodb34.docker/install.tar.gz
-containers/arangodb35.docker/install.tar.gz
-containers/arangodb.dockerDevel/install.tar.gz
+containers/*/install.tar.gz
 release
