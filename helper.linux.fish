@@ -692,7 +692,7 @@ function buildDockerImage
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
 
   if not test -d $containerpath
-    set containerpath $WORKDIR/containers/arangodbDevel.docker
+    set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
   end
   and tar czf $containerpath/install.tar.gz *
   if test $status -ne 0
