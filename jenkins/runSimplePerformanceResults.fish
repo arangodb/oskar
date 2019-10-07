@@ -28,6 +28,12 @@ for i in $dates
   sed -i "1,\$s:,$i,:,$secs,:" $results
 end
 
+set -l tests (awk -F, '{print $3}' $results | sort | uniq)
+set -l branches (awk -F, '{print $1}' $results | sort | uniq)
+
+echo "Included tests: $tests"
+echo "Included branches: $branches"
+
 echo > $gp
 begin
   echo 'set ylabel "seconds"'
@@ -35,23 +41,30 @@ begin
   echo 'set term png size 2048,800'
   echo 'set key left bottom'
   echo 'set xtics nomirror rotate by 90 right font ",8"'
+
   echo -n 'set xtics ('
   set -l sep ""
-  for i in $dates
-    set -l secs (date -d $i +%s)
-    set -l iso (date -I -d $i)
 
-    echo -n $sep\"$iso\" $secs
-    set sep ", "
+  if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
+    set -l c 1
+
+    for i in $branches
+      echo -n $sep\"$i\" $c
+      set sep ", "
+      set c (expr $c + 1)
+    end
+  else
+    for i in $dates
+      set -l secs (date -d $i +%s)
+      set -l iso (date -I -d $i)
+
+      echo -n $sep\"$iso\" $secs
+      set sep ", "
+    end
   end
+
   echo ')'
 end >> $gp
-
-set -l tests (awk -F, '{print $3}' $results | sort | uniq)
-set -l branches (awk -F, '{print $1}' $results | sort | uniq)
-
-echo "Included tests: $tests"
-echo "Included branches: $branches"
 
 echo > $desc
 
@@ -62,19 +75,6 @@ for test in $tests
 
   echo "set title \"$test\"" >> $gp
   echo "set output \"work/images/$test.png\"" >> $gp
-
-  set -l branches
-  set -l sep ""
-  set -l c 1
-
-  for branch in $branches
-    set branches "$sep\"$branch\" $c"
-    set sep ", "
-    set c (expr c + 1)
-  end
-
-  echo "set xtics $branches" >> $gp
-
   echo -n 'plot ' >> $gp
   set -l sep ""
 
