@@ -48,7 +48,7 @@ begin
   set -l sep ""
 
   if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
-    rm $lookup
+    rm -f $lookup
     touch $lookup
     set -l c 0
 
