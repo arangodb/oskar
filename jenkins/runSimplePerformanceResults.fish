@@ -78,7 +78,7 @@ for test in $tests
         set c red
     end
 
-    if test "$DAYS_AGO" -eq 0
+    if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
       awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print \$1 \" \" \$5}" $results | sort > $filename
     else
       awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print \$2 \" \" \$5}" $results | sort > $filename
