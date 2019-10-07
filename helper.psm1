@@ -441,7 +441,7 @@ Function VS2019
 {
     $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
     $global:GENERATOR = "Visual Studio 16 2019 Win64"
-    $global:GENERATORID = "v141"
+    $global:GENERATORID = "v142"
 }
 If(-Not($global:GENERATOR))
 {
