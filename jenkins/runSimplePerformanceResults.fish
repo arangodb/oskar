@@ -112,7 +112,10 @@ end
 echo "Generating images"
 docker run -v (pwd)/work:/work pavlov99/gnuplot gnuplot $gp
 or begin
-  echo $gp
+  echo "=== $gp ==="
+  cat $gp
+  echo
+
   for i in $filenames
     echo "=== $i ==="
     cat $i
