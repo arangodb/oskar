@@ -68,7 +68,7 @@ for test in $tests
   set -l c 1
 
   for branch in $branches
-    set branches "\"$branch\" $c
+    set branches "$sep\"$branch\" $c"
     set sep ", "
     set c (expr c + 1)
   end
