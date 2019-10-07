@@ -55,6 +55,8 @@ echo "Included branches: $branches"
 
 echo > $desc
 
+set -l filenames
+
 for test in $tests
   echo "Test $test"
 
@@ -67,6 +69,7 @@ for test in $tests
     set -l bname (echo $branch | tr "/" "_")
     set -l btitle (echo $branch | tr "/" " " | tr "_" "-")
     set -l filename work/total/$bname-$test.csv
+    set filenames $filenames $filename
     set -l c ""
 
     switch $branch
@@ -108,5 +111,14 @@ end
 
 echo "Generating images"
 docker run -v (pwd)/work:/work pavlov99/gnuplot gnuplot $gp
+or begin
+  echo $gp
+  for i in $filenames
+    echo "=== $i ==="
+    cat $i
+    echo
+  end
+  exit 1
+end
 
 cp work/images/*.png $dst
