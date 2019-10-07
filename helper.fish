@@ -1337,6 +1337,10 @@ function findArangoDBVersion
     end
   end
 
+  if test -n "$DOCKER_DISTRO"
+    set -xg DOCKER_TAG "$DOCKER_TAG-$DOCKER_DISTRO"
+  end
+
   echo '------------------------------------------------------------------------------'
   echo "ARANGODB_VERSION:                  $ARANGODB_VERSION"
   echo
