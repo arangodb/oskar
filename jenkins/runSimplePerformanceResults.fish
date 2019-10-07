@@ -62,6 +62,19 @@ for test in $tests
 
   echo "set title \"$test\"" >> $gp
   echo "set output \"work/images/$test.png\"" >> $gp
+
+  set -l branches
+  set -l sep ""
+  set -l c 1
+
+  for branch in $branches
+    set branches "\"$branch\" $c
+    set sep ", "
+    set c (expr c + 1)
+  end
+
+  echo "set xtics $branches" >> $gp
+
   echo -n 'plot ' >> $gp
   set -l sep ""
 
