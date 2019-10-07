@@ -34,6 +34,8 @@ set -l branches (awk -F, '{print $1}' $results | sort | uniq)
 echo "Included tests: $tests"
 echo "Included branches: $branches"
 
+set -l lookup work/branches_lookup.txt
+
 echo > $gp
 begin
   echo 'set ylabel "seconds"'
@@ -46,9 +48,12 @@ begin
   set -l sep ""
 
   if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
-    set -l c 1
+    rm $lookup
+    touch $lookup
+    set -l c 0
 
     for i in $branches
+      echo $i >> $lookup
       echo -n $sep\"$i\" $c
       set sep ", "
       set c (expr $c + 1)
@@ -95,7 +100,8 @@ for test in $tests
     end
 
     if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
-      awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print \$1 \" \" \$5}" $results | sort > $filename
+      set -l pos (fgrep -n "$branch" $lookup | head -1 | awk -F: '{print $1}')
+      awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print $pos \" \" \$5}" $results | sort > $filename
     else
       awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print \$2 \" \" \$5}" $results | sort > $filename
     end
