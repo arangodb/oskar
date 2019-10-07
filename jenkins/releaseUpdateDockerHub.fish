@@ -38,6 +38,8 @@ and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 and updateDockerHub arangodb $DOCKER_TAG
 and updateDockerHub enterprise $DOCKER_TAG
+and set -xg RELEASE_IS_HEAD false
+and updateDockerHub enterprise $DOCKER_TAG-ubi
 
 set -l s $status
 unlockDirectory
