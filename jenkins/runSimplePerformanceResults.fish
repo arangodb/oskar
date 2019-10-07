@@ -50,7 +50,7 @@ begin
   if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
     rm -f $lookup
     touch $lookup
-    set -l c 0
+    set -l c 1
 
     for i in $branches
       echo $i >> $lookup
@@ -100,7 +100,7 @@ for test in $tests
     end
 
     if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
-      set -l pos (fgrep -n "$branch" $lookup | head -1 | awk -F: '{print $1}')
+      set -l pos (expr (fgrep -n "$branch" $lookup | head -1 | awk -F: '{print $1}') + 1)
       awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print $pos \" \" \$5}" $results | sort > $filename
     else
       awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print \$2 \" \" \$5}" $results | sort > $filename
