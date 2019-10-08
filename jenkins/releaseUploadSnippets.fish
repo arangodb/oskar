@@ -11,7 +11,7 @@ if test -z "$PANTHEON_SITE" -o "$PANTHEON_SITE" != "dev" -a "$PANTHEON_SITE" != 
   exit 1
 end
 
-if test "$RELEASE_TYPE" == "preview" -a "$RELEASE_IS_HEAD" == "true"
+if test "$RELEASE_TYPE" = "preview" -a "$RELEASE_IS_HEAD" = "true"
   echo "building a preview release can't be head"
   exit 1
 end
