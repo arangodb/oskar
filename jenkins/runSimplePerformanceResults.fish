@@ -50,7 +50,7 @@ begin
   if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
     rm -f $lookup
     touch $lookup
-    set -l c 1
+    set -l c 0
 
     for i in $branches
       echo $i >> $lookup
@@ -60,7 +60,7 @@ begin
     end
 
     echo ')'
-    echo "set xrange [0:$c]"
+    echo "set xrange [-1:$c]"
   else
     for i in $dates
       set -l secs (date -d $i +%s)
