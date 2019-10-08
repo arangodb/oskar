@@ -35,7 +35,7 @@ function upload
     rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-technical-preview/
     and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-technical-preview-enterprise/
   else
-    if test "$RELEASE_IS_HEAD" == "true"
+    if test "$RELEASE_IS_HEAD" = "true"
       rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-current/
       and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/$ARANGODB_REPO
     else
