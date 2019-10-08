@@ -61,6 +61,7 @@ begin
 
     echo ')'
     echo "set xrange [-1:$c]"
+    echo "set grid xtics ytics"
   else
     for i in $dates
       set -l secs (date -d $i +%s)
