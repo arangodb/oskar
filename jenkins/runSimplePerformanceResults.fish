@@ -58,6 +58,9 @@ begin
       set sep ", "
       set c (expr $c + 1)
     end
+
+    echo ')'
+    echo "set xrange [0:$c]"
   else
     for i in $dates
       set -l secs (date -d $i +%s)
@@ -66,9 +69,9 @@ begin
       echo -n $sep\"$iso\" $secs
       set sep ", "
     end
-  end
 
-  echo ')'
+    echo ')'
+  end
 end >> $gp
 
 echo > $desc
