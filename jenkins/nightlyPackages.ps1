@@ -22,7 +22,7 @@ If (Get-PSDrive -Name $NAS_SHARE_LETTER -ErrorAction SilentlyContinue)
 {
     If ((Get-PSDrive -Name $NAS_SHARE_LETTER).DisplayRoot -ne "$env:NAS_SHARE_ROOT")
     {
-        Write-Host "$env:NAS_SHARE_ROOT could be mounted to $NAS_SHARE_LETTER but it's the letter is already occupied by something other"
+        Write-Host "$env:NAS_SHARE_ROOT could be mounted to ${NAS_SHARE_LETTER}: but it's the letter is already occupied by something other"
         Exit 1
     }
 }
@@ -30,7 +30,7 @@ Else
 {
     If (!$env:NAS_USERNAME -or $env:NAS_USERNAME -eq "" -or !$env:NAS_PASSWORD)
     {
-        Write-Host "NAS_USERNAME and NAS_PASSWORD required to mount share to PSDrive with letter B (since it's not mounted in current system)"
+        Write-Host "NAS_USERNAME and NAS_PASSWORD required to mount share to PSDrive with letter ${NAS_SHARE_LETTER}: (since it's not mounted in current system)"
         Exit 1
     }
     New-PSDrive –Name $NAS_SHARE_LETTER –PSProvider FileSystem –Root "$env:NAS_SHARE_ROOT" -Credential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($env:NAS_USERNAME, $env:NAS_PASSWORD))
@@ -43,7 +43,7 @@ Function movePackagesToStage2
     $SRC="$ENV:WORKSPACE"
     Write-Host "SRC: $SRC"
 
-    $DST="$NAS_SHARE_LETTER:\buildfiles\stage2\nightly\$PACKAGES"
+    $DST="${NAS_SHARE_LETTER}:\buildfiles\stage2\nightly\$PACKAGES"
     Write-Host "DST: $DST"
 
     Write-Host "Windows: $SYSTEM_IS_WINDOWS"
