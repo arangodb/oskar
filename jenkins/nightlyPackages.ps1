@@ -9,6 +9,31 @@ If (!$env:ARANGODB_PACKAGES -or $env:ARANGODB_PACKAGES -eq "")
     Exit 1
 }
 
+# \\nas02.arangodb.biz\buildfiles
+If (!$env:$NAS_SHARE_ROOT -eq "")
+{
+    Write-Host "NAS_SHARE_ROOT required"
+    Exit 1
+}
+
+If (Get-PSDrive -Name B -ErrorAction SilentlyContinue)
+{
+    If ((Get-PSDrive -Name B).Root -neq "$NAS_SHARE_ROOT")
+    {
+        Write-Host "$NAS_SHARE_ROOT could be mounted to B: but it's the letter is already occupied by something other"
+        Exit 1
+    }
+}
+Else
+{
+    If (!$env:NAS_USERNAME -or $env:NAS_USERNAME -eq "" -or !$env:NAS_PASSWORD)
+    {
+        Write-Host "NAS_USERNAME and NAS_PASSWORD required to mount share to PSDrive with letter B (since it's not mounted in current system)"
+        Exit 1
+    }
+    New-PSDrive –Name "B" –PSProvider FileSystem –Root "$NAS_ROOT" -Credential New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($NAS_USERNAME, $NAS_PASSWORD)
+}
+
 $PACKAGES="$env:ARANGODB_PACKAGES"
 
 Function movePackagesToStage2
@@ -16,7 +41,7 @@ Function movePackagesToStage2
     $SRC="$ENV:WORKSPACE"
     Write-Host "SRC: $SRC"
 
-    $DST="\\nas02.arangodb.biz\buildfiles\stage2\nightly\$PACKAGES"
+    $DST="$NAS_ROOT\stage2\nightly\$PACKAGES"
     Write-Host "DST: $DST"
 
     Write-Host "Windows: $SYSTEM_IS_WINDOWS"
