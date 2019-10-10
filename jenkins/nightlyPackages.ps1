@@ -20,9 +20,9 @@ $NAS_SHARE_LETTER="B"
 
 If (Get-PSDrive -Name $NAS_SHARE_LETTER -ErrorAction SilentlyContinue)
 {
-    If ((Get-PSDrive -Name $NAS_SHARE_LETTER).Root -ne "$env:NAS_SHARE_ROOT")
+    If ((Get-PSDrive -Name $NAS_SHARE_LETTER).DisplayRoot -ne "$env:NAS_SHARE_ROOT")
     {
-        Write-Host "$env:NAS_SHARE_ROOT could be mounted to `$NAS_SHARE_LETTER`: but it's the letter is already occupied by something other"
+        Write-Host "$env:NAS_SHARE_ROOT could be mounted to $NAS_SHARE_LETTER but it's the letter is already occupied by something other"
         Exit 1
     }
 }
@@ -43,7 +43,7 @@ Function movePackagesToStage2
     $SRC="$ENV:WORKSPACE"
     Write-Host "SRC: $SRC"
 
-    $DST="$NAS_SHARE_LETTER:\stage2\nightly\$PACKAGES"
+    $DST="$NAS_SHARE_LETTER:\buildfiles\stage2\nightly\$PACKAGES"
     Write-Host "DST: $DST"
 
     Write-Host "Windows: $SYSTEM_IS_WINDOWS"
