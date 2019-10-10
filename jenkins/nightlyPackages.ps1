@@ -38,6 +38,9 @@ Else
 
 $PACKAGES="$env:ARANGODB_PACKAGES"
 
+$DST="${NAS_SHARE_LETTER}:\buildfiles\stage2\nightly\$PACKAGES"
+    Write-Host "DST: $DST"
+    
 Function movePackagesToStage2
 {
     $SRC="$ENV:WORKSPACE"
@@ -56,7 +59,7 @@ Function movePackagesToStage2
 
     ForEach ($file in $(Get-ChildItem $SRC\* -Include ArangoDB3*-*.zip, ArangoDB3*-*.exe))
     {
-        Move-Item -Force -Path "$file" -Destination $DST\Windows;comm
+        #Move-Item -Force -Path "$file" -Destination $DST\Windows;comm
     }
 
   return $global:ok
