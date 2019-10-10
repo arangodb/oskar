@@ -33,7 +33,7 @@ Else
         Write-Host "NAS_USERNAME and NAS_PASSWORD required to mount share to PSDrive with letter B (since it's not mounted in current system)"
         Exit 1
     }
-    New-PSDrive –Name $NAS_SHARE_LETTER –PSProvider FileSystem –Root "$NAS_SHARE_ROOT" -Credential New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($NAS_USERNAME, $NAS_PASSWORD)
+    New-PSDrive –Name $NAS_SHARE_LETTER –PSProvider FileSystem –Root "$NAS_SHARE_ROOT" -Credential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($NAS_USERNAME, $NAS_PASSWORD))
 }
 
 $PACKAGES="$env:ARANGODB_PACKAGES"
