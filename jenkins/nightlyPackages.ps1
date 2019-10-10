@@ -33,14 +33,11 @@ Else
         Write-Host "NAS_USERNAME and NAS_PASSWORD required to mount share to PSDrive with letter ${NAS_SHARE_LETTER}: (since it's not mounted in current system)"
         Exit 1
     }
-    New-PSDrive –Name $NAS_SHARE_LETTER –PSProvider FileSystem –Root "$env:NAS_SHARE_ROOT" -Credential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($env:NAS_USERNAME, $env:NAS_PASSWORD))
+    New-PSDrive -Name $NAS_SHARE_LETTER -PSProvider FileSystem -Root "$env:NAS_SHARE_ROOT" -Credential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($env:NAS_USERNAME, $env:NAS_PASSWORD))
 }
 
 $PACKAGES="$env:ARANGODB_PACKAGES"
 
-$DST="${NAS_SHARE_LETTER}:\buildfiles\stage2\nightly\$PACKAGES"
-    Write-Host "DST: $DST"
-    
 Function movePackagesToStage2
 {
     $SRC="$ENV:WORKSPACE"
@@ -57,7 +54,10 @@ Function movePackagesToStage2
         mkdir -p $DST\Windows;comm
     }
 
-
+    ForEach ($file in $(Get-ChildItem $SRC\* -Include ArangoDB3*-*.zip, ArangoDB3*-*.exe))
+    {
+        Move-Item -Force -Path "$file" -Destination $DST\Windows;comm
+    }
 
   return $global:ok
 }
