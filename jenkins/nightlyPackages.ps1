@@ -10,7 +10,7 @@ If (!$env:ARANGODB_PACKAGES -or $env:ARANGODB_PACKAGES -eq "")
 }
 
 # \\nas02.arangodb.biz\buildfiles
-If (!$env:$NAS_SHARE_ROOT -or $env:$NAS_SHARE_ROOT -eq "")
+If (!$env:NAS_SHARE_ROOT -or $env:NAS_SHARE_ROOT -eq "")
 {
     Write-Host "NAS_SHARE_ROOT required"
     Exit 1
@@ -20,9 +20,9 @@ $NAS_SHARE_LETTER="B"
 
 If (Get-PSDrive -Name $NAS_SHARE_LETTER -ErrorAction SilentlyContinue)
 {
-    If ((Get-PSDrive -Name $NAS_SHARE_LETTER).Root -neq "$NAS_SHARE_ROOT")
+    If ((Get-PSDrive -Name $NAS_SHARE_LETTER).Root -ne "$env:NAS_SHARE_ROOT")
     {
-        Write-Host "$NAS_SHARE_ROOT could be mounted to $NAS_SHARE_LETTER: but it's the letter is already occupied by something other"
+        Write-Host "$env:NAS_SHARE_ROOT could be mounted to `$NAS_SHARE_LETTER`: but it's the letter is already occupied by something other"
         Exit 1
     }
 }
@@ -33,7 +33,7 @@ Else
         Write-Host "NAS_USERNAME and NAS_PASSWORD required to mount share to PSDrive with letter B (since it's not mounted in current system)"
         Exit 1
     }
-    New-PSDrive –Name $NAS_SHARE_LETTER –PSProvider FileSystem –Root "$NAS_SHARE_ROOT" -Credential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($NAS_USERNAME, $NAS_PASSWORD))
+    New-PSDrive –Name $NAS_SHARE_LETTER –PSProvider FileSystem –Root "$env:NAS_SHARE_ROOT" -Credential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($env:NAS_USERNAME, $env:NAS_PASSWORD))
 }
 
 $PACKAGES="$env:ARANGODB_PACKAGES"
