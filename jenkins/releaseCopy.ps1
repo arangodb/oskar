@@ -1,9 +1,37 @@
-If(-not((Get-SmbMapping -LocalPath B: -ErrorAction SilentlyContinue).Status -eq "OK"))
+If (!$env:RELEASE_TAG -or $env:RELEASE_TAG -eq "")
 {
-    New-PSDrive –Name "B" –PSProvider FileSystem –Root "\\nas02.arangodb.biz\buildfiles" –Persist
+    Write-Host "RELEASE_TAG required"
+    Exit 1
 }
 
-$dest = "b:/stage1/$env:RELEASE_TAG/release"
+# \\nas02.arangodb.biz\buildfiles
+If (!$env:NAS_SHARE_ROOT -or $env:NAS_SHARE_ROOT -eq "")
+{
+    Write-Host "NAS_SHARE_ROOT required"
+    Exit 1
+}
+
+$NAS_SHARE_LETTER="B"
+
+If (Get-PSDrive -Name $NAS_SHARE_LETTER -ErrorAction SilentlyContinue)
+{
+    If ((Get-PSDrive -Name $NAS_SHARE_LETTER).DisplayRoot -ne "$env:NAS_SHARE_ROOT")
+    {
+        Write-Host "$env:NAS_SHARE_ROOT could be mounted to ${NAS_SHARE_LETTER}: but it's the letter is already occupied by something other"
+        Exit 1
+    }
+}
+Else
+{
+    If (!$env:NAS_USERNAME -or $env:NAS_USERNAME -eq "" -or !$env:NAS_PASSWORD)
+    {
+        Write-Host "NAS_USERNAME and NAS_PASSWORD required to mount share to PSDrive with letter ${NAS_SHARE_LETTER}: (since it's not mounted in current system)"
+        Exit 1
+    }
+    New-PSDrive -Name $NAS_SHARE_LETTER -PSProvider FileSystem -Root "$env:NAS_SHARE_ROOT" -Credential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList ($env:NAS_USERNAME, $env:NAS_PASSWORD))
+}
+
+$dest = "${NAS_SHARE_LETTER}:/stage1/$env:RELEASE_TAG/release"
 
 If(-Not(Test-Path -PathType Container -Path "$dest/packages/Community/Windows"))
 {
