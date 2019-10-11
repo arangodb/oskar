@@ -1,0 +1,25 @@
+#!/bin/bash
+script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
+ferr(){ echo "$@"; exit 1; }
+set -u
+set -o pipefail
+
+
+# oskar work dir - or a directory that contains a checkout in a sub folder
+export ARANGO_OSKAR=${ARANGO_OSKAR:-"/oskar"}
+export ARANGO_WORK=${ARANGO_WORK:-"$ARANGO_OSKAR/work"}
+
+# path to arangodb source
+export ARANGO_SOURCE="$ARANGO_WORK/ArangoDB"
+
+# path to documentation build
+export ARANGO_BUILD="${ARANGO_BUILD_DOC:-"$ARANGO_WORK/build"}"
+
+cd "$ARANGO_SOURCE" || { echo "could not change in arangodb source directroy"; exit 1; }
+
+#TODO check .git/config instead
+[[ -f VERSION ]]  ||  { echo "please make sure you are in a valid checkout"; exit 1; }
+[[ -f VERSIONS ]] ||  { echo "please make sure you are in a valid checkout"; exit 1; }
+
+echo "calling build clang script"
+"$ARANGO_OSKAR/containers/documentation.docker/clang_build" "$@" 2>&1 | tee "$ARANGO_WORK/clang-build.log"
