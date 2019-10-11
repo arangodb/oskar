@@ -43,7 +43,7 @@ Function movePackagesToStage2
     $SRC="$ENV:WORKSPACE"
     Write-Host "SRC: $SRC"
 
-    $DST="${NAS_SHARE_LETTER}:\buildfiles\stage2\nightly\$PACKAGES"
+    $DST="${NAS_SHARE_LETTER}:\stage2\nightly\$PACKAGES"
     Write-Host "DST: $DST"
 
     Write-Host "Windows: $SYSTEM_IS_WINDOWS"
