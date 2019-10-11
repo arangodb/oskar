@@ -9,7 +9,7 @@ set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
 
-if test -z "MACOSX_DEPLOYMENT_TARGET"
+if test -z "$MACOSX_DEPLOYMENT_TARGET"
   set -xg MACOSX_DEPLOYMENT_TARGET 10.12
 end
 
