@@ -14,7 +14,7 @@ run_cmake() {
         -DUSE_MAINTAINER_MODE=ON \
         -DUSE_FAILURE_TESTS=ON \
         -DUSE_ENTERPRISE=ON \
-        -DUSE_JEMALLOC=ON \
+        -DUSE_JEMALLOC=OFF \
         "${ARANGO_SOURCE}" || ferr "failed to run cmake"
 }
 
