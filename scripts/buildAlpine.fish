@@ -107,38 +107,61 @@ or exit $status
 set -g t2 (date -u +%s)
 and echo $t0,cmake,(expr $t2 - $t1) >> $INNERWORKDIR/buildTimes.csv
 
-echo "Finished cmake at "(date)", now starting build"
-
-set -g MAKEFLAGS -j$PARALLELISM 
-if test "$VERBOSEBUILD" = "On"
-  echo "Building verbosely"
-  set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
-end
-
-set -x DESTDIR (pwd)/install
-echo Running make $MAKEFLAGS for static build
-
-if test "$SHOW_DETAILS" = "On"
-  make $MAKEFLAGS install ^&1
+if test "$SKIP_MAKE" = "On"
+  echo "Finished cmake at "(date)", skipping build"
 else
-  echo make output in work/buildArangoDB.log
-  nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
-end
-or exit $status
+  echo "Finished cmake at "(date)", now starting build"
 
-set -g t3 (date -u +%s)
-and echo $t0,make,(expr $t3 - $t2) >> $INNERWORKDIR/buildTimes.csv
-
-cd install
-and if test -z "$NOSTRIP"
-  echo Stripping executables...
-  strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
-  if test -f usr/bin/arangobackup
-    strip usr/bin/arangobackup
+  set -g MAKEFLAGS -j$PARALLELISM 
+  if test "$VERBOSEBUILD" = "On"
+    echo "Building verbosely"
+    set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
   end
+
+  set -x DESTDIR (pwd)/install
+  echo Running make $MAKEFLAGS for static build
+
+  if test "$SHOW_DETAILS" = "On"
+    make $MAKEFLAGS install ^&1
+    or exit $status
+  else
+    echo make output in work/buildArangoDB.log
+    set -l ep ""
+
+    if test "$SHOW_DETAILS" = "Ping"
+      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log && tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
+      set ep (jobs -p | tail -1)
+    end
+
+    nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+    or begin
+      if test -n "$ep"
+	kill $ep
+      end
+
+      exit 1
+    end
+
+    if test -n "$ep"
+      kill $ep
+    end
+  end
+  and set -g t3 (date -u +%s)
+  and echo $t0,make,(expr $t3 - $t2) >> $INNERWORKDIR/buildTimes.csv
+
+  cd install
+  and if test -z "$NOSTRIP"
+    echo Stripping executables...
+      strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
+    if test -f usr/bin/arangobackup
+      strip usr/bin/arangobackup
+    end
+  end
+
+  and echo "Finished at "(date)
+  and ccache --show-stats
+  and set -g t4 (date -u +%s)
+  and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
 end
 
-and echo "Finished at "(date)
-and ccache --show-stats
-and set -g t4 (date -u +%s)
-and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
+
