@@ -18,11 +18,16 @@ else
 end
 
 if test "$OPENSSL_VERSION" = ""
-    set -xg OPENSSL_VERSION 1.1.1
+  set -xg OPENSSL_VERSION 1.1.1
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
 cd $INNERWORKDIR
+if test "$USE_CCACHE" = "Off"
+  set -xg CCACHE_DISABLE true
+  echo "ccache is DISABLED"
+end
+
 mkdir -p .ccache.alpine2
 set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine2
 if test "$CCACHEBINPATH" = ""

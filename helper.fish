@@ -65,9 +65,13 @@ function releaseMode ; set -gx BUILDMODE RelWithDebInfo ; end
 if test -z "$BUILDMODE" ; releaseMode
 else ; set -gx BUILDMODE $BUILDMODE ; end
 
-function makeOff ; set -gx SKIP_MAKE On ; end
-function makeOn ; set -gx SKIP_MAKE Off; end
+function makeOff ; set -gx SKIP_MAKE On  ; end
+function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
+
+function ccacheOn  ; set -gx USE_CCACHE On  ; end
+function ccacheOff ; set -gx USE_CCACHE Off ; end
+ccacheOn
 
 function coverageOn ; set -gx COVERAGE On ; debugMode ; end
 function coverageOff ; set -gx COVERAGE Off ; end
@@ -1103,6 +1107,7 @@ function showConfig
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'
+  printf $fmt3 'CCACHE'        $USE_CCACHE   '(ccacheOn/Off)'
   if test "$CCACHESIZE" != ""
   printf $fmt3 'CCACHE size'   $CCACHESIZE   '(CCACHESIZE)'
   end
