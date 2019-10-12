@@ -6,16 +6,16 @@ mkdir -p work/images
 set -l gp work/generate.gnuplot
 set -l results work/results.csv
 set -l desc work/description.html
-set -l src /mnt/buildfiles/performance/Linux/Simple/RAW
+set -l src /mnt/buildfiles/performance/Linux/Compiler/RAW
 
 set -l csvfiles (ls -1 $src/results-*.csv | sort -r | awk -F/ '{key = substr($NF,9,length($NF)-16); if (a[key] != 1) print $0; a[key] = 1 }' | sort)
 
 if test -z "$DAYS_AGO"
   cat $csvfiles > $results
-  set dst /mnt/userfiles/SL/performance/simple/ALL
+  set dst /mnt/userfiles/SL/performance/compiler/ALL
 else
   cat $csvfiles | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") '$2 >= start {print $0}' > $results
-  set dst /mnt/userfiles/SL/performance/simple/$DAYS_AGO
+  set dst /mnt/userfiles/SL/performance/compiler/$DAYS_AGO
 end
 
 mkdir -p $dst
