@@ -25,7 +25,7 @@ set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
 set -l filename $dest/results-$resultname-$datetime.csv
 
 echo "storing results in $resultname"
-awk -F, "{print \"$ARANGODB_BRANCH,$date,\" \$1 \",\" \$2}" \
+awk -F, "{print \"$ARANGODB_BRANCH,$date,\" \$2 \",\" \$3}" \
   < work/buildTimes.csv \
   > $filename
 
