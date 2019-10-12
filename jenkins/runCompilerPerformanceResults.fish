@@ -105,9 +105,9 @@ for test in $tests
 
     if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
       set -l pos (expr (fgrep -n "$branch" $lookup | head -1 | awk -F: '{print $1}') - 1)
-      awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print $pos \" \" \$5}" $results | sort > $filename
+      awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print $pos \" \" \$4}" $results | sort > $filename
     else
-      awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print \$2 \" \" \$5}" $results | sort > $filename
+      awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print \$2 \" \" \$4}" $results | sort > $filename
     end
 
     if test -s $filename
