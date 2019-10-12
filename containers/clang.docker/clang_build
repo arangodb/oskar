@@ -9,7 +9,7 @@ run_cmake() {
     mkdir -p ${ARANGO_BUILD}
     cd ${ARANGO_BUILD} || ferr "could not enter build dir"
 
-    cmake \
+    "$@" \
         -DCMAKE_BUILD_TYPE=Debug \
         -DUSE_MAINTAINER_MODE=ON \
         -DUSE_FAILURE_TESTS=ON \
@@ -19,8 +19,7 @@ run_cmake() {
 }
 
 scan_build() {
-    export CXX=clang++-8 CC=clang-8
-    run_cmake
+    run_cmake scan-build-8 cmake
     scan-build-8 -o ${ARANGO_WORK}/clang-scan-build-result make -j $(nproc) || ferr "failed to build"
 }
 
