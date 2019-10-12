@@ -45,19 +45,21 @@ RUN echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-8 main" >> /etc/
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
+        cmake \
         clang-8 \
         clang-format-8 \
         clang-tools-8 \
         && apt-get clean
 
+#arango extra libs
+RUN apt-get update && apt-get install -y -q --no-install-recommends \
+        libldap2-dev \
+        && apt-get clean
 
 ## set env
 ENV ARANGO_INSTALL "/install"
 ENV HOME "$ARANGO_INSTALL"
 RUN mkdir "$ARANGO_INSTALL" && chmod 777 "$ARANGO_INSTALL"
-
-## switch to force gitbook update
-ARG FORCE_UPDATE="not given"
 
 ## other setup - ditaa, lockfile, bash_lib
 COPY setup /setup
