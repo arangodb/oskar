@@ -143,7 +143,7 @@ else
     set -l ep ""
 
     if test "$SHOW_DETAILS" = "Ping"
-      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log && tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
+      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log; and tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
       set ep (jobs -p | tail -1)
     end
 
