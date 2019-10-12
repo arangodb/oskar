@@ -26,7 +26,7 @@ set -l filename $dest/results-$resultname-$datetime.csv
 
 echo "storing results in $resultname"
 awk "{print \"$ARANGODB_BRANCH,$date,\" \$1 \",\" \$2}" \
-  < buildTimes.csv \
+  < work/buildTimes.csv \
   > $filename
 
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
