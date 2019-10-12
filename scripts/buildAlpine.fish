@@ -49,6 +49,9 @@ rm -rf install
 and mkdir install
 
 echo "Starting build at "(date)" on "(hostname)
+set -g t0 (date "+%Y%m%d")
+set -g t1 (date -u +%s)
+rm -f $INNERWORKDIR/buildTimes.csv
 rm -f $INNERWORKDIR/.ccache.log
 ccache --zero-stats
 
@@ -101,6 +104,9 @@ else
 end
 or exit $status
 
+set -g t2 (date -u +%s)
+and echo $t0,cmake,(expr $t2 - $t1) >> $INNERWORKDIR/buildTimes.csv
+
 echo "Finished cmake at "(date)", now starting build"
 
 set -g MAKEFLAGS -j$PARALLELISM 
@@ -120,6 +126,9 @@ else
 end
 or exit $status
 
+set -g t3 (date -u +%s)
+and echo $t0,make,(expr $t3 - $t2) >> $INNERWORKDIR/buildTimes.csv
+
 cd install
 and if test -z "$NOSTRIP"
   echo Stripping executables...
@@ -131,3 +140,5 @@ end
 
 and echo "Finished at "(date)
 and ccache --show-stats
+and set -g t4 (date -u +%s)
+and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
