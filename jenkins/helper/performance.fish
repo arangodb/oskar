@@ -1,4 +1,9 @@
+mkdir -p work/total
+mkdir -p work/images
 
+set -l gp work/generate.gnuplot
+set -l results work/results.csv
+set -l desc work/description.html
 set -l src /mnt/buildfiles/performance/Linux/$PERF_TYPE/RAW
 
 set -l csvfiles (ls -1 $src/results-*.csv | sort -r | awk -F/ '{key = substr($NF,9,length($NF)-16); if (a[key] != 1) print $0; a[key] = 1 }' | sort)
