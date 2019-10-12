@@ -1511,7 +1511,7 @@ function moveResultsToWorkspace
       mv $WORKDIR/work/coverage $WORKSPACE
     end
 
-    set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html}
+    set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html,csv}
     for f in $matches
       echo $f | grep -v testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"      
     end
