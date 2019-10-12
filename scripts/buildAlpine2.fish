@@ -1,4 +1,4 @@
-y#!/usr/bin/env fish
+#!/usr/bin/env fish
 if test "$PARALLELISM" = ""
   set -xg PARALLELISM 64
 end
