@@ -162,6 +162,7 @@ else
   end
   and set -g t3 (date -u +%s)
   and echo $t0,make,(expr $t3 - $t2) >> $INNERWORKDIR/buildTimes.csv
+  or exit 1
 
   cd install
   and if test -z "$NOSTRIP"
@@ -171,8 +172,9 @@ else
       strip usr/bin/arangobackup
     end
   end
+  or exit 1
 
-  and echo "Finished at "(date)
+  echo "Finished at "(date)
   and ccache --show-stats
   and set -g t4 (date -u +%s)
   and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
