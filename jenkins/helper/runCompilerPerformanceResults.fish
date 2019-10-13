@@ -1,10 +1,12 @@
-mkdir -p work/total
-mkdir -p work/images
+set -l gp work/generate-$OS.gnuplot
+set -l results work/results-$OS.csv
+set -l desc work/description-$OS.html
+set -l src /mnt/buildfiles/performance/$OS/$PERF_TYPE/RAW
+set -l images work/images/$OS
+set -l total work/total/$OS
 
-set -l gp work/generate.gnuplot
-set -l results work/results.csv
-set -l desc work/description.html
-set -l src /mnt/buildfiles/performance/Linux/$PERF_TYPE/RAW
+mkdir -p $images
+mkdir -p $total
 
 set -l csvfiles (ls -1 $src/results-*.csv | sort -r | awk -F/ '{key = substr($NF,9,length($NF)-16); if (a[key] != 1) print $0; a[key] = 1 }' | sort)
 
@@ -81,14 +83,14 @@ for test in $tests
   echo "Test $test"
 
   echo "set title \"$test\"" >> $gp
-  echo "set output \"work/images/$test.png\"" >> $gp
+  echo "set output \"$images/$test.png\"" >> $gp
   echo -n 'plot ' >> $gp
   set -l sep ""
 
   for branch in $branches
     set -l bname (echo $branch | tr "/" "_")
     set -l btitle (echo $branch | tr "/" " " | tr "_" "-")
-    set -l filename work/total/$bname-$test.csv
+    set -l filename $total/$bname-$test.csv
     set filenames $filenames $filename
     set -l c ""
 
@@ -123,11 +125,11 @@ for test in $tests
   echo >> $gp
 
   echo "<br/>" >> $desc
-  echo "<img src=\"ws/work/images/$test.png\"></img>" >> $desc
+  echo "<img src=\"ws/$images/$test.png\"></img>" >> $desc
 end
 
-if test (count work/images/*.png) -gt 0
-  rm -f work/images/*.png
+if test (count $images/*.png) -gt 0
+  rm -f $images/*.png
 end
 
 echo "Generating images"
@@ -145,4 +147,4 @@ or begin
   exit 1
 end
 
-cp work/images/*.png $dst
+cp $images/*.png $dst

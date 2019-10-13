@@ -4,4 +4,8 @@ set -l PERF_TYPE Compiler
 set -l PERF_OUT compiler
 set -l PERF_COL 4
 
-source jenkins/helper/performance.fish
+set -l OS Linux
+source jenkins/helper/runCompilerPerformanceResults.fish
+
+set -l OS MAC
+source jenkins/helper/runCompilerPerformanceResults.fish
