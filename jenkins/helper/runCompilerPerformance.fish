@@ -1,11 +1,9 @@
-#!/usr/bin/env fish
-source jenkins/helper/jenkins.fish
-
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
-set -xg dest /mnt/buildfiles/performance/Linux/Compiler/RAW
+set -xg dest /mnt/buildfiles/performance/$OS/Compiler/RAW
 
-cleanPrepareLockUpdateClear
+mkdir -p $dest
+and cleanPrepareLockUpdateClear
 and enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and if echo "$ARANGODB_BRANCH" | grep -q "^v"
@@ -28,6 +26,3 @@ echo "storing results in $resultname"
 awk -F, "{print \"$ARANGODB_BRANCH,$date,\" \$2 \",\" \$3}" \
   < work/buildTimes.csv \
   > $filename
-
-cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
-exit $s
