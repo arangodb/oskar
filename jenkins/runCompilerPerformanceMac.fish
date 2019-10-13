@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 source jenkins/helper/jenkins.fish
 
-SET -xg OS MAC
+set -xg OS MAC
 
 source jenkins/helper/runCompilerPerformance.fish
 
