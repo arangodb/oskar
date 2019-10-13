@@ -78,7 +78,7 @@ if count $src/results-*.csv > /dev/null
     end
   end >> $gp
 
-  echo > $desc
+  echo "<h1>$OS</h1>" > $desc
 
   set -l filenames
 
