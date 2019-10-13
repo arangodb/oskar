@@ -1187,6 +1187,32 @@ Function setNightlyRelease
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_TYPE .*', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly")' | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
 }
 
+Function preservePackagesToWorkdir
+{
+    Push-Location $pwd
+    Set-Location "$global:ARANGODIR\build\"
+    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+    ForEach ($PACKAGE in $(Get-ChildItem $pwd\* -Filter ArangoDB* -Include *.exe, *.zip).FullName)
+    {
+        Write-Host "Preserve $PACKAGE to $global:INNERWORKDIR"
+        Move-Item "$PACKAGE" -Force -Destination "$global:INNERWORKDIR"; comm
+    }
+    Pop-Location
+}
+
+Function preserveSymbolsToWorkdir
+{
+    Push-Location $pwd
+    If ($global:ARANGODB_FULL_VERSION -ne "")
+    {
+        $suffix = If ($ENTERPRISEEDITION -eq "On") {"e"} Else {""}
+        Write-Host "Preserve ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip to $global:INNERWORKDIR"
+        Remove-Item -Force "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
+        7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"; comm
+    }
+    Pop-Location
+}
+
 Function buildArangoDB
 {
     checkoutIfNeeded
@@ -1224,11 +1250,13 @@ Function buildArangoDB
                             Write-Host "Sign error, see $INNERWORKDIR\sign.* for details."
                         }
                     }
+                preservePackagesToWorkdir
                 }
                 Else
                 {
                     Write-Host "Package error, see $INNERWORKDIR\package.* for details."
                 }
+            preserveSymbolsToWorkdir
             }
         }
         Else
@@ -1301,34 +1329,30 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
+    
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes -eq "true"))
     {
-        Write-Host "*.pdb ..."
-        Push-Location $global:ARANGODIR\build\bin\$BUILDMODE
-        If($ENTERPRISEEDITION -eq "On")
+        Write-Host "ArangoDB3*pdb.zip ..."
+        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*pdb.zip"))
         {
-            7zip -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+            Write-Host "Move $INNERWORKDIR\$file"
+            Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 
         }
-        Else
-        {
-            7zip -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
-        }
-        Pop-Location
     }
 
-    if($SKIPPACKAGING -eq "Off")
+    If($SKIPPACKAGING -eq "Off")
     {
         Write-Host "ArangoDB3*.exe ..."
-        ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "ArangoDB3*.exe"))
+        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*.exe"))
         {
-            Write-Host "Move $global:ARANGODIR\build\$file"
-            Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
+            Write-Host "Move $INNERWORKDIR\$file"
+            Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 
         }
         Write-Host "ArangoDB3*.zip ..."
-        ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "ArangoDB3*.zip"))
+        ForEach ($file in $(Get-ChildItem "$global:INNERWORKDIR\" -Filter "ArangoDB3*.zip"))
         {
-            Write-Host "Move $global:ARANGODIR\build\$file"
-            Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
+            Write-Host "Move $INNERWORKDIR\$file"
+            Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 
         }
     }
     Write-Host "testfailures.log"
@@ -1486,8 +1510,8 @@ Function makeEnterpriseRelease
 
 Function makeRelease
 {
-    makeCommunityRelease
     makeEnterpriseRelease
+    makeCommunityRelease
 }
 
 parallelism ([int]$env:NUMBER_OF_PROCESSORS)
