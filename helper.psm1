@@ -1192,7 +1192,7 @@ Function movePackagesToWorkdir
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build\"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    ForEach ($PACKAGE in $(Get-ChildItem $pwd\* -Filter ArangoDB* -Include *.exe, *.zip).FullName)
+    ForEach ($PACKAGE in $(Get-ChildItem $pwd\* -Filter ArangoDB3* -Include *.exe, *.zip).FullName)
     {
         Write-Host "Move $PACKAGE to $global:INNERWORKDIR"
         Move-Item "$PACKAGE" -Force -Destination "$global:INNERWORKDIR"; comm
