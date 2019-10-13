@@ -5,4 +5,4 @@ set -l PERF_OUT simple
 set -l PERF_COL 5
 
 set -l OS Linux
-source jenkins/helper/runAnyPerformance.fish
+source jenkins/helper/runAnyPerformanceResults.fish
