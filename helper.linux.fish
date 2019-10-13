@@ -914,6 +914,7 @@ function runInContainer
              -e TEST="$TEST" \
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
+             -e USE_CCACHE="$USE_CCACHE" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              $argv)

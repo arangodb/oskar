@@ -18,11 +18,16 @@ else
 end
 
 if test "$OPENSSL_VERSION" = ""
-    set -xg OPENSSL_VERSION 1.1.1
+  set -xg OPENSSL_VERSION 1.1.1
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
 cd $INNERWORKDIR
+if test "$USE_CCACHE" = "Off"
+  set -xg CCACHE_DISABLE true
+  echo "ccache is DISABLED"
+end
+
 mkdir -p .ccache.alpine2
 set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine2
 if test "$CCACHEBINPATH" = ""
@@ -44,6 +49,9 @@ rm -rf install
 and mkdir install
 
 echo "Starting build at "(date)" on "(hostname)
+set -g t1 (date -u +%s)
+set -g t0 (date "+%Y%m%d")
+rm -f $INNERWORKDIR/buildTimes.csv
 rm -f $INNERWORKDIR/.ccache.log
 ccache --zero-stats
 
@@ -110,6 +118,9 @@ else
 end
 or exit $status
 
+set -g t2 (date -u +%s)
+and echo $t0,cmake,(expr $t2 - $t1) >> $INNERWORKDIR/buildTimes.csv
+
 if test "$SKIP_MAKE" = "On"
   echo "Finished cmake at "(date)", skipping build"
 else
@@ -132,7 +143,7 @@ else
     set -l ep ""
 
     if test "$SHOW_DETAILS" = "Ping"
-      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log && tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
+      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log; and tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
       set ep (jobs -p | tail -1)
     end
 
@@ -149,6 +160,9 @@ else
       kill $ep
     end
   end
+  and set -g t3 (date -u +%s)
+  and echo $t0,make,(expr $t3 - $t2) >> $INNERWORKDIR/buildTimes.csv
+  or exit 1
 
   cd install
   and if test -z "$NOSTRIP"
@@ -158,7 +172,10 @@ else
       strip usr/bin/arangobackup
     end
   end
+  or exit 1
 
-  and echo "Finished at "(date)
+  echo "Finished at "(date)
   and ccache --show-stats
+  and set -g t4 (date -u +%s)
+  and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
 end

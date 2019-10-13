@@ -20,6 +20,11 @@ end
 echo "Using openssl version $OPENSSL_VERSION and path $OPENSSL_PATH"
 
 cd $INNERWORKDIR
+if test "$USE_CCACHE" = "Off"
+  set -xg CCACHE_DISABLE true
+  echo "ccache is DISABLED"
+end
+
 mkdir -p .ccache.mac
 set -x CCACHE_DIR $INNERWORKDIR/.ccache.mac
 if test "$CCACHEBINPATH" = ""
@@ -36,14 +41,17 @@ if test -z "$NO_RM_BUILD"
   echo "Cleaning build directory"
   rm -rf build
 end
+mkdir -p build
+cd build
+rm -rf install
+and mkdir install
 
 echo "Starting build at "(date)" on "(hostname)
+set -g t1 (date -u +%s)
+set -g t0 (date "+%Y%m%d")
+rm -f $INNERWORKDIR/buildTimes.csv
 rm -f $INNERWORKDIR/.ccache.mac.log
 ccache --zero-stats
-
-rm -rf build
-and mkdir -p build
-and cd build
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
@@ -85,15 +93,51 @@ else
 end
 or exit $status
 
-echo "Finished cmake at "(date)", now starting build"
+set -g t2 (date -u +%s)
+and echo $t0,cmake,(expr $t2 - $t1) >> $INNERWORKDIR/buildTimes.csv
 
-set -g MAKEFLAGS -j$PARALLELISM 
-if test "$VERBOSEBUILD" = "On"
-  echo "Building verbosely"
-  set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
+if test "$SKIP_MAKE" = "On"
+  echo "Finished cmake at "(date)", skipping build"
+else
+  echo "Finished cmake at "(date)", now starting build"
+
+  set -g MAKEFLAGS -j$PARALLELISM 
+  if test "$VERBOSEBUILD" = "On"
+    echo "Building verbosely"
+    set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
+  end
+
+  if test "$SHOW_DETAILS" = "On"
+    make $MAKEFLAGS install ^&1
+    or exit $status
+  else
+    echo make output in work/buildArangoDB.log
+    set -l ep ""
+
+    if test "$SHOW_DETAILS" = "Ping"
+      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log; and tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
+      set ep (jobs -p | tail -1)
+    end
+
+    nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+    or begin
+      if test -n "$ep"
+	kill $ep
+      end
+
+      exit 1
+    end
+
+    if test -n "$ep"
+      kill $ep
+    end
+  end
+  and set -g t3 (date -u +%s)
+  and echo $t0,make,(expr $t3 - $t2) >> $INNERWORKDIR/buildTimes.csv
+  or exit 1
+
+  and echo "Finished at "(date)
+  and ccache --show-stats
+  and set -g t4 (date -u +%s)
+  and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
 end
-
-echo Running make, output in $INNERWORKDIR/buildArangoDB.log
-and nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1 
-and echo "Finished at "(date)
-and ccache --show-stats

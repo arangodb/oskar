@@ -1,28 +1,33 @@
 #!/usr/bin/env fish
 if test "$PARALLELISM" = ""
-    set -xg PARALLELISM 64
+  set -xg PARALLELISM 64
 end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-    set -xg COMPILER_VERSION 6.4.0
+  set -xg COMPILER_VERSION 6.4.0
 end
 echo "Using compiler version $COMPILER_VERSION"
 
 if test "$COMPILER_VERSION" = "6.4.0"
-    set -xg CC_NAME gcc
-    set -xg CXX_NAME g++
+  set -xg CC_NAME gcc
+  set -xg CXX_NAME g++
 else
-    set -xg CC_NAME gcc-$COMPILER_VERSION
-    set -xg CXX_NAME g++-$COMPILER_VERSION
+  set -xg CC_NAME gcc-$COMPILER_VERSION
+  set -xg CXX_NAME g++-$COMPILER_VERSION
 end
 
 if test "$OPENSSL_VERSION" = ""
-    set -xg OPENSSL_VERSION 1.1.0
+  set -xg OPENSSL_VERSION 1.1.0
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
 cd $INNERWORKDIR
+if test "$USE_CCACHE" = "Off"
+  set -xg CCACHE_DISABLE true
+  echo "ccache is DISABLED"
+end
+
 mkdir -p .ccache.alpine
 set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine
 if test "$CCACHEBINPATH" = ""
@@ -44,6 +49,9 @@ rm -rf install
 and mkdir install
 
 echo "Starting build at "(date)" on "(hostname)
+set -g t0 (date "+%Y%m%d")
+set -g t1 (date -u +%s)
+rm -f $INNERWORKDIR/buildTimes.csv
 rm -f $INNERWORKDIR/.ccache.log
 ccache --zero-stats
 
@@ -96,33 +104,64 @@ else
 end
 or exit $status
 
-echo "Finished cmake at "(date)", now starting build"
+set -g t2 (date -u +%s)
+and echo $t0,cmake,(expr $t2 - $t1) >> $INNERWORKDIR/buildTimes.csv
 
-set -g MAKEFLAGS -j$PARALLELISM 
-if test "$VERBOSEBUILD" = "On"
-  echo "Building verbosely"
-  set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
-end
-
-set -x DESTDIR (pwd)/install
-echo Running make $MAKEFLAGS for static build
-
-if test "$SHOW_DETAILS" = "On"
-  make $MAKEFLAGS install ^&1
+if test "$SKIP_MAKE" = "On"
+  echo "Finished cmake at "(date)", skipping build"
 else
-  echo make output in work/buildArangoDB.log
-  nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
-end
-or exit $status
+  echo "Finished cmake at "(date)", now starting build"
 
-cd install
-and if test -z "$NOSTRIP"
-  echo Stripping executables...
-  strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
-  if test -f usr/bin/arangobackup
-    strip usr/bin/arangobackup
+  set -g MAKEFLAGS -j$PARALLELISM 
+  if test "$VERBOSEBUILD" = "On"
+    echo "Building verbosely"
+    set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
   end
+
+  set -x DESTDIR (pwd)/install
+  echo Running make $MAKEFLAGS for static build
+
+  if test "$SHOW_DETAILS" = "On"
+    make $MAKEFLAGS install ^&1
+    or exit $status
+  else
+    echo make output in work/buildArangoDB.log
+    set -l ep ""
+
+    if test "$SHOW_DETAILS" = "Ping"
+      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log ; and tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
+      set ep (jobs -p | tail -1)
+    end
+
+    nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+    or begin
+      if test -n "$ep"
+	kill $ep
+      end
+
+      exit 1
+    end
+
+    if test -n "$ep"
+      kill $ep
+    end
+  end
+  and set -g t3 (date -u +%s)
+  and echo $t0,make,(expr $t3 - $t2) >> $INNERWORKDIR/buildTimes.csv
+
+  cd install
+  and if test -z "$NOSTRIP"
+    echo Stripping executables...
+      strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
+    if test -f usr/bin/arangobackup
+      strip usr/bin/arangobackup
+    end
+  end
+
+  and echo "Finished at "(date)
+  and ccache --show-stats
+  and set -g t4 (date -u +%s)
+  and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
 end
 
-and echo "Finished at "(date)
-and ccache --show-stats
+

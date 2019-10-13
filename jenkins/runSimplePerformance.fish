@@ -11,6 +11,7 @@ if test -z "$ARANGODB_TEST_CONFIG"
 end
 
 cleanPrepareLockUpdateClear
+and enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and if echo "$ARANGODB_BRANCH" | grep -q "^v"
   pushd work/ArangoDB
@@ -19,9 +20,9 @@ and if echo "$ARANGODB_BRANCH" | grep -q "^v"
   echo "==== date $datetime ===="
   popd
 end
-and enterprise
 and maintainerOff
 and releaseMode
+and pingDetails
 and showConfig
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 
@@ -47,10 +48,13 @@ and docker run \
 set -l s $status
 set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
 set -l filename $dest/results-$resultname-$datetime.csv
+
 echo "storing results in $resultname"
 awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
   > $filename
+
 sudo rm -rf work/database
+
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s
