@@ -717,7 +717,7 @@ Function findArangoDBVersion
     }
     Else
     {
-        $global:ARANGODB_FULL_VERSION = $global:ARANGODB_VERSION   
+        $global:ARANGODB_FULL_VERSION = $global:ARANGODB_VERSION
     }
     return $global:ARANGODB_FULL_VERSION
 }
@@ -1203,11 +1203,12 @@ Function preservePackagesToWorkdir
 Function preserveSymbolsToWorkdir
 {
     Push-Location $pwd
-    If ($global:ARANGODB_FULL_VERSION -ne "")
+    Set-Location "$global:ARANGODIR\build\"
+    If (findArangoDBVersion)
     {
         $suffix = If ($ENTERPRISEEDITION -eq "On") {"e"} Else {""}
         Write-Host "Preserve ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip to $global:INNERWORKDIR"
-        Remove-Item -Force "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
+        Remove-Item -Force "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip" -ErrorAction SilentlyContinue
         7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"; comm
     }
     Pop-Location
@@ -1256,7 +1257,7 @@ Function buildArangoDB
                 {
                     Write-Host "Package error, see $INNERWORKDIR\package.* for details."
                 }
-            preserveSymbolsToWorkdir
+                preserveSymbolsToWorkdir
             }
         }
         Else
