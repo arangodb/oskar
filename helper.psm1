@@ -1187,14 +1187,14 @@ Function setNightlyRelease
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_TYPE .*', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly")' | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
 }
 
-Function preservePackagesToWorkdir
+Function movePackagesToWorkdir
 {
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build\"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     ForEach ($PACKAGE in $(Get-ChildItem $pwd\* -Filter ArangoDB* -Include *.exe, *.zip).FullName)
     {
-        Write-Host "Preserve $PACKAGE to $global:INNERWORKDIR"
+        Write-Host "Move $PACKAGE to $global:INNERWORKDIR"
         Move-Item "$PACKAGE" -Force -Destination "$global:INNERWORKDIR"; comm
     }
     Pop-Location
@@ -1203,13 +1203,21 @@ Function preservePackagesToWorkdir
 Function preserveSymbolsToWorkdir
 {
     Push-Location $pwd
-    Set-Location "$global:ARANGODIR\build\"
+    Set-Location $global:ARANGODIR
     If (findArangoDBVersion)
     {
+        Set-Location "$global:ARANGODIR\build\bin\$BUILDMODE"
         $suffix = If ($ENTERPRISEEDITION -eq "On") {"e"} Else {""}
-        Write-Host "Preserve ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip to $global:INNERWORKDIR"
-        Remove-Item -Force "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip" -ErrorAction SilentlyContinue
-        7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"; comm
+        Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
+        If (Test-Path -Path "$global:ARANGODIR\build\bin\$BUILDMODE\*.pdb")
+        {
+            Remove-Item -Force "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip" -ErrorAction SilentlyContinue
+            7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"; comm
+        }
+        Else
+        {
+            Write-Host "No symbol (PDB) files found at ${global:ARANGODIR}\build\bin\${BUILDMODE}"
+        }
     }
     Pop-Location
 }
@@ -1251,7 +1259,7 @@ Function buildArangoDB
                             Write-Host "Sign error, see $INNERWORKDIR\sign.* for details."
                         }
                     }
-                preservePackagesToWorkdir
+                    movePackagesToWorkdir
                 }
                 Else
                 {
