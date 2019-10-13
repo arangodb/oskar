@@ -106,7 +106,7 @@ if count $src/results-*.csv > /dev/null
 	  set c red
       end
 
-      if test -n "DAYS_AGO" -a "$DAYS_AGO" -eq 0
+      if test -n "$DAYS_AGO" -a "$DAYS_AGO" -eq 0
 	set -l pos (expr (fgrep -n "$branch" $lookup | head -1 | awk -F: '{print $1}') - 1)
 	awk -F, "\$1 == \"$branch\" && \$3 == \"$test\" {print $pos \" \" \$$PERF_COL}" $results | sort > $filename
       else
