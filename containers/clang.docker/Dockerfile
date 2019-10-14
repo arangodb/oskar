@@ -39,16 +39,16 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
 RUN echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster main" >> /etc/apt/sources.list; \
     echo "deb-src http://apt.llvm.org/buster/ llvm-toolchain-buster main" >> /etc/apt/sources.list
 
-RUN echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-8 main" >> /etc/apt/sources.list; \
-    echo "deb-src http://apt.llvm.org/buster/ llvm-toolchain-buster-8 main" >> /etc/apt/sources.list
+RUN echo "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-9 main" >> /etc/apt/sources.list; \
+    echo "deb-src http://apt.llvm.org/buster/ llvm-toolchain-buster-9 main" >> /etc/apt/sources.list
 
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -
 
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
         cmake \
-        clang-8 \
-        clang-format-8 \
-        clang-tools-8 \
+        clang-9 \
+        clang-format-9 \
+        clang-tools-9 \
         && apt-get clean
 
 #arango extra libs

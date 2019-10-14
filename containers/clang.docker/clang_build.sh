@@ -19,8 +19,16 @@ run_cmake() {
 }
 
 scan_build() {
-    run_cmake scan-build-8 cmake
-    scan-build-8 -o "${ARANGO_WORK}/clang-scan-build-result" make -j "$(nproc)" || ferr "failed to build"
+    run_cmake scan-build-9 \
+        --exclude "${ARANGO_SOURCE}/3rdParty" \
+        --exclude "${ARANGO_SOURCE}/tests" \
+        cmake
+
+    scan-build-9 \
+        --exclude "${ARANGO_SOURCE}/3rdParty" \
+        --exclude "${ARANGO_SOURCE}/tests" \
+        -o "${ARANGO_WORK}/clang-scan-build-result" \
+        make -j "$(nproc)" || ferr "failed to build"
 }
 
 case $1 in
