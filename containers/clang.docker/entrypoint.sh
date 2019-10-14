@@ -19,4 +19,4 @@ cd "$ARANGO_SOURCE" || { echo "could not change in arangodb source directroy"; e
 [[ -f VERSIONS ]] ||  { echo "please make sure you are in a valid checkout"; exit 1; }
 
 echo "calling build clang script"
-"$ARANGO_OSKAR/containers/clang.docker/clang_build" "$@" 2>&1 | tee "$ARANGO_WORK/clang-build.log"
+"$ARANGO_OSKAR/containers/clang.docker/clang_build.sh" "$@" 2>&1 | tee "$ARANGO_WORK/clang-build.log"

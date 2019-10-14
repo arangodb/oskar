@@ -62,11 +62,11 @@ ENV HOME "$ARANGO_INSTALL"
 RUN mkdir "$ARANGO_INSTALL" && chmod 777 "$ARANGO_INSTALL"
 
 ## other setup - ditaa, lockfile, bash_lib
-COPY setup /setup
-RUN /setup
+COPY setup.sh /setup.sh
+RUN /setup.sh
 
 WORKDIR "$ARANGO_INSTALL"
 
 ## setup entrypoint
-COPY entrypoint /entrypoint
-ENTRYPOINT [ "/entrypoint" ]
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh" ]
