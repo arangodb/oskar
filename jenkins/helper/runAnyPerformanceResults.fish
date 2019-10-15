@@ -128,6 +128,7 @@ if count $src/results-*.csv > /dev/null
     echo >> $gp
 
     echo "<br/>" >> $desc
+    echo "<a name=\"$OS-$test\"/>" >> $desc
     echo "<img src=\"ws/$images/$test.png\"></img>" >> $desc
   end
 
