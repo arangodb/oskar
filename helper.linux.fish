@@ -7,7 +7,7 @@ set -gx ARCH (uname -m)
 
 set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
-set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH:3
+set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH:4
 set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH:3
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH

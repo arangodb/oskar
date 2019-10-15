@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.8
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 RUN apk update && \
