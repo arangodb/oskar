@@ -40,7 +40,7 @@ $PACKAGES="$env:ARANGODB_PACKAGES"
 
 Function movePackagesToStage2
 {
-    $SRC="$ENV:WORKSPACE"
+    $SRC="$global:INNERWORKDIR"
     Write-Host "SRC: $SRC"
 
     $DST="${NAS_SHARE_LETTER}:\stage2\nightly\$PACKAGES"
@@ -54,7 +54,7 @@ Function movePackagesToStage2
         mkdir -p $DST\Windows;comm
     }
 
-    ForEach ($file in $(Get-ChildItem $SRC\* -Include ArangoDB3*-*.zip, ArangoDB3*-*.exe))
+    ForEach ($file in $(Get-ChildItem $SRC\* -Filter ArangoDB3* -Include *.zip, *.exe))
     {
         Move-Item -Force -Path "$file" -Destination $DST\Windows;comm
     }
@@ -72,8 +72,8 @@ $s = $global:ok
 If ($global:ok) 
 {
     storeSymbols
-    moveResultsToWorkspace
     movePackagesToStage2
+    moveResultsToWorkspace
     $s = $global:ok
 }
 unlockDirectory

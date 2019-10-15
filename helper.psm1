@@ -59,8 +59,6 @@ $env:CLCACHE_LOG = 0
 $env:CLCACHE_HARDLINK = 1
 $env:CLCACHE_OBJECT_CACHE_TIMEOUT_MS = 120000
 
-$global:GENERATOR = "Visual Studio 15 2017 Win64"
-
 $global:launcheableTests = @()
 $global:maxTestCount = 0
 $global:testCount = 0
@@ -433,6 +431,47 @@ If(-Not($SIGN))
     signPackageOn
 }
 
+Function VS2017
+{
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2017"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $global:GENERATOR = "Visual Studio 15 2017 Win64"
+    $global:GENERATORID = "v141"
+}
+Function VS2019
+{
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $global:GENERATOR = "Visual Studio 16 2019 Win64"
+    $global:GENERATORID = "v142"
+}
+If(-Not($global:GENERATOR))
+{
+    VS2017
+}
+
+Function findCompilerVersion
+{
+    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
+    {
+        $MSVC_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "MSVC_WINDOWS" | Select Line
+        If ($MSVC_WINDOWS -ne "")
+        {
+            $MSVC_WINDOWS -match '\"(?<version>[0-9]*)\"' | Out-Null
+            If ($Matches.count -eq 1)
+            {
+                switch ($Matches['version'])
+                {
+                    2017 { VS2017 }
+                    2019 { VS2019 }
+                    default { VS2017 }
+                }
+                return
+            }
+        }
+    }
+
+    VS2017
+}
+
 Function maintainerOn
 {
     $global:MAINTAINER = "On"
@@ -717,7 +756,7 @@ Function findArangoDBVersion
     }
     Else
     {
-        $global:ARANGODB_FULL_VERSION = $global:ARANGODB_VERSION   
+        $global:ARANGODB_FULL_VERSION = $global:ARANGODB_VERSION
     }
     return $global:ARANGODB_FULL_VERSION
 }
@@ -1066,6 +1105,7 @@ Function configureWindows
         New-Item -ItemType Directory -Path "$global:ARANGODIR\build"
     }
 
+    findCompilerVersion
     configureCache
     $cacheZipFN = getCacheID
     $haveCache = $(Test-Path -Path $cacheZipFN)
@@ -1092,15 +1132,15 @@ Function configureWindows
             $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
         }
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
-        Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`""
-        proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+        Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`""
+        proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
     }
     Else
     {
         downloadStarter
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-        Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
-        proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"v141,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+        Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
+        proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
     }
     if(!$haveCache)
     {
@@ -1187,6 +1227,41 @@ Function setNightlyRelease
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_TYPE .*', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly")' | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
 }
 
+Function movePackagesToWorkdir
+{
+    Push-Location $pwd
+    Set-Location "$global:ARANGODIR\build\"
+    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+    ForEach ($PACKAGE in $(Get-ChildItem $pwd\* -Filter ArangoDB3* -Include *.exe, *.zip).FullName)
+    {
+        Write-Host "Move $PACKAGE to $global:INNERWORKDIR"
+        Move-Item "$PACKAGE" -Force -Destination "$global:INNERWORKDIR"; comm
+    }
+    Pop-Location
+}
+
+Function preserveSymbolsToWorkdir
+{
+    Push-Location $pwd
+    Set-Location $global:ARANGODIR
+    If (findArangoDBVersion)
+    {
+        Set-Location "$global:ARANGODIR\build\bin\$BUILDMODE"
+        $suffix = If ($ENTERPRISEEDITION -eq "On") {"e"} Else {""}
+        Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
+        If (Test-Path -Path "$global:ARANGODIR\build\bin\$BUILDMODE\*.pdb")
+        {
+            Remove-Item -Force "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip" -ErrorAction SilentlyContinue
+            7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"; comm
+        }
+        Else
+        {
+            Write-Host "No symbol (PDB) files found at ${global:ARANGODIR}\build\bin\${BUILDMODE}"
+        }
+    }
+    Pop-Location
+}
+
 Function buildArangoDB
 {
     checkoutIfNeeded
@@ -1224,11 +1299,13 @@ Function buildArangoDB
                             Write-Host "Sign error, see $INNERWORKDIR\sign.* for details."
                         }
                     }
+                    movePackagesToWorkdir
                 }
                 Else
                 {
                     Write-Host "Package error, see $INNERWORKDIR\package.* for details."
                 }
+                preserveSymbolsToWorkdir
             }
         }
         Else
@@ -1278,7 +1355,7 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\test.log" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "*.zip ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*.zip"))
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR\* -Filter "*.zip" -Exclude "ArangoDB3*.zip"))
     {
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
@@ -1301,34 +1378,30 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
+    
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes -eq "true"))
     {
-        Write-Host "*.pdb ..."
-        Push-Location $global:ARANGODIR\build\bin\$BUILDMODE
-        If($ENTERPRISEEDITION -eq "On")
+        Write-Host "ArangoDB3*pdb.zip ..."
+        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*pdb.zip"))
         {
-            7zip -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3e-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
+            Write-Host "Move $INNERWORKDIR\$file"
+            Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 
         }
-        Else
-        {
-            7zip -Path *.pdb -DestinationPath $ENV:WORKSPACE\ArangoDB3-$global:ARANGODB_FULL_VERSION.pdb.zip; comm
-        }
-        Pop-Location
     }
 
-    if($SKIPPACKAGING -eq "Off")
+    If($SKIPPACKAGING -eq "Off")
     {
         Write-Host "ArangoDB3*.exe ..."
-        ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "ArangoDB3*.exe"))
+        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*.exe"))
         {
-            Write-Host "Move $global:ARANGODIR\build\$file"
-            Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
+            Write-Host "Move $INNERWORKDIR\$file"
+            Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 
         }
         Write-Host "ArangoDB3*.zip ..."
-        ForEach ($file in $(Get-ChildItem "$global:ARANGODIR\build" -Filter "ArangoDB3*.zip"))
+        ForEach ($file in $(Get-ChildItem "$global:INNERWORKDIR\" -Filter "ArangoDB3*.zip"))
         {
-            Write-Host "Move $global:ARANGODIR\build\$file"
-            Move-Item -Force -Path "$global:ARANGODIR\build\$file" -Destination $ENV:WORKSPACE; comm 
+            Write-Host "Move $INNERWORKDIR\$file"
+            Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 
         }
     }
     Write-Host "testfailures.log"
@@ -1486,8 +1559,8 @@ Function makeEnterpriseRelease
 
 Function makeRelease
 {
-    makeCommunityRelease
     makeEnterpriseRelease
+    makeCommunityRelease
 }
 
 parallelism ([int]$env:NUMBER_OF_PROCESSORS)

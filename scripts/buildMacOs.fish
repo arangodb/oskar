@@ -108,7 +108,7 @@ else
   end
 
   if test "$SHOW_DETAILS" = "On"
-    make $MAKEFLAGS install ^&1
+    make $MAKEFLAGS ^&1
     or exit $status
   else
     echo make output in work/buildArangoDB.log
@@ -119,7 +119,7 @@ else
       set ep (jobs -p | tail -1)
     end
 
-    nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+    nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1
     or begin
       if test -n "$ep"
 	kill $ep
