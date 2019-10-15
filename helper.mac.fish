@@ -25,6 +25,49 @@ jemallocOff
 # disable strange TAR feature from MacOSX
 set -xg COPYFILE_DISABLE 1
 
+function minMacOS
+  set -l min $argv[1]
+
+  if test "$min" = ""
+    set -e MACOSX_DEPLOYMENT_TARGET
+    return 0
+  end
+
+  switch $min
+    case '10.12'
+      set -gx MACOSX_DEPLOYMENT_TARGET $min
+
+    case '10.13'
+      set -gx MACOSX_DEPLOYMENT_TARGET $min
+
+    case '10.14'
+      set -gx MACOSX_DEPLOYMENT_TARGET $min
+
+    case '*'
+      echo "unknown macOS version $min"
+  end
+end
+
+function findRequiredMinMacOS
+  set -l f $WORKDIR/work/ArangoDB/VERSIONS
+
+  test -f $f
+  or begin
+    echo "Cannot find $f; make sure source is checked out"
+    return 1
+  end
+
+  set -l v (fgrep MACOS_MIN $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    echo "$f: no MACOS_MIN specified, using 10.12"
+    minMacOS 10.12
+  else
+    echo "Using MACOS_MIN version '$v' from '$f'"
+    minMacOS $v
+  end
+end
+
 function opensslVersion
   set -l oversion $argv[1]
 
@@ -127,6 +170,7 @@ end
 function buildArangoDB
   checkoutIfNeeded
   and findRequiredOpenSSL
+  and findRequiredMinMacOS
   runLocal $SCRIPTSDIR/buildMacOs.fish $argv
   set -l s $status
   if test $s -ne 0
@@ -137,6 +181,7 @@ end
 
 function makeArangoDB
   findRequiredOpenSSL
+  findRequiredMinMacOS
   runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
