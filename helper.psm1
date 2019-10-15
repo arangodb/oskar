@@ -448,6 +448,33 @@ If(-Not($global:GENERATOR))
     VS2017
 }
 
+Function findCompilerVersion
+{
+    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
+    {
+        $MSVC_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "MSVC_WINDOWS" | Select Line
+        If ($MSVC_WINDOWS -ne "")
+        {
+            $MSVC_WINDOWS -match '\"(?<version>[0-9]*)\"' | Out-Null
+            If ($Matches.count -eq 1)
+            {
+                switch ($Matches['version'])
+                {
+                    2017 { VS2017 }
+                    2019 { VS2019 }
+                    default { VS2017 }
+                }
+                return
+            }
+        }
+    }
+
+    VS2017
+}
+
+    $global:USE_RCLONE = "false"
+}
+
 Function maintainerOn
 {
     $global:MAINTAINER = "On"
@@ -1081,6 +1108,7 @@ Function configureWindows
         New-Item -ItemType Directory -Path "$global:ARANGODIR\build"
     }
 
+    findCompilerVersion
     configureCache
     $cacheZipFN = getCacheID
     $haveCache = $(Test-Path -Path $cacheZipFN)
