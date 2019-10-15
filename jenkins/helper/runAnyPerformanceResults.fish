@@ -83,6 +83,10 @@ if count $src/results-*.csv > /dev/null
   set -l filenames
 
   for test in $tests
+    echo "<a href=\"#$OS-$test\"/>$test</a> "
+  end >> $desc
+
+  for test in $tests
     echo "Test $test"
 
     echo "set title \"$test\"" >> $gp
