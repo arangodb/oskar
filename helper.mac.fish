@@ -44,7 +44,7 @@ function minMacOS
       set -gx MACOSX_DEPLOYMENT_TARGET $min
 
     case '*'
-      echo "unknown openssl version $min"
+      echo "unknown macOS version $min"
   end
 end
 
