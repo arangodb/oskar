@@ -472,9 +472,6 @@ Function findCompilerVersion
     VS2017
 }
 
-    $global:USE_RCLONE = "false"
-}
-
 Function maintainerOn
 {
     $global:MAINTAINER = "On"
