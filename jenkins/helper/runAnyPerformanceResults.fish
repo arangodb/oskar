@@ -131,7 +131,7 @@ if count $src/results-*.csv > /dev/null
     echo "<img src=\"ws/$images/$test.png\"></img>" >> $desc
   end
 
-  if not count $images/*.png > /dev/null
+  if count $images/*.png > /dev/null
     rm -f $images/*.png
   end
 
