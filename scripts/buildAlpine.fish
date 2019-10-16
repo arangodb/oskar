@@ -22,21 +22,22 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-cd $INNERWORKDIR
 if test "$USE_CCACHE" = "Off"
   set -xg CCACHE_DISABLE true
   echo "ccache is DISABLED"
+else
+  cd $INNERWORKDIR
+  mkdir -p .ccache.alpine
+  set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine
+  if test "$CCACHEBINPATH" = ""
+    set -xg CCACHEBINPATH /usr/lib/ccache/bin
+  end
+  if test "$CCACHESIZE" = ""
+    set -xg CCACHESIZE 50G
+  end
+  ccache -M $CCACHESIZE
 end
 
-mkdir -p .ccache.alpine
-set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine
-if test "$CCACHEBINPATH" = ""
-  set -xg CCACHEBINPATH /usr/lib/ccache/bin
-end
-if test "$CCACHESIZE" = ""
-  set -xg CCACHESIZE 50G
-end
-ccache -M $CCACHESIZE
 cd $INNERWORKDIR/ArangoDB
 
 if test -z "$NO_RM_BUILD"
@@ -57,8 +58,6 @@ ccache --zero-stats
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
- -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
- -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME \
  -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id -no-pie"\
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=On \
@@ -66,6 +65,12 @@ set -g FULLARGS $argv \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION
+
+if test "$USE_CCACHE" != "Off"
+  set -g FULLARGS $FULLARGS \
+   -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
+   -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME
+end
 
 if test "$argv" = ""
   echo "using default architecture 'nehalem'"
@@ -159,7 +164,9 @@ else
   end
 
   and echo "Finished at "(date)
-  and ccache --show-stats
+  and if test "$USE_CCACHE" != "Off"
+    ccache --show-stats
+  end
   and set -g t4 (date -u +%s)
   and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
 end
