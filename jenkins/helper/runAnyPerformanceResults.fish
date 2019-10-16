@@ -154,3 +154,4 @@ if count $src/results-*.csv > /dev/null
     cp $images/*.png $dst
   end
 end
+
