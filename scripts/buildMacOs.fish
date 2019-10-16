@@ -69,7 +69,7 @@ set -g FULLARGS $argv \
 if test "$USE_CCACHE" != "Off"
   set -g FULLARGS $FULLARGS \
    -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/g++ \
-   -DCMAKE_C_COMPILER=$CCACHEBINPATH/gcc \
+   -DCMAKE_C_COMPILER=$CCACHEBINPATH/gcc
 end
 
 if test "$argv" = ""
