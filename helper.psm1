@@ -453,19 +453,17 @@ Function findCompilerVersion
     If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
     {
         $MSVC_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "MSVC_WINDOWS" | Select Line
-        If ($MSVC_WINDOWS -ne "")
+        If ($MSVC_WINDOWS)
         {
-            $MSVC_WINDOWS -match '\"(?<version>[0-9]*)\"' | Out-Null
-            If ($Matches.count -eq 1)
-            {
+            $MSVC_WINDOWS -match "`"(?<version>[0-9]*)`"" | Out-Null
+
                 switch ($Matches['version'])
                 {
                     2017 { VS2017 }
                     2019 { VS2019 }
                     default { VS2017 }
                 }
-                return
-            }
+            return
         }
     }
 
