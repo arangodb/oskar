@@ -51,6 +51,7 @@ set ST "$ST""500,runSingleTest2 replication_ongoing_global -\n"
 set ST "$ST""250,runSingleTest2 replication_ongoing_global_spec -\n"
 set ST "$ST""500,runSingleTest2 replication_sync -\n"
 set ST "$ST""250,runSingleTest1 hot_backup -\n"
+set ST "$ST""500,runSingleTest1 permissions -\n"
 
 set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g STL (count $STS)

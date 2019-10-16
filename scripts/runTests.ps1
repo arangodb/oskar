@@ -54,6 +54,7 @@ Function global:registerSingleTests()
     registerTest -testname "version"
     registerTest -testname "audit_client"
     registerTest -testname "audit_server"
+    registerTest -testname "permissions"
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that
     # the testing framework does not support automatic restarts of instances
