@@ -28,6 +28,7 @@ updateconf() {
   done < "$conffile"
 
   ## cycle through all ARANGOCONF* var / value pairs
+  #  lowercase values while we're here because it's easy with awk
   awk 'BEGIN{for(v in ENVIRON) print tolower(v) " " ENVIRON[v]}' \
     | grep -e '^arangoconf' \
     | while read -r var value; do
@@ -38,6 +39,7 @@ updateconf() {
         # :: so let's split it in 2 separate parsings
         section=$(echo "$var" | sed -n 's/arangoconf_\([^_]*\)_\(.*\)/\1/p')
         param=$(echo "$var" | sed -n 's/arangoconf_\([^_]*\)_\(.*\)/\2/p')
+        param=$(echo "$param" | sed 's/_/-/') # env vars use '-' but param names use '-'
 
         # :: array not available in POSIX sh - let's hope sections are never duplicate
         file="$(ls "$tmpconfdir"/[0-9][0-9]-"$section" 2>/dev/null || true)"
