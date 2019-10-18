@@ -50,8 +50,9 @@ rm -rf install
 and mkdir install
 
 echo "Starting build at "(date)" on "(hostname)
-set -g t1 (date -u +%s)
 set -g t0 (date "+%Y%m%d")
+set -g t1 (date -u +%s)
+
 rm -f $INNERWORKDIR/buildTimes.csv
 rm -f $INNERWORKDIR/.ccache.log
 ccache --zero-stats

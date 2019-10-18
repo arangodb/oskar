@@ -7,8 +7,18 @@ set -gx ARCH (uname -m)
 
 set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
-set -gx ALPINEBUILDIMAGE arangodb/alpinebuildarangodb-$ARCH:4
-set -gx ALPINEBUILDIMAGE2 arangodb/alpinebuildarangodb2-$ARCH:3
+
+set -gx ALPINEBUILDIMAGE_NAME arangodb/alpinebuildarangodb-$ARCH
+set -gx ALPINEBUILDIMAGE_TAG 4
+set -gx ALPINEBUILDIMAGE $ALPINEBUILDIMAGE_NAME:$ALPINEBUILDIMAGE_TAG
+
+set -gx ALPINEBUILDIMAGE2_NAME arangodb/alpinebuildarangodb2-$ARCH
+set -gx ALPINEBUILDIMAGE2_TAG 3
+set -gx ALPINEBUILDIMAGE2 $ALPINEBUILDIMAGE2_NAME:$ALPINEBUILDIMAGE2_TAG
+
+set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
+set -gx ALPINEBUILDIMAGE3_TAG 1
+set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
 set -gx CENTOSPACKAGINGIMAGE_TAG 2
@@ -40,6 +50,9 @@ function compiler
       set -gx COMPILER_VERSION $cversion
 
     case 8.3.0
+      set -gx COMPILER_VERSION $cversion
+
+    case 9.2.0
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -81,6 +94,9 @@ function findBuildImage
       case 8.3.0
         echo $ALPINEBUILDIMAGE2
 
+      case 9.2.0
+        echo $ALPINEBUILDIMAGE3
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -98,6 +114,9 @@ function findBuildScript
 
       case 8.3.0
         echo buildAlpine2.fish
+
+      case 9.2.0
+        echo buildAlpine3.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -784,7 +803,11 @@ function buildAlpineBuildImage
   popd
 end
 
-function pushAlpineBuildImage ; docker push $ALPINEBUILDIMAGE ; end
+function pushAlpineBuildImage
+  docker tag $ALPINEBUILDIMAGE $ALPINEBUILDIMAGE_NAME:latest
+  and docker push $ALPINEBUILDIMAGE
+  and docker push $ALPINEBUILDIMAGE_NAME:latest
+end
 
 function pullAlpineBuildImage ; docker pull $ALPINEBUILDIMAGE ; end
 
@@ -796,9 +819,29 @@ function buildAlpineBuildImage2
   popd
 end
 
-function pushAlpineBuildImage2 ; docker push $ALPINEBUILDIMAGE2 ; end
+function pushAlpineBuildImage2
+  docker tag $ALPINEBUILDIMAGE2 $ALPINEBUILDIMAGE2_NAME:latest
+  and docker push $ALPINEBUILDIMAGE2
+  and docker push $ALPINEBUILDIMAGE2_NAME:latest
+end
 
 function pullAlpineBuildImage2 ; docker pull $ALPINEBUILDIMAGE2 ; end
+
+function buildAlpineBuildImage3
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine3.docker
+  and docker build --pull -t $ALPINEBUILDIMAGE3 .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage3
+  docker tag $ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:latest
+  and docker push $ALPINEBUILDIMAGE3
+  and docker push $ALPINEBUILDIMAGE3_NAME:latest
+end
+
+function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
 
 function buildCentosPackagingImage
   pushd $WORKDIR

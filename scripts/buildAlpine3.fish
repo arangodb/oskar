@@ -5,11 +5,11 @@ end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-  set -xg COMPILER_VERSION 6.4.0
+  set -xg COMPILER_VERSION 9.2.0
 end
 echo "Using compiler version $COMPILER_VERSION"
 
-if test "$COMPILER_VERSION" = "6.4.0"
+if test "$COMPILER_VERSION" = "9.2.0"
   set -xg CC_NAME gcc
   set -xg CXX_NAME g++
 else
@@ -18,7 +18,7 @@ else
 end
 
 if test "$OPENSSL_VERSION" = ""
-  set -xg OPENSSL_VERSION 1.1.0
+  set -xg OPENSSL_VERSION 1.1.1
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
@@ -27,8 +27,8 @@ if test "$USE_CCACHE" = "Off"
   echo "ccache is DISABLED"
 else
   cd $INNERWORKDIR
-  mkdir -p .ccache.alpine
-  set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine
+  mkdir -p .ccache.alpine3
+  set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine3
   if test "$CCACHEBINPATH" = ""
     set -xg CCACHEBINPATH /usr/lib/ccache/bin
   end
@@ -57,9 +57,11 @@ rm -f $INNERWORKDIR/buildTimes.csv
 rm -f $INNERWORKDIR/.ccache.log
 ccache --zero-stats
 
+set -l pie "-fpic -fPIC -fpie -fPIE -static-pie"
+set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
+
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
- -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id -no-pie"\
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=On \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
@@ -79,8 +81,12 @@ if test "$argv" = ""
     -DTARGET_ARCHITECTURE=nehalem
 end
 
-if test "$MAINTAINER" != "On"
+if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
+else
+  set -g FULLARGS $FULLARGS \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
 end
@@ -91,13 +97,21 @@ else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-    -DCMAKE_C_FLAGS="-fno-stack-protector -fprofile-arcs -ftest-coverage" \
-    -DCMAKE_CXX_FLAGS="-fno-stack-protector -fprofile-arcs -ftest-coverage"
+    -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
+    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage"
 else
   set -g FULLARGS $FULLARGS \
-   -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-   -DCMAKE_C_FLAGS=-fno-stack-protector \
-   -DCMAKE_CXX_FLAGS=-fno-stack-protector
+   -DUSE_JEMALLOC=$JEMALLOC_OSKAR
+
+  if test "$MAINTAINER" = "On"
+    set -g FULLARGS $FULLARGS \
+     -DCMAKE_C_FLAGS="$pie -fno-stack-protector" \
+     -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector"
+  else
+    set -g FULLARGS $FULLARGS \
+     -DCMAKE_C_FLAGS="$pie $inline -fno-stack-protector" \
+     -DCMAKE_CXX_FLAGS="$pie $inline -fno-stack-protector"
+  end
 end
 
 echo cmake $FULLARGS
