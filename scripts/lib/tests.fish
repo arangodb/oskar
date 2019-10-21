@@ -196,6 +196,13 @@ function createReport
     eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
     popd
   end
+  and begin
+    pushd tmp
+    if test (count */UNITTEST_RESULT.json) -gt 0
+      tar czvf "$INNERWORKDIR/ArangoDB/timings.tar.gz" */UNITTEST_RESULT.json
+    end
+    popd
+  end
   
   # core on mac are under "/cores"
   # we have to grab all, because we do not know if a
