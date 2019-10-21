@@ -3,7 +3,7 @@ set -e
 
 ## Update conf from generic env vars
 ## env vars syntax:
-##  ARANGOCONF_SECTION_PARAMETER=VALUE
+##  ARANGOCONF_SECTION_OPTION=VALUE
 ## example:
 ##  ARANGOCONF_LOG_LEVEL=debug
 ##   => update [log] section with "level = debug"
@@ -33,14 +33,14 @@ updateconf() {
     | grep -e '^arangoconf' \
     | while read -r var value; do
 
-        ## Extract section name and parameter name from var name.
+        ## Extract section name and option name from var name.
         # :: In POSIX sh, process substitution is undefined. In bash we would do:
-        # :: $ read -r section param < <(echo "$var" | sed -n 's/ARANGOCONF_\([^_]*\)_\(.*\)/\1 \2/p')
+        # :: $ read -r section option < <(echo "$var" | sed -n 's/ARANGOCONF_\([^_]*\)_\(.*\)/\1 \2/p')
         # :: so let's split it in 2 separate parsings
         section=$(echo "$var" | sed -n 's/arangoconf_\([^_]*\)_\(.*\)/\1/p')
-        param=$(echo "$var" | sed -n 's/arangoconf_\([^_]*\)_\(.*\)/\2/p')
-        param=$(echo "$param" | sed 's/_/-/') # env vars use '_' but param names use '-'
-        if [ "$section" = "" ] || [ "$param" = "" ]; then continue; fi # bypass invalid vars
+        option=$(echo "$var" | sed -n 's/arangoconf_\([^_]*\)_\(.*\)/\2/p')
+        option=$(echo "$option" | sed 's/_/-/') # env vars use '_' but option names use '-'
+        if [ "$section" = "" ] || [ "$option" = "" ]; then continue; fi # bypass invalid vars
 
         # :: array not available in POSIX sh - let's hope sections are never duplicate
         file="$(ls "$tmpconfdir"/[0-9][0-9]-"$section" 2>/dev/null || true)"
@@ -48,13 +48,13 @@ updateconf() {
         if [ ! -f "$file" ]; then # section (file) not yet existing
           file="$tmpconfdir"/99-"$section"
           echo "[$section]" >> "$file"
-          echo "$param = $value" >> "$file"
+          echo "$option = $value" >> "$file"
 
         else # section already existing
-          if grep -qe "^$param = " "$file"; then # parameter already existing - replace
-            sed -i 's/^'"$param"' = .*/'"$param"' = '"$value"'/g' "$file"
-          else # parameter not yet existing - just add
-            echo "$param = $value" >> "$file"
+          if grep -qe "^$option = " "$file"; then # option already existing - replace
+            sed -i 's/^'"$option"' = .*/'"$option"' = '"$value"'/g' "$file"
+          else # option not yet existing - just add
+            echo "$option = $value" >> "$file"
           fi
         fi
 
