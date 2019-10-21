@@ -48,15 +48,14 @@ updateconf() {
         if [ ! -f "$file" ]; then # section (file) not yet existing
           file="$tmpconfdir"/99-"$section"
           echo "[$section]" >> "$file"
-          echo "$option = $value" >> "$file"
-
-        else # section already existing
-          if grep -qe "^$option = " "$file"; then # option already existing - replace
-            sed -i 's/^'"$option"' = .*/'"$option"' = '"$value"'/g' "$file"
-          else # option not yet existing - just add
-            echo "$option = $value" >> "$file"
-          fi
         fi
+
+        if grep -qe "^$option = " "$file"; then # option already existing - comment it
+          sed -i 's/^\('"$option"' = .*\)/# \1/' "$file"
+        fi
+
+        # Add option
+        echo "$option = $value" >> "$file"
 
       done
 
