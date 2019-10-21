@@ -7,6 +7,7 @@ set -e
 ## example:
 ##  ARANGOD_CONF_LOG_LEVEL=debug
 ##   => update [log] section with "level = debug"
+## Multi-line values will be split in multiple occurences of the same option
 updateconf() {
   tmpconfdir=/tmp/arangoconf
   conffile=/tmp/arangod.conf
@@ -54,9 +55,11 @@ updateconf() {
           sed -i 's/^\('"$option"' = .*\)/# \1/' "$file"
         fi
 
-        # Add option
-        echo "$option = $value" >> "$file"
-
+        # Add option - split by newline
+        echo "$value" \
+        | while read -r value_i; do
+          echo "$option = $value_i" >> "$file"
+        done
       done
 
   ## Generate a new config file from updated section files
