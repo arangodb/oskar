@@ -28,18 +28,17 @@ updateconf() {
       echo "$line" >> "$(printf "%s/%02d-%s" "$tmpconfdir" "$currentnumber" "$currentfile")"
   done < "$conffile"
 
-  ## cycle through all ARANGOD_CONF* var / value pairs
-  #  lowercase values while we're here because it's easy with awk
-  awk 'BEGIN{for(v in ENVIRON) print tolower(v) " " ENVIRON[v]}' \
-    | grep -e '^arangod_conf' \
-    | while read -r var value; do
+  ## cycle through all ARANGOD_CONF_* var / value pairs
+  awk 'BEGIN{for(v in ENVIRON) print v}' \
+    | grep -e '^ARANGOD_CONF_' \
+    | while read -r var; do
 
         ## Extract section name and option name from var name.
         # :: In POSIX sh, process substitution is undefined. In bash we would do:
-        # :: $ read -r section option < <(echo "$var" | sed -n 's/arangod_conf_\([^_]*\)_\(.*\)/\1 \2/p')
+        # :: $ read -r section option < <(echo "$var" | sed -n 's/ARANGOD_CONF_\([^_]*\)_\(.*\)/\1 \2/p')
         # :: so let's split it in 2 separate parsings
-        section=$(echo "$var" | sed -n 's/arangod_conf_\([^_]*\)_\(.*\)/\1/p')
-        option=$(echo "$var" | sed -n 's/arangod_conf_\([^_]*\)_\(.*\)/\2/p')
+        section=$(echo "$var" | sed -n 's/ARANGOD_CONF_\([^_]*\)_\(.*\)/\1/p' | tr '[:upper:]' '[:lower:]')
+        option=$(echo "$var" | sed -n 's/ARANGOD_CONF_\([^_]*\)_\(.*\)/\2/p' | tr '[:upper:]' '[:lower:]')
         option=$(echo "$option" | sed 's/_/-/') # env vars use '_' but option names use '-'
         if [ "$section" = "" ] || [ "$option" = "" ]; then continue; fi # bypass invalid vars
 
@@ -56,7 +55,7 @@ updateconf() {
         fi
 
         # Add option - split by newline
-        echo "$value" \
+        awk 'BEGIN{print ENVIRON["'"$var"'"]}' \
         | while read -r value_i; do
           echo "$option = $value_i" >> "$file"
         done
