@@ -40,6 +40,7 @@ updateconf() {
         section=$(echo "$var" | sed -n 's/arangoconf_\([^_]*\)_\(.*\)/\1/p')
         param=$(echo "$var" | sed -n 's/arangoconf_\([^_]*\)_\(.*\)/\2/p')
         param=$(echo "$param" | sed 's/_/-/') # env vars use '_' but param names use '-'
+        if [ "$section" = "" ] || [ "$param" = "" ]; then continue; fi # bypass invalid vars
 
         # :: array not available in POSIX sh - let's hope sections are never duplicate
         file="$(ls "$tmpconfdir"/[0-9][0-9]-"$section" 2>/dev/null || true)"
