@@ -227,7 +227,7 @@ function createReport
   echo tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
   eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
 
-  echo rm -rf $cores $archives
+  echo rm -rf $cores innerlogs.tar.gz
   eval $IONICE nice -n 10 rm -rf $cores innerlogs.tar.gz
 
   # And finally collect the testfailures.txt:
