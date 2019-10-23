@@ -71,6 +71,7 @@ Function global:registerSingleTests()
     registerTest -testname "foxx_manager"
     registerTest -testname "http_replication" -weight 2
     registerTest -testname "http_server" -sniff true
+    registerTest -testname "http_webif" -sniff true
     registerTest -testname "importing"
     registerTest -testname "queryCacheAuthorization"
     registerTest -testname "readOnly"
@@ -111,6 +112,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "http_server" -sniff true
+    registerTest -cluster $true -testname "http_webif" -sniff true
     registerTest -cluster $true -testname "server_permissions"
     registerTest -cluster $true -testname "ssl_server" -sniff true
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
