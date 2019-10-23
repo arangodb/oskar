@@ -199,7 +199,8 @@ function createReport
   and begin
     pushd $INNERWORKDIR/tmp
     if test (count */UNITTEST_RESULT.json) -gt 0
-      tar czvf "$INNERWORKDIR/ArangoDB/timings.tar.gz" */UNITTEST_RESULT.json
+      echo tar czvf "$INNERWORKDIR/ArangoDB/work/timings.tar.gz" */UNITTEST_RESULT.json
+      tar czvf "$INNERWORKDIR/ArangoDB/work/timings.tar.gz" */UNITTEST_RESULT.json
     end
     popd
   end
