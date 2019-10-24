@@ -39,7 +39,7 @@ else if test "$USE_CCACHE" = "sccache"
     echo "using sccache at $SCCACHE_DIR ($SCCACHE_CACHE_SIZE)"
   else
     echo "using sccache at redis ($SCCACHE_REDIS)"
-  endif
+  end
   pushd $INNERWORKDIR; and sccache --start-server; and popd
   or begin echo "fatal, cannot start sccache"; exit 1; end
 else
