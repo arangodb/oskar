@@ -88,10 +88,15 @@ set -g FULLARGS $argv \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION
 
-if test "$USE_CCACHE" != "Off"
+if test "$USE_CCACHE" = "Off"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_CCACHE=Off
+else
+  # USE_CACHE is not used because the compiler is already ccache
   set -g FULLARGS $FULLARGS \
    -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
-   -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME
+   -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME \
+   -DUSE_CCACHE=Off
 end
 
 if test "$argv" = ""
