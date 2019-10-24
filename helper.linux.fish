@@ -946,12 +946,13 @@ function runInContainer
              -e OPENSSL_VERSION="$OPENSSL_VERSION" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
+             -e SCCACHE_REDIS="$SCCACHE_REDIS" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
              -e SHOW_DETAILS="$SHOW_DETAILS" \
-             -e SKIP_MAKE="$SKIP_MAKE" \
              -e SKIPGREY="$SKIPGREY" \
              -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
              -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
+             -e SKIP_MAKE="$SKIP_MAKE" \
              -e SSH_AUTH_SOCK=/ssh-agent \
              -e STORAGEENGINE="$STORAGEENGINE" \
              -e TEST="$TEST" \

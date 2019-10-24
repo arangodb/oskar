@@ -34,11 +34,14 @@ else if test "$USE_CCACHE" = "sccache"
   else
     set -xg SCCACHE_CACHE_SIZE $CCACHESIZE
   end
-  # set -xg SCCACHE_DIR $INNERWORKDIR/.sccache.alpine3
-  set -xg SCCACHE_REDIS redis://192.168.10.73:6379
-  set -xg SCCACHE_LOG_LEVEL debug
-  echo "using sccache at $SCCACHE_DIR ($SCCACHE_REDIS)"
-  sccache --start-server
+  if test "$SCCACHE_REDIS" = ""
+    set -xg SCCACHE_DIR $INNERWORKDIR/.sccache.alpine3
+    echo "using sccache at $SCCACHE_DIR ($SCCACHE_CACHE_SIZE)"
+  else
+    echo "using sccache at redis ($SCCACHE_REDIS)"
+  endif
+  pushd $INNERWORKDIR; and sccache --start-server; and popd
+  or begin echo "fatal, cannot start sccache"; exit 1; end
 else
   cd $INNERWORKDIR
   mkdir -p .ccache.alpine3
@@ -53,6 +56,7 @@ else
   rm -f $INNERWORKDIR/.ccache.log
   echo "using ccache at $CCACHE_DIR ($CCACHESIZE)"
   ccache --zero-stats
+  or begin echo "fatal, cannot start ccache"; exit 1; end
 end
 
 cd $INNERWORKDIR/ArangoDB
@@ -84,11 +88,7 @@ set -g FULLARGS $argv \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION
 
-if test "$USE_CCACHE" = "Off"
-  set -g FULLARGS $FULLARGS \
-   -DCMAKE_CXX_COMPILER=$CXX_NAME \
-   -DCMAKE_C_COMPILER=$CC_NAME
-else
+if test "$USE_CCACHE" != "Off"
   set -g FULLARGS $FULLARGS \
    -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
    -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME
