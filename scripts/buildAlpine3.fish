@@ -25,6 +25,20 @@ echo "Using openssl version $OPENSSL_VERSION"
 if test "$USE_CCACHE" = "Off"
   set -xg CCACHE_DISABLE true
   echo "ccache is DISABLED"
+else if test "$USE_CCACHE" = "sccache"
+  if test "$CCACHEBINPATH" = ""
+    set -xg CCACHEBINPATH /tools
+  end
+  if test "$CCACHESIZE" = ""
+    set -xg SCCACHE_CACHE_SIZE 50G
+  else
+    set -xg SCCACHE_CACHE_SIZE $CCACHESIZE
+  end
+  # set -xg SCCACHE_DIR $INNERWORKDIR/.sccache.alpine3
+  set -xg SCCACHE_REDIS redis://192.168.10.73:6379
+  set -xg SCCACHE_LOG_LEVEL debug
+  echo "using sccache at $SCCACHE_DIR ($SCCACHE_REDIS)"
+  sccache --start-server
 else
   cd $INNERWORKDIR
   mkdir -p .ccache.alpine3
@@ -36,6 +50,9 @@ else
     set -xg CCACHESIZE 50G
   end
   ccache -M $CCACHESIZE
+  rm -f $INNERWORKDIR/.ccache.log
+  echo "using ccache at $CCACHE_DIR ($CCACHESIZE)"
+  ccache --zero-stats
 end
 
 cd $INNERWORKDIR/ArangoDB
@@ -54,8 +71,6 @@ set -g t0 (date "+%Y%m%d")
 set -g t1 (date -u +%s)
 
 rm -f $INNERWORKDIR/buildTimes.csv
-rm -f $INNERWORKDIR/.ccache.log
-ccache --zero-stats
 
 set -l pie "-fpic -fPIC -fpie -fPIE -static-pie"
 set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
@@ -69,7 +84,11 @@ set -g FULLARGS $argv \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION
 
-if test "$USE_CCACHE" != "Off"
+if test "$USE_CCACHE" = "Off"
+  set -g FULLARGS $FULLARGS \
+   -DCMAKE_CXX_COMPILER=$CXX_NAME \
+   -DCMAKE_C_COMPILER=$CC_NAME
+else
   set -g FULLARGS $FULLARGS \
    -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
    -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME
@@ -181,8 +200,11 @@ else
   or exit 1
 
   echo "Finished at "(date)
-  and if test "$USE_CCACHE" != "Off"
+  and if test "$USE_CCACHE" = "On"
     ccache --show-stats
+  else if test "$USE_CCACHE" = "sccache"
+    sccache --show-stats
+    sccache --stop-server
   end
   and set -g t4 (date -u +%s)
   and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
