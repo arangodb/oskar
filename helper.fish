@@ -72,7 +72,8 @@ makeOn
 function ccacheOn  ; set -gx USE_CCACHE On      ; end
 function sccacheOn ; set -gx USE_CCACHE sccache ; end
 function ccacheOff ; set -gx USE_CCACHE Off     ; end
-ccacheOn
+if test -z "$USE_CCACHE" ; ccacheOn
+else ; set -gx USE_CCACHE $USE_CCACHE ; end
 
 function coverageOn ; set -gx COVERAGE On ; debugMode ; end
 function coverageOff ; set -gx COVERAGE Off ; end

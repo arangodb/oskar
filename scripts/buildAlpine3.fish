@@ -34,11 +34,14 @@ else if test "$USE_CCACHE" = "sccache"
   else
     set -xg SCCACHE_CACHE_SIZE $CCACHESIZE
   end
-  if test "$SCCACHE_REDIS" = ""
-    set -xg SCCACHE_DIR $INNERWORKDIR/.sccache.alpine3
-    echo "using sccache at $SCCACHE_DIR ($SCCACHE_CACHE_SIZE)"
-  else
+  if test "$SCCACHE_REDIS" != ""
     echo "using sccache at redis ($SCCACHE_REDIS)"
+  else if test "$SCCACHE_GCS_BUCKET" != ""
+    echo "using sccache at GCS ($SCCACHE_GCS_BUCKET)"
+    set -xg SCCACHE_GCS_RW_MODE READ_WRITE
+  else
+   set -xg SCCACHE_DIR $INNERWORKDIR/.sccache.alpine3
+   echo "using sccache at $SCCACHE_DIR ($SCCACHE_CACHE_SIZE)"
   end
   pushd $INNERWORKDIR; and sccache --start-server; and popd
   or begin echo "fatal, cannot start sccache"; exit 1; end
