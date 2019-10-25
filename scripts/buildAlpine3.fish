@@ -24,7 +24,7 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-setupCache
+setupCcache
 cd $INNERWORKDIR/ArangoDB
 
 if test -z "$NO_RM_BUILD"
