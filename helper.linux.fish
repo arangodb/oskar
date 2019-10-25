@@ -885,6 +885,8 @@ function remakeImages
   pushAlpineBuildImage ; or set -l s 1
   buildAlpineBuildImage2 ; or set -l s 1
   pushAlpineBuildImage2 ; or set -l s 1
+  buildAlpineBuildImage3 ; or set -l s 1
+  pushAlpineBuildImage3 ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
   pushUbuntuPackagingImage ; or set -l s 1
   buildCentosPackagingImage ; or set -l s 1
@@ -1093,6 +1095,7 @@ function updateOskar
   and pullUbuntuBuildImage
   and pullAlpineBuildImage
   and pullAlpineBuildImage2
+  and pullAlpineBuildImage3
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
   and pullDocumentationImage
