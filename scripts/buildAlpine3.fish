@@ -171,12 +171,7 @@ else
   or exit 1
 
   echo "Finished at "(date)
-  and if test "$USE_CCACHE" = "On"
-    ccache --show-stats
-  else if test "$USE_CCACHE" = "sccache"
-    sccache --show-stats
-    sccache --stop-server
-  end
+  and shutdownCcache
   and set -g t4 (date -u +%s)
   and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
 end

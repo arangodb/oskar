@@ -7,7 +7,7 @@ function setupCcache
       set -xg CCACHEBINPATH /tools
     end
     if test "$CCACHESIZE" = ""
-      set -xg SCCACHE_CACHE_SIZE 50G
+      set -xg SCCACHE_CACHE_SIZE 200G
     else
       set -xg SCCACHE_CACHE_SIZE $CCACHESIZE
     end
@@ -41,5 +41,13 @@ function setupCcache
     and ccache --zero-stats
     and popd
     or begin echo "fatal, cannot start ccache"; exit 1; end
+  end
+end
+
+function shutdownCcache
+  if test "$USE_CCACHE" = "On"
+    ccache --show-stats
+   if test "$USE_CCACHE" = "sccache"
+    sccache --stop-server
   end
 end
