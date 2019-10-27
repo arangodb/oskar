@@ -24,7 +24,7 @@ function setupCcache
     pushd $INNERWORKDIR; and sccache --start-server; and popd
     or begin echo "fatal, cannot start sccache"; exit 1; end
   else
-    set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine3
+    set -xg CCACHE_DIR $INNERWORKDIR/.ccache.alpine3
     if test "$CCACHEBINPATH" = ""
       set -xg CCACHEBINPATH /usr/lib/ccache/bin
     end
@@ -47,7 +47,7 @@ end
 function shutdownCcache
   if test "$USE_CCACHE" = "On"
     ccache --show-stats
-   if test "$USE_CCACHE" = "sccache"
+  else if test "$USE_CCACHE" = "sccache"
     sccache --stop-server
   end
 end
