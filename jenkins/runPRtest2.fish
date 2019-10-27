@@ -16,7 +16,7 @@ and echo $date,setup,(expr $t2 - $t1) >> $filename
 and oskarCompile
 and set -l t3 (date +%s)
 and if test -f work/buildTimes.csv
-  awk -F, "{print \"\" \$2 \",\" \$3}" < work/buildTimes.csv > $filename
+  awk -F, "{print \"\" \$2 \",\" \$3}" < work/buildTimes.csv >> $filename
   and rm -f work/buildTimes.csv
 end
 and oskar
