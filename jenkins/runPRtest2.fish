@@ -1,5 +1,7 @@
 #!/usr/bin/env fish
 set -l t1 (date +%s)
+set -l filename work/totalTimes.csv
+
 source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear
@@ -10,22 +12,20 @@ and skipGrey
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and pingDetails
 and set -l t2 (date +%s)
-and oskar1
+and echo $date,setup,(expr $t2 - $t1) >> $filename
+and oskarCompile
+and set -l t3 (date +%s)
+and if test -f work/buildTimes.csv
+  awk -F, "{print \"\" \$2 \",\" \$3}" < work/buildTimes.csv > $filename
+  and rm -f work/buildTimes.csv
+end
+and oskar
+and set -l t4 (date +%s)
+and echo $date,tests,(expr $t4 - $t3) >> $filename
+
 
 set -l s $status
 
-set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
-set -l filename work/compile-times-$resultname-$datetime.csv
-
-if test -f work/buildTimes.csv
-  echo "storing compile times in $resultname"
-  awk -F, "{print \"$ARANGODB_BRANCH,$date,\" \$2 \",\" \$3}" \
-    < work/buildTimes.csv \
-    > $filename
-end
-
-echo $date,setup,(expr $t2 - $t1) >> $filename
-echo $date,total,(expr (date +%s) - $t1) >> $filename
 
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s

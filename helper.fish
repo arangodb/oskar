@@ -225,7 +225,7 @@ function createLogLevelsOverride
   end
 end
 
-function oskar1
+function oskarCompile
   showConfig
   showRepository
   set -x NOSTRIP 1
@@ -234,33 +234,22 @@ function oskar1
   else
     buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
   end
+end
+
+function oskar1
+  oskarCompile
   oskar
 end
 
 function oskar1Full
-  showConfig
-  showRepository
-  set -x NOSTRIP 1
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  end
+  oskarCompile
   oskarFull
 end
 
 function oskar2
   set -l testsuite $TESTSUITE
-  set -x NOSTRIP 1
 
-  showConfig
-  showRepository
-
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  end
+  oskarCompile
 
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
@@ -270,16 +259,8 @@ end
 
 function oskar4
   set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE
-  set -x NOSTRIP 1
 
-  showConfig
-  showRepository
-
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  end
+  oskarCompile
 
   rocksdb
   cluster ; oskar ; or return $status
@@ -295,18 +276,10 @@ end
 
 function oskar8
   set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE ; set -l enterpriseedition $ENTERPRISEEDITION
-  set -x NOSTRIP 1
-
-  showConfig
-  showRepository
 
   enterprise
 
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  end
+  oskarCompile
  
   rocksdb
   cluster ; oskar ; or return $status
@@ -318,11 +291,7 @@ function oskar8
 
   community
 
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  end
+  oskarCompile
 
   rocksdb
   cluster ; oskar ; or return $status
