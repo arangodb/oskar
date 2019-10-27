@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+source ./scripts/lib/build.fish
+
 if test "$PARALLELISM" = ""
   set -xg PARALLELISM 64
 end
@@ -22,43 +24,7 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-if test "$USE_CCACHE" = "Off"
-  set -xg CCACHE_DISABLE true
-  echo "ccache is DISABLED"
-else if test "$USE_CCACHE" = "sccache"
-  if test "$CCACHEBINPATH" = ""
-    set -xg CCACHEBINPATH /tools
-  end
-  if test "$CCACHESIZE" = ""
-    set -xg SCCACHE_CACHE_SIZE 50G
-  else
-    set -xg SCCACHE_CACHE_SIZE $CCACHESIZE
-  end
-  if test "$SCCACHE_REDIS" = ""
-    set -xg SCCACHE_DIR $INNERWORKDIR/.sccache.alpine2
-    echo "using sccache at $SCCACHE_DIR ($SCCACHE_CACHE_SIZE)"
-  else
-    echo "using sccache at redis ($SCCACHE_REDIS)"
-  end
-  pushd $INNERWORKDIR; and sccache --start-server; and popd
-  or begin echo "fatal, cannot start sccache"; exit 1; end
-else
-  cd $INNERWORKDIR
-  mkdir -p .ccache.alpine2
-  set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine2
-  if test "$CCACHEBINPATH" = ""
-    set -xg CCACHEBINPATH /usr/lib/ccache/bin
-  end
-  if test "$CCACHESIZE" = ""
-    set -xg CCACHESIZE 50G
-  end
-  ccache -M $CCACHESIZE
-  rm -f $INNERWORKDIR/.ccache.log
-  echo "using ccache at $CCACHE_DIR ($CCACHESIZE)"
-  ccache --zero-stats
-  or begin echo "fatal, cannot start ccache"; exit 1; end
-end
-
+setupCcache
 cd $INNERWORKDIR/ArangoDB
 
 if test -z "$NO_RM_BUILD"
@@ -205,12 +171,7 @@ else
   or exit 1
 
   echo "Finished at "(date)
-  and if test "$USE_CCACHE" = "On"
-    ccache --show-stats
-  else if test "$USE_CCACHE" = "sccache"
-    sccache --show-stats
-    sccache --stop-server
-  end
+  and shutdownCcache
   and set -g t4 (date -u +%s)
   and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
 end
