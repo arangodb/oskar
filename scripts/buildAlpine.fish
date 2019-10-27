@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+source ./scripts/lib/build.fish
+
 if test "$PARALLELISM" = ""
   set -xg PARALLELISM 64
 end
