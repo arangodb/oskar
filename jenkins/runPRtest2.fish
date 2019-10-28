@@ -20,12 +20,11 @@ and if test -f work/buildTimes.csv
   and rm -f work/buildTimes.csv
 end
 and oskar
-and set -l t4 (date +%s)
-and echo $date,tests,(expr $t4 - $t3) >> $filename
-
 
 set -l s $status
 
+set -l t4 (date +%s)
+echo $date,tests,(expr $t4 - $t3) >> $filename
 
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s
