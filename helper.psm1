@@ -275,9 +275,9 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
 
   proc -process "git"  -argument "clone -b $OPENSSL_TAG https://github.com/openssl/openssl $env:TMP\OpenSSL\tmp" -logfile $false -priority "Normal"
   Set-Location "$env:TMP\OpenSSL\tmp"
-  proc -process "git" -argument "fetch" -logfile $false -priority "Normal"
-  proc -process "git" -argument "reset --hard $OPENSSL_TAG"  -logfile $false -priority "Normal"
-  proc -process "git" -argument "clean -fdx"
+  proc -process "git" -argument "fetch --no-progress" -logfile $false -priority "Normal"
+  proc -process "git" -argument "reset --no-progress --hard $OPENSSL_TAG"  -logfile $false -priority "Normal"
+  proc -process "git" -argument "clean --no-progress -fdx"
 
   ForEach($mode In $modes)
   {
