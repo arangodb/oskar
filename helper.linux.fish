@@ -9,15 +9,15 @@ set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE_NAME arangodb/alpinebuildarangodb-$ARCH
-set -gx ALPINEBUILDIMAGE_TAG 4
+set -gx ALPINEBUILDIMAGE_TAG 5
 set -gx ALPINEBUILDIMAGE $ALPINEBUILDIMAGE_NAME:$ALPINEBUILDIMAGE_TAG
 
 set -gx ALPINEBUILDIMAGE2_NAME arangodb/alpinebuildarangodb2-$ARCH
-set -gx ALPINEBUILDIMAGE2_TAG 3
+set -gx ALPINEBUILDIMAGE2_TAG 4
 set -gx ALPINEBUILDIMAGE2 $ALPINEBUILDIMAGE2_NAME:$ALPINEBUILDIMAGE2_TAG
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 1
+set -gx ALPINEBUILDIMAGE3_TAG 2
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
@@ -885,6 +885,8 @@ function remakeImages
   pushAlpineBuildImage ; or set -l s 1
   buildAlpineBuildImage2 ; or set -l s 1
   pushAlpineBuildImage2 ; or set -l s 1
+  buildAlpineBuildImage3 ; or set -l s 1
+  pushAlpineBuildImage3 ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
   pushUbuntuPackagingImage ; or set -l s 1
   buildCentosPackagingImage ; or set -l s 1
@@ -946,12 +948,15 @@ function runInContainer
              -e OPENSSL_VERSION="$OPENSSL_VERSION" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
+             -e SCCACHE_REDIS="$SCCACHE_REDIS" \
+             -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
+             -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
              -e SHOW_DETAILS="$SHOW_DETAILS" \
-             -e SKIP_MAKE="$SKIP_MAKE" \
              -e SKIPGREY="$SKIPGREY" \
              -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
              -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
+             -e SKIP_MAKE="$SKIP_MAKE" \
              -e SSH_AUTH_SOCK=/ssh-agent \
              -e STORAGEENGINE="$STORAGEENGINE" \
              -e TEST="$TEST" \
@@ -1090,6 +1095,7 @@ function updateOskar
   and pullUbuntuBuildImage
   and pullAlpineBuildImage
   and pullAlpineBuildImage2
+  and pullAlpineBuildImage3
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
   and pullDocumentationImage
