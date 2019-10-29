@@ -115,10 +115,9 @@ Function createReport
 
 Function runTests
 {
-    If(Test-Path -PathType Container -Path $env:TMP)
+    If (Test-Path -PathType Container -Path $env:TMP)
     {
-        Remove-Item -Recurse -Force -Path $env:TMP
-        New-Item -ItemType Directory -Path $env:TMP
+        Remove-Item -Recurse -Force -Path $env:TMP -Exclude "$env:TMP\OpenSSL"
     }
     Else
     {
@@ -126,7 +125,7 @@ Function runTests
     }
     Push-Location $pwd
     Set-Location $global:ARANGODIR
-    ForEach($log in $(Get-ChildItem -Filter "*.log"))
+    ForEach ($log in $(Get-ChildItem -Filter "*.log"))
     {
         Remove-Item -Recurse -Force $log 
     }
