@@ -158,19 +158,19 @@ function createReport
         end
 
         echo Test $d took (math $stopped - $started) seconds, status $localresult
-        echo $d,(math $stopped - $started),$localresult >> testRuns.txt
+        echo $d,(math $stopped - $started),$localresult >> testRuns.csv
       else
         echo Test $d did not finish, status $localresult
-        echo $d,-1,$localresult >> testRuns.txt
+        echo $d,-1,$localresult >> testRuns.csv
       end
     end
   end
 
-  echo "TOTAL,"(math $totalStopped - $totalStarted)","$result >> testRuns.txt
+  echo "TOTAL,"(math $totalStopped - $totalStarted)","$result >> testRuns.csv
 
   begin
     echo "<table>"; echo "Test,Runtime,Status" | sed -e 's/^/<tr><th>/' -e 's/,/<\/th><th>/g' -e 's/$/<\/th><\/tr>/'
-    cat testRuns.txt \
+    cat testRuns.csv \
       | sed -e 's/^/<tr><td>/' -e 's/,/<\/td><td align="right">/g' -e 's/$/<\/td><\/tr>/' \
       | sed -e 's/^<tr>\(.*BAD.*\)$/<tr style="background-color: red;color: white;">\1/'
     echo "</table>"
@@ -235,8 +235,8 @@ function createReport
     set -g result BAD
   end
 
-  if test -f $INNERWORKDIR/tmp/testRuns.txt
-    cp $INNERWORKDIR/tmp/testRuns.txt $INNERWORKDIR
+  if test -f $INNERWORKDIR/tmp/testRuns.csv
+    cp $INNERWORKDIR/tmp/testRuns.csv $INNERWORKDIR
   end
 
   if test -f $INNERWORKDIR/tmp/testRuns.html
