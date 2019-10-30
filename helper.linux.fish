@@ -949,6 +949,7 @@ function runInContainer
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCCACHE_REDIS="$SCCACHE_REDIS" \
+             -e SCCACHE_MEMCACHED="$SCCACHE_MEMCACHED" \
              -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
              -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \

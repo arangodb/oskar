@@ -13,9 +13,17 @@ function setupCcache
     end
     if test "$SCCACHE_REDIS" != ""
       echo "using sccache at redis ($SCCACHE_REDIS)"
+      set -xg SCCACHE_MEMCHACHED ""
+      set -xg SCCACHE_GCS_BUCKET ""
+      set -xg SCCACHE_DIR ""
+    else if test "$SCCACHE_MEMCHACHED" != ""
+      echo "using sccache at memcached ($SCCACHE_MEMCHACHED)"
+      set -xg SCCACHE_GCS_BUCKET ""
+      set -xg SCCACHE_DIR ""
     else if test "$SCCACHE_GCS_BUCKET" != ""
       echo "using sccache at GCS ($SCCACHE_GCS_BUCKET)"
       set -xg SCCACHE_GCS_RW_MODE READ_WRITE
+      set -xg SCCACHE_DIR ""
     else
      set -xg SCCACHE_DIR $INNERWORKDIR/.sccache.alpine3
      echo "using sccache at $SCCACHE_DIR ($SCCACHE_CACHE_SIZE)"
