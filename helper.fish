@@ -69,9 +69,40 @@ function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
 
-function ccacheOn  ; set -gx USE_CCACHE On      ; end
-function sccacheOn ; set -gx USE_CCACHE sccache ; end
-function ccacheOff ; set -gx USE_CCACHE Off     ; end
+function defineSccacheRedis
+  switch (hostname)
+    case 'gce-*'
+      set -gx SCCACHE_REDIS "redis://10.164.0.35"
+    case '*'
+      # Don't set SCCACHE_REDIS at non-GCE environment by default
+      set -e SCCACHE_REDIS
+      #export SCCACHE_REDIS=redis://192.168.10.73
+  end
+end
+
+if test -z "$SCCACHE_REDIS" ; defineSccacheRedis
+else ; set -gx SCCACHE_REDIS $SCCACHE_REDIS ; end
+
+function ccacheOn
+  if test -z "$SCCACHE_REDIS"; or test "$SCCACHE_REDIS" = ""
+    set -gx USE_CCACHE On
+  else
+    echo "Use sccache instead since SSCACHE_REDIS was defined!"
+    sccacheOn
+  end
+end
+
+function sccacheOn
+  if test -z "$SCCACHE_REDIS"; or test "$SCCACHE_REDIS" = ""
+    echo "Use ccache instead since SSCACHE_REDIS was not defined!"
+    ccacheOn
+  else
+    set -gx USE_CCACHE sccache
+  end
+end
+
+function ccacheOff ; set -gx USE_CCACHE Off ; end
+
 if test -z "$USE_CCACHE" ; ccacheOn
 else ; set -gx USE_CCACHE $USE_CCACHE ; end
 
