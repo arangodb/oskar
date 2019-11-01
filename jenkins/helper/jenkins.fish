@@ -33,6 +33,9 @@ function prepareOskar
       rm -f $lockfile
     end
   end
+
+  mkdir -p work
+  test -f $WORKSPACE/credentials; and cp $WORKSPACE/credentials work/.gcs-credentials
 end
 
 function cleanBranchName
