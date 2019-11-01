@@ -1088,11 +1088,17 @@ function pushOskar
   popd
 end
 
-function updateOskar
+function updateOskarOnly
   pushd $WORKDIR
   and git checkout -- .
   and git pull
   and source helper.fish
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function updateOskar
+  updateOskarOnly
   and pullUbuntuBuildImage
   and pullAlpineBuildImage
   and pullAlpineBuildImage2
@@ -1101,8 +1107,13 @@ function updateOskar
   and pullCentosPackagingImage
   and pullDocumentationImage
   and pullCppcheckImage
-  or begin ; popd ; return 1 ; end
-  popd
+end
+
+function updateDockerBuildImage
+  checkoutIfNeeded
+  and findRequiredCompiler
+  and findRequiredOpenSSL
+  and docker pull (findBuildImage)
 end
 
 function downloadStarter
