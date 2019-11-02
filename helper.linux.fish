@@ -20,6 +20,10 @@ set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
 set -gx ALPINEBUILDIMAGE3_TAG 2
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
+set -gx ALPINEUTILSIMAGE_NAME arangodb/alpinebuildarangodb3-$ARCH
+set -gx ALPINEUTILSIMAGE_TAG 1
+set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
+
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
 set -gx CENTOSPACKAGINGIMAGE_TAG 2
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
@@ -180,18 +184,18 @@ end
 ## #############################################################################
 
 function checkoutUpgradeDataTests
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/checkoutUpgradeDataTests.fish
+  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutUpgradeDataTests.fish
   or return $status
 end
 
 function checkoutArangoDB
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/checkoutArangoDB.fish
+  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutArangoDB.fish
   or return $status
   community
 end
 
 function checkoutEnterprise
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/checkoutEnterprise.fish
+  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutEnterprise.fish
   or return $status
   enterprise
 end
@@ -210,7 +214,7 @@ function switchBranches
   end
 
   checkoutIfNeeded
-  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/switchBranches.fish $argv
+  and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
 end
 
 ## #############################################################################
@@ -318,9 +322,9 @@ function oskar
   checkoutIfNeeded
   and if test "$ASAN" = "On"
     parallelism 2
-    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $ALPINEUTILSIMAGE $SCRIPTSDIR/runTests.fish
   else
-    runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE $ALPINEUTILSIMAGE $SCRIPTSDIR/runTests.fish
   end
   set s $status
 
@@ -337,17 +341,17 @@ function oskarFull
     launchLdapServer
     and if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
     end
     set s $status
   else
     if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
     end
   end
   set s $status
@@ -424,7 +428,7 @@ function createCompleteTar
 
   pushd $WORKDIR/work
   and runInContainer \
-	$UBUNTUBUILDIMAGE $SCRIPTSDIR/createCompleteTar.fish \
+	$ALPINEUTILSIMAGE $SCRIPTSDIR/createCompleteTar.fish \
 	$RELEASE_TAG
   and popd
   or begin ; popd ; return 1 ; end
@@ -843,6 +847,22 @@ end
 
 function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
 
+function buildAlpineUtilsImage
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUtils.docker
+  and docker build --pull -t $ALPINEUTILSIMAGE .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineUtilsImage
+  docker tag $ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:latest
+  and docker push $ALPINEUTILSIMAGE
+  and docker push $ALPINEUTILSIMAGE_NAME:latest
+end
+
+function pullAlpineUtilsImage ; docker pull $ALPINEUTILSIMAGE ; end
+
 function buildCentosPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildRPMPackage.fish containers/buildCentos7Packaging.docker/scripts
@@ -887,6 +907,8 @@ function remakeImages
   pushAlpineBuildImage2 ; or set -l s 1
   buildAlpineBuildImage3 ; or set -l s 1
   pushAlpineBuildImage3 ; or set -l s 1
+  buildAlpineUtilsImage ; or set -l s 1
+  pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
   pushUbuntuPackagingImage ; or set -l s 1
   buildCentosPackagingImage ; or set -l s 1
@@ -984,7 +1006,7 @@ function runInContainer
       -e UID=(id -u) \
       -e GID=(id -g) \
       -e INNERWORKDIR=$INNERWORKDIR \
-      $UBUNTUBUILDIMAGE $SCRIPTSDIR/recursiveChown.fish
+      $ALPINEUTILSIMAGE $SCRIPTSDIR/recursiveChown.fish
 
   if test -n "$agentstarted"
     ssh-agent -k > /dev/null
@@ -1039,7 +1061,7 @@ function findOpenSSLVersion
 end
 
 function clearWorkDir
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/clearWorkDir.fish
+  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/clearWorkDir.fish
 end
 
 function transformSpec
@@ -1103,6 +1125,7 @@ function updateOskar
   and pullAlpineBuildImage
   and pullAlpineBuildImage2
   and pullAlpineBuildImage3
+  and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
   and pullDocumentationImage
@@ -1118,13 +1141,13 @@ end
 
 function downloadStarter
   mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
+  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
 end
 
 function downloadSyncer
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
   rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-  runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $UBUNTUBUILDIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+  runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
   ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
 end
 
