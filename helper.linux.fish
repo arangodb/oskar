@@ -1095,22 +1095,34 @@ function pushOskar
   pushd $WORKDIR
   and source helper.fish
   and git push
+
   and buildUbuntuBuildImage
   and pushUbuntuBuildImage
+
   and buildAlpineBuildImage
-  and pushAlpineBuildImage2
-  and buildAlpineBuildImage2
-  and pushAlpineBuildImage3
-  and buildAlpineBuildImage3
   and pushAlpineBuildImage
+
+  and buildAlpineBuildImage2
+  and pushAlpineBuildImage2
+
+  and buildAlpineBuildImage3
+  and pushAlpineBuildImage3
+
+  and buildAlpineUtilsImage
+  and pushAlpineUtilsImage
+
   and buildUbuntuPackagingImage
   and pushUbuntuPackagingImage
+
   and buildCentosPackagingImage
   and pushCentosPackagingImage
+
   and buildDocumentationImage
   and pushDocumentationImage
+
   and buildCppcheckImage
   and pushCppcheckImage
+
   or begin ; popd ; return 1 ; end
   popd
 end
