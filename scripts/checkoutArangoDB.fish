@@ -1,5 +1,8 @@
 #!/usr/bin/env fish
 cd $INNERWORKDIR
-if test ! -d ArangoDB
+and if test ! -d ArangoDB
+  git clone ssh://git@github.com/arangodb/ArangoDB
+else if test -d ArangoDB/.git
+  rm -rf ArangoDB
   git clone ssh://git@github.com/arangodb/ArangoDB
 end
