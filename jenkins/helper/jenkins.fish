@@ -35,7 +35,7 @@ function prepareOskar
   end
 
   mkdir -p work
-  test -f $WORKSPACE/credentials; and cp $WORKSPACE/credentials work/.gcs-credentials
+  begin test -f $WORKSPACE/credentials; and cp $WORKSPACE/credentials work/.gcs-credentials; end; or true
 end
 
 function cleanBranchName
