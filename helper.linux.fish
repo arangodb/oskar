@@ -30,7 +30,7 @@ set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TA
 
 set -gx DOCIMAGE arangodb/arangodb-documentation:1
 set -gx CPPCHECKIMAGE arangodb/cppcheck:1
-set -xg IONICE "ionice -t -n 7"
+set -xg IONICE "ionice -n 7"
 
 set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
 set -gx LDAPNETWORK ldaptestnet
