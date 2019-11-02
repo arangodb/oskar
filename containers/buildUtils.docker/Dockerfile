@@ -1,7 +1,7 @@
 FROM alpine:3.10
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
-RUN apk update && apk add git bash fish curl
+RUN apk update && apk add git bash fish curl openssh
 
 COPY ./scripts /scripts
 
