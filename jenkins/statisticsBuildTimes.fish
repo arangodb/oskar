@@ -1,4 +1,10 @@
 #!/usr/bin/env fish
+if test -z "$CLOUD_URL"
+  echo "missing CLOUD_URL"
+  exit 1
+end
+
+
 set -l output result.json
 
 echo "copying statistics for job $USE_BUILD_URL"
