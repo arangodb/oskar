@@ -5,11 +5,10 @@ if test -z "$CLOUD_URL"
 end
 
 if test -f totalTimes.csv
-  awk -F, '{print($1 ",\"" $2 "\"," $3)}' totalTimes.csv \
-    | sed -e 's~\(.*\)~[\1]~' \
-    | sed -e 'N;s~\n~,~' \
-    | sed -e 's~\(.*\)~[\1]~' \
-    > totalTimes.json
+  begin
+    awk -F, 'BEGIN {print("[")} END {print("]")} {if (1 < NR) print(","); print("[" $1 ",\"" $2 "\"," $3 "]")}' totalTimes.csv \
+      | tr -d "\n"
+  end > totalTimes.json
 end
 
 echo "copying statistics for job $USE_BUILD_URL"
@@ -24,7 +23,7 @@ for name in build totalTimes
   if test -f $$name.json
     begin
       echo $sep
-      echo \""$name\": "
+      echo -n \""$name\": "
       cat $$name.json
       set sep ','
     end >> $output
@@ -43,3 +42,4 @@ echo '}' >> $output
 
 echo "to collection 'times'"
 curl --user "$USER:$PASSWORD" --insecure --header 'accept: application/json' --data-binary "@$output" --dump - -X POST "$CLOUD_URL/_api/document/times"
+or exit 1
