@@ -1098,6 +1098,10 @@ function pushOskar
   and buildUbuntuBuildImage
   and pushUbuntuBuildImage
   and buildAlpineBuildImage
+  and pushAlpineBuildImage2
+  and buildAlpineBuildImage2
+  and pushAlpineBuildImage3
+  and buildAlpineBuildImage3
   and pushAlpineBuildImage
   and buildUbuntuPackagingImage
   and pushUbuntuPackagingImage
