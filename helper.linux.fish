@@ -21,7 +21,7 @@ set -gx ALPINEBUILDIMAGE3_TAG 2
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEUTILSIMAGE_TAG 1
+set -gx ALPINEUTILSIMAGE_TAG 2
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
@@ -849,6 +849,7 @@ function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
+  and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
   and cd $WORKDIR/containers/buildUtils.docker
   and docker build --pull -t $ALPINEUTILSIMAGE .
   or begin ; popd ; return 1 ; end
