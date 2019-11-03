@@ -31,7 +31,9 @@ for name in build totalTimes
   end
 end
 
-for name in USE_BUILD_URL USE_JOB_NAME USE_NODE_NAME EDITION STORAGE_ENGINE TEST_SUITE
+set -l timestamp (date -u +%s)
+
+for name in USE_BUILD_URL USE_JOB_NAME USE_NODE_NAME EDITION STORAGE_ENGINE TEST_SUITE timestamp
   echo "testing env variable $name"
   if test ! -z "$$name"
     echo $sep
