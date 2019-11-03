@@ -20,22 +20,24 @@ echo '{' > $output
 set -l sep ''
 
 for name in build totalTimes
+  echo "testing file $name"
   if test -f $$name.json
     begin
       echo $sep
       echo -n \""$name\": "
-      cat $$name.json
-      set sep ','
+      cat $name.json
     end >> $output
+    set sep ','
   end
 end
 
 for name in USE_BUILD_URL USE_JOB_NAME USE_NODE_NAME EDITION STORAGE_ENGINE TEST_SUITE
+  echo "testing env variable $name"
   if test ! -z "$$name"
     echo $sep
     echo -n "\"$name\": \"$$name\""
-    set set ','
   end >> $output
+  set set ','
 end
 
 echo '}' >> $output
