@@ -11,6 +11,13 @@ if test -f totalTimes.csv
   end > totalTimes.json
 end
 
+if test -f testRuns.csv
+  begin
+    awk -F, 'BEGIN {print("[")} END {print("]")} {if (1 < NR) print(","); print("[\"" $1 "\"," $2 ",\"" $3 "\"]")}' testRuns.csv \
+      | tr -d "\n"
+  end > testRuns.json
+end
+
 echo "copying statistics for job $USE_BUILD_URL"
 curl --user "$USER:$PASSWORD" --insecure -o build.json "$USE_BUILD_URL//api/json?pretty=true&depth=100"
 
@@ -19,7 +26,7 @@ set -l output result.json
 echo '{' > $output
 set -l sep ''
 
-for name in build totalTimes
+for name in build totalTimes testRuns
   echo "testing file $name"
   if test -f $$name.json
     begin
