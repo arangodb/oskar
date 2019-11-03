@@ -56,3 +56,11 @@ function cleanPrepareLockUpdateClear
   and updateOskar
   and clearResults
 end
+
+function cleanPrepareLockUpdateClear2
+  cleanJenkinsParameter
+  and prepareOskar
+  and lockDirectory
+  and updateOskarOnly
+  and clearResults
+end
