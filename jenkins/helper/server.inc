@@ -111,7 +111,7 @@ fi
 count=0
 
 while [ "$count" -lt 240 ]; do
-  responseCode=`curl -s -I $CURL_USER http://$(hostname):${ARANGO_PORTS[1]/_api/version | head -n 1 | cut -d$' ' -f2`
+  responseCode=`curl -s -I $CURL_USER http://$(hostname):${ARANGO_PORTS[1]}/_api/version | head -n 1 | cut -d$' ' -f2`
   if [ -n "${responseCode}" ];
   then
     if [ $responseCode -eq 200 ];
@@ -132,7 +132,7 @@ if [ $count -ge 240 ]; then
 
     echo
     echo "curl:"
-    curl $CURL_USER -v http://$(hostname):${ARANGO_PORTS[1]/_api/version
+    curl $CURL_USER -v http://$(hostname):${ARANGO_PORTS[1]}/_api/version
 
     echo "ArangoDB did not start"
     exit 1
