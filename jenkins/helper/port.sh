@@ -36,6 +36,7 @@ if test "$1" == "--cluster" ; then
                                date > $PORTDIR/`expr $port + 21` && portfiles+=("$PORTDIR/`expr $port + 21`") &&\
                                date > $PORTDIR/`expr $port + 22` && portfiles+=("$PORTDIR/`expr $port + 22`") &&\
                                date > $PORTDIR/`expr $port + 23` && portfiles+=("$PORTDIR/`expr $port + 23`")) 2> /dev/null); do
+    echo ${portfiles[@]}
     rm -f ${portfiles[@]}
     sleep 1
     port=`expr $port + $INCR`
@@ -50,6 +51,7 @@ if test "$1" == "--cluster" ; then
 else
   while ! ((set -o noclobber ; date > $PORTDIR/$port && portfiles+=("$PORTDIR/$port") &&\
                                date > $PORTDIR/`expr $port + 1` && portfiles+=("$PORTDIR/`expr $port + 1`")) 2> /dev/null); do
+    echo ${portfiles[@]}
     rm -f ${portfiles[@]}
     sleep 1
     port=`expr $port + $INCR`
