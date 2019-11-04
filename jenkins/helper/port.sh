@@ -40,7 +40,7 @@ if test "$1" == "--cluster" ; then
 
   echo "$port `expr $port + 10` `expr $port + 20`"
 else
-  while ! ((set -o noclobber ; date > $PORTDIR/$port) 2> /dev/null); do
+  while ! ((set -o noclobber ; date > $PORTDIR/`expr $port - 1` && date > $PORTDIR/$port) 2> /dev/null); do
     sleep 1
     port=`expr $port + $INCR`
   done
