@@ -343,7 +343,7 @@ function oskarFull
       parallelism 2
       runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $$UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
     set s $status
   else
