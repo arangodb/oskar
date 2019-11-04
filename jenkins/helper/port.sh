@@ -24,18 +24,18 @@ find $PORTDIR -type f -cmin +$TIMEOUT -exec rm "{}" ";"
 if test "$1" == "--cluster" ; then
   shift
   portfiles=()
-  while ! ((set -o noclobber ; date > $PORTDIR/$port && portfiles=+("$PORTDIR/$port") &&\
-                               date > $PORTDIR/`expr $port + 1` && portfiles=+("$PORTDIR/`expr $port + 1`") && \
-                               date > $PORTDIR/`expr $port + 2` && portfiles=+("$PORTDIR/`expr $port + 2`") &&\
-                               date > $PORTDIR/`expr $port + 3` && portfiles=+("$PORTDIR/`expr $port + 3`") &&\
-                               date > $PORTDIR/`expr $port + 10` && portfiles=+("$PORTDIR/`expr $port + 10`") &&\
-                               date > $PORTDIR/`expr $port + 11` && portfiles=+("$PORTDIR/`expr $port + 11`") &&\
-                               date > $PORTDIR/`expr $port + 12` && portfiles=+("$PORTDIR/`expr $port + 12`") &&\
-                               date > $PORTDIR/`expr $port + 13` && portfiles=+("$PORTDIR/`expr $port + 13`") &&\
-                               date > $PORTDIR/`expr $port + 20` && portfiles=+("$PORTDIR/`expr $port + 20`") &&\
-                               date > $PORTDIR/`expr $port + 21` && portfiles=+("$PORTDIR/`expr $port + 21`") &&\
-                               date > $PORTDIR/`expr $port + 22` && portfiles=+("$PORTDIR/`expr $port + 22`") &&\
-                               date > $PORTDIR/`expr $port + 23` && portfiles=+("$PORTDIR/`expr $port + 23`")) 2> /dev/null); do
+  while ! ((set -o noclobber ; date > $PORTDIR/$port && portfiles+=("$PORTDIR/$port") &&\
+                               date > $PORTDIR/`expr $port + 1` && portfiles+=("$PORTDIR/`expr $port + 1`") &&\
+                               date > $PORTDIR/`expr $port + 2` && portfiles+=("$PORTDIR/`expr $port + 2`") &&\
+                               date > $PORTDIR/`expr $port + 3` && portfiles+=("$PORTDIR/`expr $port + 3`") &&\
+                               date > $PORTDIR/`expr $port + 10` && portfiles+=("$PORTDIR/`expr $port + 10`") &&\
+                               date > $PORTDIR/`expr $port + 11` && portfiles+=("$PORTDIR/`expr $port + 11`") &&\
+                               date > $PORTDIR/`expr $port + 12` && portfiles+=("$PORTDIR/`expr $port + 12`") &&\
+                               date > $PORTDIR/`expr $port + 13` && portfiles+=("$PORTDIR/`expr $port + 13`") &&\
+                               date > $PORTDIR/`expr $port + 20` && portfiles+=("$PORTDIR/`expr $port + 20`") &&\
+                               date > $PORTDIR/`expr $port + 21` && portfiles+=("$PORTDIR/`expr $port + 21`") &&\
+                               date > $PORTDIR/`expr $port + 22` && portfiles+=("$PORTDIR/`expr $port + 22`") &&\
+                               date > $PORTDIR/`expr $port + 23` && portfiles+=("$PORTDIR/`expr $port + 23`")) 2> /dev/null); do
     rm -f ${portfiles[@]}
     sleep 1
     port=`expr $port + $INCR`
@@ -48,8 +48,8 @@ if test "$1" == "--cluster" ; then
         `expr $port + 20` `expr $port + 21` `expr $port + 22` `expr $port + 23`"
 else
   portfiles=()
-  while ! ((set -o noclobber ; date > $PORTDIR/$port && portfiles=+("$PORTDIR/$port") &&\
-                               date > $PORTDIR/`expr $port + 1` && portfiles=+("$PORTDIR/`expr $port + 1`")) 2> /dev/null); do
+  while ! ((set -o noclobber ; date > $PORTDIR/$port && portfiles+=("$PORTDIR/$port") &&\
+                               date > $PORTDIR/`expr $port + 1` && portfiles+=("$PORTDIR/`expr $port + 1`")) 2> /dev/null); do
     rm -f ${portfiles[@]}
     sleep 1
     port=`expr $port + $INCR`
