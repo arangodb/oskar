@@ -41,9 +41,9 @@ if test "$1" == "--cluster" ; then
 
   echo "`expr $port + 1` `expr $port + 11` `expr $port + 21`" > ports
 
-  echo "$port `expr $port + 1` $port `expr $port + 2` `expr $port + 3`\
-        `expr $port + 10` $port `expr $port + 11` `expr $port + 12` `expr $port + 13`\
-        `expr $port + 20` $port `expr $port + 21` `expr $port + 22` `expr $port + 23`"
+  echo "$port `expr $port + 1` `expr $port + 2` `expr $port + 3`\
+        `expr $port + 10` `expr $port + 11` `expr $port + 12` `expr $port + 13`\
+        `expr $port + 20` `expr $port + 21` `expr $port + 22` `expr $port + 23`"
 else
   while ! ((set -o noclobber ; date > $PORTDIR/$port && date > $PORTDIR/`expr $port + 1`) 2> /dev/null); do
     sleep 1
