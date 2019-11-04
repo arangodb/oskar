@@ -63,7 +63,7 @@ DOCKER_AUTH=""
 STARTER_AUTH=""
 DOCKER_CMD="docker run --cap-add SYS_NICE --name $ARANGO_DOCKER_NAME -d $EXPORT_PORTS -v $OUTDIR:/testrun"
 #DOCKER_IMAGE="registry.arangodb.biz:5000/arangodb/linux-${ARANGO_EDITION}-maintainer:$ARANGO_BRANCH"
-STARTER_CMD="arangodb --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun"
+STARTER_CMD="arangodb --starter.address $(hostname) --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun"
 STARTER_MODE=""
 
 if [ "$ARANGO_AUTH" == "auth" ]; then
@@ -116,7 +116,7 @@ fi
 count=0
 
 while [ "$count" -lt 240 ]; do
-  responseCode=`curl -s -I $CURL_USER http://127.0.0.1:$ARANGO_PORT/_api/version | head -n 1 | cut -d$' ' -f2`
+  responseCode=`curl -s -I $CURL_USER http://$(hostname):$ARANGO_PORT/_api/version | head -n 1 | cut -d$' ' -f2`
   if [ -n "${responseCode}" ];
   then
     if [ $responseCode -eq 200 ];
@@ -137,7 +137,7 @@ if [ $count -ge 240 ]; then
 
     echo
     echo "curl:"
-    curl $CURL_USER -v http://127.0.0.1:$ARANGO_PORT/_api/version
+    curl $CURL_USER -v http://$(hostname):$ARANGO_PORT/_api/version
 
     echo "ArangoDB did not start"
     exit 1
