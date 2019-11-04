@@ -61,7 +61,7 @@ function runAnyTest
     echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
   else
     set -l arguments $t \
-      (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true")\
+      (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic "$SKIPNONDETERMINISTIC" \
