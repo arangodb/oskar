@@ -26,24 +26,14 @@ done
 
 echo "NAME: $ARANGO_DOCKER_NAME"
 
-#if [ "$ARANGO_MODE" == "cluster" ]; then
-  if [[ -v ARANGO_PORTS ]]; then
-    IFS=', ' read -r -a ARANGO_PORTS <<< "$ARANGO_PORTS"
-  fi
-  #if [[ ${#ARANGO_PORTS[@]} > 0 ]]; then
-    #port_shift=29
-    for i in "${ARANGO_PORTS[@]}"; do
-      echo "PORT $i to export"
-      EXPORT_PORTS="$EXPORT_PORTS -p $i:$i"
-      #EXPORT_PORTS="$EXPORT_PORTS -p $i:$(expr 8500 + $port_shift)"
-      #port_shift=$(expr $port_shift + 10)
-  #done
-#  else 
-#    EXPORT_PORTS="-p $ARANGO_PORT:$ARANGO_PORT"
-#  fi
-#else
-#  EXPORT_PORTS="-p $ARANGO_PORT:$ARANGO_PORT"
-#fi
+if [[ -v ARANGO_PORTS ]]; then
+  IFS=', ' read -r -a ARANGO_PORTS <<< "$ARANGO_PORTS"
+fi
+for i in "${ARANGO_PORTS[@]}"; do
+  echo "PORT $i to export"
+  EXPORT_PORTS="$EXPORT_PORTS -p $i:$i"
+done
+
 echo "PORTS: $EXPORT_PORTS"
 echo "MODE: $ARANGO_MODE"
 echo "ENGINE: $ARANGO_STORAGE_ENGINE"
