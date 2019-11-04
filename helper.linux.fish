@@ -21,7 +21,7 @@ set -gx ALPINEBUILDIMAGE3_TAG 2
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
-set -gx ALPINEUTILSIMAGE_TAG 1
+set -gx ALPINEUTILSIMAGE_TAG 2
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
@@ -341,9 +341,9 @@ function oskarFull
     launchLdapServer
     and if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
     end
     set s $status
   else
