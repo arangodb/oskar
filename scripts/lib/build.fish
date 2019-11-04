@@ -24,6 +24,7 @@ function setupCcache
       echo "using sccache at GCS ($SCCACHE_GCS_BUCKET)"
       set -e SCCACHE_MEMCACHED
       set -xg SCCACHE_GCS_RW_MODE READ_WRITE
+      set -xg SCCACHE_GCS_KEY_PATH /work/.gcs-credentials
       set -e SCCACHE_DIR
     else
      set -xg SCCACHE_DIR $INNERWORKDIR/.sccache.alpine3
