@@ -5,13 +5,14 @@ set -l filename work/totalTimes.csv
 
 source jenkins/helper/jenkins.fish
 
-cleanPrepareLockUpdateClear
+cleanPrepareLockUpdateClear2
 and eval $EDITION
 and eval $STORAGE_ENGINE
 and eval $TEST_SUITE
 and skipGrey
 and rm -f $filename
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and updateDockerBuildImage
 and set -l t2 (date +%s)
 and echo "$date,setup,"(expr $t2 - $t1) >> $filename
 and pingDetails

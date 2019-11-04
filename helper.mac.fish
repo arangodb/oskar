@@ -216,13 +216,20 @@ function pushOskar
   popd
 end
 
-function updateOskar
+function updateOskarOnly
   pushd $WORKDIR
   and git checkout -- .
   and git pull
   and source helper.fish
   or begin ; popd ; return 1 ; end
   popd
+end
+
+function updateOskar
+  updateOskarOnly
+end
+
+function updateDockerBuildImage
 end
 
 function downloadStarter
