@@ -13,6 +13,10 @@ if test "$1" == "--clean"; then
     shift
   done
 
+  if test -f portfiles
+    echo "freeing acquired but not used ports: $(cat portfiles)"
+    rm -f "$(cat portfiles)"
+  fi
   exit
 fi
 
@@ -39,8 +43,6 @@ if test "$1" == "--cluster" ; then
   do
     sleep 0.5
     port=`expr $port + $INCR`
-    rm -f $(cat portfiles)
-    echo -n "" > portfiles
   done
 
   echo "`expr $port + 1` `expr $port + 11` `expr $port + 21`" > ports
@@ -54,8 +56,6 @@ else
   do
     sleep 0.5
     port=`expr $port + $INCR`
-    rm -f $(cat portfiles)
-    echo -n "" > portfiles
   done
 
   echo "`expr $port + 1`" > ports
