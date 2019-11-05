@@ -701,6 +701,62 @@ function buildDockerRelease
   end
 end
 
+function buildDockerArgs
+  if test (count $argv) -eq 0
+    echo Must give image distro as argument
+    return 1
+  end
+
+  set -l imagedistro $argv[1]
+
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$imagedistro.docker
+
+  if not test -d $containerpath
+    set containerpath $WORKDIR/containers/arangodbDevel$imagedistro.docker
+  end
+
+  set -l EDITION "Community"
+  if test "$ENTERPRISEEDITION" = "On"
+    set EDITION "Enterprise"
+  end
+
+  set -l BUILD_ARGS ""
+
+  switch $imagedistro
+    case ubi
+      set BUILD_ARGS $BUILD_ARGS"--build-arg name="(string lower $EDITION)
+      set BUILD_ARGS $BUILD_ARGS" --build-arg vendor=ArangoDB"
+      set BUILD_ARGS $BUILD_ARGS" --build-arg version="$ARANGODB_VERSION
+      set BUILD_ARGS $BUILD_ARGS" --build-arg release="$ARANGODB_VERSION
+      set BUILD_ARGS $BUILD_ARGS" --build-arg summary=\"ArangoDB "$EDITION"\""
+      set BUILD_ARGS $BUILD_ARGS" --build-arg description=\"ArangoDB "$EDITION"\""
+      set BUILD_ARGS $BUILD_ARGS" --build-arg maintainer=redhat@arangodb.com"
+  end
+
+  echo "$BUILD_ARGS"
+end
+
+function buildDockerAddFiles
+  if test (count $argv) -eq 0
+    echo Must give image distro as argument
+    return 1
+  end
+
+  set -l imagedistro $argv[1]
+
+  findArangoDBVersion ; or return 1
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$imagedistro.docker
+
+  if not test -d $containerpath
+    set containerpath $WORKDIR/containers/arangodbDevel$imagedistro.docker
+  end
+
+  switch $imagedistro
+    case ubi
+      cp $WORKDIR/work/ArangoDB/LICENSE $containerpath
+  end
+end
+
 function buildDockerImage
   if test (count $argv) -eq 0
     echo Must give image name as argument
@@ -710,6 +766,7 @@ function buildDockerImage
   set -l imagename $argv[1]
 
   findArangoDBVersion ; or return 1
+  set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
   pushd $WORKDIR/work/ArangoDB/build/install
 
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
@@ -718,6 +775,7 @@ function buildDockerImage
     set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
   end
   and tar czf $containerpath/install.tar.gz *
+  and buildDockerAddFiles $DOCKER_DISTRO
   if test $status -ne 0
     echo Could not create install tarball!
     popd
@@ -726,7 +784,7 @@ function buildDockerImage
   popd
 
   pushd $containerpath
-  and docker build --pull -t $imagename .
+  and eval "docker build $BUILD_ARGS --pull -t $imagename ."
   or begin ; popd ; return 1 ; end
   popd
 end
