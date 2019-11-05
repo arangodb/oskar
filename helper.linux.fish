@@ -322,9 +322,9 @@ function oskar
   checkoutIfNeeded
   and if test "$ASAN" = "On"
     parallelism 2
-    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $ALPINEUTILSIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   else
-    runInContainer --cap-add SYS_NICE $ALPINEUTILSIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   end
   set s $status
 
