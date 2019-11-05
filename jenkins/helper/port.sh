@@ -13,7 +13,7 @@ if test "$1" == "--clean"; then
     shift
   done
 
-  if test -f portfiles
+  if test -f portfiles; then
     echo "freeing acquired but not used ports: $(cat portfiles)"
     rm -f "$(cat portfiles)"
   fi
