@@ -349,9 +349,9 @@ function oskarFull
   else
     if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --cap-add SYS_NICE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
   end
   set s $status
