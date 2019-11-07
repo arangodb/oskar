@@ -244,7 +244,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $testWeight = $weight
         }
 
-        If (vst) {
+        If ($vst) {
           $testparams = $testparams + " --vst true"
         }
 
