@@ -1054,7 +1054,6 @@ function showConfig
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
-  printf $fmt3 'Skip MAKE'  $SKIP_MAKE           '(makeOn/Off)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
@@ -1078,6 +1077,7 @@ function showConfig
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'
+  printf $fmt3 'Skip MAKE'  $SKIP_MAKE           '(makeOn/Off)'
   printf $fmt3 'CCACHE'        $USE_CCACHE   '(ccacheOn/Off/sccacheOn)'
   if test "$CCACHESIZE" != ""
   printf $fmt3 'CCACHE size'   $CCACHESIZE   '(CCACHESIZE)'
