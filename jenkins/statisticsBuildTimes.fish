@@ -32,7 +32,7 @@ set -l sep ''
 
 for name in build totalTimes testRuns
   echo "testing file $name"
-  if test -s $$name.json
+  if test -s $name.json
     begin
       echo $sep
       echo -n \""$name\": "
