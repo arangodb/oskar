@@ -4,14 +4,18 @@ if test -z "$CLOUD_URL"
   exit 1
 end
 
-if test -f totalTimes.csv
+rm -f totalTimes.json
+
+if test -s totalTimes.csv
   begin
     awk -F, 'BEGIN {print("[")} END {print("]")} {if (1 < NR) print(","); print("[" $1 ",\"" $2 "\"," $3 "]")}' totalTimes.csv \
       | tr -d "\n"
   end > totalTimes.json
 end
 
-if test -f testRuns.csv
+rm -f testRuns.json
+
+if test -s testRuns.csv
   begin
     awk -F, 'BEGIN {print("[")} END {print("]")} {if (1 < NR) print(","); print("[\"" $1 "\"," $2 ",\"" $3 "\"]")}' testRuns.csv \
       | tr -d "\n"
@@ -28,7 +32,7 @@ set -l sep ''
 
 for name in build totalTimes testRuns
   echo "testing file $name"
-  if test -f $$name.json
+  if test -s $$name.json
     begin
       echo $sep
       echo -n \""$name\": "
