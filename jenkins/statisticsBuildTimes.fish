@@ -44,7 +44,7 @@ end
 
 set -l timestamp (date -u +%s)
 
-for name in USE_BUILD_URL USE_JOB_NAME USE_NODE_NAME EDITION STORAGE_ENGINE TEST_SUITE timestamp
+for name in USE_BUILD_URL USE_JOB_NAME USE_NODE_NAME EDITION STORAGE_ENGINE TEST_SUITE ARANGODB_BRANCH timestamp
   echo "testing env variable $name"
   if test ! -z "$$name"
     echo $sep
