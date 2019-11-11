@@ -183,6 +183,16 @@ end
 ## checkout and switch functions
 ## #############################################################################
 
+function checkoutMirror
+  if test (count $argv) -ne 1
+    echo "usage: checkoutMirror.fish <DIRECTORY>"
+    exit 1
+  end
+
+  runInContainer -v $argv[1]:/mirror $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMirror.fish
+  or return $status
+end
+
 function checkoutUpgradeDataTests
   runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutUpgradeDataTests.fish
   or return $status
