@@ -1007,6 +1007,12 @@ function runInContainer
     set -l agentstarted ""
   end
 
+  set -l mirror
+
+  if test -n "$GITHUB_MIRROR" -a -d "$GITHUB_MIRROR/mirror"
+    set mirror -v $GITHUB_MIRROR/mirror:/mirror
+  end
+
   # Run script in container in background, but print output and react to
   # a TERM signal to the shell or to a foreground subcommand. Note that the
   # container process itself will run as root and will be immune to SIGTERM
@@ -1017,6 +1023,7 @@ function runInContainer
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
+             $mirror \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ASAN="$ASAN" \
