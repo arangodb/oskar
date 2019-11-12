@@ -69,35 +69,56 @@ function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
 
-function defineSccacheRedis
+function isGCE
   switch (hostname)
     case 'gce-*'
-      set -gx SCCACHE_REDIS "redis://10.164.0.35"
+      set -gx IS_GCE "true"
     case '*'
-      # Don't set SCCACHE_REDIS at non-GCE environment by default
-      set -e SCCACHE_REDIS
-      #export SCCACHE_REDIS=redis://192.168.10.73
+      set -gx IS_GCE "false"
   end
 end
 
-if test -z "$SCCACHE_REDIS" ; defineSccacheRedis
-else ; set -gx SCCACHE_REDIS $SCCACHE_REDIS ; end
+if test -z "$IS_GCE" ; isGCE
+else ; set -gx IS_GCE "false" ; end
+
+function defineSccacheGCE
+  if test -z "$SCCACHE_GCS_BUCKET"
+    set -gx SCCACHE_GCS_BUCKET "arangodbbuildcache"
+  end
+  if test -z "$SCCACHE_REDIS"
+    set -gx SCCACHE_REDIS "redis://10.164.0.35"
+  end
+  if test -z "$SCCACHE_MEMCACHED"
+    # Not memcached servers for GCE atm
+    # set -gx SCCACHE_MEMCACHED "tcp://<address>:<port>"
+    set -gx SCCACHE_MEMCACHED ""
+  end
+end
+
+function undefSccacheGCE
+  # Don't use sccache at non-GCE environment by default
+  set -e SCCACHE_GCS_BUCKET
+  set -e SCCACHE_REDIS
+  set -e SCCACHE_MEMCACHED
+end
 
 function ccacheOn
-  if test -z "$SCCACHE_REDIS"; or test "$SCCACHE_REDIS" = ""
+  if test $IS_GCE = "false"
     set -gx USE_CCACHE On
+    undefSccacheGCE
   else
-    echo "Use sccache instead since SSCACHE_REDIS was defined!"
+    echo "Use sccache instead since IS_GCE is true!"
     sccacheOn
   end
 end
 
 function sccacheOn
-  if test -z "$SCCACHE_REDIS"; or test "$SCCACHE_REDIS" = ""
-    echo "Use ccache instead since SSCACHE_REDIS was not defined!"
-    ccacheOn
-  else
+  if test $IS_GCE = "true"
     set -gx USE_CCACHE sccache
+    defineSccacheGCE
+  else
+    echo "Use ccache instead since IS_GCE is false!"
+    ccacheOn
   end
 end
 
