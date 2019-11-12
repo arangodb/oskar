@@ -1026,6 +1026,8 @@ function runInContainer
              $mirror \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
+             -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+             -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
              -e ASAN="$ASAN" \
              -e BUILDMODE="$BUILDMODE" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
@@ -1047,10 +1049,12 @@ function runInContainer
              -e OPENSSL_VERSION="$OPENSSL_VERSION" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
-             -e SCCACHE_REDIS="$SCCACHE_REDIS" \
-             -e SCCACHE_MEMCACHED="$SCCACHE_MEMCACHED" \
-             -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
+             -e SCCACHE_BUCKET="$SCCACHE_BUCKET" \
+             -e SCCACHE_ENDPOINT="$SCCACHE_ENDPOINT" \
              -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
+             -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
+             -e SCCACHE_MEMCACHED="$SCCACHE_MEMCACHED" \
+             -e SCCACHE_REDIS="$SCCACHE_REDIS" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
              -e SHOW_DETAILS="$SHOW_DETAILS" \
              -e SKIPGREY="$SKIPGREY" \
