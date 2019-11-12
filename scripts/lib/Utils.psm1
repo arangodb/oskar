@@ -206,7 +206,7 @@ Function launchTest($which) {
     Pop-Location
 }
 
-Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff)
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, $vst)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
     If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $testname))
@@ -242,6 +242,10 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
         }
         If ($weight) {
           $testWeight = $weight
+        }
+
+        If ($vst) {
+          $testparams = $testparams + " --vst true"
         }
 
         If ($sniff) {

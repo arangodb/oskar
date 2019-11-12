@@ -179,6 +179,9 @@ else ; set -gx RELEASE_TYPE $RELEASE_TYPE ; end
 function keepBuild ; set -gx NO_RM_BUILD 1 ; end
 function clearBuild ; set -gx NO_RM_BUILD ; end
 
+function githubMirror   ; set -gx GITHUB_MIRROR $argv[1] ; end
+function noGithubMirror ; set -e  GITHUB_MIRROR ; end
+
 function setAllLogsToWorkspace ; set -gx WORKSPACE_LOGS "all" ; end
 function setOnlyFailLogsToWorkspace ; set -gx WORKSPACE_LOGS "fail"; end
 if test -z "$WORKSPACE_LOGS"; setOnlyFailLogsToWorkspace
@@ -1085,7 +1088,6 @@ function showConfig
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
-  printf $fmt3 'Skip MAKE'  $SKIP_MAKE           '(makeOn/Off)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
@@ -1108,15 +1110,17 @@ function showConfig
   printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
   echo
   echo 'Internal Configuration'
-  printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'
-  printf $fmt3 'CCACHE'        $USE_CCACHE   '(ccacheOn/Off/sccacheOn)'
+  printf $fmt3 'Parallelism'   $PARALLELISM   '(parallelism nnn)'
+  printf $fmt3 'Skip MAKE'     $SKIP_MAKE     '(makeOn/Off)'
+  printf $fmt3 'Github Mirror' "$GITHUB_MIRROR" '(githubMirror)'
+  printf $fmt3 'CCACHE'        $USE_CCACHE    '(ccacheOn/Off/sccacheOn)'
   if test "$CCACHESIZE" != ""
-  printf $fmt3 'CCACHE size'   $CCACHESIZE   '(CCACHESIZE)'
+  printf $fmt3 'CCACHE size'   $CCACHESIZE          '(CCACHESIZE)'
   end
-  printf $fmt3 'Verbose Build' $VERBOSEBUILD '(verboseBuild/silentBuild)'
-  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR '(verbose/slient)'
+  printf $fmt3 'Verbose Build' $VERBOSEBUILD        '(verboseBuild/silentBuild)'
+  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR        '(verbose/slient)'
   printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
-  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
+  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS      '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR

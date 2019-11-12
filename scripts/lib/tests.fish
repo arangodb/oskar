@@ -61,7 +61,7 @@ function runAnyTest
     echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
   else
     set -l arguments $t \
-      (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true")\
+      (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic "$SKIPNONDETERMINISTIC" \
@@ -150,18 +150,18 @@ function createReport
         set totalStarted $started
       end
 
-      if test -f "$d/started" -a -f "$d/stopped"
+      if test -f "$d/stopped"
         set stopped (cat "$d/stopped")
 
         if test $totalStopped -lt $stopped
           set totalStopped $stopped
         end
 
-        echo Test $d took (math $stopped - $started) seconds, status $localresult
+        echo Test $d took (math $stopped - $started) seconds [$stopped - $started], status $localresult
         echo $d,(math $stopped - $started),$localresult >> testRuns.csv
       else
-        echo Test $d did not finish, status $localresult
-        echo $d,-1,$localresult >> testRuns.csv
+        echo Test $d did not finish [$started], status $localresult
+        echo $d,0,$localresult >> testRuns.csv
       end
     end
   end
