@@ -79,6 +79,6 @@ function shutdownCcache
   if test "$USE_CCACHE" = "On"
     ccache --show-stats
   else if test "$USE_CCACHE" = "sccache"
-    sccache --stop-server
+    sccache --stop-server; or echo "warning: cannot stop sccache"
   end
 end
