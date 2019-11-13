@@ -50,7 +50,15 @@ function setupCcache
     end
 
     pushd $INNERWORKDIR; and sccache --start-server; and popd
-    or begin echo "fatal, cannot start sccache"; exit 1; end
+    or begin
+      echo "warning: cannot start sccache"
+      set -e SCCACHE_DIR
+      set -e SCCACHE_BUCKET
+      set -e SCCACHE_DIR
+      set -e SCCACHE_GCS_BUCKET
+      set -e SCCACHE_MEMCACHED
+      set -e SCCACHE_REDIS
+    end
   else
     set -xg CCACHE_DIR $INNERWORKDIR/.ccache.alpine3
     if test "$CCACHEBINPATH" = ""
