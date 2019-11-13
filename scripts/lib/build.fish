@@ -15,9 +15,6 @@ function setupCcache
 
     if test "$SCCACHE_BUCKET" != "" -a "$AWS_ACCESS_KEY_ID" != ""
       echo "using sccache at S3 ($SCCACHE_BUCKET)"
-echo "SCCACHE_BUCKET $SCCACHE_BUCKET"
-echo "SCCACHE_ENDPOINT $SCCACHE_ENDPOINT"
-echo "AWS_ACCESS_KEY_ID $AWS_ACCESS_KEY_ID"
       set -e SCCACHE_DIR
       set -e SCCACHE_GCS_BUCKET
       set -e SCCACHE_MEMCACHED
