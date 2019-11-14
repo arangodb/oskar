@@ -153,18 +153,19 @@ Function hostKey
 
 Function clearWER
 {
-    Remove-Item "$global:REG_WER" -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item "$global:REG_WER" -Force
+    Remove-Item "$global:REG_WER" -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+    New-Item "$global:REG_WER" -Force | Out-Null
 }
 
 Function configureWER($executable, $path)
 {
+    Write-Host "Configure crashdumps location for $executable processes"
     $regPath = "$global:REG_WER\$executable"
-    Remove-Item "$regPath" -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item "$regPath" -Force
-    New-ItemProperty "$regPath" -Name DumpFolder -PropertyType ExpandString -Value "$path" -Force
-    New-ItemProperty "$regPath" -Name DumpCount -PropertyType DWord -Value 100 -Force
-    New-ItemProperty "$regPath" -Name DumpType -PropertyType DWord -Value 2 -Force
+    Remove-Item "$regPath" -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+    New-Item "$regPath" -Force | Out-Null
+    New-ItemProperty "$regPath" -Name DumpFolder -PropertyType ExpandString -Value "$path" -Force | Out-Null
+    New-ItemProperty "$regPath" -Name DumpCount -PropertyType DWord -Value 100 -Force | Out-Null
+    New-ItemProperty "$regPath" -Name DumpType -PropertyType DWord -Value 2 -Force | Out-Null
 }
 
 $global:OPENSSL_DEFAULT_VERSION = "1.1.0l"
@@ -179,9 +180,10 @@ Function oskarOpenSSL
     $global:USE_OSKAR_OPENSSL = "On"
     findCompilerVersion
     findRequiredOpenSSL
-    $global:OPENSSL_PATH = "$env:TMP\OpenSSL\${OPENSSL_VERSION}"
+    $global:OPENSSL_PATH = "${global:INNERWORKDIR}\OpenSSL\${OPENSSL_VERSION}"
     Write-Host "Use OpenSSL within oskar: build ${OPENSSL_VERSION} if not present in ${OPENSSL_PATH}"
-    If (checkOpenSSL $env:TMP $OPENSSL_VERSION $MSVS ${OPENSSL_MODES} ${OPENSSL_TYPES} $true)
+    $global:ok = (checkOpenSSL $global:INNERWORKDIR $OPENSSL_VERSION $MSVS ${OPENSSL_MODES} ${OPENSSL_TYPES} $true)
+    If ($global:ok)
     {
       Write-Host "Set OPENSSL_ROOT_DIR via environment variable to $OPENSSL_PATH"
       $env:OPENSSL_ROOT_DIR = $OPENSSL_PATH
@@ -267,18 +269,18 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
 {
   Push-Location
   $OPENSSL_TAG="OpenSSL_" + ($version -Replace "\.","_")
-  If (-Not(Test-Path -PathType Container -Path "$env:TMP\OpenSSL\tmp"))
+  If (-Not(Test-Path -PathType Container -Path "${global:INNERWORKDIR}\OpenSSL\tmp"))
   {
-    mkdir "$env:TMP\OpenSSL\tmp"
+    mkdir "${global:INNERWORKDIR}\OpenSSL\tmp"
   }
   Else
   {
-    Remove-Item -Recurse -Force -Path "$env:TMP\OpenSSL\tmp\*"
+    Remove-Item -Recurse -Force -Path "${global:INNERWORKDIR}\OpenSSL\tmp\*"
   }
   If ($global:ok)
   {
-    proc -process "git"  -argument "clone -q -b $OPENSSL_TAG https://github.com/openssl/openssl $env:TMP\OpenSSL\tmp" -logfile $false -priority "Normal"
-    Set-Location "$env:TMP\OpenSSL\tmp"
+    proc -process "git"  -argument "clone -q -b $OPENSSL_TAG https://github.com/openssl/openssl ${global:INNERWORKDIR}\OpenSSL\tmp" -logfile $false -priority "Normal"
+    Set-Location "${global:INNERWORKDIR}\OpenSSL\tmp"
     If ($global:ok)
     {
       proc -process "git" -argument "fetch -q" -logfile $false -priority "Normal"
@@ -1223,6 +1225,7 @@ Function noteStartAndRepoState
     {
         Remove-Item -Force $env:TMP\testProtocol.txt
     }
+    New-Item -Force $env:TMP\testProtocol.txt
     $(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH.mm.ssZ") | Add-Content $env:TMP\testProtocol.txt
     Write-Output "========== Status of main repository:" | Add-Content $env:TMP\testProtocol.txt
     Write-Host "========== Status of main repository:"
@@ -1288,50 +1291,53 @@ Function configureWindows
       If (Test-Path "env:OPENSSL_ROOT_DIR") { Remove-Item env:\OPENSSL_ROOT_DIR }
     }
 
-    configureCache
-    $cacheZipFN = getCacheID
-    $haveCache = $(Test-Path -Path $cacheZipFN)
-    Push-Location $pwd
-    Set-Location "$global:ARANGODIR\build"
-    if($haveCache)
+    if ($global:ok)
     {
-        Write-Host "Extracting cmake configure zip: ${cacheZipFN}"
-        # Touch the file, so a cleanup job sees its used:
-        $file = Get-Item $cacheZipFN
-        $file.LastWriteTime = (get-Date)
-        # extract it
-        7unzip $cacheZipFN
+      configureCache
+      $cacheZipFN = getCacheID
+      $haveCache = $(Test-Path -Path $cacheZipFN)
+      Push-Location $pwd
+      Set-Location "$global:ARANGODIR\build"
+      if($haveCache)
+      {
+          Write-Host "Extracting cmake configure zip: ${cacheZipFN}"
+          # Touch the file, so a cleanup job sees its used:
+          $file = Get-Item $cacheZipFN
+          $file.LastWriteTime = (get-Date)
+          # extract it
+          7unzip $cacheZipFN
+      }
+      $ARANGODIR_SLASH = $global:ARANGODIR -replace "\\","/"
+      If($ENTERPRISEEDITION -eq "On")
+      {
+          downloadStarter
+          downloadSyncer
+          copyRclone
+          $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
+          If ($global:USE_RCLONE -eq "true")
+          {
+              $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
+          }
+          Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+      }
+      Else
+      {
+          downloadStarter
+          Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+      }
+      if(!$haveCache)
+      {
+          Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
+          7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-xr!*.exe"; comm
+      }
+      Write-Host "Clcache Statistics"
+      showCacheStats
+      Pop-Location
     }
-    $ARANGODIR_SLASH = $global:ARANGODIR -replace "\\","/"
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        downloadStarter
-        downloadSyncer
-        copyRclone
-        $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
-        If ($global:USE_RCLONE -eq "true")
-        {
-            $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
-        }
-        Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
-        Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`""
-        proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
-    }
-    Else
-    {
-        downloadStarter
-        Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-        Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
-        proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
-    }
-    if(!$haveCache)
-    {
-        Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
-        7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-xr!*.exe"; comm
-    }
-    Write-Host "Clcache Statistics"
-    showCacheStats
-    Pop-Location
 }
 
 Function buildWindows 
@@ -1600,6 +1606,7 @@ Function moveResultsToWorkspace
 
 Function configureDumpsArangoDB
 {
+    Write-Host "Configure crashdumps for arango* processes to reside in ${global:COREDIR}..."
     clearWER
     ForEach($executable in (Get-ChildItem -File -Filter "arango*.exe" -Path "$global:ARANGODIR\build\bin\$BUILDMODE"))
     {

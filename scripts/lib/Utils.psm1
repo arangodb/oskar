@@ -285,9 +285,9 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     comm
 }
 
-Function Kill-Children ($PidToKill, $SessionId)
+Function Stop-Children ($PidToKill, $SessionId)
 {
-    Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $PidToKill -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) } | ForEach-Object { Kill-Children $_.ProcessId $_.SessionId }
+    Get-WmiObject win32_process | Where {$_.ParentProcessId -eq $PidToKill -And $_.SessionId -eq $SessionId -And -Not [string]::IsNullOrEmpty($_.Path) } | ForEach-Object { Stop-Children $_.ProcessId $_.SessionId }
     If (Get-Process -Id $PidToKill -ErrorAction SilentlyContinue)
     {
         Write-Host "Killing child: $Pid"
@@ -359,7 +359,7 @@ Function LaunchController($seconds)
                 Write-Host "Testrun timeout:"
                 $str = $($test | where {($_.Name -ne "commandline")} | Out-String)
                 Write-Host $str
-                Kill-Children $test['pid'] $SessionId
+                Stop-Children $test['pid'] $SessionId
                 If(Get-Process -Id $test['pid'] -ErrorAction SilentlyContinue) {
                     Stop-Process -Force -Id $test['pid']
                 }
