@@ -381,6 +381,23 @@ end
 ## #############################################################################
 
 function makeRelease
+  makeEnterpriseRelease
+  and makeCommunityRelease
+end
+
+function makeCommunityRelease
+  if test (count $argv) -lt 2
+    findArangoDBVersion ; or return 1
+  else
+    set -xg ARANGODB_VERSION "$argv[1]"
+    set -xg ARANGODB_PACKAGE_REVISION "$argv[2]"
+    set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
+  end
+
+  buildCommunityPackage
+end
+
+function makeEnterpriseRelease
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
@@ -395,7 +412,6 @@ function makeRelease
   end
 
   buildEnterprisePackage
-  and buildCommunityPackage
 end
 
 ## #############################################################################
