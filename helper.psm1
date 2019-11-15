@@ -1252,15 +1252,15 @@ Function getCacheID
        
     If ($ENTERPRISEEDITION -eq "On")
     {
-        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } |get-filehash > $env:TMP\allHashes.txt
+        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
     }
     else
     {
         # if there happenes to be an enterprise directory, we ignore it.
-        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | get-filehash > $env:TMP\allHashes.txt
+        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
     }
     
-    $hash = "$((get-filehash $env:TMP\allHashes.txt).Hash)"
+    $hash = "$((Get-FileHash $env:TMP\allHashes.txt).Hash)" + ($env:OPENSSL_ROOT_DIR).GetHashCode()
     $hashStr = "$env:CMAKE_CONFIGURE_DIR\${hash}-EP_${ENTERPRISEEDITION}.zip"
     Remove-Item -Force $env:TMP\allHashes.txt
     return $hashStr
