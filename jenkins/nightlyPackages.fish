@@ -13,12 +13,15 @@ set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
 
 function mountMacCatalinaStage2
   if test (sw_vers -productVersion | cut -d. -f2) -ge 15
-    mkdir -p /System/Volumes/Data/Users/Shared/mnt/buildfiles
-    if not test -d /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2
-      sudo mount -t nfs -o "noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/Shared/mnt/buildfiles
+    echo "Use Catalina-specific stage2 mount to /Users/Shared/mnt/buildfiles"
+    if not test -d /Users/Shared/mnt/buildfiles
+      mkdir -p /Users/Shared/mnt/buildfiles
     end
-    echo "Use Catalina-specific stage2 mount"
-    set -xg DST /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2/nightly/$PACKAGES
+    if not test (mount | grep -c -e 'nas02.arangodb.biz:/volume1/buildfiles on /Users/Shared/mnt/buildfiles') = 1
+      mount -t nfs nas02.arangodb.biz:/volume1/buildfiles /Users/Shared/mnt/buildfiles
+      or exit 1
+    end
+    set -xg DST /Users/Shared/mnt/buildfiles/stage2/nightly/$PACKAGES
   end
 end
 
