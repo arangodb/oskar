@@ -11,18 +11,13 @@ set -xg PACKAGES "$ARANGODB_PACKAGES"
 set -xg SRC work
 set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
 
-function mountMacStage2
+function mountMacCatalinaStage2
   if test (sw_vers -productVersion | cut -d. -f2) -ge 15
-    echo "CATALINA 1"
     mkdir -p /System/Volumes/Data/Users/Shared/mnt/buildfiles
     if not test -d /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2
-      echo "CATALINA 2"
       sudo mount -t nfs -o "noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/Shared/mnt/buildfiles
     end
     set -xg DST /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2/nightly/$PACKAGES
-  else
-    echo "NON CATALINA"
-    
   end
 end
 
@@ -41,7 +36,7 @@ function movePackagesToStage2
   end
 
   if test "$SYSTEM_IS_MACOSX" = "true"
-    mountMacStage2
+    mountMacCatalinaStage2
     rm -rf $DST/MacOSX
     and mkdir -p $DST/MacOSX
     and chmod 777 $DST/MacOSX

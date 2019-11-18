@@ -5,24 +5,16 @@ if test -z "$RELEASE_TAG"
 end
 
 set -xg SRC .
+set -xg DST /mnt/buildfiles/stage1/$RELEASE_TAG
 
-function mountStage1
-  if test "$SYSTEM_IS_MACOSX" = "true"
-    if test (sw_vers -productVersion | cut -d. -f2) -ge 15
-      mkdir -p /System/Volumes/Data/Users/Shared/mnt/buildfiles
-      if not test -d /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage1
-        sudo mount -t nfs -o "noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/Shared/mnt/buildfiles
-      end
-      set -xg DST /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage1/$RELEASE_TAG
-    else
-      set -xg DST /mnt/buildfiles/stage1/$RELEASE_TAG
+if test (uname) = "Darwin"
+  if test (sw_vers -productVersion | cut -d. -f2) -ge 15
+    mkdir -p /System/Volumes/Data/Users/Shared/mnt/buildfiles
+    if not test -d /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage1
+      sudo mount -t nfs -o "noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/Shared/mnt/buildfiles
     end
-  else
-    set -xg DST /mnt/buildfiles/stage1/$RELEASE_TAG
-  end
+    set -xg DST /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage1/$RELEASE_TAG
 end
-
-mountStage1
 
 umask 000
 mkdir -p $DST/release/snippets
