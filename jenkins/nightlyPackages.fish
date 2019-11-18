@@ -50,7 +50,6 @@ function movePackagesToStage2
     or return 1
   end
 
-  touch $SRC/arangodb3-A.dmg
   for pattern in "arangodb3*-*.dmg" "arangodb3*-mac*-*.tar.gz"
     set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
     for file in $files
