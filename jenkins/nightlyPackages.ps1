@@ -73,9 +73,9 @@ If ($global:ok)
 {
     storeSymbols
     movePackagesToStage2
-    moveResultsToWorkspace
     $s = $global:ok
 }
+moveResultsToWorkspace
 unlockDirectory
 
 If($s)
