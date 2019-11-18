@@ -8,6 +8,8 @@ end
 
 set -xg PACKAGES "$ARANGODB_PACKAGES"
 
+set -xg SRC work
+
 function mountStage2
   if test "$SYSTEM_IS_MACOSX" = "true"
     if test (sw_vers -productVersion | cut -d. -f2) -ge 15
@@ -25,8 +27,7 @@ function mountStage2
 end
 
 mountStage2
-set -xg SRC work
-
+echo "$DST"
 
 function movePackagesToStage2
   if test "$SYSTEM_IS_LINUX" = "true"
@@ -60,9 +61,9 @@ function movePackagesToStage2
 end
 
 cleanPrepareLockUpdateClear
-and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and setNightlyRelease
-and makeRelease
+#and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+#and setNightlyRelease
+#and makeRelease
 and movePackagesToStage2
 
 set -l s $status
