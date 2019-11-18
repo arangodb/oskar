@@ -18,7 +18,7 @@ function mountMacCatalinaStage2
       mkdir -p /Users/Shared/mnt/buildfiles
     end
     if not test (mount | grep -c -e 'nas02.arangodb.biz:/volume1/buildfiles on /Users/Shared/mnt/buildfiles') = 1
-      mount -t nfs nas02.arangodb.biz:/volume1/buildfiles /Users/Shared/mnt/buildfiles
+      mount -t nfs -o "nodev,nosuid,rw" nas02.arangodb.biz:/volume1/buildfiles /Users/Shared/mnt/buildfiles
       or exit 1
     end
     set -xg DST /Users/Shared/mnt/buildfiles/stage2/nightly/$PACKAGES
@@ -43,7 +43,7 @@ function movePackagesToStage2
 
   if test "$SYSTEM_IS_MACOSX" = "true"
     mountMacCatalinaStage2
-    and sudo rm -rf $DST/MacOSX
+    and rm -rf $DST/MacOSX
     and mkdir -p $DST/MacOSX
     and chmod 777 $DST/MacOSX
     or return 1
