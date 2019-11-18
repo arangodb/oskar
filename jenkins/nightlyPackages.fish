@@ -28,7 +28,7 @@ end
 
 mountStage2
 echo "$DST"
-
+exit
 function movePackagesToStage2
   if test "$SYSTEM_IS_LINUX" = "true"
     rm -rf $DST/Linux
