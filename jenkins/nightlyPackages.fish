@@ -15,10 +15,12 @@ function mountStage2
     if test (sw_vers -productVersion | cut -d. -f2) -ge 15
       mkdir -p /System/Volumes/Data/Users/Shared/mnt/buildfiles
       if not test -d /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2
+        echo "CATALINA"
         sudo mount -t nfs -o "noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/Shared/mnt/buildfiles
       end
       set -xg DST /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2/nightly/$PACKAGES
     else
+      echo "NON CATALINA"
       set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
     end
   else
