@@ -18,6 +18,7 @@ if test -z "$MACOSX_DEPLOYMENT_TARGET"
 end
 
 set -gx SYSTEM_IS_MACOSX true
+echo "Set SYSTEM_IS_MACOSX true"
 
 ## #############################################################################
 ## config
