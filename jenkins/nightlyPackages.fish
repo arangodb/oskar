@@ -10,6 +10,9 @@ set -xg PACKAGES "$ARANGODB_PACKAGES"
 
 set -xg SRC work
 
+echo "SYSTEM_IS_MACOSX=$SYSTEM_IS_MACOSX"
+echo "SYSTEM_IS_LINUX=$SYSTEM_IS_LINUX"
+
 function mountStage2
   if test "$SYSTEM_IS_MACOSX" = "true"
     if test (sw_vers -productVersion | cut -d. -f2) -ge 15
