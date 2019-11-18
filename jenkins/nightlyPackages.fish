@@ -43,13 +43,14 @@ function movePackagesToStage2
 
   if test "$SYSTEM_IS_MACOSX" = "true"
     mountMacCatalinaStage2
-    rm -rf $DST/MacOSX
+    and chmod 777 $DST/MacOSX
+    and rm -rf $DST/MacOSX
     and mkdir -p $DST/MacOSX
     and chmod 777 $DST/MacOSX
     or return 1
   end
 
-  touch $SRC arangodb3-A.dmg
+  touch $SRC/arangodb3-A.dmg
   for pattern in "arangodb3*-*.dmg" "arangodb3*-mac*-*.tar.gz"
     set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
     for file in $files
