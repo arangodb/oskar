@@ -43,7 +43,7 @@ function movePackagesToStage2
 
   if test "$SYSTEM_IS_MACOSX" = "true"
     mountMacCatalinaStage2
-    and rm -rf $DST/MacOSX/*
+    and sudo rm -rf $DST/MacOSX
     and mkdir -p $DST/MacOSX
     and chmod 777 $DST/MacOSX
     or return 1
