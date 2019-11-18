@@ -8,8 +8,25 @@ end
 
 set -xg PACKAGES "$ARANGODB_PACKAGES"
 
+function mountStage2
+  if test "$SYSTEM_IS_LINUX" = "true"
+    set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
+  else if test "$SYSTEM_IS_MACOSX" = "true"
+  end
+  if test (sw_vers -productVersion | cut -d. -f2) -ge 15
+    mkdir -p /System/Volumes/Data/Users/Shared/mnt/buildfiles
+    if not test -d /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2
+      sudo mount -t nfs -o "noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/Shared/mnt/buildfiles
+    end
+    set -xg DST /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2/nightly/$PACKAGES
+  else
+    set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
+  end
+end
+
+mountStage2
 set -xg SRC work
-set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
+
 
 function movePackagesToStage2
   if test "$SYSTEM_IS_LINUX" = "true"
