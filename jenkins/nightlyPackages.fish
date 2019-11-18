@@ -62,9 +62,9 @@ function movePackagesToStage2
 end
 
 cleanPrepareLockUpdateClear
-#and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-#and setNightlyRelease
-#and makeRelease
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and setNightlyRelease
+and makeRelease
 and movePackagesToStage2
 
 set -l s $status
