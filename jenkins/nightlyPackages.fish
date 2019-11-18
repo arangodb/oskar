@@ -13,9 +13,10 @@ set -xg SRC work
 function mountStage2
   if test "$SYSTEM_IS_MACOSX" = "true"
     if test (sw_vers -productVersion | cut -d. -f2) -ge 15
+      echo "CATALINA 1"
       mkdir -p /System/Volumes/Data/Users/Shared/mnt/buildfiles
       if not test -d /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2
-        echo "CATALINA"
+        echo "CATALINA 2"
         sudo mount -t nfs -o "noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/Shared/mnt/buildfiles
       end
       set -xg DST /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2/nightly/$PACKAGES
@@ -24,6 +25,7 @@ function mountStage2
       set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
     end
   else
+    echo "NON LINUX"
     set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
   end
 end
