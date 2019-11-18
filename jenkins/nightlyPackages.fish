@@ -49,6 +49,7 @@ function movePackagesToStage2
     or return 1
   end
 
+  touch $SRC arangodb3-A.dmg
   for pattern in "arangodb3*-*.dmg" "arangodb3*-mac*-*.tar.gz"
     set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
     for file in $files
@@ -60,9 +61,9 @@ function movePackagesToStage2
 end
 
 cleanPrepareLockUpdateClear
-and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and setNightlyRelease
-and makeRelease
+#and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+#and setNightlyRelease
+#and makeRelease
 and movePackagesToStage2
 
 set -l s $status
