@@ -16,7 +16,7 @@ function prepareOskar
   else
     git fetch --tags ; and git fetch ; and git reset --hard ; and git checkout $OSKAR_BRANCH ; and git reset --hard origin/$OSKAR_BRANCH
   end
-  and source helper.fish
+  source helper.fish
   and echo "SOURCED helper.fish"
   if test $status -ne 0 ; echo Did not find oskar and helpers ; exit 1 ; end
 
