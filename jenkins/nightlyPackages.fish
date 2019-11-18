@@ -28,7 +28,7 @@ end
 
 mountStage2
 echo "$DST"
-exit
+
 function movePackagesToStage2
   if test "$SYSTEM_IS_LINUX" = "true"
     rm -rf $DST/Linux
@@ -61,9 +61,6 @@ function movePackagesToStage2
 end
 
 cleanPrepareLockUpdateClear
-#and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-#and setNightlyRelease
-#and makeRelease
 and movePackagesToStage2
 
 set -l s $status
