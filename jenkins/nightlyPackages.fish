@@ -17,11 +17,14 @@ function mountMacCatalinaStage2
     if not test -d /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2
       sudo mount -t nfs -o "noowners,nolockd,resvport,hard,bg,intr,rw,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/Shared/mnt/buildfiles
     end
+    echo "Use Catalina-specific stage2 mount"
     set -xg DST /System/Volumes/Data/Users/Shared/mnt/buildfiles/stage2/nightly/$PACKAGES
   end
 end
 
 function movePackagesToStage2
+  echo "Moving packages to stage2..."
+
   if test "$SYSTEM_IS_LINUX" = "true"
     rm -rf $DST/Linux
     and mkdir -p $DST/Linux
