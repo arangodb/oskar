@@ -29,7 +29,11 @@ set -gx CENTOSPACKAGINGIMAGE_TAG 2
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
 
 set -gx DOCIMAGE arangodb/arangodb-documentation:1
-set -gx CPPCHECKIMAGE arangodb/cppcheck:1
+
+set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck
+set -gx CPPCHECKIMAGE_TAG 2
+set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
+
 set -xg IONICE "ionice -c 3"
 
 set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
@@ -963,7 +967,11 @@ function buildCppcheckImage
   or begin ; popd ; return 1 ; end
   popd
 end
-function pushCppcheckImage ; docker push $CPPCHECKIMAGE ; end
+function pushCppcheckImage
+  docker tag $CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:latest
+  and docker push $CPPCHECKIMAGE
+  and docker push $CPPCHECKIMAGE_NAME:latest
+end
 function pullCppcheckImage ; docker pull $CPPCHECKIMAGE ; end
 
 function remakeImages
