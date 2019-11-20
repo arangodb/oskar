@@ -4,9 +4,9 @@ source jenkins/helper/jenkins.fish
 if test -z "$DOCKER_TAG"
   echo "DOCKER_TAG required"
   exit 1
+else
+  set -xg DOCKER_TAG "$DOCKER_TAG"
 end
-
-set -xg TAG "$DOCKER_TAG"
 
 if test -z "$IS_NIGHTLY_BUILD"
   echo "IS_NIGHTLY_BUILD required"
