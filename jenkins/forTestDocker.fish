@@ -15,7 +15,6 @@ cleanPrepareLockUpdateClear
 and rm -rf $WORKSPACE/imagenames.log
 and community
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and setNightlyRelease
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
@@ -31,7 +30,6 @@ end
 
 enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and setNightlyRelease
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
