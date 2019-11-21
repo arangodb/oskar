@@ -19,7 +19,7 @@ and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and showRepository
 and if test $IS_NIGHTLY_BUILD = true; setNightlyRelease; end
 and set -xg RELEASE_TYPE "preview"
-and makeDockerRelease
+and makeDockerRelease "$DOCKER_TAG"
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
