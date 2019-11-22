@@ -300,21 +300,22 @@ end
 
 function oskar1
   oskarCompile
-  oskar
+  and oskar
 end
 
 function oskar1Full
   oskarCompile
-  oskarFull
+  and oskarFull
 end
 
 function oskar2
   set -l testsuite $TESTSUITE
 
   oskarCompile
-
+  and begin
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+  end
 
   set -xg TESTSUITE $testsuite
 end
@@ -323,6 +324,7 @@ function oskar4
   set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE
 
   oskarCompile
+  and begin
 
   rocksdb
   cluster ; oskar ; or return $status
@@ -332,6 +334,7 @@ function oskar4
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
   cluster ; rocksdb
+  end
 
   set -xg TESTSUITE $testsuite ; set -xg STORAGEENGINE $storageengine
 end
@@ -340,8 +343,8 @@ function oskar8
   set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE ; set -l enterpriseedition $ENTERPRISEEDITION
 
   enterprise
-
-  oskarCompile
+  and skarCompile
+  and begin
  
   rocksdb
   cluster ; oskar ; or return $status
@@ -350,10 +353,10 @@ function oskar8
   mmfiles
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
-
-  community
-
-  oskarCompile
+  end
+  and community
+  and oskarCompile
+  and begin
 
   rocksdb
   cluster ; oskar ; or return $status
@@ -362,8 +365,10 @@ function oskar8
   mmfiles
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+  end
 
   set -xg TESTSUITE $testsuite ; set -xg STORAGEENGINE $storageengine ; set -l ENTERPRISEEDITION $enterpriseedition
+  
 end
 
 ## #############################################################################
