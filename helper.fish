@@ -343,7 +343,7 @@ function oskar8
   set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE ; set -l enterpriseedition $ENTERPRISEEDITION
 
   enterprise
-  and skarCompile
+  and oskarCompile
   and begin
  
   rocksdb
