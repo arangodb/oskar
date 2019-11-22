@@ -26,8 +26,10 @@ and oskar
 
 set -l s $status
 
-set -l t4 (date +%s)
-echo "$date,tests,"(expr $t4 - $t3) >> $filename
+if not test -z $t3
+  set -l t4 (date +%s)
+  echo "$date,tests,"(expr $t4 - $t3) >> $filename
+echo
 
-cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
+cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
