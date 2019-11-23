@@ -26,7 +26,7 @@ and oskar
 
 set -l s $status
 
-if test -n t3
+if not test -z "$t3"
   set -l t4 (date +%s)
   echo "$date,tests,"(expr $t4 - $t3) >> $filename
 end
