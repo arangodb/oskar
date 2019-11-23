@@ -29,7 +29,7 @@ set -l s $status
 if test -n t3
   set -l t4 (date +%s)
   echo "$date,tests,"(expr $t4 - $t3) >> $filename
-echo
+end
 
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
