@@ -1,6 +1,8 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.0
 MAINTAINER Frank Celler <info@arangodb.com>
 
+RUN microdnf update -y && rm -rf /var/cache/yum
+
 # Metadata (required)
 ARG name
 ARG vendor
