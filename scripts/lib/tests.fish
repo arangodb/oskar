@@ -66,7 +66,7 @@ function runAnyTest
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic "$SKIPNONDETERMINISTIC" \
       --skipTimeCritical "$SKIPTIMECRITICAL" \
-      --testOutput $l2 \
+      --testOutput "$l2" \
       --writeXmlReport false \
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
@@ -74,7 +74,7 @@ function runAnyTest
 
     echo (pwd) "-" scripts/unittest $arguments
     mkdir -p $l2
-    fish -c "date -u +%s > \"'\"$l2/started\"'\"; scripts/unittest $arguments > \"$l1\" ^&1; date -u +%s > \"'\"$l2/stopped\"'\"" &
+    fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped" &
     set -g portBase (math $portBase + 100)
     sleep 1
   end
