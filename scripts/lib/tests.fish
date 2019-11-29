@@ -52,7 +52,7 @@ function runAnyTest
     set l0 "$t"_"$tt"
   end
   set -l l1 "$l0".log
-  set -l l2 $TMPDIR/"$l0".out
+  set -l l2 "$TMPDIR/$l0.out"
   set -e argv[1..2]
 
   if test $VERBOSEOSKAR = On ; echo "$launchCount: Launching $l0" ; end
@@ -73,7 +73,8 @@ function runAnyTest
       $argv
 
     echo (pwd) "-" scripts/unittest $arguments
-    mkdir -p $l2
+    mkdir -p "$l2"
+    echo "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped"
     fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped" &
     set -g portBase (math $portBase + 100)
     sleep 1
