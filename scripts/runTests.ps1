@@ -12,6 +12,9 @@ Function global:registerSingleTests()
 
     $global:TESTSUITE_TIMEOUT = 3900
 
+    registerTest -testname "upgrade_data_3.2.*"
+    registerTest -testname "upgrade_data_3.3.*"
+    registerTest -testname "upgrade_data_3.4.*"
     registerTest -testname "replication_static" -weight 2
     registerTest -testname "shell_server"
     registerTest -testname "replication_ongoing_32" -weight 2
