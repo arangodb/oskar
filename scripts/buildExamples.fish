@@ -25,6 +25,7 @@ and begin
   else
     echo "No Cookbook book present!"
   end
+end
 and begin
   set l Documentation/Books/Drivers
   if test -d $l
