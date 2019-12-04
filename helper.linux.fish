@@ -616,24 +616,24 @@ function makeDockerRelease
   findArangoDBVersion ; or return 1
 
   if test (count $argv) -ge 1
-    set DOCKER_TAG $argv[1]
+    set CUSTOM_DOCKER_TAG $argv[1]
   end
 
   community
-  and buildDockerRelease $DOCKER_TAG
+  and buildDockerRelease $CUSTOM_DOCKER_TAG
   and enterprise
-  and buildDockerRelease $DOCKER_TAG
+  and buildDockerRelease $CUSTOM_DOCKER_TAG
 end
 
 function makeDockerCommunityRelease
   findArangoDBVersion ; or return 1
 
-  if test (count $argv) -ge 1
-    set DOCKER_TAG $argv[1]
-  end
-
   community
-  and buildDockerRelease $DOCKER_TAG
+  and if test (count $argv) -ge 1
+    buildDockerRelease $argv[1]
+  else
+    buildDockerRelease $DOCKER_TAG
+  end
 end
 
 function makeDockerEnterpriseRelease
@@ -644,12 +644,12 @@ function makeDockerEnterpriseRelease
 
   findArangoDBVersion ; or return 1
 
-  if test (count $argv) -ge 1
-    set DOCKER_TAG $argv[1]
-  end
-
   enterprise
-  and buildDockerRelease $DOCKER_TAG
+  and if test (count $argv) -ge 1
+    buildDockerRelease $argv[1]
+  else
+    buildDockerRelease $DOCKER_TAG
+  end
 end
 
 function buildDockerRelease
