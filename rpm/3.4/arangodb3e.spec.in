@@ -188,10 +188,10 @@ ArangoDB 3 (https://www.arangodb.com)
   or JavaScript extensions.
 
 First Steps with ArangoDB:
-  https://docs.arangodb.com/latest/Manual/GettingStarted/
+  https://www.arangodb.com/docs/stable/getting-started.html
 
 Configuring the storage Engine:
-  https://docs.arangodb.com/latest/Manual/Administration/Configuration/GeneralArangod.html#storage-engine
+  https://www.arangodb.com/docs/stable/programs-arangod-server.html#storage-engine
 
 Configuration file:
   /etc/arangodb3/arangod.conf

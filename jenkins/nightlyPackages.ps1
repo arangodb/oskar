@@ -63,13 +63,13 @@ Function movePackagesToStage2
 }
 
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
-If ($global:ok) 
+If ($global:ok ) 
 {
     setNightlyRelease
     makeRelease
 }
 $s = $global:ok
-If ($global:ok) 
+If ($global:ok -And $env:MOVE_TO_STAGE2 -eq $true) 
 {
     storeSymbols
     movePackagesToStage2
