@@ -44,15 +44,15 @@ set -xg GCOV_PREFIX_STRIP 3
 function runAnyTest
   set -l t $argv[1]
   set -l tt $argv[2]
-  set -l l0 "$t"
+  set -l l0 (string replace '*' 'all' $t)
   if test "$tt" = "-"
     set tt ""
   end
   if test "$tt" != ""
-    set l0 "$t"_"$tt"
+    set l0 "$l0"_"$tt"
   end
   set -l l1 "$l0".log
-  set -l l2 "$TMPDIR/$l0.out"
+  set -l l2 $TMPDIR/"$l0".out
   set -e argv[1..2]
 
   if test $VERBOSEOSKAR = On ; echo "$launchCount: Launching $l0" ; end
