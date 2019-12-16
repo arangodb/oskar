@@ -9,8 +9,12 @@ set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
 
-if test -z "$MACOSX_DEPLOYMENT_TARGET"
+function defaultMacOSXDeploymentTarget
   set -xg MACOSX_DEPLOYMENT_TARGET 10.12
+end
+
+if test -z "$MACOSX_DEPLOYMENT_TARGET"
+  defaultMacOSXDeploymentTarget
 end
 
 set -gx SYSTEM_IS_MACOSX true
@@ -43,6 +47,9 @@ function minMacOS
     case '10.14'
       set -gx MACOSX_DEPLOYMENT_TARGET $min
 
+    case '10.15'
+      set -gx MACOSX_DEPLOYMENT_TARGET $min
+
     case '*'
       echo "unknown macOS version $min"
   end
@@ -60,8 +67,9 @@ function findRequiredMinMacOS
   set -l v (fgrep MACOS_MIN $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
   if test "$v" = ""
-    echo "$f: no MACOS_MIN specified, using 10.12"
-    minMacOS 10.12
+    defaultMacOSXDeploymentTarget
+    echo "$f: no MACOS_MIN specified, using $MACOSX_DEPLOYMENT_TARGET"
+    minMacOS $MACOSX_DEPLOYMENT_TARGET
   else
     echo "Using MACOS_MIN version '$v' from '$f'"
     minMacOS $v

@@ -152,6 +152,9 @@ else
       exit 1
     end
 
+    echo == (date) ==
+    echo "compilation finished"
+
     if test -n "$ep"
       kill $ep
     end

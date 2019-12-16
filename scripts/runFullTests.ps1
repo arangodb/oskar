@@ -44,7 +44,9 @@ Function global:registerSingleTests()
     registerTest -testname "server_http"
     registerTest -testname "ssl_server"  -sniff true
     registerTest -testname "shell_client"
+    registerTest -testname "shell_client" -vst
     registerTest -testname "shell_client_aql"
+    registerTest -testname "shell_client_aql" -vst
     registerTest -testname "shell_replication" -weight 2
     registerTest -testname "BackupAuthNoSysTests"
     registerTest -testname "BackupAuthSysTests"

@@ -69,9 +69,68 @@ function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
 
-function ccacheOn  ; set -gx USE_CCACHE On      ; end
-function sccacheOn ; set -gx USE_CCACHE sccache ; end
-function ccacheOff ; set -gx USE_CCACHE Off     ; end
+function isGCE
+  switch (hostname)
+    case 'gce-*'
+      set -gx IS_GCE "true"
+    case '*'
+      set -gx IS_GCE "false"
+  end
+end
+
+if test -z "$IS_GCE" ; isGCE
+else ; set -gx IS_GCE "false" ; end
+
+function defineSccacheGCE
+  if test -z "$SCCACHE_GCS_BUCKET"
+    set -gx SCCACHE_GCS_BUCKET "arangodbbuildcache"
+  end
+  if test -z "$SCCACHE_BUCKET"
+    # No S3 for GCE atm
+    set -gx SCCACHE_BUCKET ""
+  end
+  if test -z "$SCCACHE_REDIS"
+    # No redis servers for GCE atm
+    # set -gx SCCACHE_REDIS "redis://<address>"
+    set -gx SCCACHE_REDIS ""
+  end
+  if test -z "$SCCACHE_MEMCACHED"
+    # No memcached servers for GCE atm
+    # set -gx SCCACHE_MEMCACHED "tcp://<address>:<port>"
+    set -gx SCCACHE_MEMCACHED ""
+  end
+end
+
+function undefSccacheGCE
+  # Don't use sccache at non-GCE environment by default
+  set -e SCCACHE_BUCKET
+  set -e SCCACHE_GCS_BUCKET
+  set -e SCCACHE_REDIS
+  set -e SCCACHE_MEMCACHED
+end
+
+function ccacheOn
+  if test $IS_GCE = "false"
+    set -gx USE_CCACHE On
+    undefSccacheGCE
+  else
+    echo "Use sccache instead since IS_GCE is true!"
+    sccacheOn
+  end
+end
+
+function sccacheOn
+  if test $IS_GCE = "true"
+    set -gx USE_CCACHE sccache
+    defineSccacheGCE
+  else
+    echo "Use ccache instead since IS_GCE is false!"
+    ccacheOn
+  end
+end
+
+function ccacheOff ; set -gx USE_CCACHE Off ; end
+
 if test -z "$USE_CCACHE" ; ccacheOn
 else ; set -gx USE_CCACHE $USE_CCACHE ; end
 
@@ -147,6 +206,9 @@ else ; set -gx RELEASE_TYPE $RELEASE_TYPE ; end
 
 function keepBuild ; set -gx NO_RM_BUILD 1 ; end
 function clearBuild ; set -gx NO_RM_BUILD ; end
+
+function githubMirror   ; set -gx GITHUB_MIRROR $argv[1] ; end
+function noGithubMirror ; set -e  GITHUB_MIRROR ; end
 
 function setAllLogsToWorkspace ; set -gx WORKSPACE_LOGS "all" ; end
 function setOnlyFailLogsToWorkspace ; set -gx WORKSPACE_LOGS "fail"; end
@@ -238,21 +300,22 @@ end
 
 function oskar1
   oskarCompile
-  oskar
+  and oskar
 end
 
 function oskar1Full
   oskarCompile
-  oskarFull
+  and oskarFull
 end
 
 function oskar2
   set -l testsuite $TESTSUITE
 
   oskarCompile
-
+  and begin
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+  end
 
   set -xg TESTSUITE $testsuite
 end
@@ -261,6 +324,7 @@ function oskar4
   set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE
 
   oskarCompile
+  and begin
 
   rocksdb
   cluster ; oskar ; or return $status
@@ -270,6 +334,7 @@ function oskar4
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
   cluster ; rocksdb
+  end
 
   set -xg TESTSUITE $testsuite ; set -xg STORAGEENGINE $storageengine
 end
@@ -278,8 +343,8 @@ function oskar8
   set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE ; set -l enterpriseedition $ENTERPRISEEDITION
 
   enterprise
-
-  oskarCompile
+  and oskarCompile
+  and begin
  
   rocksdb
   cluster ; oskar ; or return $status
@@ -288,10 +353,10 @@ function oskar8
   mmfiles
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
-
-  community
-
-  oskarCompile
+  end
+  and community
+  and oskarCompile
+  and begin
 
   rocksdb
   cluster ; oskar ; or return $status
@@ -300,8 +365,10 @@ function oskar8
   mmfiles
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+  end
 
   set -xg TESTSUITE $testsuite ; set -xg STORAGEENGINE $storageengine ; set -l ENTERPRISEEDITION $enterpriseedition
+  
 end
 
 ## #############################################################################
@@ -319,6 +386,23 @@ end
 ## #############################################################################
 
 function makeRelease
+  makeEnterpriseRelease
+  and makeCommunityRelease
+end
+
+function makeCommunityRelease
+  if test (count $argv) -lt 2
+    findArangoDBVersion ; or return 1
+  else
+    set -xg ARANGODB_VERSION "$argv[1]"
+    set -xg ARANGODB_PACKAGE_REVISION "$argv[2]"
+    set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
+  end
+
+  buildCommunityPackage
+end
+
+function makeEnterpriseRelease
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
@@ -333,7 +417,6 @@ function makeRelease
   end
 
   buildEnterprisePackage
-  and buildCommunityPackage
 end
 
 ## #############################################################################
@@ -1054,7 +1137,6 @@ function showConfig
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
-  printf $fmt3 'Skip MAKE'  $SKIP_MAKE           '(makeOn/Off)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
@@ -1077,15 +1159,17 @@ function showConfig
   printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
   echo
   echo 'Internal Configuration'
-  printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'
-  printf $fmt3 'CCACHE'        $USE_CCACHE   '(ccacheOn/Off/sccacheOn)'
+  printf $fmt3 'Parallelism'   $PARALLELISM   '(parallelism nnn)'
+  printf $fmt3 'Skip MAKE'     $SKIP_MAKE     '(makeOn/Off)'
+  printf $fmt3 'Github Mirror' "$GITHUB_MIRROR" '(githubMirror)'
+  printf $fmt3 'CCACHE'        $USE_CCACHE    '(ccacheOn/Off/sccacheOn)'
   if test "$CCACHESIZE" != ""
-  printf $fmt3 'CCACHE size'   $CCACHESIZE   '(CCACHESIZE)'
+  printf $fmt3 'CCACHE size'   $CCACHESIZE          '(CCACHESIZE)'
   end
-  printf $fmt3 'Verbose Build' $VERBOSEBUILD '(verboseBuild/silentBuild)'
-  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR '(verbose/slient)'
+  printf $fmt3 'Verbose Build' $VERBOSEBUILD        '(verboseBuild/silentBuild)'
+  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR        '(verbose/slient)'
   printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
-  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
+  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS      '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR

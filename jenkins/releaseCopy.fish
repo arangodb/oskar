@@ -7,6 +7,20 @@ end
 set -xg SRC .
 set -xg DST /mnt/buildfiles/stage1/$RELEASE_TAG
 
+if test (uname) = "Darwin"
+  if test (sw_vers -productVersion | cut -d. -f2) -ge 15
+    echo "Use Catalina-specific stage2 mount to /Users/$USER/buildfiles"
+    if not test -d /System/Volumes/Data/Users/$USER/buildfiles
+      mkdir -p /System/Volumes/Data/Users/$USER/buildfiles
+    end
+    if not test (mount | grep -c -e "nas02.arangodb.biz:/volume1/buildfiles on /Users/$USER/buildfiles") = 1
+      mount -t nfs -o "nodev,noowners,nosuid,rw,nolockd,hard,bg,intr,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/$USER/buildfiles
+      or exit 1
+    end
+    set -xg DST /System/Volumes/Data/Users/$USER/buildfiles/stage1/$RELEASE_TAG
+  end
+end
+
 umask 000
 mkdir -p $DST/release/snippets
 mkdir -p $DST/release/source

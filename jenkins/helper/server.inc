@@ -3,17 +3,17 @@ if [ -z "$ARANGO_BRANCH" ]; then ARANGO_BRANCH="devel"; fi
 if [ -z "$ARANGO_DOCKER_REG" ]; then ARANGO_DOCKER_REG="docker.io/arangodb"; fi
 if [ -z "$ARANGO_DOCKER_TAG" ]; then ARANGO_DOCKER_TAG="$ARANGO_BRANCH"; fi
 
-if [ "$USE_PREVIEW_DOCKER" == "true" ]
+if [ "$USE_TEST_DOCKER" == "true" ]
 then 
-    PREVIEW="-preview"
+    TEST_DOCKER="-test"
 fi
 
 case ${ARANGO_EDITION,,} in
      "enterprise")
-          DOCKER_IMAGE="$ARANGO_DOCKER_REG/enterprise$PREVIEW:$ARANGO_DOCKER_TAG"
+          DOCKER_IMAGE="$ARANGO_DOCKER_REG/enterprise$TEST_DOCKER:$ARANGO_DOCKER_TAG"
       ;;
      *)
-          DOCKER_IMAGE="$ARANGO_DOCKER_REG/arangodb$PREVIEW:$ARANGO_DOCKER_TAG"
+          DOCKER_IMAGE="$ARANGO_DOCKER_REG/arangodb$TEST_DOCKER:$ARANGO_DOCKER_TAG"
       ;;
 esac
 

@@ -20,8 +20,8 @@ set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
 set -gx ALPINEBUILDIMAGE3_TAG 2
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
-set -gx ALPINEUTILSIMAGE_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEUTILSIMAGE_TAG 6
+set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
+set -gx ALPINEUTILSIMAGE_TAG 3
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
@@ -29,8 +29,12 @@ set -gx CENTOSPACKAGINGIMAGE_TAG 2
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
 
 set -gx DOCIMAGE arangodb/arangodb-documentation:1
-set -gx CPPCHECKIMAGE arangodb/cppcheck:1
-set -xg IONICE "ionice -n 7"
+
+set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck
+set -gx CPPCHECKIMAGE_TAG 2
+set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
+
+set -xg IONICE "ionice -c 3"
 
 set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
 set -gx LDAPNETWORK ldaptestnet
@@ -183,6 +187,16 @@ end
 ## checkout and switch functions
 ## #############################################################################
 
+function checkoutMirror
+  if test (count $argv) -ne 1
+    echo "usage: checkoutMirror.fish <DIRECTORY>"
+    exit 1
+  end
+
+  runInContainer -v $argv[1]:/mirror $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMirror.fish
+  or return $status
+end
+
 function checkoutUpgradeDataTests
   runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutUpgradeDataTests.fish
   or return $status
@@ -210,6 +224,7 @@ function switchBranches
   if test $force_clean = "true"
     if test ! -d $WORKDIR/ArangoDB/.git
       rm -rf $INNERWORKDIR/ArangoDB/.git
+      or return $status
     end
   end
 
@@ -322,9 +337,9 @@ function oskar
   checkoutIfNeeded
   and if test "$ASAN" = "On"
     parallelism 2
-    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $ALPINEUTILSIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   else
-    runInContainer --cap-add SYS_NICE $ALPINEUTILSIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
   end
   set s $status
 
@@ -341,17 +356,17 @@ function oskarFull
     launchLdapServer
     and if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
     set s $status
   else
     if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --cap-add SYS_NICE $ALPINEUTILSIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
     end
   end
   set s $status
@@ -601,24 +616,24 @@ function makeDockerRelease
   findArangoDBVersion ; or return 1
 
   if test (count $argv) -ge 1
-    set DOCKER_TAG $argv[1]
+    set CUSTOM_DOCKER_TAG $argv[1]
   end
 
   community
-  and buildDockerRelease $DOCKER_TAG
+  and buildDockerRelease $CUSTOM_DOCKER_TAG
   and enterprise
-  and buildDockerRelease $DOCKER_TAG
+  and buildDockerRelease $CUSTOM_DOCKER_TAG
 end
 
 function makeDockerCommunityRelease
   findArangoDBVersion ; or return 1
 
-  if test (count $argv) -ge 1
-    set DOCKER_TAG $argv[1]
-  end
-
   community
-  and buildDockerRelease $DOCKER_TAG
+  and if test (count $argv) -ge 1
+    buildDockerRelease $argv[1]
+  else
+    buildDockerRelease $DOCKER_TAG
+  end
 end
 
 function makeDockerEnterpriseRelease
@@ -629,12 +644,12 @@ function makeDockerEnterpriseRelease
 
   findArangoDBVersion ; or return 1
 
-  if test (count $argv) -ge 1
-    set DOCKER_TAG $argv[1]
-  end
-
   enterprise
-  and buildDockerRelease $DOCKER_TAG
+  and if test (count $argv) -ge 1
+    buildDockerRelease $argv[1]
+  else
+    buildDockerRelease $DOCKER_TAG
+  end
 end
 
 function buildDockerRelease
@@ -701,6 +716,62 @@ function buildDockerRelease
   end
 end
 
+function buildDockerArgs
+  if test (count $argv) -eq 0
+    echo Must give image distro as argument
+    return 1
+  end
+
+  set -l imagedistro $argv[1]
+
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$imagedistro.docker
+
+  if not test -d $containerpath
+    set containerpath $WORKDIR/containers/arangodbDevel$imagedistro.docker
+  end
+
+  set -l EDITION "Community"
+  if test "$ENTERPRISEEDITION" = "On"
+    set EDITION "Enterprise"
+  end
+
+  set -l BUILD_ARGS ""
+
+  switch $imagedistro
+    case ubi
+      set BUILD_ARGS $BUILD_ARGS"--build-arg name="(string lower $EDITION)
+      set BUILD_ARGS $BUILD_ARGS" --build-arg vendor=ArangoDB"
+      set BUILD_ARGS $BUILD_ARGS" --build-arg version="$ARANGODB_VERSION
+      set BUILD_ARGS $BUILD_ARGS" --build-arg release="$ARANGODB_VERSION
+      set BUILD_ARGS $BUILD_ARGS" --build-arg summary=\"ArangoDB "$EDITION"\""
+      set BUILD_ARGS $BUILD_ARGS" --build-arg description=\"ArangoDB "$EDITION"\""
+      set BUILD_ARGS $BUILD_ARGS" --build-arg maintainer=redhat@arangodb.com"
+  end
+
+  echo "$BUILD_ARGS"
+end
+
+function buildDockerAddFiles
+  if test (count $argv) -eq 0
+    echo Must give image distro as argument
+    return 1
+  end
+
+  set -l imagedistro $argv[1]
+
+  findArangoDBVersion ; or return 1
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$imagedistro.docker
+
+  if not test -d $containerpath
+    set containerpath $WORKDIR/containers/arangodbDevel$imagedistro.docker
+  end
+
+  switch $imagedistro
+    case ubi
+      cp $WORKDIR/work/ArangoDB/LICENSE $containerpath
+  end
+end
+
 function buildDockerImage
   if test (count $argv) -eq 0
     echo Must give image name as argument
@@ -710,6 +781,7 @@ function buildDockerImage
   set -l imagename $argv[1]
 
   findArangoDBVersion ; or return 1
+  set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
   pushd $WORKDIR/work/ArangoDB/build/install
 
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
@@ -718,6 +790,7 @@ function buildDockerImage
     set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
   end
   and tar czf $containerpath/install.tar.gz *
+  and buildDockerAddFiles $DOCKER_DISTRO
   if test $status -ne 0
     echo Could not create install tarball!
     popd
@@ -726,7 +799,7 @@ function buildDockerImage
   popd
 
   pushd $containerpath
-  and docker build --pull -t $imagename .
+  and eval "docker build $BUILD_ARGS --pull -t $imagename ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -894,7 +967,11 @@ function buildCppcheckImage
   or begin ; popd ; return 1 ; end
   popd
 end
-function pushCppcheckImage ; docker push $CPPCHECKIMAGE ; end
+function pushCppcheckImage
+  docker tag $CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:latest
+  and docker push $CPPCHECKIMAGE
+  and docker push $CPPCHECKIMAGE_NAME:latest
+end
 function pullCppcheckImage ; docker pull $CPPCHECKIMAGE ; end
 
 function remakeImages
@@ -938,6 +1015,12 @@ function runInContainer
     set -l agentstarted ""
   end
 
+  set -l mirror
+
+  if test -n "$GITHUB_MIRROR" -a -d "$GITHUB_MIRROR/mirror"
+    set mirror -v $GITHUB_MIRROR/mirror:/mirror
+  end
+
   # Run script in container in background, but print output and react to
   # a TERM signal to the shell or to a foreground subcommand. Note that the
   # container process itself will run as root and will be immune to SIGTERM
@@ -948,8 +1031,11 @@ function runInContainer
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
+             $mirror \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
+             -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+             -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
              -e ASAN="$ASAN" \
              -e BUILDMODE="$BUILDMODE" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
@@ -971,10 +1057,13 @@ function runInContainer
              -e OPENSSL_VERSION="$OPENSSL_VERSION" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
-             -e SCCACHE_REDIS="$SCCACHE_REDIS" \
-             -e SCCACHE_MEMCACHED="$SCCACHE_MEMCACHED" \
-             -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
+             -e SCCACHE_BUCKET="$SCCACHE_BUCKET" \
+             -e SCCACHE_IDLE_TIMEOUT="$SCCACHE_IDLE_TIMEOUT" \
+             -e SCCACHE_ENDPOINT="$SCCACHE_ENDPOINT" \
              -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
+             -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
+             -e SCCACHE_MEMCACHED="$SCCACHE_MEMCACHED" \
+             -e SCCACHE_REDIS="$SCCACHE_REDIS" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
              -e SHOW_DETAILS="$SHOW_DETAILS" \
              -e SKIPGREY="$SKIPGREY" \
@@ -1158,14 +1247,14 @@ end
 
 function downloadStarter
   mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
-  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
+  and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
 end
 
 function downloadSyncer
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-  runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
-  ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+  and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+  and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+  and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
 end
 
 ## #############################################################################
