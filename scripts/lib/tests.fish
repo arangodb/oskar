@@ -60,7 +60,7 @@ function runAnyTest
   if grep $t UnitTests/OskarTestSuitesBlackList
     echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
   else
-    set -l arguments $t \
+    set -l arguments \'"$t"\' \
       (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
