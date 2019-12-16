@@ -7,6 +7,9 @@ source $SCRIPTS/lib/tests.fish
 ################################################################################
 
 set -l ST
+set ST "$ST""1000,runSingleTest1 'upgrade_data_3.2.*' -\n"
+set ST "$ST""1000,runSingleTest1 'upgrade_data_3.3.*' -\n"
+set ST "$ST""1000,runSingleTest1 'upgrade_data_3.4.*' -\n"
 set ST "$ST""250,runSingleTest1 BackupAuthNoSysTests -\n"
 set ST "$ST""250,runSingleTest1 BackupAuthSysTests -\n"
 set ST "$ST""250,runSingleTest1 BackupNoAuthNoSysTests -\n"
