@@ -5,7 +5,6 @@ set -gx GID (id -g)
 set -gx INNERWORKDIR $WORKDIR/work
 set -gx THIRDPARTY_BIN third_party/bin
 set -gx THIRDPARTY_SBIN third_party/sbin
-set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
 

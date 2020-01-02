@@ -1,10 +1,31 @@
+function setupCcacheBinPath
+  set -xg CCACHETYPE $argv[1]
+
+  if test "$USE_CCACHE" = "Off"
+    return 0
+  else if test "$USE_CCACHE" = "sccache"
+    switch $CCACHETYPE
+      case macosx
+          set -xg CCACHEBINPATH $SCRIPTSDIR/tools
+      case '*'
+          echo "fatal, unknown CCACHETYPE $CCACHETYPE"
+          exit
+    end
+
+    return 0
+  end
+end
+
 function setupCcache
+  set -xg CCACHETYPE $argv[1]
+
   if test "$USE_CCACHE" = "Off"
     set -xg CCACHE_DISABLE true
     echo "ccache is DISABLED"
   else if test "$USE_CCACHE" = "sccache"
     if test "$CCACHEBINPATH" = ""
-      set -xg CCACHEBINPATH $argv[2]
+      echo "fatal, CCACHEBINPATH not set"
+      exit 1
     end
 
     if test "$CCACHESIZE" = ""
@@ -63,9 +84,10 @@ function setupCcache
       set -e SCCACHE_REDIS
     end
   else
-    set -xg CCACHE_DIR $INNERWORKDIR/.ccache.alpine3
+    set -xg CCACHE_DIR $INNERWORKDIR/.ccache.$CCACHETYPE
     if test "$CCACHEBINPATH" = ""
-      set -xg CCACHEBINPATH $argv[1]
+      echo "fatal, CCACHEBINPATH not set" 
+      exit 1
     end
     if test "$CCACHESIZE" = ""
       set -xg CCACHESIZE 50G
@@ -74,7 +96,7 @@ function setupCcache
     echo "using ccache at $CCACHE_DIR ($CCACHESIZE)"
 
     pushd $INNERWORKDIR
-    and mkdir -p .ccache.alpine3
+    and mkdir -p .ccache.$CCACHETYPE
     and rm -f .ccache.log
     and ccache -M $CCACHESIZE
     and ccache --zero-stats

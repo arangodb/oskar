@@ -41,7 +41,8 @@ set -g FULLARGS $argv \
  -DOPENSSL_ROOT_DIR=$OPENSSL_PATH \
  -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET
 
-setupCcache /usr/lib/ccache/bin /tools
+setupCcacheBinPath macosx
+and setupCcache macosx
 and cleanBuildDirectory
 and cd $INNERWORKDIR/ArangoDB/build
 and TT_init
