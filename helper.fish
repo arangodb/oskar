@@ -1166,6 +1166,12 @@ function showConfig
   if test "$CCACHESIZE" != ""
   printf $fmt3 'CCACHE size'   $CCACHESIZE          '(CCACHESIZE)'
   end
+  if test "$USE_CCACHE" = "sccache"
+    if test "$SCCACHE_BUCKET" != ""
+      printf $fmt3 'S3 Bucket' $SCCACHE_BUCKET      '(SCCACHE_BUCKET)'
+      printf $fmt3 'S3 Server' $SCCACHE_ENDPOINT    '(SCCACHE_ENDPOINT)'
+    end
+  end
   printf $fmt3 'Verbose Build' $VERBOSEBUILD        '(verboseBuild/silentBuild)'
   printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR        '(verbose/slient)'
   printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'

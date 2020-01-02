@@ -45,17 +45,11 @@ setupCcache /usr/lib/ccache/bin /tools
 and cleanBuildDirectory
 and cd $INNERWORKDIR/ArangoDB/build
 and TT_init
-and echo 3
 and cmakeCcache
-and echo 4
 and selectArchitecture
-and echo 5
 and selectMaintainer
-and echo 6
 and runCmake
-and echo 7
 and TT_cmake
-and echo 8
 and if test "$SKIP_MAKE" = "On"
   echo "Finished cmake at "(date)", skipping build"
 else

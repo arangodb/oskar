@@ -81,6 +81,7 @@ function setupCcache
     and popd
     or begin echo "fatal, cannot start ccache"; exit 1; end
   end
+  return 0
 end
 
 function cmakeCcache
@@ -94,6 +95,7 @@ function cmakeCcache
      -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME \
      -DUSE_CCACHE=Off
   end
+  return 0
 end
 
 function shutdownCcache
@@ -102,6 +104,7 @@ function shutdownCcache
   else if test "$USE_CCACHE" = "sccache"
     sccache --stop-server; or echo "warning: cannot stop sccache"
   end
+  return 0
 end
 
 function selectArchitecture
@@ -110,6 +113,7 @@ function selectArchitecture
     set -g FULLARGS $FULLARGS \
       -DTARGET_ARCHITECTURE=nehalem
   end
+  return 0
 end
 
 function selectMaintainer
@@ -118,6 +122,7 @@ function selectMaintainer
       -DUSE_CATCH_TESTS=Off \
       -DUSE_GOOGLE_TESTS=Off
   end
+  return 0
 end
 
 function cleanBuildDirectory
