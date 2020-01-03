@@ -334,7 +334,7 @@ function buildTarGzPackage
   pushd $INNERWORKDIR/ArangoDB/build
   and rm -rf install
   and make install DESTDIR=install
-  and mkdir install/usr
+  and mkdir -p install/usr
   and mv install/opt/arangodb/bin install/usr
   and mv install/opt/arangodb/sbin install/usr
   and mv install/opt/arangodb/share install/usr

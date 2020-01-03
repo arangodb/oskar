@@ -13,7 +13,7 @@ else
   security unlock-keychain -p $MACOS_ADMIN_KEYCHAIN_PASS
 end
 
-## NOTE: This script can obly ba called on an existing Build directory
+## NOTE: This script can only be called on an existing "build" directory
 cd $INNERWORKDIR/ArangoDB/build
 make packages
 # and move to folder
