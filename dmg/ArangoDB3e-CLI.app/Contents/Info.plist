@@ -33,7 +33,7 @@
   <string>acli</string>
 
   <key>CFBundleVersion</key>
-  <string>@VERSION</string>
+  <string>@VERSION@</string>
 
   <key>NSAppleScriptEnabled</key>
   <string>NO</string>
