@@ -12,7 +12,7 @@
     ArangoDB on an operating system not supported by us.
   </p>
   <hr/>
-  <p>Source Packages for <strong>C++14 Compilers</strong>
+  <p>Source Packages for <strong>C++17 Compilers</strong>
     <ul>
       <li>
         <a href="https://download.arangodb.com/Source/@SOURCE_TAR_GZ@">tar.gz @ARANGODB_VERSION@</a><br>
