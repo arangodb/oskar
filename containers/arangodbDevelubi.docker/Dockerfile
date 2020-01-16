@@ -1,6 +1,27 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.0
 MAINTAINER Frank Celler <info@arangodb.com>
 
+RUN microdnf update -y && rm -rf /var/cache/yum
+
+# Metadata (required)
+ARG name
+ARG vendor
+ARG version
+ARG release
+ARG summary
+ARG description
+ARG maintainer
+
+LABEL name="$name" \
+      vendor="$vendor" \
+      version="$version" \
+      release="$release" \
+      summary="$summary" \
+      description="$description" \
+      maintainer="$maintainer"
+
+ADD ./LICENSE /licenses/LICENSE
+
 RUN microdnf install gpg nodejs wget binutils && \
     npm install -g foxx-cli && \
     rm -rf /root/.npm && \

@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+source ./scripts/lib/build.fish
+
 if test "$PARALLELISM" = ""
   set -xg PARALLELISM 64
 end
@@ -22,22 +24,7 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-if test "$USE_CCACHE" = "Off"
-  set -xg CCACHE_DISABLE true
-  echo "ccache is DISABLED"
-else
-  cd $INNERWORKDIR
-  mkdir -p .ccache.alpine
-  set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine
-  if test "$CCACHEBINPATH" = ""
-    set -xg CCACHEBINPATH /usr/lib/ccache/bin
-  end
-  if test "$CCACHESIZE" = ""
-    set -xg CCACHESIZE 50G
-  end
-  ccache -M $CCACHESIZE
-end
-
+setupCcache
 cd $INNERWORKDIR/ArangoDB
 
 if test -z "$NO_RM_BUILD"
@@ -54,8 +41,6 @@ set -g t0 (date "+%Y%m%d")
 set -g t1 (date -u +%s)
 
 rm -f $INNERWORKDIR/buildTimes.csv
-rm -f $INNERWORKDIR/.ccache.log
-ccache --zero-stats
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
@@ -67,10 +52,15 @@ set -g FULLARGS $argv \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION
 
-if test "$USE_CCACHE" != "Off"
+if test "$USE_CCACHE" = "Off"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_CCACHE=Off
+else
+  # USE_CACHE is not used because the compiler is already ccache
   set -g FULLARGS $FULLARGS \
    -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
-   -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME
+   -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME \
+   -DUSE_CCACHE=Off
 end
 
 if test "$argv" = ""
@@ -167,9 +157,7 @@ else
   or exit 1
 
   echo "Finished at "(date)
-  and if test "$USE_CCACHE" != "Off"
-    ccache --show-stats
-  end
+  and shutdownCcache
   and set -g t4 (date -u +%s)
   and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
 end

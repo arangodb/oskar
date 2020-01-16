@@ -33,6 +33,9 @@ function prepareOskar
       rm -f $lockfile
     end
   end
+
+  mkdir -p work
+  begin test -f $HOME/.gcs-credentials; and cp $HOME/.gcs-credentials work/.gcs-credentials; end; or true
 end
 
 function cleanBranchName
@@ -51,5 +54,13 @@ function cleanPrepareLockUpdateClear
   and prepareOskar
   and lockDirectory
   and updateOskar
+  and clearResults
+end
+
+function cleanPrepareLockUpdateClear2
+  cleanJenkinsParameter
+  and prepareOskar
+  and lockDirectory
+  and updateOskarOnly
   and clearResults
 end

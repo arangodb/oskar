@@ -12,7 +12,7 @@
   </p>
   <p>
     See the
-    <a href="https://docs.arangodb.com/@ARANGODB_PACKAGES@/Manual/Deployment/Docker/" target="_blank">Docker Deployment</a>
+    <a href="https://www.arangodb.com/docs/@ARANGODB_PACKAGES@/deployment-docker.html" target="_blank">Docker Deployment</a>
     section in the documentation about running ArangoDB in containers
     and how to persist your data under Docker.
   </p>

@@ -11,7 +11,24 @@ set -xg PACKAGES "$ARANGODB_PACKAGES"
 set -xg SRC work
 set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
 
+function mountMacCatalinaStage2
+  if test (sw_vers -productVersion | cut -d. -f2) -ge 15
+    echo "Use Catalina-specific stage2 mount to /Users/$USER/buildfiles"
+    if not test -d /System/Volumes/Data/Users/$USER/buildfiles
+      mkdir -p /System/Volumes/Data/Users/$USER/buildfiles
+    end
+    if not test (mount | grep -c -e "nas02.arangodb.biz:/volume1/buildfiles on /Users/$USER/buildfiles") = 1
+      mount -t nfs -o "nodev,noowners,nosuid,rw,nolockd,hard,bg,intr,tcp,nfc" nas02.arangodb.biz:/volume1/buildfiles /System/Volumes/Data/Users/$USER/buildfiles
+      or exit 1
+    end
+    set -xg DST /System/Volumes/Data/Users/$USER/buildfiles/stage2/nightly/$PACKAGES
+  end
+end
+
 function movePackagesToStage2
+  echo "Moving packages to stage2..."
+  umask 000
+
   if test "$SYSTEM_IS_LINUX" = "true"
     rm -rf $DST/Linux
     and mkdir -p $DST/Linux
@@ -26,7 +43,8 @@ function movePackagesToStage2
   end
 
   if test "$SYSTEM_IS_MACOSX" = "true"
-    rm -rf $DST/MacOSX
+    mountMacCatalinaStage2
+    and rm -rf $DST/MacOSX
     and mkdir -p $DST/MacOSX
     and chmod 777 $DST/MacOSX
     or return 1

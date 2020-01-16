@@ -9,8 +9,12 @@ set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
 
-if test -z "$MACOSX_DEPLOYMENT_TARGET"
+function defaultMacOSXDeploymentTarget
   set -xg MACOSX_DEPLOYMENT_TARGET 10.12
+end
+
+if test -z "$MACOSX_DEPLOYMENT_TARGET"
+  defaultMacOSXDeploymentTarget
 end
 
 set -gx SYSTEM_IS_MACOSX true
@@ -43,6 +47,9 @@ function minMacOS
     case '10.14'
       set -gx MACOSX_DEPLOYMENT_TARGET $min
 
+    case '10.15'
+      set -gx MACOSX_DEPLOYMENT_TARGET $min
+
     case '*'
       echo "unknown macOS version $min"
   end
@@ -60,8 +67,9 @@ function findRequiredMinMacOS
   set -l v (fgrep MACOS_MIN $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
   if test "$v" = ""
-    echo "$f: no MACOS_MIN specified, using 10.12"
-    minMacOS 10.12
+    defaultMacOSXDeploymentTarget
+    echo "$f: no MACOS_MIN specified, using $MACOSX_DEPLOYMENT_TARGET"
+    minMacOS $MACOSX_DEPLOYMENT_TARGET
   else
     echo "Using MACOS_MIN version '$v' from '$f'"
     minMacOS $v
@@ -102,7 +110,7 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9]")
 
   if test "$v" = ""
     echo "$f: no OPENSSL_MACOS specified, using 1.0.2"
@@ -216,13 +224,20 @@ function pushOskar
   popd
 end
 
-function updateOskar
+function updateOskarOnly
   pushd $WORKDIR
   and git checkout -- .
   and git pull
   and source helper.fish
   or begin ; popd ; return 1 ; end
   popd
+end
+
+function updateOskar
+  updateOskarOnly
+end
+
+function updateDockerBuildImage
 end
 
 function downloadStarter

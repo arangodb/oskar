@@ -153,18 +153,173 @@ Function hostKey
 
 Function clearWER
 {
-    Remove-Item "$global:REG_WER" -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item "$global:REG_WER" -Force
+    Remove-Item "$global:REG_WER" -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+    New-Item "$global:REG_WER" -Force | Out-Null
 }
 
 Function configureWER($executable, $path)
 {
+    Write-Host "Configure crashdumps location for $executable processes"
     $regPath = "$global:REG_WER\$executable"
-    Remove-Item "$regPath" -Recurse -Force -ErrorAction SilentlyContinue
-    New-Item "$regPath" -Force
-    New-ItemProperty "$regPath" -Name DumpFolder -PropertyType ExpandString -Value "$path" -Force
-    New-ItemProperty "$regPath" -Name DumpCount -PropertyType DWord -Value 100 -Force
-    New-ItemProperty "$regPath" -Name DumpType -PropertyType DWord -Value 2 -Force
+    Remove-Item "$regPath" -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
+    New-Item "$regPath" -Force | Out-Null
+    New-ItemProperty "$regPath" -Name DumpFolder -PropertyType ExpandString -Value "$path" -Force | Out-Null
+    New-ItemProperty "$regPath" -Name DumpCount -PropertyType DWord -Value 100 -Force | Out-Null
+    New-ItemProperty "$regPath" -Name DumpType -PropertyType DWord -Value 2 -Force | Out-Null
+}
+
+$global:OPENSSL_DEFAULT_VERSION = "1.1.0l"
+$global:OPENSSL_VERSION = $global:OPENSSL_DEFAULT_VERSION
+
+$global:OPENSSL_MODES = "release", "debug"
+$global:OPENSSL_TYPES = "static", "shared"
+
+Function oskarOpenSSL
+{
+    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+    $global:USE_OSKAR_OPENSSL = "On"
+    findCompilerVersion
+    findRequiredOpenSSL
+    $global:OPENSSL_PATH = "${global:INNERWORKDIR}\OpenSSL\${OPENSSL_VERSION}"
+    Write-Host "Use OpenSSL within oskar: build ${OPENSSL_VERSION} if not present in ${OPENSSL_PATH}"
+    $global:ok = (checkOpenSSL $global:INNERWORKDIR $OPENSSL_VERSION $MSVS ${OPENSSL_MODES} ${OPENSSL_TYPES} $true)
+    If ($global:ok)
+    {
+      Write-Host "Set OPENSSL_ROOT_DIR via environment variable to $OPENSSL_PATH"
+      $env:OPENSSL_ROOT_DIR = $OPENSSL_PATH
+    }
+    Else
+    {
+      Write-Host "Error during checking and building OpenSSL with oskar!"
+    }
+    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+}
+
+Function ownOpenSSL
+{
+    $global:USE_OSKAR_OPENSSL = "Off"
+}
+
+If(-Not($USE_OSKAR_OPENSSL))
+{
+    $global:USE_OSKAR_OPENSSL = "On"
+}
+
+Function checkOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $types, $doBuild)
+{
+  $count = 0
+  Push-Location
+  If (Test-Path -PathType Container -Path "${path}\OpenSSL\${version}\VS_${msvs}")
+  {
+    ForEach ($mode In $modes)
+    {
+      ForEach ($type In $types)
+      {
+        $OPENSSL_BUILD="${type}-${mode}"
+        $OPENSSL_CHECK_PATH="${path}\OpenSSL\${version}\VS_${msvs}\${OPENSSL_BUILD}"
+        If(Test-Path -PathType Leaf -Path "${OPENSSL_CHECK_PATH}\bin\openssl.exe")
+        {
+          Set-Location "${OPENSSL_CHECK_PATH}\bin"
+          If ((.\openssl.exe version | Select-String -Pattern "${version}").Length -eq 1)
+          {
+            $count++
+          }
+          Else
+          {
+            If ($doBuild)
+            {
+              Write-Host "Building OpenSSL ${version} (${OPENSSL_BUILD}) due to wrong version in ${OPENSSL_CHECK_PATH}"
+              If (buildOpenSSL $path $version $msvs $mode $type)
+              {
+                $count++
+              }
+            }
+          }
+        }
+        Else
+        {
+          If ($doBuild)
+          {
+            Write-Host "Building OpenSSL ${version} (${OPENSSL_BUILD}) due to no build in ${OPENSSL_CHECK_PATH}"
+            If (buildOpenSSL $path $version $msvs $mode $type)
+            {
+              $count++
+            }
+          }
+        }
+      }
+    }
+  }
+  Else 
+  {
+    If ($doBuild)
+    {
+      Write-Host "Build OpenSSL ${version} all configurations"
+      If (buildOpenSSL $path $version $msvs $modes $types)
+      {
+        $count = ($modes.Length * $types.Length)
+      }
+    }
+  }
+  Pop-Location
+  return $count -eq ($modes.Length * $types.Length)
+}
+
+Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $types)
+{
+  Push-Location
+  $OPENSSL_TAG="OpenSSL_" + ($version -Replace "\.","_")
+  If (-Not(Test-Path -PathType Container -Path "${global:INNERWORKDIR}\OpenSSL\tmp"))
+  {
+    mkdir "${global:INNERWORKDIR}\OpenSSL\tmp"
+  }
+  Else
+  {
+    Remove-Item -Recurse -Force -Path "${global:INNERWORKDIR}\OpenSSL\tmp\*"
+  }
+  If ($global:ok)
+  {
+    proc -process "git"  -argument "clone -q -b $OPENSSL_TAG https://github.com/openssl/openssl ${global:INNERWORKDIR}\OpenSSL\tmp" -logfile $false -priority "Normal"
+    Set-Location "${global:INNERWORKDIR}\OpenSSL\tmp"
+    If ($global:ok)
+    {
+      proc -process "git" -argument "fetch -q" -logfile $false -priority "Normal"
+      If ($global:ok)
+      {
+        proc -process "git" -argument "reset -q --hard $OPENSSL_TAG"  -logfile $false -priority "Normal"
+        If ($global:ok)
+        {
+          proc -process "git" -argument "clean -q -fdx"
+          ForEach($mode In $modes)
+          {
+            ForEach($type In $types)
+            {
+              $OPENSSL_BUILD="${type}-${mode}"
+              $env:installdir = "${path}\OpenSSL\${version}\VS_${msvs}\${OPENSSL_BUILD}"
+              If(Test-Path -PathType Leaf -Path "$env:installdir")
+              {
+                  Remove-Item -Force -Recurse -Path "${env:installdir}\*"
+                  New-Item -Path "${env:installdir}"
+              }
+              If ($type -eq "static")
+              {
+                $CONFIG_TYPE = "no-shared"
+              }
+              Else
+              {
+                $CONFIG_TYPE = "${type}"
+              }
+              $buildCommand = "call `"C:\Program Files (x86)\Microsoft Visual Studio\$msvs\Community\Common7\Tools\vsdevcmd`" -arch=amd64 2>&1 1> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && perl Configure $CONFIG_TYPE --$mode --prefix=`"$env:installdir`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake clean 2>&1 1>> `"${INNERDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake install 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`""
+              Invoke-Expression "& cmd /c '$buildCommand'" 
+              If (-Not ($?)) { $global:ok = $false }
+            }
+          }
+        }
+      }
+    }
+  }
+  Pop-Location
+  return $global:ok
 }
 
 ################################################################################
@@ -324,6 +479,8 @@ Function showConfig
     Write-host "OnlyGrey       : "$ONLYGREY
     Write-Host " "
     Write-Host "Generator      : "$GENERATOR
+    Write-Host "OpenSSL        :  ${OPENSSL_VERSION} (A.B.Cd)"
+    Write-Host "Use oskar SSL  : "$USE_OSKAR_OPENSSL
     Write-Host "Packaging      : "$PACKAGING
     Write-Host "Static exec    : "$STATICEXECUTABLES
     Write-Host "Static libs    : "$STATICLIBS
@@ -436,12 +593,14 @@ Function VS2017
     $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2017"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
     $global:GENERATOR = "Visual Studio 15 2017 Win64"
     $global:GENERATORID = "v141"
+    $global:MSVS = "2017"
 }
 Function VS2019
 {
     $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
     $global:GENERATOR = "Visual Studio 16 2019"
     $global:GENERATORID = "v142"
+    $global:MSVS = "2019"
 }
 If(-Not($global:GENERATOR))
 {
@@ -706,6 +865,24 @@ If(-Not($USE_RCLONE))
     findUseRclone
 }
 
+Function findRequiredOpenSSL
+{
+    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
+    {
+        $OPENSSL_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "OPENSSL_WINDOWS" | Select Line
+        If ($OPENSSL_WINDOWS -ne "")
+        {
+            If ($OPENSSL_WINDOWS -match '[0-9]{1}\.[0-9]{1}\.[0-9]{1}[a-z]{1}' -And $Matches.count -eq 1)
+            {
+                $global:OPENSSL_VERSION = $Matches[0]
+                return
+            }
+        }
+    }
+    Write-Host "No VERSIONS file with proper OPENSSL_WINDOWS record found! Using default version: ${OPENSSL_DEFAULT_VERSION}"
+    $global:OPENSSL_VERSION = $global:OPENSSL_DEFAULT_VERSION
+}
+
 # ##############################################################################
 # Version detection
 # ##############################################################################
@@ -901,29 +1078,29 @@ Function switchBranches($branch_c,$branch_e)
     checkoutIfNeeded
     Push-Location $pwd
     Set-Location $global:ARANGODIR;comm
-    If ($global:ok) 
+    If ($global:ok)
     {
         proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
     }
-    If ($global:ok) 
+    If ($global:ok)
     {
         proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
     }
-    If ($global:ok) 
+    If ($global:ok)
     {
         proc -process "git" -argument "fetch" -logfile $false -priority "Normal"
     }
-    If ($global:ok) 
+    If ($global:ok)
     {
         proc -process "git" -argument "fetch --tags -f" -logfile $false -priority "Normal"
     }
-    If ($global:ok) 
+    If ($global:ok)
     {
         proc -process "git" -argument "checkout $branch_c" -logfile $false -priority "Normal"
     }
     If ($branch_c.StartsWith("v"))
     {
-        If ($global:ok) 
+        If ($global:ok)
         {
             proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
         }
@@ -939,36 +1116,36 @@ Function switchBranches($branch_c,$branch_e)
     {
         Push-Location $pwd
         Set-Location $global:ENTERPRISEDIR;comm
-        If ($global:ok) 
+        If ($global:ok)
         {
             proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
         }
-        If ($global:ok) 
+        If ($global:ok)
         {
             proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
         }
-        If ($global:ok) 
+        If ($global:ok)
         {
             proc -process "git" -argument "fetch" -logfile $false -priority "Normal"
         }
-        If ($global:ok) 
+        If ($global:ok)
         {
             proc -process "git" -argument "fetch --tags -f" -logfile $false -priority "Normal"
         }
-        If ($global:ok) 
+        If ($global:ok)
         {
             proc -process "git" -argument "checkout $branch_e" -logfile $false -priority "Normal"
         }
         If ($branch_e.StartsWith("v"))
         {
-            If ($global:ok) 
+            If ($global:ok)
             {
                 proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
             }
         }
         Else
         {
-            If ($global:ok) 
+            If ($global:ok)
             {
                 proc -process "git" -argument "reset --hard origin/$branch_e" -logfile $false -priority "Normal"
             }
@@ -1048,6 +1225,7 @@ Function noteStartAndRepoState
     {
         Remove-Item -Force $env:TMP\testProtocol.txt
     }
+    New-Item -Force $env:TMP\testProtocol.txt
     $(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH.mm.ssZ") | Add-Content $env:TMP\testProtocol.txt
     Write-Output "========== Status of main repository:" | Add-Content $env:TMP\testProtocol.txt
     Write-Host "========== Status of main repository:"
@@ -1074,15 +1252,15 @@ Function getCacheID
        
     If ($ENTERPRISEEDITION -eq "On")
     {
-        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } |get-filehash > $env:TMP\allHashes.txt
+        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
     }
     else
     {
         # if there happenes to be an enterprise directory, we ignore it.
-        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | get-filehash > $env:TMP\allHashes.txt
+        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
     }
     
-    $hash = "$((get-filehash $env:TMP\allHashes.txt).Hash)"
+    $hash = "$((Get-FileHash $env:TMP\allHashes.txt).Hash)" + ($env:OPENSSL_ROOT_DIR).GetHashCode()
     $hashStr = "$env:CMAKE_CONFIGURE_DIR\${hash}-EP_${ENTERPRISEEDITION}.zip"
     Remove-Item -Force $env:TMP\allHashes.txt
     return $hashStr
@@ -1104,50 +1282,62 @@ Function configureWindows
     }
 
     findCompilerVersion
-    configureCache
-    $cacheZipFN = getCacheID
-    $haveCache = $(Test-Path -Path $cacheZipFN)
-    Push-Location $pwd
-    Set-Location "$global:ARANGODIR\build"
-    if($haveCache)
+    If ($USE_OSKAR_OPENSSL -eq "On")
     {
-        Write-Host "Extracting cmake configure zip: ${cacheZipFN}"
-        # Touch the file, so a cleanup job sees its used:
-        $file = Get-Item $cacheZipFN
-        $file.LastWriteTime = (get-Date)
-        # extract it
-        7unzip $cacheZipFN
-    }
-    $ARANGODIR_SLASH = $global:ARANGODIR -replace "\\","/"
-    If($ENTERPRISEEDITION -eq "On")
-    {
-        downloadStarter
-        downloadSyncer
-        copyRclone
-        $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
-        If ($global:USE_RCLONE -eq "true")
-        {
-            $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
-        }
-        Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
-        Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`""
-        proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+      oskarOpenSSL
     }
     Else
     {
-        downloadStarter
-        Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-        Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
-        proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+      If (Test-Path "env:OPENSSL_ROOT_DIR") { Remove-Item env:\OPENSSL_ROOT_DIR }
     }
-    if(!$haveCache)
+
+    if ($global:ok)
     {
-        Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
-        7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-xr!*.exe"; comm
+      configureCache
+      $cacheZipFN = getCacheID
+      $haveCache = $(Test-Path -Path $cacheZipFN)
+      Push-Location $pwd
+      Set-Location "$global:ARANGODIR\build"
+      if($haveCache)
+      {
+          Write-Host "Extracting cmake configure zip: ${cacheZipFN}"
+          # Touch the file, so a cleanup job sees its used:
+          $file = Get-Item $cacheZipFN
+          $file.LastWriteTime = (get-Date)
+          # extract it
+          7unzip $cacheZipFN
+      }
+      $ARANGODIR_SLASH = $global:ARANGODIR -replace "\\","/"
+      If($ENTERPRISEEDITION -eq "On")
+      {
+          downloadStarter
+          downloadSyncer
+          copyRclone
+          $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
+          If ($global:USE_RCLONE -eq "true")
+          {
+              $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
+          }
+          Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+      }
+      Else
+      {
+          downloadStarter
+          Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+      }
+      if(!$haveCache)
+      {
+          Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
+          7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-xr!*.exe"; comm
+      }
+      Write-Host "Clcache Statistics"
+      showCacheStats
+      Pop-Location
     }
-    Write-Host "Clcache Statistics"
-    showCacheStats
-    Pop-Location
 }
 
 Function buildWindows 
@@ -1214,6 +1404,7 @@ Function storeSymbols
             Write-Host "Symbol: symstore.exe add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress"
             proc -process "symstore.exe" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
         }
+        #uploadSymbols functionality moved to jenkins/releaseUploadFiles3.fish due to problems with gsutil on Windows
         #uploadSymbols
         Pop-Location
     }
@@ -1416,6 +1607,7 @@ Function moveResultsToWorkspace
 
 Function configureDumpsArangoDB
 {
+    Write-Host "Configure crashdumps for arango* processes to reside in ${global:COREDIR}..."
     clearWER
     ForEach($executable in (Get-ChildItem -File -Filter "arango*.exe" -Path "$global:ARANGODIR\build\bin\$BUILDMODE"))
     {

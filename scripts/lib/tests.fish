@@ -44,12 +44,12 @@ set -xg GCOV_PREFIX_STRIP 3
 function runAnyTest
   set -l t $argv[1]
   set -l tt $argv[2]
-  set -l l0 "$t"
+  set -l l0 (string replace '*' 'all' $t)
   if test "$tt" = "-"
     set tt ""
   end
   if test "$tt" != ""
-    set l0 "$t"_"$tt"
+    set l0 "$l0"_"$tt"
   end
   set -l l1 "$l0".log
   set -l l2 $TMPDIR/"$l0".out
@@ -60,20 +60,21 @@ function runAnyTest
   if grep $t UnitTests/OskarTestSuitesBlackList
     echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
   else
-    set -l arguments $t \
-      (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true")\
+    set -l arguments \'"$t"\' \
+      (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic "$SKIPNONDETERMINISTIC" \
       --skipTimeCritical "$SKIPTIMECRITICAL" \
-      --testOutput $l2 \
+      --testOutput "$l2" \
       --writeXmlReport false \
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
       $argv
 
     echo (pwd) "-" scripts/unittest $arguments
-    mkdir -p $l2
+    mkdir -p "$l2"
+    #echo "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped"
     fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped" &
     set -g portBase (math $portBase + 100)
     sleep 1
@@ -150,27 +151,27 @@ function createReport
         set totalStarted $started
       end
 
-      if test -f "$d/started" -a -f "$d/stopped"
+      if test -f "$d/stopped"
         set stopped (cat "$d/stopped")
 
         if test $totalStopped -lt $stopped
           set totalStopped $stopped
         end
 
-        echo Test $d took (math $stopped - $started) seconds, status $localresult
-        echo $d,(math $stopped - $started),$localresult >> testRuns.txt
+        echo Test $d took (math $stopped - $started) seconds [$stopped - $started], status $localresult
+        echo $d,(math $stopped - $started),$localresult >> testRuns.csv
       else
-        echo Test $d did not finish, status $localresult
-        echo $d,-1,$localresult >> testRuns.txt
+        echo Test $d did not finish [$started], status $localresult
+        echo $d,0,$localresult >> testRuns.csv
       end
     end
   end
 
-  echo "TOTAL,"(math $totalStopped - $totalStarted)","$result >> testRuns.txt
+  echo "TOTAL,"(math $totalStopped - $totalStarted)","$result >> testRuns.csv
 
   begin
     echo "<table>"; echo "Test,Runtime,Status" | sed -e 's/^/<tr><th>/' -e 's/,/<\/th><th>/g' -e 's/$/<\/th><\/tr>/'
-    cat testRuns.txt \
+    cat testRuns.csv \
       | sed -e 's/^/<tr><td>/' -e 's/,/<\/td><td align="right">/g' -e 's/$/<\/td><\/tr>/' \
       | sed -e 's/^<tr>\(.*BAD.*\)$/<tr style="background-color: red;color: white;">\1/'
     echo "</table>"
@@ -243,8 +244,8 @@ function createReport
     set -g result BAD
   end
 
-  if test -f $INNERWORKDIR/tmp/testRuns.txt
-    cp $INNERWORKDIR/tmp/testRuns.txt $INNERWORKDIR
+  if test -f $INNERWORKDIR/tmp/testRuns.csv
+    cp $INNERWORKDIR/tmp/testRuns.csv $INNERWORKDIR
   end
 
   if test -f $INNERWORKDIR/tmp/testRuns.html
