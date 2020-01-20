@@ -31,7 +31,7 @@ Function createReport
         Write-Host "Looking at directory $($dir.BaseName)"
         If(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_EXECUTIVE_SUMMARY.json")
             {
-                        $reportFound = true
+                        $reportFound = $true
                         If(-Not($(Get-Content "$($dir.FullName)\UNITTEST_RESULT_EXECUTIVE_SUMMARY.json") -eq "true"))
                         {
                             $global:result = "BAD"
@@ -43,7 +43,7 @@ Function createReport
             }
         If(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json")
             {
-                        $reportFound = true
+                        $reportFound = $true
                         If(-Not($(Get-Content "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json") -eq "false"))
                         {
                             $global:result = "BAD"
@@ -54,7 +54,7 @@ Function createReport
                             $global:badtests = $global:badtests + "Crash occured in $file`r`n"
                         }   
             }
-        if ($reportFound != true)
+        if ($reportFound != $true)
             {
                 Write-Host "No Testresult found at directory $($dir.BaseName)"
                 $global:result = "BAD"
