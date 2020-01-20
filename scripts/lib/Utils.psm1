@@ -54,7 +54,7 @@ Function createReport
                             $global:badtests = $global:badtests + "Crash occured in $file`r`n"
                         }   
             }
-        if ($reportFound != $true)
+        if ($reportFound -ne $true)
             {
                 Write-Host "No Testresult found at directory $($dir.BaseName)"
                 $global:result = "BAD"
