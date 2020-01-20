@@ -43,10 +43,10 @@ Function global:registerSingleTests()
     registerTest -testname "shell_server_aql" -index "4" -bucket "5/4"
     registerTest -testname "server_http"
     registerTest -testname "ssl_server"  -sniff true
-    registerTest -testname "shell_client"
-    registerTest -testname "shell_client" -vst
-    registerTest -testname "shell_client_aql"
-    registerTest -testname "shell_client_aql" -vst
+    registerTest -testname "shell_client" -index "0"
+    registerTest -testname "shell_client" -vst -index "1"
+    registerTest -testname "shell_client_aql" -index "0"
+    registerTest -testname "shell_client_aql" -vst -index "1"
     registerTest -testname "shell_replication" -weight 2
     registerTest -testname "BackupAuthNoSysTests"
     registerTest -testname "BackupAuthSysTests"
