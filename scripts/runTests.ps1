@@ -38,6 +38,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_client_aql" -index "http"
     registerTest -testname "shell_client_aql" -vst -index "vst"
     registerTest -testname "shell_replication" -weight 2
+    registerTest -testname "server_secrets"
     registerTest -testname "server_permissions"
     registerTest -testname "server_parameters"
     registerTest -testname "BackupAuthNoSysTests"
@@ -85,6 +86,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "dump_multiple"
     registerTest -cluster $true -testname "http_server"  -sniff true
+    registerTest -cluster $true -testname "server_secrets"
     registerTest -cluster $true -testname "server_permissions"
     registerTest -cluster $true -testname "server_parameters"
     registerTest -cluster $true -testname "resilience_move"
