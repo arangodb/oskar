@@ -218,6 +218,12 @@ else ; set -gx WORKSPACE_LOGS $WORKSPACE_LOGS ; end
 function addLogLevel ; set -gx LOG_LEVELS $LOG_LEVELS $argv ; end
 function clearLogLevel ; set -ge LOG_LEVEL ; end
 
+function notarizeApp ; set -gx NOTARIZE_APP On ; end
+function noNotarizeAppp ; set -gx NOTARIZE_APP Off ; end
+if test -z "$NOTARIZE_APP"; noNotarizeAppp
+else ; set -gx NOTARIZE_APP $NOTARIZE_APP ; end
+
+
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
 # else is available before proceeding
@@ -1176,6 +1182,7 @@ function showConfig
   printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR        '(verbose/slient)'
   printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
   printf $fmt3 'Logs preserve' $WORKSPACE_LOGS      '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
+  printf $fmt3 'Notarize'      $NOTARIZE_APP        '(notarizeApp/noNotarizedApp)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR

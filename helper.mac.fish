@@ -284,9 +284,9 @@ function buildEnterprisePackage
   and enterprise
   and set -xg NOSTRIP dont
   and cleanupThirdParty
+  and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
   and downloadStarter
   and downloadSyncer
-  and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
   and copyRclone "macos"
   and if test "$USE_RCLONE" = "true"
     set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"

@@ -15,6 +15,7 @@ if test ! -f "${HOME}/Library/ArangoDB-etc"; then
 fi
 
 # check for old PID file
+PIDFILE="/var/tmp/arangod.pid"
 
 if [ -f "${PIDFILE}" ];  then
 result=$(
