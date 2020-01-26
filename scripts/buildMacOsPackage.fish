@@ -172,7 +172,7 @@ and if test $NOTARIZE_APP = On
   and stapleApp
 end
 and createDmg
-and mv ${DMGNAME} "$INNERWORKDIR/$PKGNAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
+and mv $DMGNAME "$INNERWORKDIR/$PKGNAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
 or begin popd; exit 1; end
 
 popd
