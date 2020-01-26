@@ -27,11 +27,15 @@ end
 
 if test "$ENTERPRISEEDITION" = "On"
   set -g APPNAME ArangoDB3e-CLI.app
+  set -g PKGNAME arangodb3e
   set -g EDITION "Enterprise"
 else
   set -g APPNAME ArangoDB3-CLI.app
+  set -g PKGNAME arangodb3
   set -g "Community"
 end
+
+set -g DMGNAME (basename $APPNAME .app).dmg
 
 # helper functions
 function setupApp
@@ -152,7 +156,7 @@ function createDmg
     --icon "$APPNAME" 200 190 \
     --app-drop-link 600 185 \
     --no-internet-enable \
-    (basename $APPNAME .app).dmg $APPNAME
+    $DMGNAME $APPNAME
 end
 
 # create app, notarize and create dmg
@@ -168,20 +172,7 @@ and if test $NOTARIZE_APP = On
   and stapleApp
 end
 and createDmg
-and popd
-and exit 0
-
-# and ../../utils/create-dmg --identity $IDENTITY $APPNAME
-# use the name stored in the INFO.PLIST, not APPNAME
-# and mv "ArangoDB3-CLI $ARANGODB_DARWIN_UPSTREAM.dmg" "$INNERWORKDIR/arangodb3-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
+and mv ${DMGNAME} "$INNERWORKDIR/$PKGNAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
 or begin popd; exit 1; end
 
 popd
-
-
-# ## NOTE: This script can only be called on an existing "build" directory
-# cd $INNERWORKDIR/ArangoDB/build
-# make packages
-# # and move to folder
-# and make copy_packages
-# and echo Package build in $INNERWORKDIR
