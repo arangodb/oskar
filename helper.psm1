@@ -6,6 +6,11 @@ If(-Not($ENV:WORKSPACE))
     $ENV:WORKSPACE = Join-Path -Path $global:WORKDIR -ChildPath work
 }
 
+If(-Not($ENV:OSKAR_BRANCH))
+{
+    $ENV:OSKAR_BRANCH = "master"
+}
+
 If(-Not(Test-Path -PathType Container -Path "work"))
 {
     New-Item -ItemType Directory -Path "work"
@@ -1165,7 +1170,7 @@ Function updateOskar
     }
     If ($global:ok) 
     {
-        proc -process "git" -argument "reset --hard origin/master" -logfile $false -priority "Normal"
+        proc -process "git" -argument "reset --hard origin/${ENV:OSKAR_BRANCH}" -logfile $false -priority "Normal"
     }
     Pop-Location
 }
@@ -1272,6 +1277,7 @@ Function getCacheID
 
 Function configureWindows
 {
+    echo "TEST ${ENV:OSKAR_BRANCH}"
     If(Test-Path -PathType Container -Path "$global:ARANGODIR\build")
     {
         Remove-Item -Path "$global:ARANGODIR\build\*" -Recurse
