@@ -1277,6 +1277,7 @@ Function getCacheID
 
 Function configureWindows
 {
+    echo "TEST ${ENV:OSKAR_BRANCH}"
     If(Test-Path -PathType Container -Path "$global:ARANGODIR\build")
     {
         Remove-Item -Path "$global:ARANGODIR\build\*" -Recurse
