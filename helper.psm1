@@ -279,11 +279,11 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
   echo "buildOpenSSL BEGIN: $path, $version, $msvs, $modes, $types"
   If (-Not(Test-Path -PathType Container -Path "${global:INNERWORKDIR}\OpenSSL\tmp"))
   {
-    mkdir "${global:INNERWORKDIR}\OpenSSL\tmp"
+    mkdir "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}"
   }
   Else
   {
-    Remove-Item -Recurse -Force -Path "${global:INNERWORKDIR}\OpenSSL\tmp\*"
+    Remove-Item -Recurse -Force -Path "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}\*"
   }
   If ($global:ok)
   {
