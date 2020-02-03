@@ -214,7 +214,7 @@ Function checkOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
 {
   $count = 0
   Push-Location
-  echo "checkOpenSSL BEGIN: $path, $version, $msvs, $modes, $types, $doBuild"
+  Write-Host "checkOpenSSL BEGIN: $path, $version, $msvs, $modes, $types, $doBuild"
   If (Test-Path -PathType Container -Path "${path}\OpenSSL\${version}\VS_${msvs}")
   {
     ForEach ($mode In $modes)
@@ -223,7 +223,7 @@ Function checkOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
       {
         $OPENSSL_BUILD="${type}-${mode}"
         $OPENSSL_CHECK_PATH="${path}\OpenSSL\${version}\VS_${msvs}\${OPENSSL_BUILD}"
-        echo "OPENSSL_CHECK_PATH: $OPENSSL_CHECK_PATH"
+        Write-Host "OPENSSL_CHECK_PATH: $OPENSSL_CHECK_PATH"
         If(Test-Path -PathType Leaf -Path "${OPENSSL_CHECK_PATH}\bin\openssl.exe")
         {
           Set-Location "${OPENSSL_CHECK_PATH}\bin"
@@ -276,7 +276,7 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
 {
   Push-Location
   $OPENSSL_TAG="OpenSSL_" + ($version -Replace "\.","_")
-  echo "buildOpenSSL BEGIN: $path, $version, $msvs, $modes, $types"
+  Write-Host "buildOpenSSL BEGIN: $path, $version, $msvs, $modes, $types"
   If (-Not(Test-Path -PathType Container -Path "${global:INNERWORKDIR}\OpenSSL\tmp"))
   {
     mkdir "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}"
@@ -317,7 +317,7 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
               {
                 $CONFIG_TYPE = "${type}"
               }
-              $buildCommand = "call `"C:\Program Files (x86)\Microsoft Visual Studio\$msvs\Community\Common7\Tools\vsdevcmd`" -arch=amd64 2>&1 1> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && perl Configure $CONFIG_TYPE --$mode --prefix=`"$env:installdir`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake clean 2>&1 1>> `"${INNERDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}${msvs}.log`" && nmake install 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log`""
+              $buildCommand = "call `"C:\Program Files (x86)\Microsoft Visual Studio\$msvs\Community\Common7\Tools\vsdevcmd`" -arch=amd64 2>&1 1> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log`" && perl Configure $CONFIG_TYPE --$mode --prefix=`"$env:installdir`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log`" && nmake clean 2>&1 1>> `"${INNERDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log`" && nmake 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log`" && nmake install 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log`""
               Invoke-Expression "& cmd /c '$buildCommand'" 
               If (-Not ($?)) { $global:ok = $false }
             }
