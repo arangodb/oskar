@@ -214,7 +214,6 @@ Function checkOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
 {
   $count = 0
   Push-Location
-  Write-Host "checkOpenSSL BEGIN: $path, $version, $msvs, $modes, $types, $doBuild"
   If (Test-Path -PathType Container -Path "${path}\OpenSSL\${version}\VS_${msvs}")
   {
     ForEach ($mode In $modes)
@@ -223,7 +222,6 @@ Function checkOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
       {
         $OPENSSL_BUILD="${type}-${mode}"
         $OPENSSL_CHECK_PATH="${path}\OpenSSL\${version}\VS_${msvs}\${OPENSSL_BUILD}"
-        Write-Host "OPENSSL_CHECK_PATH: $OPENSSL_CHECK_PATH"
         If(Test-Path -PathType Leaf -Path "${OPENSSL_CHECK_PATH}\bin\openssl.exe")
         {
           Set-Location "${OPENSSL_CHECK_PATH}\bin"
@@ -276,7 +274,6 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
 {
   Push-Location
   $OPENSSL_TAG="OpenSSL_" + ($version -Replace "\.","_")
-  Write-Host "buildOpenSSL BEGIN: $path, $version, $msvs, $modes, $types"
   If (-Not(Test-Path -PathType Container -Path "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}"))
   {
     mkdir "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}"
