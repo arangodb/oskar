@@ -317,7 +317,7 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
               {
                 $CONFIG_TYPE = "${type}"
               }
-              $buildCommand = "call `"C:\Program Files (x86)\Microsoft Visual Studio\$msvs\Community\Common7\Tools\vsdevcmd`" -arch=amd64 2>&1 1> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && perl Configure $CONFIG_TYPE --$mode --prefix=`"$env:installdir`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake clean 2>&1 1>> `"${INNERDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake install 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`""
+              $buildCommand = "call `"C:\Program Files (x86)\Microsoft Visual Studio\$msvs\Community\Common7\Tools\vsdevcmd`" -arch=amd64 2>&1 1> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && perl Configure $CONFIG_TYPE --$mode --prefix=`"$env:installdir`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake clean 2>&1 1>> `"${INNERDIR}\buildOpenSSL_${type}-${mode}.log`" && nmake 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}${msvs}.log`" && nmake install 2>&1 1>> `"${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log`""
               Invoke-Expression "& cmd /c '$buildCommand'" 
               If (-Not ($?)) { $global:ok = $false }
             }
