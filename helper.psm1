@@ -277,7 +277,7 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
   Push-Location
   $OPENSSL_TAG="OpenSSL_" + ($version -Replace "\.","_")
   Write-Host "buildOpenSSL BEGIN: $path, $version, $msvs, $modes, $types"
-  If (-Not(Test-Path -PathType Container -Path "${global:INNERWORKDIR}\OpenSSL\tmp"))
+  If (-Not(Test-Path -PathType Container -Path "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}"))
   {
     mkdir "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}"
   }
@@ -318,7 +318,7 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
                 $CONFIG_TYPE = "${type}"
               }
               $buildCommand = "call `"C:\Program Files (x86)\Microsoft Visual Studio\$msvs\Community\Common7\Tools\vsdevcmd`" -arch=amd64 && perl Configure $CONFIG_TYPE --$mode --prefix=`"${env:installdir}`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A && nmake clean && nmake && nmake install"
-              Invoke-Expression "& cmd /c '$buildCommand'" | tee "${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log"
+              Invoke-Expression "& cmd /c '$buildCommand' 2>&1" | tee "${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log"
               If (-Not ($?)) { $global:ok = $false }
             }
           }
