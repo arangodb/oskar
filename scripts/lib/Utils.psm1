@@ -376,3 +376,10 @@ Function LaunchController($seconds)
     Get-WmiObject win32_process | Out-File -filepath $env:TMP\processes-after.txt 
     comm
 }
+
+
+Function stopService()
+{
+    
+
+}
