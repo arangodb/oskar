@@ -10,8 +10,6 @@ ARANGODB="/usr/sbin/arangod"
 . /usr/share/debconf/confmodule
 . /usr/share/arangodb3/arangodb-helper
 
-db_get @EDITION@/storage_engine
-STORAGE_ENGINE=$RET
 export GLIBCXX_FORCE_NEW=1
 
 if test -d /var/lib/arangodb3 -a ! -f /usr/sbin/arangod; then
@@ -19,9 +17,6 @@ if test -d /var/lib/arangodb3 -a ! -f /usr/sbin/arangod; then
 else
     NEW_INSTALL_EXISTING_DIR=false
 fi
-
-# fill in correct storage engine into arangod.conf
-sed -i /etc/arangodb3/arangod.conf -e "s;storage-engine = auto;storage-engine = $STORAGE_ENGINE;"
 
 if [ -d "/run/systemd/system" ] ; then
     if deb-systemd-invoke is-active arangodb3.service 2>&1 >/dev/null ; then
