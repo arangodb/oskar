@@ -23,6 +23,8 @@ if test -z $argv[1]
   exit 1
 end
 
+echo "argv[1]: $argv[1]"
+
 # unlock keychain to make code signing work
 if test "$MACOS_ADMIN_KEYCHAIN_PASS" = "-"
   security unlock-keychain
