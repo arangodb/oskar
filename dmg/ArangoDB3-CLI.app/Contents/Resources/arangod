@@ -16,7 +16,7 @@ program=$(basename $me)
 installation=$(dirname $me)
 executable=$installation/opt/arangodb/sbin/$program
 if [ -x $executable ] ; then
-  exec $executable -c "${HOME}/Library/ArangoDB-etc/arangod.conf" $*
+  exec $executable -c "${HOME}/Library/ArangoDB-etc/${program}.conf" $*
 fi
 echo "Could not find executable!"
 exit 1
