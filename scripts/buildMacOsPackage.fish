@@ -32,10 +32,10 @@ else
   security unlock-keychain -p $MACOS_ADMIN_KEYCHAIN_PASS
 end
 
-set -l pd "default"
+set -gx pd "default"
 
 if test -d $WORKDIR/dmg/$argv[1]
-  set pd $argv[1]
+  set -gx pd $argv[1]
 end
 
 if test "$ENTERPRISEEDITION" = "On"
