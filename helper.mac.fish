@@ -262,7 +262,7 @@ function buildPackage
     echo Building community edition MacOs bundle...
   end
 
-  runLocal $SCRIPTSDIR/buildMacOsPackage.fish
+  runLocal $SCRIPTSDIR/buildMacOsPackage.fish $ARANGODB_PACKAGES
   and buildTarGzPackage
 end
 

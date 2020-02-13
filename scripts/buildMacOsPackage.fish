@@ -18,6 +18,10 @@ if test -z "$MACOS_ADMIN_KEYCHAIN_PASS"
   exit 1
 end
 
+if test -z $argv[1]
+  echo "Need ArangoDB MAJOR.MINOR version the parameter!"
+end
+
 # unlock keychain to make code signing work
 if test "$MACOS_ADMIN_KEYCHAIN_PASS" = "-"
   security unlock-keychain
@@ -27,8 +31,8 @@ end
 
 set -l pd "default"
 
-if test -d $WORKDIR/dmg/$ARANGODB_PACKAGES
-  set pd "$ARANGODB_PACKAGES"
+if test -d $WORKDIR/dmg/$argv[1]
+  set pd $argv[1]
 end
 
 if test "$ENTERPRISEEDITION" = "On"
