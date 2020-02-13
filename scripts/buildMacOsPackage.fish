@@ -23,8 +23,6 @@ if test -z $argv[1]
   exit 1
 end
 
-echo "argv[1]: $argv[1]"
-
 # unlock keychain to make code signing work
 if test "$MACOS_ADMIN_KEYCHAIN_PASS" = "-"
   security unlock-keychain
@@ -32,10 +30,10 @@ else
   security unlock-keychain -p $MACOS_ADMIN_KEYCHAIN_PASS
 end
 
-set -gx pd "default"
+set -g pd "default"
 
 if test -d $WORKDIR/dmg/$argv[1]
-  set -gx pd $argv[1]
+  set -g pd $argv[1]
 end
 
 if test "$ENTERPRISEEDITION" = "On"
@@ -52,7 +50,6 @@ set -g DMGNAME (basename $APPNAME .app).dmg
 
 # helper functions
 function setupApp
-  echo "USE $WORKDIR/dmg/$pd/$APPNAME"
   cp -a $WORKDIR/dmg/$pd/$APPNAME $INNERWORKDIR/dmg
   and sed -i '' -e "s:@VERSION@:$ARANGODB_DARWIN_UPSTREAM:g" $INNERWORKDIR/dmg/$APPNAME/Contents/Info.plist
   and echo "created APP in $INNERWORKDIR/dmg/$APPNAME"
