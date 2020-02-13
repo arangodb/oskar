@@ -42,21 +42,12 @@ if [ "$1" = 'arangod' ]; then
     # must work regardless under which user we run:
     cp /etc/arangodb3/arangod.conf /tmp/arangod.conf
 
+    ARANGO_STORAGE_ENGINE=rocksdb
     if [ ! -z "$ARANGO_ENCRYPTION_KEYFILE" ]; then
         echo "Using encrypted database"
         sed -i /tmp/arangod.conf -e "s;^.*encryption-keyfile.*;encryption-keyfile=$ARANGO_ENCRYPTION_KEYFILE;"
-        ARANGO_STORAGE_ENGINE=rocksdb
     fi
 
-    if [ "$ARANGO_STORAGE_ENGINE" == "rocksdb" ]; then
-        echo "choosing RocksDB storage engine"
-        sed -i /tmp/arangod.conf -e "s;storage-engine = auto;storage-engine = rocksdb;"
-    elif [ "$ARANGO_STORAGE_ENGINE" == "mmfiles" ]; then
-        echo "choosing MMFiles storage engine"
-        sed -i /tmp/arangod.conf -e "s;storage-engine = auto;storage-engine = mmfiles;"
-    else
-        echo "automatically choosing storage engine"
-    fi
     if [ ! -f /var/lib/arangodb3/SERVER ] && [ "$SKIP_DATABASE_INIT" != "1" ]; then
         if [ ! -z "$ARANGO_ROOT_PASSWORD_FILE" ]; then
             if [ -f "$ARANGO_ROOT_PASSWORD_FILE" ]; then
