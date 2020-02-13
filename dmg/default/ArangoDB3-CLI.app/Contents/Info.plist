@@ -42,7 +42,7 @@
   <string>Copyright © 2014-2020 ArangoDB GmbH, Cologne, Germany. All rights reserved.</string>
 
   <key>LSMinimumSystemVersion</key>
-  <string>10.9</string>
+  <string>10.14</string>
 
   <key>NSSupportsSuddenTermination</key>
   <false/>

@@ -25,6 +25,12 @@ else
   security unlock-keychain -p $MACOS_ADMIN_KEYCHAIN_PASS
 end
 
+set -l pd "default"
+
+if test -d $WORKDIR/dmg/$ARANGODB_PACKAGES
+  set pd "$ARANGODB_PACKAGES"
+end
+
 if test "$ENTERPRISEEDITION" = "On"
   set -g APPNAME ArangoDB3e-CLI.app
   set -g PKGNAME arangodb3e
@@ -32,14 +38,14 @@ if test "$ENTERPRISEEDITION" = "On"
 else
   set -g APPNAME ArangoDB3-CLI.app
   set -g PKGNAME arangodb3
-  set -g "Community"
+  set -g EDITION "Community"
 end
 
 set -g DMGNAME (basename $APPNAME .app).dmg
 
 # helper functions
 function setupApp
-  cp -a $WORKDIR/dmg/$APPNAME $INNERWORKDIR/dmg
+  cp -a $WORKDIR/dmg/$pd/$APPNAME $INNERWORKDIR/dmg
   and sed -i '' -e "s:@VERSION@:$ARANGODB_DARWIN_UPSTREAM:g" $INNERWORKDIR/dmg/$APPNAME/Contents/Info.plist
   and echo "created APP in $INNERWORKDIR/dmg/$APPNAME"
   and begin
