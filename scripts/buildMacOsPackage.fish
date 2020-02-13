@@ -20,6 +20,7 @@ end
 
 if test -z $argv[1]
   echo "Need ArangoDB MAJOR.MINOR version the parameter!"
+  exit 1
 end
 
 # unlock keychain to make code signing work
