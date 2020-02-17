@@ -50,7 +50,7 @@ set -g DMGNAME (basename $APPNAME .app).dmg
 
 # helper functions
 function setupApp
-  cp -a $WORKDIR/dmg/$pd/$APPNAME $INNERWORKDIR/dmg
+  cp -aL $WORKDIR/dmg/$pd/$APPNAME $INNERWORKDIR/dmg
   and sed -i '' -e "s:@VERSION@:$ARANGODB_DARWIN_UPSTREAM:g" $INNERWORKDIR/dmg/$APPNAME/Contents/Info.plist
   and echo "created APP in $INNERWORKDIR/dmg/$APPNAME"
   and begin
