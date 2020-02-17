@@ -35,7 +35,7 @@ fi
 # check for database engine
 
 if test ! -f "${HOME}/Library/ArangoDB/opt/arangodb/var/lib/arangodb3/SERVER" -a ! -f "${HOME}/Library/ArangoDB/opt/arangodb/var/lib/arangodb3/ENGINE"; then
-    STORAGE_ENGINE=rocksdb
+    STORAGE_ENGINE=auto
 
     sed -i -e "s;storage-engine = auto;storage-engine = $STORAGE_ENGINE;" "${ARANGOD_CONF}"
 else
