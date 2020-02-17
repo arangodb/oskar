@@ -18,5 +18,5 @@ executable=$installation/opt/arangodb/bin/$program
 if [ -x $executable ] ; then
   exec $executable --server.arangod=$installation/opt/arangodb/sbin/arangod --server.js-dir=$installation/opt/arangodb/share/arangodb3/js "$@"
 fi
-echo "Could not find executable!"
+echo "Could not find executable ${executable}!"
 exit 1
