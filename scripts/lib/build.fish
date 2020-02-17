@@ -191,10 +191,10 @@ function runMake
       set ep (jobs -p | tail -1)
     end
 
-    nice make $MAKEFLAGS $arv[1] > $INNERWORKDIR/buildArangoDB.log ^&1
+    nice make $MAKEFLAGS $argv[1] > $INNERWORKDIR/buildArangoDB.log ^&1
     or begin
       if test -n "$ep"
-	kill $ep
+        kill $ep
       end
 
       exit 1
