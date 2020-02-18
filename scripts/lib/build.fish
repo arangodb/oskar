@@ -1,10 +1,33 @@
+function setupCcacheBinPath
+  set -xg CCACHETYPE $argv[1]
+
+  if test "$USE_CCACHE" = "Off"
+    return 0
+  else if test "$USE_CCACHE" = "sccache"
+    switch $CCACHETYPE
+      case macosx
+          set -xg CCACHEBINPATH $SCRIPTSDIR/tools
+      case alpine
+          set -xg CCACHEBINPATH /tools
+      case '*'
+          echo "fatal, unknown CCACHETYPE $CCACHETYPE"
+          exit
+    end
+
+    return 0
+  end
+end
+
 function setupCcache
+  set -xg CCACHETYPE $argv[1]
+
   if test "$USE_CCACHE" = "Off"
     set -xg CCACHE_DISABLE true
     echo "ccache is DISABLED"
   else if test "$USE_CCACHE" = "sccache"
     if test "$CCACHEBINPATH" = ""
-      set -xg CCACHEBINPATH /tools
+      echo "fatal, CCACHEBINPATH not set"
+      exit 1
     end
 
     if test "$CCACHESIZE" = ""
@@ -49,7 +72,10 @@ function setupCcache
       set -e SCCACHE_REDIS
     end
 
-    pushd $INNERWORKDIR; and sccache --start-server; and popd
+    pushd $INNERWORKDIR
+    and begin sccache --stop-server; or true; end
+    and sccache --start-server
+    and popd
     or begin
       echo "warning: cannot start sccache"
       set -e SCCACHE_DIR
@@ -60,9 +86,10 @@ function setupCcache
       set -e SCCACHE_REDIS
     end
   else
-    set -xg CCACHE_DIR $INNERWORKDIR/.ccache.alpine3
+    set -xg CCACHE_DIR $INNERWORKDIR/.ccache.$CCACHETYPE
     if test "$CCACHEBINPATH" = ""
-      set -xg CCACHEBINPATH /usr/lib/ccache/bin
+      echo "fatal, CCACHEBINPATH not set" 
+      exit 1
     end
     if test "$CCACHESIZE" = ""
       set -xg CCACHESIZE 50G
@@ -71,13 +98,28 @@ function setupCcache
     echo "using ccache at $CCACHE_DIR ($CCACHESIZE)"
 
     pushd $INNERWORKDIR
-    and mkdir -p .ccache.alpine3
+    and mkdir -p .ccache.$CCACHETYPE
     and rm -f .ccache.log
     and ccache -M $CCACHESIZE
     and ccache --zero-stats
     and popd
     or begin echo "fatal, cannot start ccache"; exit 1; end
   end
+  return 0
+end
+
+function cmakeCcache
+  if test "$USE_CCACHE" = "Off"
+    set -g FULLARGS $FULLARGS \
+      -DUSE_CCACHE=Off
+  else
+    # USE_CACHE is not used because the compiler is already ccache
+    set -g FULLARGS $FULLARGS \
+     -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
+     -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME \
+     -DUSE_CCACHE=Off
+  end
+  return 0
 end
 
 function shutdownCcache
@@ -86,4 +128,131 @@ function shutdownCcache
   else if test "$USE_CCACHE" = "sccache"
     sccache --stop-server; or echo "warning: cannot stop sccache"
   end
+  return 0
+end
+
+function selectArchitecture
+  if test "$argv" = ""
+    echo "using default architecture 'nehalem'"
+    set -g FULLARGS $FULLARGS \
+      -DTARGET_ARCHITECTURE=nehalem
+  end
+  return 0
+end
+
+function selectMaintainer
+  if test "$MAINTAINER" != "On"
+    set -g FULLARGS $FULLARGS \
+      -DUSE_CATCH_TESTS=Off \
+      -DUSE_GOOGLE_TESTS=Off
+  end
+  return 0
+end
+
+function cleanBuildDirectory
+  pushd $INNERWORKDIR/ArangoDB
+  and if test -z "$NO_RM_BUILD"
+    echo "Cleaning build directory"
+    rm -rf build
+  end
+  and mkdir -p build
+  and cd build
+  and rm -rf install
+  and mkdir install
+  and popd
+  or begin popd ; return 1 ; end
+end
+
+function runCmake
+  echo cmake $FULLARGS
+
+  if test "$SHOW_DETAILS" = "On"
+    cmake $FULLARGS .. ^&1
+  else
+    echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
+    cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log ^&1
+  end
+end
+
+function runMake
+  set -g MAKEFLAGS -j$PARALLELISM 
+  if test "$VERBOSEBUILD" = "On"
+    echo "Building verbosely"
+    set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
+  end
+
+  if test "$SHOW_DETAILS" = "On"
+    make $MAKEFLAGS $argv[1] ^&1
+    or exit $status
+  else
+    echo make output in work/buildArangoDB.log
+    set -l ep ""
+
+    if test "$SHOW_DETAILS" = "Ping"
+      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log; and tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
+      set ep (jobs -p | tail -1)
+    end
+
+    if test "$argv[1]" = "install"
+      nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1
+    end
+    and nice make $MAKEFLAGS $argv[1] >> $INNERWORKDIR/buildArangoDB.log ^&1
+    or begin
+      if test -n "$ep"
+        kill $ep
+      end
+
+      exit 1
+    end
+
+    echo == (date) ==
+    echo "compilation finished"
+
+    if test -n "$ep"
+      kill $ep
+    end
+  end
+end
+
+function installTargets
+  pushd install
+  and if test -z "$NOSTRIP"
+    echo Stripping executables...
+    strip \
+      usr/sbin/arangod \
+      usr/bin/arangoimp \
+      usr/bin/arangosh \
+      usr/bin/arangovpack \
+      usr/bin/arangoexport \
+      usr/bin/arangobench \
+      usr/bin/arangodump \
+      usr/bin/arangorestore
+
+    and if test -f usr/bin/arangobackup
+      strip usr/bin/arangobackup
+    end
+  end
+end
+
+function TT_init
+  echo "Starting build at "(date)" on "(hostname)
+  and set -g TT_t0 (date "+%Y%m%d")
+  and set -g TT_t1 (date -u +%s)
+
+  rm -f $INNERWORKDIR/buildTimes.csv
+end
+
+function TT_cmake
+  set -g TT_t2 (date -u +%s)
+  and echo $TT_t0,cmake,(expr $TT_t2 - $TT_t1) >> $INNERWORKDIR/buildTimes.csv
+end
+
+function TT_make
+  set -g TT_t3 (date -u +%s)
+  and echo $TT_t0,make,(expr $TT_t3 - $TT_t2) >> $INNERWORKDIR/buildTimes.csv
+end
+
+function TT_strip
+  set -g TT_t4 (date -u +%s)
+  and echo $TT_t0,strip,(expr $TT_t4 - $TT_t3) >> $INNERWORKDIR/buildTimes.csv
 end
