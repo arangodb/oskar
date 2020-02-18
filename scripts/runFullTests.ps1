@@ -82,6 +82,7 @@ Function global:registerSingleTests()
     registerTest -testname "version"
     registerTest -testname "audit_client"
     registerTest -testname "audit_server"
+    registerTest -testname "server_secrets"
     registerTest -testname "permissions"
     registerTest -testname "server_permissions"
     registerTest -testname "server_parameters"
@@ -116,6 +117,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "http_server" -sniff true
+    registerTest -cluster $true -testname "server_secrets"
     registerTest -cluster $true -testname "server_permissions"
     registerTest -cluster $true -testname "server_parameters"
     registerTest -cluster $true -testname "ssl_server" -sniff true
