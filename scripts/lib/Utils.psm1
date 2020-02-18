@@ -380,6 +380,46 @@ Function LaunchController($seconds)
 
 Function stopService()
 {
-    //need to create a service
+    #find the specific service and then check the condition and then apply new cmd
+    Get-Service arangodb | Where {$_.status -eq 'Stopped'} |  Start-Service
 
 }
+
+#to get the specific service information
+Get-Service -Name arangodb
+
+#To start the service (need to run in administrator mode)
+Start-Service -Name arangoDB
+
+#To stop the service
+Stop-Service -Name arangoDB
+
+$service = Get-Service -Name arangodb
+
+echo $service.Status
+
+#To restart the service
+Restart-Service -Name arangoDB
+
+# to get the service propertiesinformation
+Get-Service -Name arangodb | Get-Member
+
+#to get the service information in details
+Get-Service -Name arangodb | Select-Object *
+
+#get all the stopped or running service or disabled.
+Get-Service | Where-Object Status -EQ 'Stopped'
+
+#find the specific service and then check the condition and then apply new cmd
+Get-Service arangodb | Where {$_.status -eq 'Stopped'} |  Start-Service
+
+
+#Storing Service objects in variables
+$service = Get-Service -Name arangoDB
+
+#use stored service variable and pipe that variable to start the service
+$service | Start-Service
+
+#variable does not get update if external entity change the state of the service thus need to use .Refresh
+$service.Refresh() 
+
