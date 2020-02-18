@@ -7,6 +7,8 @@ function setupCcacheBinPath
     switch $CCACHETYPE
       case macosx
           set -xg CCACHEBINPATH $SCRIPTSDIR/tools
+      case alpine
+          set -xg CCACHEBINPATH /tools
       case '*'
           echo "fatal, unknown CCACHETYPE $CCACHETYPE"
           exit

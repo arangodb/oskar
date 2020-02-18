@@ -24,6 +24,7 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
+setupCcacheBinPath alpine
 setupCcache
 cd $INNERWORKDIR/ArangoDB
 

@@ -67,7 +67,8 @@ else
   end
 end
 
-setupCcache /usr/lib/ccache/bin /tools alpine3
+setupCcacheBinPath alpine
+and setupCcache alpine
 and cleanBuildDirectory
 and cd $INNERWORKDIR/ArangoDB/build
 and TT_init
