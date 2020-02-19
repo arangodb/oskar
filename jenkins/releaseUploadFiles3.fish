@@ -27,8 +27,8 @@ function upload
 end
 
 function uploadWindowsSymbols
-  ssh root@symbol.arangodb.biz "cd /script/ && python program.py /mnt/symsrv_arangodb${ARANGODB_MAJOR}${ARANGODB_MINOR}"
-  and ssh root@symbol.arangodb.biz "gsutil rsync -r /mnt/symsrv_arangodb${ARANGODB_MAJOR}${ARANGODB_MINOR} gs://download.arangodb.com/symsrv_arangodb${ARANGODB_MAJOR}${ARANGODB_MINOR}"
+  ssh root@symbol.arangodb.biz "cd /script/ && python program.py /mnt/symsrv_arangodb$ARANGODB_MAJOR$ARANGODB_MINOR"
+  and ssh root@symbol.arangodb.biz "gsutil rsync -r /mnt/symsrv_arangodb$ARANGODB_MAJOR$ARANGODB_MINOR gs://download.arangodb.com/symsrv_arangodb$ARANGODB_MAJOR$ARANGODB_MINOR"
 end
 
 # there might be internet hickups
