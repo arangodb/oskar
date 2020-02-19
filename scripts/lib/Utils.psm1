@@ -214,7 +214,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
     $checkname = If ($index) { $testname + "_$index" } Else { $testname }
     
-    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern "^$checkname$"))
+    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern "^$checkname$" | select line))
     {
         $testWeight = 1
         $testparams = ""
@@ -289,7 +289,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     }
     Else
     {
-        Write-Host "Test suite $testname skipped by UnitTests/OskarTestSuitesBlackList"
+        Write-Host "Test suite $checkname skipped by UnitTests/OskarTestSuitesBlackList"
     }
     comm
 }
