@@ -212,7 +212,9 @@ Function launchTest($which) {
 Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst, [switch]$http2)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
-    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $testname))
+    $checkname = If ($index) { $testname + "_$index" } Else { $testname }
+    
+    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $checkname))
     {
         $testWeight = 1
         $testparams = ""
@@ -220,7 +222,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
 
         $output = $testname.replace("*", "all")
         If ($index) {
-          $output = $output+"$index"
+          $output = $output+"_$index"
         }
         If ($filter) {
            $testparams = $testparams+" --test $filter"
