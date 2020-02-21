@@ -15,6 +15,10 @@ function setupCcacheBinPath
     end
 
     return 0
+  else
+    set -xg CCACHEBINPATH /usr/lib/ccache/bin
+
+    return 0
   end
 end
 
