@@ -73,7 +73,7 @@ and cleanBuildDirectory
 and cd $INNERWORKDIR/ArangoDB/build
 and TT_init
 and cmakeCcache
-and selectArchitecture
+and selectArchitecture $argv
 and selectMaintainer
 and runCmake
 and TT_cmake
