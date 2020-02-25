@@ -70,6 +70,7 @@ function runAnyTest
       --writeXmlReport false \
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
+      --coreCheck true \
       $argv
 
     echo (pwd) "-" scripts/unittest $arguments
