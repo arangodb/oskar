@@ -112,10 +112,8 @@ if test -z "$USE_CCACHE"
   else
     sccacheOn
   end 
-else
-  if test $USE_CCACHE = "sccache" -a test $IS_GCE = "true"
+else if test $USE_CCACHE = "sccache" -a test $IS_GCE = "true"
     defineSccacheGCE
-  end
 else
   set -gx USE_CCACHE $USE_CCACHE
 end
