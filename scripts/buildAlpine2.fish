@@ -25,7 +25,7 @@ end
 echo "Using openssl version $OPENSSL_VERSION"
 
 setupCcacheBinPath alpine
-setupCcache
+setupCcache alpine
 cd $INNERWORKDIR/ArangoDB
 
 if test -z "$NO_RM_BUILD"
