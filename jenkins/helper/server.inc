@@ -60,7 +60,7 @@ export SERVER_VERSION=$(cat ./${ARANGO_DOCKER_NAME}.txt | grep -oP '^server-vers
 if [ 1 -eq $(echo "${SERVER_VERSION} >= 3.7" | bc) ]
 then
     echo 'Add --all.server.allow-deprecated-storage-engine because $MAJOR_VERSION.$MINOR_VERSION >= 3.7'
-    MMFILES_DEPRECATED_OPTION="--all.server.allow-deprecated-storage-engine"
+    MMFILES_DEPRECATED_OPTION="--all.server.allow-deprecated-storage-engine=true"
 fi
 
 OUTDIR="`pwd`/output"
