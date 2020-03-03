@@ -54,7 +54,14 @@ echo
 docker kill $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker rm -fv $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker pull $DOCKER_IMAGE
-docker run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version
+docker run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version | xargs grep
+
+SERVER_VERSION=$(docker run --rm --cap-add SYS_NICE arangodb/arangodb-preview arangosh --version | tee /dev/tty | grep -oP '^server-version: \K[0-9].[0-9]')
+
+if [ 0 -eq "$(echo "${SERVER_VERSION} >= 3.7" | bc)" ]
+then
+    MMFILES_DEPRECATED_OPTION="--all.server.allow-deprecated-storage-engine"
+fi
 
 OUTDIR="`pwd`/output"
 rm -rf $OUTDIR
@@ -63,7 +70,7 @@ DOCKER_AUTH=""
 STARTER_AUTH=""
 DOCKER_CMD="docker run --rm --cap-add SYS_NICE --name $ARANGO_DOCKER_NAME -d $EXPORT_PORTS -v $OUTDIR:/testrun"
 #DOCKER_IMAGE="registry.arangodb.biz:5000/arangodb/linux-${ARANGO_EDITION}-maintainer:$ARANGO_BRANCH"
-STARTER_CMD="arangodb --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun"
+STARTER_CMD="arangodb --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun ${MMFILES_DEPRECATED_OPTION}"
 STARTER_MODE=""
 
 if [ "$ARANGO_AUTH" == "auth" ]; then
