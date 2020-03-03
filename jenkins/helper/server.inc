@@ -54,10 +54,12 @@ echo
 docker kill $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker rm -fv $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker pull $DOCKER_IMAGE
-SERVER_VERSION=$(docker run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version | tee $(tty) | grep -oP '^server-version: \K[0-9].[0-9]')
+docker run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version | tee ./${ARANGO_DOCKER_NAME}.txt
+export SERVER_VERSION=$(cat ./${ARANGO_DOCKER_NAME}.txt | grep -oP '^server-version: \K[0-9].[0-9]')
 
-if [ 0 -eq "$(echo "${SERVER_VERSION} >= 3.7" | bc)" ]
+if [ 1 -eq $(echo "${SERVER_VERSION} >= 3.7" | bc) ]
 then
+    echo 'Add --all.server.allow-deprecated-storage-engine because $MAJOR_VERSION.$MINOR_VERSION >= 3.7'
     MMFILES_DEPRECATED_OPTION="--all.server.allow-deprecated-storage-engine"
 fi
 
