@@ -54,9 +54,7 @@ echo
 docker kill $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker rm -fv $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker pull $DOCKER_IMAGE
-docker run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version | xargs grep
-
-SERVER_VERSION=$(docker run --rm --cap-add SYS_NICE arangodb/arangodb-preview arangosh --version | tee /dev/tty | grep -oP '^server-version: \K[0-9].[0-9]')
+SERVER_VERSION=$(docker run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version | tee /dev/tty | grep -oP '^server-version: \K[0-9].[0-9]')
 
 if [ 0 -eq "$(echo "${SERVER_VERSION} >= 3.7" | bc)" ]
 then
