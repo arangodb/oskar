@@ -59,6 +59,7 @@ set ST "$ST""250,runSingleTest2 replication_ongoing_frompresent_32 -\n"
 set ST "$ST""500,runSingleTest2 replication_ongoing_global -\n"
 set ST "$ST""250,runSingleTest2 replication_ongoing_global_spec -\n"
 set ST "$ST""500,runSingleTest2 replication_sync -\n"
+set ST "$ST""500,runSingleTest1 paths_server -\n"
 set ST "$ST""250,runSingleTest1 hot_backup -\n"
 set ST "$ST""500,runSingleTest1 permissions -\n"
 
