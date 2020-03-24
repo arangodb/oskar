@@ -262,7 +262,7 @@ function buildPackage
     echo Building community edition MacOs bundle...
   end
 
-  runLocal $SCRIPTSDIR/buildMacOsPackage.fish
+  runLocal $SCRIPTSDIR/buildMacOsPackage.fish $ARANGODB_PACKAGES
   and buildTarGzPackage
 end
 
@@ -285,9 +285,9 @@ function buildEnterprisePackage
   and enterprise
   and set -xg NOSTRIP dont
   and cleanupThirdParty
+  and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
   and downloadStarter
   and downloadSyncer
-  and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
   and copyRclone "macos"
   and if test "$USE_RCLONE" = "true"
     set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
@@ -335,7 +335,7 @@ function buildTarGzPackage
   pushd $INNERWORKDIR/ArangoDB/build
   and rm -rf install
   and make install DESTDIR=install
-  and mkdir install/usr
+  and mkdir -p install/usr
   and mv install/opt/arangodb/bin install/usr
   and mv install/opt/arangodb/sbin install/usr
   and mv install/opt/arangodb/share install/usr

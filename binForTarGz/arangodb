@@ -30,5 +30,5 @@ if [ -x "$executable" ] ; then
       ;;
   esac
 fi
-echo "Could not find executable!"
+echo "Could not find executable ${executable}!"
 exit 1

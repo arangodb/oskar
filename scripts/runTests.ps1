@@ -12,6 +12,9 @@ Function global:registerSingleTests()
 
     $global:TESTSUITE_TIMEOUT = 3900
 
+    registerTest -testname "upgrade_data_3.2.*"
+    registerTest -testname "upgrade_data_3.3.*"
+    registerTest -testname "upgrade_data_3.4.*"
     registerTest -testname "replication_static" -weight 2
     registerTest -testname "shell_server"
     registerTest -testname "replication_ongoing_32" -weight 2
@@ -30,12 +33,16 @@ Function global:registerSingleTests()
     registerTest -testname "shell_server_aql" -index "3" -bucket "5/3"
     registerTest -testname "shell_server_aql" -index "4" -bucket "5/4"
     registerTest -testname "server_http"
-    registerTest -testname "shell_client"
-    registerTest -testname "shell_client" -vst
-    registerTest -testname "shell_client_aql"
-    registerTest -testname "shell_client_aql" -vst
+    registerTest -testname "shell_client" -index "http"
+    registerTest -testname "shell_client" -vst -index "vst"
+    registerTest -testname "shell_client" -http2 -index "http2"
+    registerTest -testname "shell_client_aql" -index "http"
+    registerTest -testname "shell_client_aql" -vst -index "vst"
+    registerTest -testname "shell_client_aql" -http2 -index "http2"
     registerTest -testname "shell_replication" -weight 2
+    registerTest -testname "server_secrets"
     registerTest -testname "server_permissions"
+    registerTest -testname "server_parameters"
     registerTest -testname "BackupAuthNoSysTests"
     registerTest -testname "BackupAuthSysTests"
     registerTest -testname "BackupNoAuthNoSysTests"
@@ -57,6 +64,7 @@ Function global:registerSingleTests()
     registerTest -testname "audit_client"
     registerTest -testname "audit_server"
     registerTest -testname "permissions"
+    registerTest -testname "paths_server"
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that
     # the testing framework does not support automatic restarts of instances
@@ -81,7 +89,9 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "dump_multiple"
     registerTest -cluster $true -testname "http_server"  -sniff true
+    registerTest -cluster $true -testname "server_secrets"
     registerTest -cluster $true -testname "server_permissions"
+    registerTest -cluster $true -testname "server_parameters"
     registerTest -cluster $true -testname "resilience_move"
     registerTest -cluster $true -testname "resilience_failover"
     registerTest -cluster $true -testname "resilience_sharddist"
