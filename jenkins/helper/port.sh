@@ -22,8 +22,7 @@ fi
 
 set -x
 lock="/var/run/"$(basename $0)
-exec 200>$lock
-flock -w 360 200
+flock -w 360 $lock
 
 port=9000
 INCR=1
