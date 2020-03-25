@@ -23,7 +23,7 @@ port=9000
 INCR=1
 
 find $PORTDIR -type f -cmin +$TIMEOUT -exec rm "{}" ";"
-set -e
+
 if test "$1" == "--cluster" ; then
   shift
   while ! ((set -o noclobber ; date > $PORTDIR/$port && echo "$PORTDIR/$port" > ./ports &&\
@@ -39,7 +39,7 @@ if test "$1" == "--cluster" ; then
                                date > $PORTDIR/`expr $port + 22` && echo "$PORTDIR/`expr $port + 22`" >> ./ports &&\
                                date > $PORTDIR/`expr $port + 23` && echo "$PORTDIR/`expr $port + 23`" >> ./ports) 2> /dev/null)
   do
-    while read -r line; do rm -f "$line"; done < ./ports
+    [ -e "./ports" ] && while read -r line; do rm -f "$line"; done < ./ports
     rm -f ./ports
     port=`expr $port + $INCR`
   done
@@ -51,7 +51,7 @@ else
   while ! ((set -o noclobber ; date > $PORTDIR/$port && echo "$PORTDIR/$port" > ./ports &&\
                                date > $PORTDIR/`expr $port + 1` && echo "$PORTDIR/`expr $port + 1`" >> ./ports) 2> /dev/null)
   do
-    while read -r line; do rm -f "$line"; done < ./ports
+    [ -e "./ports" ] && while read -r line; do rm -f "$line"; done < ./ports
     rm -f ./ports
     port=`expr $port + $INCR`
   done
