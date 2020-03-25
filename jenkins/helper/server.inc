@@ -17,7 +17,7 @@ case ${ARANGO_EDITION,,} in
       ;;
 esac
 
-for name in ARANGO_DOCKER_NAME ARANGO_PORTS ARANGO_MODE ARANGO_STORAGE_ENGINE ARANGO_EDITION ARANGO_AUTH; do
+for name in ARANGO_DOCKER_NAME ARANGO_PORTS ARANGO_MODE ARANGO_STARTER_PORT ARANGO_STORAGE_ENGINE ARANGO_EDITION ARANGO_AUTH; do
     if [ -z "${!name}" ]; then
         echo "$name missing"
         exit 1
@@ -73,9 +73,9 @@ if [ "$ARANGO_AUTH" == "auth" ]; then
 fi
 
 if [ "$ARANGO_MODE" == "cluster" ]; then
-  STARTER_MODE="--starter.mode cluster --starter.port ${ARANGO_PORTS[0]}"
+  STARTER_MODE="--starter.mode cluster --starter.port ${ARANGO_STARTER_PORT}"
 elif [ "$ARANGO_MODE" == "singleserver" ]; then
-  STARTER_MODE="--starter.mode single --starter.port ${ARANGO_PORTS[0]}"
+  STARTER_MODE="--starter.mode single --starter.port ${ARANGO_STARTER_PORT}"
 else
     echo "unknown mode $ARANGO_MODE"
     exit 1
