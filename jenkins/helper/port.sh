@@ -40,6 +40,7 @@ if test "$1" == "--cluster" ; then
                                date > $PORTDIR/`expr $port + 23` && echo "$PORTDIR/`expr $port + 23`" >> ./ports) 2> /dev/null)
   do
     while read -r line; do rm -f "$line"; done < ./ports
+    rm -f ./ports
     port=`expr $port + $INCR`
   done
 
@@ -51,10 +52,11 @@ else
                                date > $PORTDIR/`expr $port + 1` && echo "$PORTDIR/`expr $port + 1`" >> ./ports) 2> /dev/null)
   do
     while read -r line; do rm -f "$line"; done < ./ports
+    rm -f ./ports
     port=`expr $port + $INCR`
   done
 
   echo -n "$port `expr $port + 1`"
 fi
 
-rm -rf ./ports
+rm -f ./ports
