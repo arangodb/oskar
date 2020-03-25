@@ -21,8 +21,8 @@ if test "$1" == "--clean"; then
 fi
 
 set -x
-lock = "/var/run/"$(basename $0)
-exec 200 > $lock
+lock="/var/run/"$(basename $0)
+exec 200>$lock
 flock -w 360 200
 
 port=9000
