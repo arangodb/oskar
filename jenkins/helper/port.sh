@@ -23,7 +23,7 @@ port=9000
 INCR=1
 
 find $PORTDIR -type f -cmin +$TIMEOUT -exec rm "{}" ";"
-
+set -e
 if test "$1" == "--cluster" ; then
   shift
   while ! ((set -o noclobber ; date > $PORTDIR/$port && echo "$PORTDIR/$port" > ./ports &&\
