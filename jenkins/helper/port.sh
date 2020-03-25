@@ -21,8 +21,7 @@ if test "$1" == "--clean"; then
 fi
 
 set -x
-scriptname = $(basename $0)
-lock = "/var/run/${scriptname}"
+lock = "/var/run/"$(basename $0)
 exec 200 > $lock
 flock -w 360 200
 
