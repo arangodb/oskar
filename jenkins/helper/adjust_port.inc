@@ -1,7 +1,7 @@
 if [[ -v ARANGO_MODE && $ARANGO_MODE == "cluster" ]]
 then
   ports=(`./oskar/jenkins/helper/port.sh --cluster`)
-  export ARANGO_PORTS="${ports[@]:1}"
+  export ARANGO_PORTS="${ports[1]} ${ports[5]} ${ports[9]}"
 else
   ports=(`./oskar/jenkins/helper/port.sh`)
   export ARANGO_PORTS="${ports[1]}"
