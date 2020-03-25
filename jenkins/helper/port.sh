@@ -63,9 +63,9 @@ if test "$1" == "--cluster" ; then
     port=`expr $port + $INCR`
   done
 
-  #echo "`expr $port + 1` `expr $port + 11` `expr $port + 21`" > ports
+  echo "`expr $port + 1` `expr $port + 11` `expr $port + 21`" > ports
 
-  echo "$port `expr $port + 1` `expr $port + 2` `expr $port + 3`\
+  #echo "$port `expr $port + 1` `expr $port + 2` `expr $port + 3`\
         `expr $port + 10` `expr $port + 11` `expr $port + 12` `expr $port + 13`\
         `expr $port + 20` `expr $port + 21` `expr $port + 22` `expr $port + 23`"
 else
@@ -78,7 +78,7 @@ else
     port=`expr $port + $INCR`
   done
 
-  #echo "`expr $port + 1`" > ports
+  echo "`expr $port + 1`" > ports
   
-  echo "$port `expr $port + 1`"
+  #echo "$port `expr $port + 1`"
 fi
