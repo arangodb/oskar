@@ -97,7 +97,7 @@ $command
 
 trap "$(trap -p | grep EXIT | sed "s/.*-- '\(.*\)'.EXIT/\1;/g")docker rm -fv $ARANGO_DOCKER_NAME ; sudo chown jenkins:jenkins -R output ; tar czf arango_data.tar.gz output" EXIT
 
-echo "Waiting until ArangoDB is ready on port ${ARANGO_PORTS[1]}"
+echo "Waiting until ArangoDB is ready on port ${ARANGO_PORTS[0]}"
 
 if [ "$ARANGO_AUTH" == "auth" ]; then
     CURL_USER="-uroot:$ARANGO_ROOT_PASSWORD"
@@ -108,7 +108,7 @@ fi
 count=0
 
 while [ "$count" -lt 240 ]; do
-  responseCode=`curl -s -I $CURL_USER http://localhost:${ARANGO_PORTS[1]}/_api/version | head -n 1 | cut -d$' ' -f2`
+  responseCode=`curl -s -I $CURL_USER http://localhost:${ARANGO_PORTS[0]}/_api/version | head -n 1 | cut -d$' ' -f2`
   if [ -n "${responseCode}" ];
   then
     if [ $responseCode -eq 200 ];
@@ -129,7 +129,7 @@ if [ $count -ge 240 ]; then
 
     echo
     echo "curl:"
-    curl $CURL_USER -v http://localhost:${ARANGO_PORTS[1]}/_api/version
+    curl $CURL_USER -v http://localhost:${ARANGO_PORTS[0]}/_api/version
 
     echo "ArangoDB did not start"
     exit 1
