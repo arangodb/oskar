@@ -9,3 +9,4 @@ trap "$(trap -p | grep EXIT | sed "s/.*-- '\(.*\)'.EXIT/\1;/g")./oskar/jenkins/h
 echo "using ports ${ports[*]}"
 export ARANGO_PORTS="${ports[*]}"
 export ARANGO_PORT="${ports[0]}"
+export ARANGO_HOST=$(hostname)
