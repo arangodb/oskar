@@ -68,9 +68,9 @@ else
 end
 
 if test "$argv" = ""
-  echo "using default architecture 'nehalem'"
+  echo "using default architecture 'westmere'"
   set -g FULLARGS $FULLARGS \
-    -DTARGET_ARCHITECTURE=nehalem
+    -DTARGET_ARCHITECTURE=westmere
 end
 
 if test "$MAINTAINER" = "On"

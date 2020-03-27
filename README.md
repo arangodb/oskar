@@ -73,7 +73,7 @@ You can then do
 
 and add `cmake` options if you need like for example:
 
-    buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+    buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
 
 The first time this will take some time, but then the configured
 `ccache` will make things a lot quicker. Once you have built for the
