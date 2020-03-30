@@ -1,5 +1,6 @@
 #!/usr/bin/env fish
-source jenkins/helper/jenkins.fish
+source (dirname (status --current-filename))/helper/jenkins.fish
+cleanPrepareLockUpdateClear
 
 if test -z "$ARANGODB_BRANCH"
   echo 'ARANGODB_BRANCH required'
@@ -17,12 +18,15 @@ and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
-and buildDockerLocal | grep -oP "\"Successfully built \K[0-9a-f].*\"" >> $WORKSPACE/imagenames.log
+and buildDockerLocal
+# | tee | grep -oP "\"Successfully built \K[0-9a-f].*\"" >> $WORKSPACE/imagenames.log
 
 if test $status -ne 0
   echo Production of Community image failed, giving up...
   exit 1
 end
+
+exit 0
 
 enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
@@ -30,7 +34,7 @@ and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
 and downloadSyncer
-and buildDockerLocal | grep -oP "\"Successfully built \K[0-9a-f].*\"" >> $WORKSPACE/imagenames.log
+and buildDockerLocal >> $WORKSPACE/imagenames.log
 
 if test $status -ne 0
   echo Production of Enterprise image failed, giving up...
