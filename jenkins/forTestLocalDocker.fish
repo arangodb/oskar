@@ -25,8 +25,6 @@ if test $status -ne 0
   exit 1
 end
 
-exit 0
-
 enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
