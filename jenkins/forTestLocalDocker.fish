@@ -18,7 +18,7 @@ and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
 and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
 and downloadStarter
-and buildDockerLocal | tee
+and buildDockerLocal | tee | grep -oP "\"Successfully built \K[0-9a-f].*\""
 # | tee | grep -oP "\"Successfully built \K[0-9a-f].*\"" >> $WORKSPACE/imagenames.log
 
 if test $status -ne 0
