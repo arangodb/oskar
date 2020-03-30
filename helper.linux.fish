@@ -804,6 +804,31 @@ function buildDockerImage
   popd
 end
 
+function buildDockerLocal
+  findArangoDBVersion ; or return 1
+  set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
+  pushd $WORKDIR/work/ArangoDB/build/install
+
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
+
+  if not test -d $containerpath
+    set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
+  end
+  and tar czf $containerpath/install.tar.gz *
+  and buildDockerAddFiles $DOCKER_DISTRO
+  if test $status -ne 0
+    echo Could not create install tarball!
+    popd
+    return 1
+  end
+  popd
+
+  pushd $containerpath
+  and eval "docker build --pull ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
 ## #############################################################################
 ## documentation release
 ## #############################################################################
