@@ -1,18 +1,14 @@
 #!/usr/bin/env fish
 source jenkins/helper/jenkins.fish
 
-if test -z "$1"
-  echo '$1 parameter as ARANGODB_BRANCH required'
+if test -z "$ARANGODB_BRANCH"
+  echo 'ARANGODB_BRANCH required'
   exit 1
-else
-  set -gx ARANGODB_BRANCH "$1"
 end
 
-if test -z "$2"
-  echo '$2 parameter as ENTERPRISE_BRANCH required'
+if test -z "$ENTERPRISE_BRANCH"
+  echo 'ENTERPRISE_BRANCH required'
   exit 1
-else
-  set -gx ENTERPRISE_BRANCH "$2"
 end
 
 rm -rf $WORKSPACE/imagenames.log
