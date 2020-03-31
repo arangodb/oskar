@@ -512,7 +512,6 @@ function buildTarGzPackageHelper
       --exclude "*.logrotate" \
       --exclude "arangodb.8" \
       --exclude "arangod.8" \
-      --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
       --exclude "$name-$v/bin/arangodb" \
       --exclude "$name-$v/bin/arangosync" \

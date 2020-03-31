@@ -64,7 +64,6 @@ Function global:registerSingleTests()
     registerTest -testname "authentication_server"
     registerTest -testname "catch"
     registerTest -testname "config"
-    registerTest -testname "dfdb"
     registerTest -testname "dump"
     registerTest -testname "dump_authentication"
     registerTest -testname "dump_encrypted"
