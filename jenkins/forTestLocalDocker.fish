@@ -1,6 +1,18 @@
 #!/usr/bin/env fish
 source (dirname (status --current-filename))/helper/jenkins.fish
-cleanPrepareLockUpdateClear
+
+if begin test -z $argv[1]; or test "$argv[1]" != "local"; end
+  cleanPrepareLockUpdateClear
+else
+  if test -e (dirname (status --current-filename))/../helper.fish
+    pushd (dirname (status --current-filename))/..
+    source helper.fish
+    popd
+  else
+    echo "No "(dirname (status --current-filename))/../helper.fish" to source!"
+    exit 1
+  end
+end
 
 if test -z "$ARANGODB_BRANCH"
   echo 'ARANGODB_BRANCH required'
