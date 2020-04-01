@@ -319,7 +319,7 @@ function buildArangoDB
   #             have to do a 'cd' for a subsequent call.
   #             Fix by not relying on relative locations in other functions
   checkoutIfNeeded
-  and runInContainer (findBuildImage) $SCRIPTSDIR/(BuildScript) $argv
+  and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
