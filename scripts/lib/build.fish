@@ -179,10 +179,10 @@ function runCmake
   echo cmake $FULLARGS
 
   if test "$SHOW_DETAILS" = "On"
-    cmake $FULLARGS .. ^&1
+    cmake $FULLARGS .. 2>&1
   else
     echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
-    cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log ^&1
+    cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1
   end
 end
 
@@ -194,7 +194,7 @@ function runMake
   end
 
   if test "$SHOW_DETAILS" = "On"
-    make $MAKEFLAGS $argv[1] ^&1
+    make $MAKEFLAGS $argv[1] 2>&1
     or exit $status
   else
     echo make output in work/buildArangoDB.log
@@ -206,9 +206,9 @@ function runMake
     end
 
     if test "$argv[1]" = "install"
-      nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1
+      nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log 2>&1
     end
-    and nice make $MAKEFLAGS $argv[1] >> $INNERWORKDIR/buildArangoDB.log ^&1
+    and nice make $MAKEFLAGS $argv[1] >> $INNERWORKDIR/buildArangoDB.log 2>&1
     or begin
       if test -n "$ep"
         kill $ep

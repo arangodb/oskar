@@ -351,7 +351,7 @@ end
 ## #############################################################################
 
 function findCompilerVersion
-  gcc -v ^| tail -1 | awk '{print $3}'
+  gcc -v 2>&1 | tail -1 | awk '{print $3}'
 end
 
 function findOpenSSLVersion
