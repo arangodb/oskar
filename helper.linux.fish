@@ -799,7 +799,7 @@ function buildDockerImage
   popd
 
   pushd $containerpath
-  and eval "docker build $BUILD_ARGS --pull -t $imagename ."
+  and eval "docker build $BUILD_ARGS --pull --no-cache -t $imagename ."
   or begin ; popd ; return 1 ; end
   popd
 end
