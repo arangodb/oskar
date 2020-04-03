@@ -62,7 +62,12 @@ end
 function createTar
   echo "Checkout OSKAR"
   pushd $INNERWORKDIR/CompleteTar
-  and tar -c -z --exclude-vcs -f ArangoDBe-$RELEASE_TAG.tar.gz ArangoDB-$RELEASE_TAG Starter-$STARTER_REV arangosync-$SYNCER_REV oskar
+  and tar -c \
+      	  -z \
+	  --exclude=.git \
+	  --exclude=.gitignore \
+	  -f ArangoDBe-$RELEASE_TAG.tar.gz \
+	  ArangoDB-$RELEASE_TAG Starter-$STARTER_REV arangosync-$SYNCER_REV oskar
   or begin popd; return 1; end
   popd
 end

@@ -85,54 +85,38 @@ function defineSccacheGCE
   if test -z "$SCCACHE_GCS_BUCKET"
     set -gx SCCACHE_GCS_BUCKET "arangodbbuildcache"
   end
-  if test -z "$SCCACHE_BUCKET"
-    # No S3 for GCE atm
-    set -gx SCCACHE_BUCKET ""
-  end
-  if test -z "$SCCACHE_REDIS"
-    # No redis servers for GCE atm
-    # set -gx SCCACHE_REDIS "redis://<address>"
-    set -gx SCCACHE_REDIS ""
-  end
-  if test -z "$SCCACHE_MEMCACHED"
-    # No memcached servers for GCE atm
-    # set -gx SCCACHE_MEMCACHED "tcp://<address>:<port>"
-    set -gx SCCACHE_MEMCACHED ""
-  end
-end
-
-function undefSccacheGCE
-  # Don't use sccache at non-GCE environment by default
-  set -e SCCACHE_BUCKET
-  set -e SCCACHE_GCS_BUCKET
-  set -e SCCACHE_REDIS
-  set -e SCCACHE_MEMCACHED
+  # No S3 for GCE atm
+  set -gx SCCACHE_BUCKET ""
+  # No redis servers for GCE atm
+  set -gx SCCACHE_REDIS ""
+  # No memcached servers for GCE atm
+  set -gx SCCACHE_MEMCACHED ""
 end
 
 function ccacheOn
-  if test $IS_GCE = "false"
-    set -gx USE_CCACHE On
-    undefSccacheGCE
-  else
-    echo "Use sccache instead since IS_GCE is true!"
-    sccacheOn
-  end
+  set -gx USE_CCACHE On
 end
 
 function sccacheOn
+  set -gx USE_CCACHE sccache
   if test $IS_GCE = "true"
-    set -gx USE_CCACHE sccache
     defineSccacheGCE
-  else
-    echo "Use ccache instead since IS_GCE is false!"
-    ccacheOn
   end
 end
 
 function ccacheOff ; set -gx USE_CCACHE Off ; end
 
-if test -z "$USE_CCACHE" ; ccacheOn
-else ; set -gx USE_CCACHE $USE_CCACHE ; end
+if test -z "$USE_CCACHE"
+  if test $IS_GCE = "false"
+    ccacheOn
+  else
+    sccacheOn
+  end 
+else if test $USE_CCACHE = "sccache" -a $IS_GCE = "true"
+    defineSccacheGCE
+else
+  set -gx USE_CCACHE $USE_CCACHE
+end
 
 function coverageOn ; set -gx COVERAGE On ; debugMode ; end
 function coverageOff ; set -gx COVERAGE Off ; end
@@ -217,6 +201,12 @@ else ; set -gx WORKSPACE_LOGS $WORKSPACE_LOGS ; end
 
 function addLogLevel ; set -gx LOG_LEVELS $LOG_LEVELS $argv ; end
 function clearLogLevel ; set -ge LOG_LEVEL ; end
+
+function notarizeApp ; set -gx NOTARIZE_APP On ; end
+function noNotarizeAppp ; set -gx NOTARIZE_APP Off ; end
+if test -z "$NOTARIZE_APP"; noNotarizeAppp
+else ; set -gx NOTARIZE_APP $NOTARIZE_APP ; end
+
 
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
@@ -1166,10 +1156,17 @@ function showConfig
   if test "$CCACHESIZE" != ""
   printf $fmt3 'CCACHE size'   $CCACHESIZE          '(CCACHESIZE)'
   end
+  if test "$USE_CCACHE" = "sccache"
+    if test "$SCCACHE_BUCKET" != ""
+      printf $fmt3 'S3 Bucket' $SCCACHE_BUCKET      '(SCCACHE_BUCKET)'
+      printf $fmt3 'S3 Server' $SCCACHE_ENDPOINT    '(SCCACHE_ENDPOINT)'
+    end
+  end
   printf $fmt3 'Verbose Build' $VERBOSEBUILD        '(verboseBuild/silentBuild)'
   printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR        '(verbose/slient)'
   printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
   printf $fmt3 'Logs preserve' $WORKSPACE_LOGS      '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
+  printf $fmt3 'Notarize'      $NOTARIZE_APP        '(notarizeApp/noNotarizedApp)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR

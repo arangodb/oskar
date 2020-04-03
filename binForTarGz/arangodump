@@ -28,5 +28,5 @@ if [ -x "$executable" ] ; then
        --server.authentication true \
        "$@"
 fi
-echo "Could not find executable!"
+echo "Could not find executable ${executable}!"
 exit 1

@@ -44,12 +44,12 @@ set -xg GCOV_PREFIX_STRIP 3
 function runAnyTest
   set -l t $argv[1]
   set -l tt $argv[2]
-  set -l l0 "$t"
+  set -l l0 (string replace '*' 'all' $t)
   if test "$tt" = "-"
     set tt ""
   end
   if test "$tt" != ""
-    set l0 "$t"_"$tt"
+    set l0 "$l0"_"$tt"
   end
   set -l l1 "$l0".log
   set -l l2 $TMPDIR/"$l0".out
@@ -57,23 +57,25 @@ function runAnyTest
 
   if test $VERBOSEOSKAR = On ; echo "$launchCount: Launching $l0" ; end
 
-  if grep $t UnitTests/OskarTestSuitesBlackList
-    echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
+  if grep -e "\b$t\b" -e "\b$l0\b" UnitTests/OskarTestSuitesBlackList
+    echo Test suite $l0 skipped by UnitTests/OskarTestSuitesBlackList
   else
-    set -l arguments $t \
+    set -l arguments \'"$t"\' \
       (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic "$SKIPNONDETERMINISTIC" \
       --skipTimeCritical "$SKIPTIMECRITICAL" \
-      --testOutput $l2 \
+      --testOutput "$l2" \
       --writeXmlReport false \
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
+      --coreCheck true \
       $argv
 
     echo (pwd) "-" scripts/unittest $arguments
-    mkdir -p $l2
+    mkdir -p "$l2"
+    #echo "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped"
     fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped" &
     set -g portBase (math $portBase + 100)
     sleep 1

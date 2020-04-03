@@ -6,3 +6,4 @@ repo_incoming
 config/environment.fish
 containers/*/install.tar.gz
 release
+.DS_Store

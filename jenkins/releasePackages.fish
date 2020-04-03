@@ -9,6 +9,7 @@ end
 cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
+and ccacheOff
 and makeRelease
 
 set -l s $status
