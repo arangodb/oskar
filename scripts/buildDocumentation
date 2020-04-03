@@ -14,7 +14,7 @@ script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
 # examples:
 # ./scripts/buildDocumenation
-# ./scropts/buildDocumenation --books "HTTP Drivers"
+# ./scripts/buildDocumenation --books "HTTP Drivers"
 # ./scripts/buildDocumenation --skip-examples --skip-swagger
 # ./scripts/buildDocumenation --all-formats
 # ./scropts/buildDocumenation --checks
