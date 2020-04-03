@@ -1543,29 +1543,36 @@ function moveResultsToWorkspace
       else
         for f in $WORKDIR/work/testreport* ; echo "rm $f" ; rm $f ; end
       end
+
+      echo "mv test.log"
       mv $WORKDIR/work/test.log $WORKSPACE
+
       if test -f $WORKDIR/work/testProtocol.txt
+        echo "mv testProtocol.txt"
         mv $WORKDIR/work/testProtocol.txt $WORKSPACE/protocol.log
       end
     end
 
     for x in buildArangoDB.log cmakeArangoDB.log
+      echo "mv $x"
       if test -f $WORKDIR/work/$x ; mv $WORKDIR/work/$x $WORKSPACE ; end
     end
 
     for x in cppcheck.xml
       if test -f $WORKDIR/work/ArangoDB/$x
+        echo "mv $x"
         mv $WORKDIR/work/ArangoDB/$x $WORKSPACE
       end
     end
 
     if test -d "$WORKDIR/work/coverage"
+      echo "mv coverage"
       mv $WORKDIR/work/coverage $WORKSPACE
     end
 
     set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html,csv}
     for f in $matches
-      echo $f | grep -v testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"      
+      echo $f | grep -qv testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"
     end
 
     for f in $WORKDIR/work/asan.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end
@@ -1577,6 +1584,7 @@ function moveResultsToWorkspace
     end
 
     if test -d $WORKDIR/work/Documentation
+      echo "mv Documentation"
       mv $WORKDIR/work/Documentation $WORKSPACE/Documentation.generated
     end
 

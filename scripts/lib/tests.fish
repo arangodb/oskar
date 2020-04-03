@@ -192,10 +192,18 @@ function createReport
  
   popd
   echo $result >> testProtocol.txt
-  pushd $INNERWORKDIR
   and begin
+    pushd $INNERWORKDIR
     echo tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
     eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
+    popd
+  end
+  and begin
+    pushd $INNERWORKDIR/tmp
+    if test (count */UNITTEST_RESULT.json) -gt 0
+      echo tar czvf "$INNERWORKDIR/timings.tar.gz" '*/UNITTEST_RESULT.json'
+      tar czvf "$INNERWORKDIR/timings.tar.gz" */UNITTEST_RESULT.json
+    end
     popd
   end
   
@@ -222,8 +230,8 @@ function createReport
   echo tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
   eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
 
-  echo rm -rf $cores $archives
-  eval $IONICE nice -n 10 rm -rf $cores $archives
+  echo rm -rf $cores innerlogs.tar.gz
+  eval $IONICE nice -n 10 rm -rf $cores innerlogs.tar.gz
 
   # And finally collect the testfailures.txt:
   rm -rf $INNERWORKDIR/testfailures.txt
