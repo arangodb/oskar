@@ -112,7 +112,7 @@ function createPackage
   and enterprise
   and set -xg NOSTRIP dont
   and echo "INFO: building 'ArangoDB'"
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and echo "INFO: finished building 'ArangoDB'"
   and mkdir -p work/ArangoDB/build/install/usr/bin
   and cp "$OSKAR_HOME/oskar/work/starter/arangodb" "work/ArangoDB/build/install/usr/bin"

@@ -293,7 +293,7 @@ function buildEnterprisePackage
     set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
   end
   and buildArangoDB \
-      -DTARGET_ARCHITECTURE=nehalem \
+      -DTARGET_ARCHITECTURE=westmere \
       -DPACKAGING=Bundle \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
       -DTHIRDPARTY_SBIN=$THIRDPARTY_SBIN_LIST \
@@ -318,7 +318,7 @@ function buildCommunityPackage
   and cleanupThirdParty
   and downloadStarter
   and buildArangoDB \
-      -DTARGET_ARCHITECTURE=nehalem \
+      -DTARGET_ARCHITECTURE=westmere \
       -DPACKAGING=Bundle \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
       -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \

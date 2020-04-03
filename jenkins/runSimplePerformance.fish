@@ -25,7 +25,7 @@ and maintainerOff
 and releaseMode
 and pingDetails
 and showConfig
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
 
 and sudo rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="

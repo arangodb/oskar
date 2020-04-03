@@ -28,7 +28,7 @@ rm -rf $WORKSPACE/imagenames.log
 and community
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
 and downloadStarter
 and buildDockerLocal | tee ./buildDocker.log; and grep -oP "Successfully built \K[0-9a-f]*" ./buildDocker.log >> $WORKSPACE/imagenames.log 
 
@@ -40,7 +40,7 @@ end
 enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
 and downloadStarter
 and downloadSyncer
 and buildDockerLocal | tee ./buildDocker.log; and grep -oP "Successfully built \K[0-9a-f]*" ./buildDocker.log >> $WORKSPACE/imagenames.log 

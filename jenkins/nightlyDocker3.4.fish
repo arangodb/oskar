@@ -5,7 +5,7 @@ cleanPrepareLockUpdateClear
 and community
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
 and downloadStarter
 and buildDockerImage arangodb/arangodb-preview:3.4
 and docker push arangodb/arangodb-preview:3.4
@@ -21,7 +21,7 @@ end
 enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
 and downloadStarter
 and downloadSyncer
 and buildDockerImage arangodb/enterprise-preview:3.4
