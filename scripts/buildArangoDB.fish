@@ -36,7 +36,8 @@ set -g FULLARGS $argv \
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=Off \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
- -DUSE_MAINTAINER_MODE=$MAINTAINER
+ -DUSE_MAINTAINER_MODE=$MAINTAINER \
+ -DUSE_STRICT_OPENSSL_VERSION=On
 
 if test "$MAINTAINER" != "On"
   set -g FULLARGS $FULLARGS \
@@ -83,7 +84,8 @@ end
 
 set -x DESTDIR (pwd)/install
 echo Running make for build, output in work/buildArangoDB.log
-nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1
+nice make $MAKEFLAGS install >> $INNERWORKDIR/buildArangoDB.log ^&1
 and echo "build and install done"  >> $INNERWORKDIR/buildArangoDB.log
 and cd install
 and if test -z "$NOSTRIP"

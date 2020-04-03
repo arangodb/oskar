@@ -24,12 +24,14 @@ Function createReport
     new-item $env:TMP\oskar-junit-report -itemtype directory
     ForEach($dir in (Get-ChildItem -Path $env:TMP  -Directory -Filter "*.out"))
     {
+        $reportFound = $false
         If ($(Get-ChildItem -filter "*.xml" -path $dir.FullName | Measure-Object | Select -ExpandProperty Count) -gt 0) {
           Copy-Item -Path "$($dir.FullName)\*.xml" $env:TMP\oskar-junit-report
         }
         Write-Host "Looking at directory $($dir.BaseName)"
         If(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_EXECUTIVE_SUMMARY.json")
             {
+                        $reportFound = $true
                         If(-Not($(Get-Content "$($dir.FullName)\UNITTEST_RESULT_EXECUTIVE_SUMMARY.json") -eq "true"))
                         {
                             $global:result = "BAD"
@@ -39,8 +41,9 @@ Function createReport
                             $global:badtests = $global:badtests + "Bad result in $file`r`n"
                         }   
             }
-        ElseIf(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json")
+        If(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json")
             {
+                        $reportFound = $true
                         If(-Not($(Get-Content "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json") -eq "false"))
                         {
                             $global:result = "BAD"
@@ -51,7 +54,7 @@ Function createReport
                             $global:badtests = $global:badtests + "Crash occured in $file`r`n"
                         }   
             }
-        Else
+        if ($reportFound -ne $true)
             {
                 Write-Host "No Testresult found at directory $($dir.BaseName)"
                 $global:result = "BAD"
@@ -206,10 +209,12 @@ Function launchTest($which) {
     Pop-Location
 }
 
-Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst)
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst, [switch]$http2)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
-    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern $testname))
+    $checkname = If ($index) { $testname + "_$index" } Else { $testname }
+    
+    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern "^$checkname$" | select line))
     {
         $testWeight = 1
         $testparams = ""
@@ -217,7 +222,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
 
         $output = $testname.replace("*", "all")
         If ($index) {
-          $output = $output+"$index"
+          $output = $output+"_$index"
         }
         If ($filter) {
            $testparams = $testparams+" --test $filter"
@@ -246,6 +251,10 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
 
         If ($vst) {
           $testparams = $testparams + " --vst true"
+        }
+
+        If ($http2) {
+          $testparams = $testparams + " --http2 true"
         }
 
         If ($sniff) {
@@ -280,7 +289,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     }
     Else
     {
-        Write-Host "Test suite $testname skipped by UnitTests/OskarTestSuitesBlackList"
+        Write-Host "Test suite $checkname skipped by UnitTests/OskarTestSuitesBlackList"
     }
     comm
 }

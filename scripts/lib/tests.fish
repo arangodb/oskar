@@ -57,8 +57,8 @@ function runAnyTest
 
   if test $VERBOSEOSKAR = On ; echo "$launchCount: Launching $l0" ; end
 
-  if grep $t UnitTests/OskarTestSuitesBlackList
-    echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
+  if grep -e "\b$t\b" -e "\b$l0\b" UnitTests/OskarTestSuitesBlackList
+    echo Test suite $l0 skipped by UnitTests/OskarTestSuitesBlackList
   else
     set -l arguments \'"$t"\' \
       (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
@@ -70,6 +70,7 @@ function runAnyTest
       --writeXmlReport false \
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
+      --coreCheck true \
       $argv
 
     echo (pwd) "-" scripts/unittest $arguments

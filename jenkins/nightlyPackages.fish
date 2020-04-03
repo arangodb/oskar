@@ -6,6 +6,10 @@ if test -z "$ARANGODB_PACKAGES"
   exit 1
 end
 
+if test -z "$MOVE_TO_STAGE2"
+  set -xg MOVE_TO_STAGE2 true
+end
+
 set -xg PACKAGES "$ARANGODB_PACKAGES"
 
 set -xg SRC work
@@ -64,7 +68,9 @@ cleanPrepareLockUpdateClear
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and makeRelease
-and movePackagesToStage2
+and if test "$MOVE_TO_STAGE2" = "true"
+  movePackagesToStage2
+end
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
