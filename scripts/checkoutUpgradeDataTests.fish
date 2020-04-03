@@ -11,7 +11,7 @@ and if test ! -d upgrade-data-tests/.git
 end
 and if test ! -d upgrade-data-tests
   echo == (date) == started clone 'upgrade-data-tests'
-  and git clone $mirror ssh://git@github.com/arangodb/upgrade-data-tests
+  and git clone --progress $mirror ssh://git@github.com/arangodb/upgrade-data-tests
   and echo == (date) == finished clone 'upgrade-data-tests'
   and if test -d /mirror/upgrade-data-tests.git
     cd upgrade-data-tests
