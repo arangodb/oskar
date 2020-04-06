@@ -1505,9 +1505,7 @@ function checkoutIfNeeded
       checkoutArangoDB
     end
   end
-  and if test ! -d $WORKDIR/ArangoDB/upgrade-data-tests
-    checkoutUpgradeDataTests
-  end
+  and checkoutUpgradeDataTests
 end
 
 function clearResults
