@@ -1101,10 +1101,6 @@ Function checkoutIfNeeded
         }
     }
     checkoutUpgradeDataTests
-    #If(-Not(Test-Path -PathType Container -Path $global:UPGRADEDATADIR))
-    #{
-    #    checkoutUpgradeDataTests
-    #}
 }
 
 Function switchBranches($branch_c,$branch_e)
