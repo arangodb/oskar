@@ -1036,18 +1036,49 @@ Function checkoutEnterprise
 
 Function checkoutUpgradeDataTests
 {
-    if($global:ok)
+    If ($global:ok)
     {
         Push-Location $pwd
-        Set-Location $global:ARANGODIR
-        If(-Not(Test-Path -PathType Container -Path "upgrade-data-tests"))
+        If (Test-Path -PathType Container -Path $global:UPGRADEDATADIR)
+        {
+            Set-Location $global:UPGRADEDATADIR
+            If (Test-Path -PathType Container -Path ".\.git")
+            {
+                proc -process "git" -argument "rev-parse --is-inside-work-tree" -logfile $false -priority "Normal"
+                If ($global:ok)
+                {
+                    If (($(git remote show -n origin) | Select-String -Pattern " Fetch " -CaseSensitive | %{$_.Line.Split("/")[-1]}) -eq 'upgrade-data-tests')
+                    {
+                        Write-Host "=="$(Get-Date)"== started fetch 'upgrade-data-tests'"
+                        proc -process "git" -argument "remote update" -logfile $false -priority "Normal" 
+                        proc -process "git" -argument "checkout -f" -logfile $false -priority "Normal"
+                        Write-Host "=="$(Get-Date)"== finished fetch 'upgrade-data-tests'"
+                        $needReset = $False
+                        If ($(git status -uno) | Select-String -Pattern "behind" -CaseSensitive)
+                        {
+                            Write-Host "=="$(Get-Date)"== started pull 'upgrade-data-tests'"
+                            proc -process "git" -argument "pull --progress" -logfile $false -priority "Normal"
+                            Write-Host "=="$(Get-Date)"== finished pull 'upgrade-data-tests'"
+                        }
+                    } Else { $needReset = $True }
+                } Else { $needReset = $True }
+            } Else { $needReset = $True }
+            If ($needReset -eq $True)
+            {
+              Set-Location $global:ARANGODIR
+              Remove-Item -Recurse -Force $global:UPGRADEDATADIR
+            }
+        }
+        If(-Not(Test-Path -PathType Container -Path $global:UPGRADEDATADIR))
         {
             If(Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
             {
                 Remove-Item -Force "$HOME\.ssh\known_hosts"
                 proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
             }
+            Write-Host "=="$(Get-Date)"== started clone 'upgrade-data-tests'"
             proc -process "git" -argument "clone ssh://git@github.com/arangodb/upgrade-data-tests" -logfile $false -priority "Normal"
+            Write-Host "=="$(Get-Date)"== finished clone 'upgrade-data-tests'"
         }
         Pop-Location
     }
@@ -1069,10 +1100,7 @@ Function checkoutIfNeeded
             checkoutArangoDB
         }
     }
-    If(-Not(Test-Path -PathType Container -Path $global:UPGRADEDATADIR))
-    {
-        checkoutUpgradeDataTests
-    }
+    checkoutUpgradeDataTests
 }
 
 Function switchBranches($branch_c,$branch_e)
