@@ -9,8 +9,8 @@ COPY ./tools/install-poll.sh /tools/
 RUN /tools/install-poll.sh
 
 COPY ./tools/install-openssl.sh /tools/
-RUN [ "/tools/install-openssl.sh", "1.1.1f" ]
-RUN [ "/tools/install-openssl.sh", "1.1.0l" ]
+RUN [ "/tools/install-openssl.sh", "1.1.1", "f" ]
+RUN [ "/tools/install-openssl.sh", "1.1.0", "l" ]
 
 COPY ./tools/install-openldap.sh /tools/
 RUN [ "/tools/install-openldap.sh", "1.1.1f" ]
