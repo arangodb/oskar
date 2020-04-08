@@ -14,10 +14,10 @@ if test "$OPENSSL_VERSION" = ""
 end
 switch $OPENSSL_VERSION
   case '1.0.2'
-      set -xg OPENSSL_PATH (brew --prefix)/opt/openssl
+      set -xg OPENSSL_PATH (set last (brew --prefix)/Cellar/openssl/{$OPENSSL_VERSION}*;and echo $last[-1])
 
   case '1.1.1'
-      set -xg OPENSSL_PATH (brew --prefix)/opt/openssl@1.1
+      set -xg OPENSSL_PATH (set last (brew --prefix)/Cellar/openssl@1.1/{$OPENSSL_VERSION}*;and echo $last[-1])
 
   case '*'
       echo "unknown openssl version $OPENSSL_VERSION"
