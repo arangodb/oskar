@@ -108,6 +108,8 @@ end
 ################################################################################
 
 set -l CT
+set CT "$CT""500,runClusterTest1 load_balancing - --dumpAgencyOnError true\n"
+set CT "$CT""500,runClusterTest1 load_balancing_auth - --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_server 0 --testBuckets 5/0 --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 shell_server 1 --testBuckets 5/1 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_server 2 --testBuckets 5/2 --dumpAgencyOnError true\n"

@@ -84,6 +84,8 @@ Function global:registerClusterTests()
 
     $global:TESTSUITE_TIMEOUT = 4200
 
+    registerTest -cluster $true -testname "load_balancing"
+    registerTest -cluster $true -testname "load_balancing_auth"
     registerTest -cluster $true -testname "agency"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "dump"
