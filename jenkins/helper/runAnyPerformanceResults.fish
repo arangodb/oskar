@@ -133,7 +133,7 @@ if count $src/results-*.csv > /dev/null
 
     echo "<br/>" >> $desc
     echo "<a name=\"$OS-$test\"/>" >> $desc
-    echo "<img src=\"ws/$images/$test.png\"></img>" >> $desc
+    echo "<img src=\"ws/$images/$test.png\" width=\"100%\"></img>" >> $desc
   end
 
   if count $images/*.png > /dev/null
