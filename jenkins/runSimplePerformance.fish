@@ -20,7 +20,7 @@ and updateDockerBuildImage
 #  set -xg datetime (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-12)
 #  echo "==== date $datetime ===="
 #  popd
-end
+#end
 and maintainerOff
 and releaseMode
 and pingDetails
