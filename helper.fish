@@ -207,6 +207,11 @@ function noNotarizeAppp ; set -gx NOTARIZE_APP Off ; end
 if test -z "$NOTARIZE_APP"; noNotarizeAppp
 else ; set -gx NOTARIZE_APP $NOTARIZE_APP ; end
 
+function strictOpenSSL; set -gx USE_STRICT_OPENSSL On ; end
+function nonStrictOpenSSL ; set -gx USE_STRICT_OPENSSL Off ; end
+if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
+  strictOpenSSL
+else ; nonStrictOpenSSL ; end
 
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
@@ -1167,6 +1172,7 @@ function showConfig
   printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
   printf $fmt3 'Logs preserve' $WORKSPACE_LOGS      '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
   printf $fmt3 'Notarize'      $NOTARIZE_APP        '(notarizeApp/noNotarizedApp)'
+  printf $fmt3 'Strict OpenSSL' $USE_STRICT_OPENSSL '(strictOpenSSL/nonStrictOpenSSL)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR

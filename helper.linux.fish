@@ -1103,6 +1103,7 @@ function runInContainer
              -e USE_CCACHE="$USE_CCACHE" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1160,6 +1161,7 @@ function interactiveContainer
              -e UID=(id -u) \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              $argv
 end
 

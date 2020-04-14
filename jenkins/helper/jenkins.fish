@@ -2,6 +2,8 @@
 
 echo Directory (pwd)
 
+set -xg IS_JENKINS "true"
+
 function prepareOskar
   set -xg OSKAR oskar
 
