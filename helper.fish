@@ -211,7 +211,7 @@ function strictOpenSSL; set -gx USE_STRICT_OPENSSL On ; end
 function nonStrictOpenSSL ; set -gx USE_STRICT_OPENSSL Off ; end
 if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
   strictOpenSSL
-else ; strictOpenSSL ; end
+else ; nonStrictOpenSSL ; end
 
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
