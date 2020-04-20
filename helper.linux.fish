@@ -133,6 +133,9 @@ function findBuildScript
       case 9.2.0
         echo buildAlpine3.fish
 
+      case 9.3.0
+        echo buildAlpine4.fish
+
       case '*'
         echo "unknown compiler version $version"
         return 1
