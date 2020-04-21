@@ -1042,7 +1042,7 @@ Function checkoutUpgradeDataTests
         If (Test-Path -PathType Container -Path $global:UPGRADEDATADIR)
         {
             Set-Location $global:UPGRADEDATADIR
-            If (Test-Path -PathType Container -Path ".\.git")
+            If (Test-Path -PathType Container -Path "$global:UPGRADEDATADIR\.git")
             {
                 proc -process "git" -argument "rev-parse --is-inside-work-tree" -logfile $false -priority "Normal"
                 If ($global:ok)
