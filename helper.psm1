@@ -1056,9 +1056,10 @@ Function checkoutUpgradeDataTests
                         $needReset = $False
                         If ($(git status -uno) | Select-String -Pattern "behind" -CaseSensitive)
                         {
-                            Write-Host "=="$(Get-Date)"== started pull 'upgrade-data-tests'"
-                            proc -process "git" -argument "pull --progress" -logfile $false -priority "Normal"
-                            Write-Host "=="$(Get-Date)"== finished pull 'upgrade-data-tests'"
+                            Write-Host "=="$(Get-Date)"== started clean and reset 'upgrade-data-tests'"
+							proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
+                            proc -process "git" -argument "reset --hard origin/devel" -logfile $false -priority "Normal"
+                            Write-Host "=="$(Get-Date)"== finished clean and reset 'upgrade-data-tests'"
                         }
                     } Else { $needReset = $True }
                 } Else { $needReset = $True }
@@ -1076,6 +1077,7 @@ Function checkoutUpgradeDataTests
                 Remove-Item -Force "$HOME\.ssh\known_hosts"
                 proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
             }
+			Set-Location $global:ARANGODIR
             Write-Host "=="$(Get-Date)"== started clone 'upgrade-data-tests'"
             proc -process "git" -argument "clone ssh://git@github.com/arangodb/upgrade-data-tests" -logfile $false -priority "Normal"
             Write-Host "=="$(Get-Date)"== finished clone 'upgrade-data-tests'"
