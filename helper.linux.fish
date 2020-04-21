@@ -20,6 +20,10 @@ set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
 set -gx ALPINEBUILDIMAGE3_TAG 4
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
+set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
+set -gx ALPINEBUILDIMAGE4_TAG 1
+set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
+
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
@@ -61,6 +65,9 @@ function compiler
       set -gx COMPILER_VERSION $cversion
 
     case 9.2.0
+      set -gx COMPILER_VERSION $cversion
+
+    case 9.3.0
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -105,6 +112,9 @@ function findBuildImage
       case 9.2.0
         echo $ALPINEBUILDIMAGE3
 
+      case 9.3.0
+        echo $ALPINEBUILDIMAGE4
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -125,6 +135,9 @@ function findBuildScript
 
       case 9.2.0
         echo buildAlpine3.fish
+
+      case 9.3.0
+        echo buildAlpine4.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -944,6 +957,22 @@ function pushAlpineBuildImage3
 end
 
 function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
+
+function buildAlpineBuildImage4
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine4.docker
+  and docker build --pull -t $ALPINEBUILDIMAGE4 .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage4
+  docker tag $ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:latest
+  and docker push $ALPINEBUILDIMAGE4
+  and docker push $ALPINEBUILDIMAGE4_NAME:latest
+end
+
+function pullAlpineBuildImage4 ; docker pull $ALPINEBUILDIMAGE4 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
