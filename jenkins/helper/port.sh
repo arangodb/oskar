@@ -24,6 +24,8 @@ INCR=1
 
 find $PORTDIR -type f -cmin +$TIMEOUT -exec rm "{}" ";"
 
+rm -f ./ports
+
 case "$1" in
 
   "--cluster")
@@ -73,7 +75,7 @@ case "$1" in
           `expr $port + 20` `expr $port + 21` `expr $port + 22`"
   ;;
 
-  "--single")
+  "--singleserver")
     while ! ((set -o noclobber ; date > $PORTDIR/$port && echo "$PORTDIR/$port" > ./ports &&\
                                  date > $PORTDIR/`expr $port + 1` && echo "$PORTDIR/`expr $port + 1`" >> ./ports) 2> /dev/null)
     do
@@ -90,5 +92,3 @@ case "$1" in
     exit 1
   ;;
 esac
-
-rm -f ./ports
