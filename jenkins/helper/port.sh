@@ -86,7 +86,7 @@ case "$1" in
   ;;
 
   *)
-    "Unknown mode as the first parameter! Should be: --single or --activefailover or --cluster."
+    echo "Unknown mode as the first parameter! Should be: --single, --activefailover or --cluster."
     exit 1
   ;;
 esac
