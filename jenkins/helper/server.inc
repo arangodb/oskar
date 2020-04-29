@@ -45,13 +45,7 @@ docker kill $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker rm -fv $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker pull $DOCKER_IMAGE
 docker run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version | tee ./${ARANGO_DOCKER_NAME}.txt
-export SERVER_VERSION=$(cat ./${ARANGO_DOCKER_NAME}.txt | grep -oP '^server-version: \K[0-9].[0-9]')
-
-#if [ 1 -eq $(echo "${SERVER_VERSION} >= 3.7" | bc) ]
-#then
-#    echo 'Add --all.server.allow-deprecated-storage-engine because $MAJOR_VERSION.$MINOR_VERSION >= 3.7'
-#    MMFILES_DEPRECATED_OPTION="--all.server.allow-deprecated-storage-engine=true"
-#fi
+export SERVER_FULL_VERSION=$(cat ./${ARANGO_DOCKER_NAME}.txt | grep -oP '^server-version: \K.*$')
 
 OUTDIR="`pwd`/output"
 rm -rf $OUTDIR
@@ -72,14 +66,21 @@ if [ "$ARANGO_AUTH" == "auth" ]; then
   STARTER_AUTH="--auth.jwt-secret /jwtsecret/geheim" 
 fi
 
-if [ "$ARANGO_MODE" == "cluster" ]; then
-  STARTER_MODE="--starter.mode cluster --starter.port ${ARANGO_STARTER_PORT}"
-elif [ "$ARANGO_MODE" == "singleserver" ]; then
-  STARTER_MODE="--starter.mode single --starter.port ${ARANGO_STARTER_PORT}"
-else
+case "$ARANGO_MODE" in
+  "cluster")
+    STARTER_MODE="--starter.mode cluster --starter.port ${ARANGO_STARTER_PORT}"
+  ;;
+  "activefailover")
+    STARTER_MODE="--starter.mode activefailover --starter.port ${ARANGO_STARTER_PORT}"
+  ;;
+  "singleserver")
+    STARTER_MODE="--starter.mode single --starter.port ${ARANGO_STARTER_PORT}"
+  ;;
+  *)
     echo "unknown mode $ARANGO_MODE"
     exit 1
-fi
+  ;;
+esac
 
 cat > $OUTDIR/starter.sh << 'EOF'
 #!/bin/sh
