@@ -72,14 +72,21 @@ if [ "$ARANGO_AUTH" == "auth" ]; then
   STARTER_AUTH="--auth.jwt-secret /jwtsecret/geheim" 
 fi
 
-if [ "$ARANGO_MODE" == "cluster" ]; then
-  STARTER_MODE="--starter.mode cluster --starter.port ${ARANGO_STARTER_PORT}"
-elif [ "$ARANGO_MODE" == "singleserver" ]; then
-  STARTER_MODE="--starter.mode single --starter.port ${ARANGO_STARTER_PORT}"
-else
+case "$ARANGO_MODE" in
+  "cluster")
+    STARTER_MODE="--starter.mode cluster --starter.port ${ARANGO_STARTER_PORT}"
+  ;;
+  "activefailover")
+    STARTER_MODE="--starter.mode activefailover --starter.port ${ARANGO_STARTER_PORT}"
+  ;;
+  "singleserver")
+    STARTER_MODE="--starter.mode single --starter.port ${ARANGO_STARTER_PORT}"
+  ;;
+  *)
     echo "unknown mode $ARANGO_MODE"
     exit 1
-fi
+  ;;
+esac
 
 cat > $OUTDIR/starter.sh << 'EOF'
 #!/bin/sh
