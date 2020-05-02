@@ -42,6 +42,12 @@ If (Get-Command handle.exe -ErrorAction SilentlyContinue)
     $global:HANDLE_EXE = (Get-Command handle.exe).Source -Replace ' ', '` '
 }
 
+$global:PSKILL_EXE = $null
+If (Get-Command pskill.exe -ErrorAction SilentlyContinue)
+{
+    $global:PSKILL_EXE = (Get-Command pskill.exe).Source -Replace ' ', '` '
+}
+
 $global:REG_WER = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
 $global:COREDIR = "$env:WORKSPACE\core"
 if (-Not(Test-Path -Path $global:COREDIR))
