@@ -609,7 +609,7 @@ end
 
 function buildTarGzPackage
   if test ! -d $WORKDIR/work/ArangoDB/build
-    echo buildRPMPackage: build directory does not exist
+    echo buildTarGzPackage: build directory does not exist
     return 1
   end
 
