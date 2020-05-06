@@ -47,7 +47,7 @@ function unpack
         or exit 1
       popd
 
-    case '*'$ARANGODB_RPM_UPDATREAM'*.rpm'
+    case '*'$ARANGODB_RPM_UPSTREAM'-'$ARANGODB_RPM_REVISION'*.rpm'
       pushd work/sandbox
         begin rpm2cpio $filename | cpio -i -d; end
         or exit 1
