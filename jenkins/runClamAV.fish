@@ -21,15 +21,15 @@ function unpack
   mkdir -p work/sandbox
 
   switch $filename
-    case '*'$ARANGODB_VERSION'*.tar.gz'
+    case '*'$ARANGODB_TGZ_UPSTREAM'*.tar.gz'
       cp $filename work/sandbox
       or exit 1
 
-    case '*'$ARANGODB_VERSION'*.tar'
+    case '*'$ARANGODB_TGZ_UPSTREAM'*.tar'
       cp $filename work/sandbox
       or exit 1
 
-    case '*'$ARANGODB_VERSION'*.zip'
+    case '*'$ARANGODB_TGZ_UPSTREAM'*.zip'
       cp $filename work/sandbox
       or exit 1
 
@@ -37,17 +37,17 @@ function unpack
       cp $filename work/sandbox
       or exit 1
 
-    case '*'$ARANGODB_VERSION'*.dmg'
+    case '*'$ARANGODB_DARWIN_UPSTREAM'*.dmg'
       cp $filename work/sandbox
       or exit 1
 
-    case '*'$ARANGODB_VERSION'*.deb'
+    case '*'$ARANGODB_DEBIAN_UPSTREAM'*.deb'
       pushd work/sandbox
         ar x $filename
         or exit 1
       popd
 
-    case '*'$ARANGODB_VERSION'*.rpm'
+    case '*'$ARANGODB_RPM_UPDATREAM'*.rpm'
       pushd work/sandbox
         begin rpm2cpio $filename | cpio -i -d; end
         or exit 1
