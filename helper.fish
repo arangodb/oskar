@@ -578,6 +578,11 @@ function buildSourceSnippet
   set -l SOURCE_TAR_BZ2 "ArangoDB-$ARANGODB_VERSION.tar.bz2"
   set -l SOURCE_ZIP "ArangoDB-$ARANGODB_VERSION.zip"
 
+  set -l SOURCE_TAG "$ARANGODB_VERSION"
+  if string match -qr '^[0-9]+$' "$ARANGODB_VERSION_RELEASE_TYPE"
+    set SOURCE_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH.$ARANGODB_VERSION_RELEASE_TYPE"
+  end
+
   set IN $argv[1]/$ARANGODB_PACKAGES/source
   set OUT $argv[2]/release/snippets
 
@@ -595,7 +600,8 @@ function buildSourceSnippet
 
   set -l n "$OUT/download-source.html"
 
-  sed -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
+  sed -e "s|@SOURCE_TAG@|$SOURCE_TAG|g" \
+      -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
       -e "s|@SOURCE_SIZE_TAR_GZ@|$SOURCE_SIZE_TAR_GZ|g" \
       -e "s|@SOURCE_SHA256_TAR_GZ@|$SOURCE_SHA256_TAR_GZ|g" \
       -e "s|@SOURCE_TAR_BZ2@|$SOURCE_TAR_BZ2|g" \
@@ -605,8 +611,6 @@ function buildSourceSnippet
       -e "s|@SOURCE_SIZE_ZIP@|$SOURCE_SIZE_ZIP|g" \
       -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/source.html.in > $n
 
