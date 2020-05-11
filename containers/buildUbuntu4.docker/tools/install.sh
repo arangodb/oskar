@@ -46,7 +46,6 @@ cd /tmp
 curl -O ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-$OPENLDAPVERSION.tgz
 tar xzf openldap-$OPENLDAPVERSION.tgz
 cd openldap-$OPENLDAPVERSION
-#cp -a /tools/config.* ./build
 CPPFLAGS=-I/opt/openssl-$OPENSSLPATH/include \
 LDFLAGS=-L/opt/openssl-$OPENSSLPATH/lib \
 ./configure -prefix=/opt/openssl-$OPENSSLPATH --enable-static

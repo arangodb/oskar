@@ -9,13 +9,17 @@ set -gx UBUNTUBUILDIMAGE_NAME arangodb/ubuntubuildarangodb-$ARCH
 set -gx UBUNTUBUILDIMAGE_TAG 1
 set -gx UBUNTUBUILDIMAGE $UBUNTUBUILDIMAGE_NAME:$UBUNTUBUILDIMAGE_TAG
 
-set -gx UBUNTUBUILDIMAGE2_NAME arangodb/ubuntubuildarangodb-$ARCH
+set -gx UBUNTUBUILDIMAGE2_NAME arangodb/ubuntubuildarangodb2-$ARCH
 set -gx UBUNTUBUILDIMAGE2_TAG 1
 set -gx UBUNTUBUILDIMAGE2 $UBUNTUBUILDIMAGE2_NAME:$UBUNTUBUILDIMAGE2_TAG
 
-set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb-$ARCH
+set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
 set -gx UBUNTUBUILDIMAGE3_TAG 1
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
+
+set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
+set -gx UBUNTUBUILDIMAGE4_TAG 1
+set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
@@ -123,6 +127,9 @@ function findBuildImage
       case 9.2.0
         echo $UBUNTUBUILDIMAGE3
 
+      case 9.3.0
+        echo $UBUNTUBUILDIMAGE4
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -168,6 +175,9 @@ function findBuildScript
       case 9.2.0
         echo buildArangoDB3.fish
 
+      case 9.3.0
+        echo buildArangoDB4.fish
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -208,10 +218,10 @@ function findRequiredCompiler
     return 1
   end
 
-  if test "$COMPILER_VERSION" != ""
-    echo "Compiler version already set to '$COMPILER_VERSION'"
-    return 0
-  end
+  #if test "$COMPILER_VERSION" != ""
+  #  echo "Compiler version already set to '$COMPILER_VERSION'"
+  #  return 0
+  #end
 
   set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
@@ -296,6 +306,7 @@ function switchBranches
 
   checkoutIfNeeded
   and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
+  and findRequiredCompiler
 end
 
 ## #############################################################################
@@ -332,6 +343,8 @@ function buildArangoDB
   #             have to do a 'cd' for a subsequent call.
   #             Fix by not relying on relative locations in other functions
   checkoutIfNeeded
+  and findRequiredCompiler
+  and findRequiredOpenSSL
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -341,7 +354,11 @@ function buildArangoDB
 end
 
 function makeArangoDB
-  runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
+  if test "$COMPILER_VERSION" = ""
+    findRequiredCompiler
+    findRequiredOpenSSL
+  end
+  and runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -384,7 +401,7 @@ function buildExamples
   and if test "$NO_RM_BUILD" != 1
     buildStaticArangoDB
   end
-  and runInContainer (findBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
+  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -937,10 +954,8 @@ end
 
 function buildUbuntuBuildImage
   pushd $WORKDIR
-  and cp -a scripts/{makeArangoDB,buildArangoDB,checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUbuntu.docker/scripts
   and cd $WORKDIR/containers/buildUbuntu.docker
   and docker build --pull -t $UBUNTUBUILDIMAGE .
-  and rm -f $WORKDIR/containers/buildUbuntu.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -955,10 +970,8 @@ function pullUbuntuBuildImage ; docker pull $UBUNTUBUILDIMAGE ; end
 
 function buildUbuntuBuildImage2
   pushd $WORKDIR
-  and cp -a scripts/{makeArangoDB,buildArangoDB,checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUbuntu.docker/scripts
-  and cd $WORKDIR/containers/buildUbuntu.docker
+  and cd $WORKDIR/containers/buildUbuntu2.docker
   and docker build --pull -t $UBUNTUBUILDIMAGE2 .
-  and rm -f $WORKDIR/containers/buildUbuntu.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -969,15 +982,12 @@ function pushUbuntuBuildImage2
   and docker push $UBUNTUBUILDIMAGE2_NAME:latest
 end
 
-function pullUbuntuBuildImage ; docker pull $UBUNTUBUILDIMAGE2 ; end
+function pullUbuntuBuildImage2 ; docker pull $UBUNTUBUILDIMAGE2 ; end
 
 function buildUbuntuBuildImage3
   pushd $WORKDIR
-  and cp -a scripts/{makeArangoDB,buildArangoDB,checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUbuntu.docker/scripts
-  and cd $WORKDIR/containers/buildUbuntu.docker
+  and cd $WORKDIR/containers/buildUbuntu3.docker
   and docker build --pull -t $UBUNTUBUILDIMAGE3 .
-  and rm -f $WORKDIR/containers/buildUbuntu.docker/scripts/*.fish
-  or begin ; popd ; return 1 ; end
   popd
 end
 
@@ -988,6 +998,22 @@ function pushUbuntuBuildImage3
 end
 
 function pullUbuntuBuildImage3 ; docker pull $UBUNTUBUILDIMAGE3 ; end
+
+function buildUbuntuBuildImage4
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUbuntu4.docker
+  and docker build --pull -t $UBUNTUBUILDIMAGE4 .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushUbuntuBuildImage4
+  docker tag $UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE4
+  and docker push $UBUNTUBUILDIMAGE4_NAME:latest
+end
+
+function pullUbuntuBuildImage4 ; docker pull $UBUNTUBUILDIMAGE4 ; end
 
 function buildUbuntuPackagingImage
   pushd $WORKDIR
@@ -1255,6 +1281,19 @@ function runInContainer
 end
 
 function interactiveContainer
+  if test -z "$SSH_AUTH_SOCK"
+    sudo killall --older-than 8h ssh-agent 2>&1 > /dev/null
+    eval (ssh-agent -c) > /dev/null
+    for key in ~/.ssh/id_rsa ~/.ssh/id_deploy
+      if test -f $key
+        ssh-add $key
+      end
+    end
+    set -l agentstarted 1
+  else
+    set -l agentstarted ""
+  end
+
   docker run -it --rm \
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
@@ -1277,7 +1316,6 @@ function interactiveContainer
              -e SKIPGREY="$SKIPGREY" \
              -e ONLYGREY="$ONLYGREY" \
              -e SSH_AUTH_SOCK=/ssh-agent \
-             -e SSH_AUTH_SOCK=/ssh-agent \
              -e STORAGEENGINE="$STORAGEENGINE" \
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
@@ -1285,6 +1323,12 @@ function interactiveContainer
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              $argv
+
+  if test -n "$agentstarted"
+    ssh-agent -k > /dev/null
+    set -e SSH_AUTH_SOCK
+    set -e SSH_AGENT_PID
+  end
 end
 
 ## #############################################################################
@@ -1377,9 +1421,13 @@ end
 function updateOskar
   updateOskarOnly
   and pullUbuntuBuildImage
+  and pullUbuntuBuildImage2
+  and pullUbuntuBuildImage3
+  and pullUbuntuBuildImage4
   and pullAlpineBuildImage
   and pullAlpineBuildImage2
   and pullAlpineBuildImage3
+  and pullAlpineBuildImage4
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
