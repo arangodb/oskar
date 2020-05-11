@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y software-properties-common && add-apt-r
 
 COPY ./tools/* /tools/
 
-RUN /tools/install.sh
+RUN [ "/tools/install.sh", "1.1.0", "l" ]
 
 COPY ./scripts /scripts
 

@@ -57,8 +57,8 @@ function runAnyTest
 
   if test $VERBOSEOSKAR = On ; echo "$launchCount: Launching $l0" ; end
 
-  if grep $t UnitTests/OskarTestSuitesBlackList
-    echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
+  if grep -e "\b$t\b" -e "\b$l0\b" UnitTests/OskarTestSuitesBlackList
+    echo Test suite $l0 skipped by UnitTests/OskarTestSuitesBlackList
   else
     set -l arguments \'"$t"\' \
       (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
@@ -70,12 +70,13 @@ function runAnyTest
       --writeXmlReport false \
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
+      --coreCheck true \
       $argv
 
     echo (pwd) "-" scripts/unittest $arguments
     mkdir -p "$l2"
-    #echo "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped"
-    fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped" &
+    #echo "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 2>&1; date -u +%s > $l2/stopped"
+    fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 2>&1; date -u +%s > $l2/stopped" &
     set -g portBase (math $portBase + 100)
     sleep 1
   end
@@ -191,10 +192,18 @@ function createReport
  
   popd
   echo $result >> testProtocol.txt
-  pushd $INNERWORKDIR
   and begin
+    pushd $INNERWORKDIR
     echo tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
     eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
+    popd
+  end
+  and begin
+    pushd $INNERWORKDIR/tmp
+    if test (count */UNITTEST_RESULT.json) -gt 0
+      echo tar czvf "$INNERWORKDIR/timings.tar.gz" '*/UNITTEST_RESULT.json'
+      tar czvf "$INNERWORKDIR/timings.tar.gz" */UNITTEST_RESULT.json
+    end
     popd
   end
   
@@ -221,8 +230,8 @@ function createReport
   echo tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
   eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
 
-  echo rm -rf $cores $archives
-  eval $IONICE nice -n 10 rm -rf $cores $archives
+  echo rm -rf $cores innerlogs.tar.gz
+  eval $IONICE nice -n 10 rm -rf $cores innerlogs.tar.gz
 
   # And finally collect the testfailures.txt:
   rm -rf $INNERWORKDIR/testfailures.txt

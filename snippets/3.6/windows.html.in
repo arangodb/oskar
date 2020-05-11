@@ -4,7 +4,7 @@
     and higher), Windows Server 2008 R2 and higher.
   </p>
   <p>
-    The processor(s) must support the SSE 4.2 instruction set (Intel Nehalem or
+    The processor(s) must support the SSE 4.2 instruction set (Intel Westmere or
     better, AMD Bulldozer or better, etc.)
   </p>
   <p>

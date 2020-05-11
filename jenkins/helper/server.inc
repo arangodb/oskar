@@ -17,7 +17,7 @@ case ${ARANGO_EDITION,,} in
       ;;
 esac
 
-for name in ARANGO_DOCKER_NAME ARANGO_PORT ARANGO_MODE ARANGO_STORAGE_ENGINE ARANGO_EDITION ARANGO_AUTH; do
+for name in ARANGO_DOCKER_NAME ARANGO_PORTS ARANGO_MODE ARANGO_STARTER_PORT ARANGO_STORAGE_ENGINE ARANGO_EDITION ARANGO_AUTH; do
     if [ -z "${!name}" ]; then
         echo "$name missing"
         exit 1
@@ -26,24 +26,14 @@ done
 
 echo "NAME: $ARANGO_DOCKER_NAME"
 
-if [ "$ARANGO_MODE" == "cluster" ]; then
-  if [[ -v ARANGO_PORTS ]]; then
-    IFS=', ' read -r -a ARANGO_PORTS <<< "$ARANGO_PORTS"
-  fi
-  if [[ ${#ARANGO_PORTS[@]} > 0 ]]; then
-    #port_shift=29
-    for i in "${ARANGO_PORTS[@]}"; do
-      echo "PORT $i to export"
-      EXPORT_PORTS="$EXPORT_PORTS -p $i:$i"
-      #EXPORT_PORTS="$EXPORT_PORTS -p $i:$(expr 8500 + $port_shift)"
-      #port_shift=$(expr $port_shift + 10)
-    done
-  else 
-    EXPORT_PORTS="-p $ARANGO_PORT:$ARANGO_PORT"
-  fi
-else
-  EXPORT_PORTS="-p $ARANGO_PORT:$ARANGO_PORT"
+if [[ -v ARANGO_PORTS ]]; then
+  IFS=', ' read -r -a ARANGO_PORTS <<< "$ARANGO_PORTS"
 fi
+for i in "${ARANGO_PORTS[@]}"; do
+  echo "PORT $i to export"
+  EXPORT_PORTS="$EXPORT_PORTS -p $i:$i"
+done
+
 echo "PORTS: $EXPORT_PORTS"
 echo "MODE: $ARANGO_MODE"
 echo "ENGINE: $ARANGO_STORAGE_ENGINE"
@@ -54,16 +44,17 @@ echo
 docker kill $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker rm -fv $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
 docker pull $DOCKER_IMAGE
-docker run --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version
+docker run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version | tee ./${ARANGO_DOCKER_NAME}.txt
+export SERVER_FULL_VERSION=$(cat ./${ARANGO_DOCKER_NAME}.txt | grep -oP '^server-version: \K.*$')
 
 OUTDIR="`pwd`/output"
 rm -rf $OUTDIR
 mkdir $OUTDIR
 DOCKER_AUTH=""
 STARTER_AUTH=""
-DOCKER_CMD="docker run --cap-add SYS_NICE --name $ARANGO_DOCKER_NAME -d $EXPORT_PORTS -v $OUTDIR:/testrun"
+DOCKER_CMD="docker run --rm --hostname localhost --cap-add SYS_NICE --name $ARANGO_DOCKER_NAME -d $EXPORT_PORTS -v $OUTDIR:/testrun"
 #DOCKER_IMAGE="registry.arangodb.biz:5000/arangodb/linux-${ARANGO_EDITION}-maintainer:$ARANGO_BRANCH"
-STARTER_CMD="arangodb --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun"
+STARTER_CMD="arangodb --starter.address localhost --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun ${MMFILES_DEPRECATED_OPTION}"
 STARTER_MODE=""
 
 if [ "$ARANGO_AUTH" == "auth" ]; then
@@ -75,19 +66,21 @@ if [ "$ARANGO_AUTH" == "auth" ]; then
   STARTER_AUTH="--auth.jwt-secret /jwtsecret/geheim" 
 fi
 
-if [ "$ARANGO_MODE" == "cluster" ]; then
-  STARTER_MODE="--starter.mode cluster"
-  if [[ "$ARANGO_MODE" == "cluster" && -v ARANGO_PORTS && ${#ARANGO_PORTS[@]} > 0 ]]; then
-    STARTER_MODE="$STARTER_MODE --starter.port $(expr ${ARANGO_PORTS[0]} - 1)"
-  else
-    STARTER_MODE="$STARTER_MODE --starter.port $(expr $ARANGO_PORT - 1)"
-  fi
-elif [ "$ARANGO_MODE" == "singleserver" ]; then
-  STARTER_MODE="--starter.mode single --starter.port $(expr $ARANGO_PORT - 1)"
-else
+case "$ARANGO_MODE" in
+  "cluster")
+    STARTER_MODE="--starter.mode cluster --starter.port ${ARANGO_STARTER_PORT}"
+  ;;
+  "activefailover")
+    STARTER_MODE="--starter.mode activefailover --starter.port ${ARANGO_STARTER_PORT}"
+  ;;
+  "singleserver")
+    STARTER_MODE="--starter.mode single --starter.port ${ARANGO_STARTER_PORT}"
+  ;;
+  *)
     echo "unknown mode $ARANGO_MODE"
     exit 1
-fi
+  ;;
+esac
 
 cat > $OUTDIR/starter.sh << 'EOF'
 #!/bin/sh
@@ -105,7 +98,7 @@ $command
 
 trap "$(trap -p | grep EXIT | sed "s/.*-- '\(.*\)'.EXIT/\1;/g")docker rm -fv $ARANGO_DOCKER_NAME ; sudo chown jenkins:jenkins -R output ; tar czf arango_data.tar.gz output" EXIT
 
-echo "Waiting until ArangoDB is ready on port $ARANGO_PORT"
+echo "Waiting until ArangoDB is ready on port ${ARANGO_PORTS[0]}"
 
 if [ "$ARANGO_AUTH" == "auth" ]; then
     CURL_USER="-uroot:$ARANGO_ROOT_PASSWORD"
@@ -116,7 +109,7 @@ fi
 count=0
 
 while [ "$count" -lt 240 ]; do
-  responseCode=`curl -s -I $CURL_USER http://127.0.0.1:$ARANGO_PORT/_api/version | head -n 1 | cut -d$' ' -f2`
+  responseCode=`curl -s -I $CURL_USER http://localhost:${ARANGO_PORTS[0]}/_api/version | head -n 1 | cut -d$' ' -f2`
   if [ -n "${responseCode}" ];
   then
     if [ $responseCode -eq 200 ];
@@ -137,7 +130,7 @@ if [ $count -ge 240 ]; then
 
     echo
     echo "curl:"
-    curl $CURL_USER -v http://127.0.0.1:$ARANGO_PORT/_api/version
+    curl $CURL_USER -v http://localhost:${ARANGO_PORTS[0]}/_api/version
 
     echo "ArangoDB did not start"
     exit 1

@@ -50,7 +50,8 @@ set -g FULLARGS $argv \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
- -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION
+ -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
 if test "$USE_CCACHE" = "Off"
   set -g FULLARGS $FULLARGS \
@@ -115,10 +116,24 @@ if test "$SKIP_MAKE" = "On"
 else
   echo "Finished cmake at "(date)", now starting build"
 
+<<<<<<< HEAD
   set -g MAKEFLAGS -j$PARALLELISM 
   if test "$VERBOSEBUILD" = "On"
     echo "Building verbosely"
     set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
+=======
+set -x DESTDIR (pwd)/install
+echo Running make for build, output in work/buildArangoDB.log
+nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1
+nice make $MAKEFLAGS install >> $INNERWORKDIR/buildArangoDB.log ^&1
+and echo "build and install done"  >> $INNERWORKDIR/buildArangoDB.log
+and cd install
+and if test -z "$NOSTRIP"
+  echo Stripping executables...
+  strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
+  if test -f usr/bin/arangobackup
+    strip usr/bin/arangobackup
+>>>>>>> 8630666884dd8a33f9062f6f1a557e9ef0155280
   end
 
   set -x DESTDIR (pwd)/install

@@ -23,5 +23,5 @@ executable=$installation/usr/bin/$program
 if [ -x "$executable" ] ; then
   exec "$executable" "$@"
 fi
-echo "Could not find executable!"
+echo "Could not find executable ${executable}!"
 exit 1

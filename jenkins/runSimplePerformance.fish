@@ -14,18 +14,18 @@ cleanPrepareLockUpdateClear2
 and enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
-and if echo "$ARANGODB_BRANCH" | grep -q "^v"
-  pushd work/ArangoDB
-  set -xg date (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-8)
-  set -xg datetime (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-12)
-  echo "==== date $datetime ===="
-  popd
-end
+#and if echo "$ARANGODB_BRANCH" | grep -q "^v"
+#  pushd work/ArangoDB
+#  set -xg date (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-8)
+#  set -xg datetime (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-12)
+#  echo "==== date $datetime ===="
+#  popd
+#end
 and maintainerOff
 and releaseMode
 and pingDetails
 and showConfig
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
 
 and sudo rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="

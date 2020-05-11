@@ -24,7 +24,8 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-setupCcache
+setupCcacheBinPath alpine
+setupCcache alpine
 cd $INNERWORKDIR/ArangoDB
 
 if test -z "$NO_RM_BUILD"
@@ -52,7 +53,8 @@ set -g FULLARGS $argv \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
- -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION
+ -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
 if test "$USE_CCACHE" = "Off"
   set -g FULLARGS $FULLARGS \
@@ -66,9 +68,9 @@ else
 end
 
 if test "$argv" = ""
-  echo "using default architecture 'nehalem'"
+  echo "using default architecture 'westmere'"
   set -g FULLARGS $FULLARGS \
-    -DTARGET_ARCHITECTURE=nehalem
+    -DTARGET_ARCHITECTURE=westmere
 end
 
 if test "$MAINTAINER" = "On"
@@ -143,7 +145,8 @@ else
       set ep (jobs -p | tail -1)
     end
 
-    nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
+    nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1
+    nice make $MAKEFLAGS install >> $INNERWORKDIR/buildArangoDB.log ^&1
     or begin
       if test -n "$ep"
 	kill $ep

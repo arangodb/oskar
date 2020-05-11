@@ -20,19 +20,23 @@ set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE_NAME arangodb/alpinebuildarangodb-$ARCH
-set -gx ALPINEBUILDIMAGE_TAG 5
+set -gx ALPINEBUILDIMAGE_TAG 7
 set -gx ALPINEBUILDIMAGE $ALPINEBUILDIMAGE_NAME:$ALPINEBUILDIMAGE_TAG
 
 set -gx ALPINEBUILDIMAGE2_NAME arangodb/alpinebuildarangodb2-$ARCH
-set -gx ALPINEBUILDIMAGE2_TAG 4
+set -gx ALPINEBUILDIMAGE2_TAG 6
 set -gx ALPINEBUILDIMAGE2 $ALPINEBUILDIMAGE2_NAME:$ALPINEBUILDIMAGE2_TAG
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 2
+set -gx ALPINEBUILDIMAGE3_TAG 5
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
+set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
+set -gx ALPINEBUILDIMAGE4_TAG 2
+set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
+
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
-set -gx ALPINEUTILSIMAGE_TAG 3
+set -gx ALPINEUTILSIMAGE_TAG 4
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
@@ -42,7 +46,7 @@ set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TA
 set -gx DOCIMAGE arangodb/arangodb-documentation:1
 
 set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck
-set -gx CPPCHECKIMAGE_TAG 2
+set -gx CPPCHECKIMAGE_TAG 3
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
 
 set -xg IONICE "ionice -c 3"
@@ -72,6 +76,9 @@ function compiler
       set -gx COMPILER_VERSION $cversion
 
     case 9.2.0
+      set -gx COMPILER_VERSION $cversion
+
+    case 9.3.0
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -137,6 +144,9 @@ function findStaticBuildImage
       case 9.2.0
         echo $ALPINEBUILDIMAGE3
 
+      case 9.3.0
+        echo $ALPINEBUILDIMAGE4
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -178,6 +188,9 @@ function findStaticBuildScript
 
       case 9.2.0
         echo buildAlpine3.fish
+
+      case 9.3.0
+        echo buildAlpine4.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -527,7 +540,7 @@ function buildEnterprisePackage
   and releaseMode
   and enterprise
   and set -xg NOSTRIP dont
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and downloadSyncer
   and copyRclone "linux"
@@ -547,7 +560,7 @@ function buildCommunityPackage
   and releaseMode
   and community
   and set -xg NOSTRIP dont
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and buildPackage
 
@@ -649,7 +662,7 @@ end
 
 function buildTarGzPackage
   if test ! -d $WORKDIR/work/ArangoDB/build
-    echo buildRPMPackage: build directory does not exist
+    echo buildTarGzPackage: build directory does not exist
     return 1
   end
 
@@ -747,7 +760,7 @@ function buildDockerRelease
   and asanOff
   and maintainerOff
   and releaseMode
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
     downloadSyncer
@@ -852,7 +865,32 @@ function buildDockerImage
   popd
 
   pushd $containerpath
-  and eval "docker build $BUILD_ARGS --pull -t $imagename ."
+  and eval "docker build $BUILD_ARGS --pull --no-cache -t $imagename ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function buildDockerLocal
+  findArangoDBVersion ; or return 1
+  set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
+  pushd $WORKDIR/work/ArangoDB/build/install
+
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
+
+  if not test -d $containerpath
+    set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
+  end
+  and tar czf $containerpath/install.tar.gz *
+  and buildDockerAddFiles $DOCKER_DISTRO
+  if test $status -ne 0
+    echo Could not create install tarball!
+    popd
+    return 1
+  end
+  popd
+
+  pushd $containerpath
+  and eval "docker build --pull ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1013,6 +1051,22 @@ end
 
 function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
 
+function buildAlpineBuildImage4
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine4.docker
+  and docker build --pull -t $ALPINEBUILDIMAGE4 .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage4
+  docker tag $ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:latest
+  and docker push $ALPINEBUILDIMAGE4
+  and docker push $ALPINEBUILDIMAGE4_NAME:latest
+end
+
+function pullAlpineBuildImage4 ; docker pull $ALPINEBUILDIMAGE4 ; end
+
 function buildAlpineUtilsImage
   pushd $WORKDIR
   and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
@@ -1171,6 +1225,7 @@ function runInContainer
              -e USE_CCACHE="$USE_CCACHE" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1228,6 +1283,7 @@ function interactiveContainer
              -e UID=(id -u) \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              $argv
 end
 
