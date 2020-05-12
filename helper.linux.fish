@@ -399,7 +399,7 @@ function buildExamples
   and if test "$NO_RM_BUILD" != 1
     buildStaticArangoDB
   end
-  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
+  and runInContainer (findBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -420,7 +420,7 @@ function oskar
     parallelism 2
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish
   else
-    runInContainer --cap-add SYS_NICE (findStaticBuildImage) $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish
   end
   set s $status
 
@@ -439,7 +439,7 @@ function oskarFull
       parallelism 2
       runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findStaticBuildImage) $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
     end
     set s $status
   else
@@ -447,7 +447,7 @@ function oskarFull
       parallelism 2
       runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --cap-add SYS_NICE (findStaticBuildImage) $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
     end
   end
   set s $status
@@ -496,7 +496,7 @@ function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
 
-  runInContainer (findStaticBuildImage) /scripts/coverage.fish
+  runInContainer (findBuildImage) /scripts/coverage.fish
   return $status
 end
 
@@ -511,7 +511,7 @@ function signSourcePackage
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
         -v $HOME/.gnupg3:/root/.gnupg \
-	(findStaticBuildImage) $SCRIPTSDIR/signFile.fish \
+	(findBuildImage) $SCRIPTSDIR/signFile.fish \
 	/work/ArangoDB-$SOURCE_TAG.tar.gz \
 	/work/ArangoDB-$SOURCE_TAG.tar.bz2 \
 	/work/ArangoDB-$SOURCE_TAG.zip
