@@ -2,6 +2,8 @@
 
 echo Directory (pwd)
 
+set -xg IS_JENKINS "true"
+
 function prepareOskar
   set -xg OSKAR oskar
 
@@ -12,7 +14,7 @@ function prepareOskar
   mkdir -p "$HOME/$NODE_NAME" ; cd "$HOME/$NODE_NAME"
 
   if not cd $OSKAR ^ /dev/null 
-    git clone -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR ; and cd $OSKAR
+    git clone --progress  -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR ; and cd $OSKAR
   else
     git fetch --tags ; and git fetch ; and git reset --hard ; and git checkout $OSKAR_BRANCH ; and git reset --hard origin/$OSKAR_BRANCH
   end
@@ -33,6 +35,9 @@ function prepareOskar
       rm -f $lockfile
     end
   end
+
+  mkdir -p work
+  begin test -f $HOME/.gcs-credentials; and cp $HOME/.gcs-credentials work/.gcs-credentials; end; or true
 end
 
 function cleanBranchName
@@ -51,5 +56,13 @@ function cleanPrepareLockUpdateClear
   and prepareOskar
   and lockDirectory
   and updateOskar
+  and clearResults
+end
+
+function cleanPrepareLockUpdateClear2
+  cleanJenkinsParameter
+  and prepareOskar
+  and lockDirectory
+  and updateOskarOnly
   and clearResults
 end

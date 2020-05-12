@@ -1,64 +1,41 @@
 #!/usr/bin/env fish
+source ./scripts/lib/build.fish
+
 if test "$PARALLELISM" = ""
-    set -xg PARALLELISM 64
+  set -xg PARALLELISM 64
 end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-    set -xg COMPILER_VERSION 8.3.0
+  set -xg COMPILER_VERSION 8.3.0
 end
 echo "Using compiler version $COMPILER_VERSION"
 
 if test "$COMPILER_VERSION" = "8.3.0"
-    set -xg CC_NAME gcc
-    set -xg CXX_NAME g++
+  set -xg CC_NAME gcc
+  set -xg CXX_NAME g++
 else
-    set -xg CC_NAME gcc-$COMPILER_VERSION
-    set -xg CXX_NAME g++-$COMPILER_VERSION
+  set -xg CC_NAME gcc-$COMPILER_VERSION
+  set -xg CXX_NAME g++-$COMPILER_VERSION
 end
 
-cd $INNERWORKDIR
-mkdir -p .ccache.alpine2
-set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine2
-if test "$CCACHEBINPATH" = ""
-  set -xg CCACHEBINPATH /usr/lib/ccache/bin
+if test "$OPENSSL_VERSION" = ""
+  set -xg OPENSSL_VERSION 1.1.1
 end
-if test "$CCACHESIZE" = ""
-  set -xg CCACHESIZE 50G
-end
-ccache -M $CCACHESIZE
-cd $INNERWORKDIR/ArangoDB
-
-if test -z "$NO_RM_BUILD"
-  echo "Cleaning build directory"
-  rm -rf build
-end
-mkdir -p build
-cd build
-rm -rf install
-and mkdir install
-
-echo "Starting build at "(date)" on "(hostname)
-rm -f $INNERWORKDIR/.ccache.log
-ccache --zero-stats
+echo "Using openssl version $OPENSSL_VERSION"
 
 set -l pie "-fpic -fPIC -fpie -fPIE -static-pie"
 set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
- -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
- -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME \
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=On \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
- -DUSE_MAINTAINER_MODE=$MAINTAINER
-
-if test "$argv" = ""
-  echo "using default architecture 'nehalem'"
-  set -g FULLARGS $FULLARGS \
-    -DTARGET_ARCHITECTURE=nehalem
-end
+ -DUSE_MAINTAINER_MODE=$MAINTAINER \
+ -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
+ -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
@@ -72,6 +49,7 @@ end
 
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
+  exit 1
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \
@@ -93,37 +71,25 @@ else
   end
 end
 
-echo cmake $FULLARGS ..
-echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
-
-if test "$SHOW_DETAILS" = "On"
-  cmake $FULLARGS .. ^&1 | tee $INNERWORKDIR/cmakeArangoDB.log
+setupCcacheBinPath alpine
+and setupCcache alpine
+and cleanBuildDirectory
+and cd $INNERWORKDIR/ArangoDB/build
+and TT_init
+and cmakeCcache
+and selectArchitecture $argv
+and selectMaintainer
+and runCmake
+and TT_cmake
+and if test "$SKIP_MAKE" = "On"
+  echo "Finished cmake at "(date)", skipping build"
 else
-  cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log ^&1
+  echo "Finished cmake at "(date)", now starting build"
+  and set -xg DESTDIR (pwd)/install
+  and runMake install
+  and TT_make
+  and installTargets
+  and echo "Finished at "(date)
+  and shutdownCcache
+  and TT_strip
 end
-or exit $status
-
-echo "Finished cmake at "(date)", now starting build"
-
-set -g MAKEFLAGS -j$PARALLELISM 
-if test "$VERBOSEBUILD" = "On"
-  echo "Building verbosely"
-  set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
-end
-
-set -x DESTDIR (pwd)/install
-echo Running make $MAKEFLAGS for static build, output in work/buildArangoDB.log
-
-if test "$SHOW_DETAILS" = "On"
-  make $MAKEFLAGS install ^&1 | tee $INNERWORKDIR/buildArangoDB.log
-else
-  nice make $MAKEFLAGS install > $INNERWORKDIR/buildArangoDB.log ^&1
-end
-and cd install
-and if test -z "$NOSTRIP"
-  echo Stripping executables...
-  strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
-end
-
-and echo "Finished at "(date)
-and ccache --show-stats

@@ -9,17 +9,121 @@ set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
 
-if test -z "MACOSX_DEPLOYMENT_TARGET"
+function defaultMacOSXDeploymentTarget
   set -xg MACOSX_DEPLOYMENT_TARGET 10.12
 end
 
+if test -z "$MACOSX_DEPLOYMENT_TARGET"
+  defaultMacOSXDeploymentTarget
+end
+
 set -gx SYSTEM_IS_MACOSX true
+
+## #############################################################################
+## config
+## #############################################################################
 
 # disable JEMALLOC for now in oskar on MacOSX, since we never tried it:
 jemallocOff
 
 # disable strange TAR feature from MacOSX
 set -xg COPYFILE_DISABLE 1
+
+function minMacOS
+  set -l min $argv[1]
+
+  if test "$min" = ""
+    set -e MACOSX_DEPLOYMENT_TARGET
+    return 0
+  end
+
+  switch $min
+    case '10.12'
+      set -gx MACOSX_DEPLOYMENT_TARGET $min
+
+    case '10.13'
+      set -gx MACOSX_DEPLOYMENT_TARGET $min
+
+    case '10.14'
+      set -gx MACOSX_DEPLOYMENT_TARGET $min
+
+    case '10.15'
+      set -gx MACOSX_DEPLOYMENT_TARGET $min
+
+    case '*'
+      echo "unknown macOS version $min"
+  end
+end
+
+function findRequiredMinMacOS
+  set -l f $WORKDIR/work/ArangoDB/VERSIONS
+
+  test -f $f
+  or begin
+    echo "Cannot find $f; make sure source is checked out"
+    return 1
+  end
+
+  set -l v (fgrep MACOS_MIN $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    defaultMacOSXDeploymentTarget
+    echo "$f: no MACOS_MIN specified, using $MACOSX_DEPLOYMENT_TARGET"
+    minMacOS $MACOSX_DEPLOYMENT_TARGET
+  else
+    echo "Using MACOS_MIN version '$v' from '$f'"
+    minMacOS $v
+  end
+end
+
+function opensslVersion
+  set -l oversion $argv[1]
+
+  if test "$oversion" = ""
+    set -e OPENSSL_VERSION
+    return 0
+  end
+
+  switch $oversion
+    case '1.0.2'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '1.1.1'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '*'
+      echo "unknown openssl version $oversion"
+  end
+end
+
+function findRequiredOpenSSL
+  set -l f $WORKDIR/work/ArangoDB/VERSIONS
+
+  test -f $f
+  or begin
+    echo "Cannot find $f; make sure source is checked out"
+    return 1
+  end
+
+  #if test "$OPENSSL_VERSION" != ""
+  #  echo "OpenSSL version already set to '$OPENSSL_VERSION'"
+  #  return 0
+  #end
+
+  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9]")
+
+  if test "$v" = ""
+    echo "$f: no OPENSSL_MACOS specified, using 1.0.2"
+    opensslVersion 1.0.2
+  else
+    echo "Using OpenSSL version '$v' from '$f'"
+    opensslVersion $v
+  end
+end
+
+## #############################################################################
+## run without docker
+## #############################################################################
 
 function runLocal
   if test -z "$SSH_AUTH_SOCK"
@@ -73,6 +177,8 @@ end
 
 function buildArangoDB
   checkoutIfNeeded
+  and findRequiredOpenSSL
+  and findRequiredMinMacOS
   runLocal $SCRIPTSDIR/buildMacOs.fish $argv
   set -l s $status
   if test $s -ne 0
@@ -82,6 +188,8 @@ function buildArangoDB
 end
 
 function makeArangoDB
+  findRequiredOpenSSL
+  findRequiredMinMacOS
   runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
@@ -116,13 +224,20 @@ function pushOskar
   popd
 end
 
-function updateOskar
+function updateOskarOnly
   pushd $WORKDIR
   and git checkout -- .
   and git pull
   and source helper.fish
   or begin ; popd ; return 1 ; end
   popd
+end
+
+function updateOskar
+  updateOskarOnly
+end
+
+function updateDockerBuildImage
 end
 
 function downloadStarter
@@ -133,12 +248,6 @@ end
 function downloadSyncer
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
   runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
-end
-
-function copyRclone
-  echo Copying rclone from rclone/rclone-arangodb-osx to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
-  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp rclone/rclone-arangodb-osx $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 function buildPackage
@@ -153,7 +262,7 @@ function buildPackage
     echo Building community edition MacOs bundle...
   end
 
-  runLocal $SCRIPTSDIR/buildMacOsPackage.fish
+  runLocal $SCRIPTSDIR/buildMacOsPackage.fish $ARANGODB_PACKAGES
   and buildTarGzPackage
 end
 
@@ -176,14 +285,18 @@ function buildEnterprisePackage
   and enterprise
   and set -xg NOSTRIP dont
   and cleanupThirdParty
+  and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
   and downloadStarter
   and downloadSyncer
-  and copyRclone
+  and copyRclone "macos"
+  and if test "$USE_RCLONE" = "true"
+    set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
+  end
   and buildArangoDB \
-      -DTARGET_ARCHITECTURE=nehalem \
+      -DTARGET_ARCHITECTURE=westmere \
       -DPACKAGING=Bundle \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DTHIRDPARTY_SBIN=$WORKDIR/work/$THIRDPARTY_SBIN/arangosync \
+      -DTHIRDPARTY_SBIN=$THIRDPARTY_SBIN_LIST \
       -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
       -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
@@ -205,7 +318,7 @@ function buildCommunityPackage
   and cleanupThirdParty
   and downloadStarter
   and buildArangoDB \
-      -DTARGET_ARCHITECTURE=nehalem \
+      -DTARGET_ARCHITECTURE=westmere \
       -DPACKAGING=Bundle \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
       -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
@@ -222,13 +335,13 @@ function buildTarGzPackage
   pushd $INNERWORKDIR/ArangoDB/build
   and rm -rf install
   and make install DESTDIR=install
-  and mkdir install/usr
+  and mkdir -p install/usr
   and mv install/opt/arangodb/bin install/usr
   and mv install/opt/arangodb/sbin install/usr
   and mv install/opt/arangodb/share install/usr
   and mv install/opt/arangodb/etc install
   and rm -rf install/opt
-  and buildTarGzPackageHelper "macosx"
+  and buildTarGzPackageHelper "macos"
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -238,7 +351,15 @@ end
 ## #############################################################################
 
 function findCompilerVersion
-  gcc -v ^| tail -1 | awk '{print $3}'
+  gcc -v 2>&1 | tail -1 | awk '{print $3}'
 end
+
+function findOpenSSLVersion
+  echo $OPENSSL_VERSION
+end
+
+## #############################################################################
+## set PARALLELISM in a sensible way
+## #############################################################################
 
 parallelism (sysctl -n hw.logicalcpu)

@@ -26,11 +26,20 @@ function upload
   and gsutil rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/packages/Enterprise gs://download.arangodb.com/$ENTERPRISE_DOWNLOAD_KEY/$ARANGODB_REPO/Enterprise
 end
 
+function uploadWindowsSymbols
+  ssh root@symbol.arangodb.biz "cd /script/ && python program.py /mnt/symsrv_arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR"
+  and ssh root@symbol.arangodb.biz "gsutil rsync -r /mnt/symsrv_arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR gs://download.arangodb.com/symsrv_arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR"
+end
+
 # there might be internet hickups
 upload
 or upload
 or upload
 or upload
+
+# there might be internet hickups
+uploadWindowsSymbols
+or uploadWindowsSymbols
 
 set -l s $status
 unlockDirectory

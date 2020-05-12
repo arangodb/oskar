@@ -129,7 +129,8 @@ fi
 %files client
 %defattr(-,root,root,0755)
 
-%config(noreplace) %{_cfgdir}/arangobench.conf
+# This is for arangobench.conf and arangobackup.conf (if the latter is present)
+%config(noreplace) %{_cfgdir}/arangob*.conf
 %config(noreplace) %{_cfgdir}/arangodump.conf
 %config(noreplace) %{_cfgdir}/arangoexp*.conf
 %config(noreplace) %{_cfgdir}/arangoimp*.conf
@@ -138,7 +139,8 @@ fi
 %config(noreplace) %{_cfgdir}/arangosh.conf
 %config(noreplace) %{_cfgdir}/arangovpack.conf
 %config(noreplace) %{_cfgdir}/foxx-manager.conf
-%{_bindir}/arangobench
+# This is for arangobench and arangobackup (if the latter is present)
+%{_bindir}/arangob*
 %{_bindir}/arangodump
 %{_bindir}/arangoexp*
 %{_bindir}/arangoimp*
@@ -188,10 +190,10 @@ ArangoDB 3 (https://www.arangodb.com)
   or JavaScript extensions.
 
 First Steps with ArangoDB:
-  https://docs.arangodb.com/latest/Manual/GettingStarted/
+  https://www.arangodb.com/docs/stable/getting-started.html
 
 Configuring the storage Engine:
-  https://docs.arangodb.com/latest/Manual/Administration/Configuration/GeneralArangod.html#storage-engine
+  https://www.arangodb.com/docs/stable/programs-arangod-server.html#storage-engine
 
 Configuration file:
   /etc/arangodb3/arangod.conf

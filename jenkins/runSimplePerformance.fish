@@ -10,20 +10,22 @@ if test -z "$ARANGODB_TEST_CONFIG"
   set -xg ARANGODB_TEST_CONFIG run-small-edges.js
 end
 
-cleanPrepareLockUpdateClear
-and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and if echo "$ARANGODB_BRANCH" | grep -q "^v"
-  pushd work/ArangoDB
-  set -xg date (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-8)
-  set -xg datetime (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-12)
-  echo "==== date $datetime ===="
-  popd
-end
+cleanPrepareLockUpdateClear2
 and enterprise
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and updateDockerBuildImage
+#and if echo "$ARANGODB_BRANCH" | grep -q "^v"
+#  pushd work/ArangoDB
+#  set -xg date (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-8)
+#  set -xg datetime (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-12)
+#  echo "==== date $datetime ===="
+#  popd
+#end
 and maintainerOff
 and releaseMode
+and pingDetails
 and showConfig
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
 
 and sudo rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="
@@ -45,10 +47,15 @@ and docker run \
       --javascript.script $ARANGODB_TEST_CONFIG"
 
 set -l s $status
-echo "storing results in $dest/results-$ARANGODB_BRANCH-$datetime.csv"
+set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
+set -l filename $dest/results-$resultname-$datetime.csv
+
+echo "storing results in $resultname"
 awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
-  > "$dest/results-$ARANGODB_BRANCH-$datetime.csv"
+  > $filename
+
 sudo rm -rf work/database
+
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s

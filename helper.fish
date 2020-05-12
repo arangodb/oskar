@@ -65,6 +65,59 @@ function releaseMode ; set -gx BUILDMODE RelWithDebInfo ; end
 if test -z "$BUILDMODE" ; releaseMode
 else ; set -gx BUILDMODE $BUILDMODE ; end
 
+function makeOff ; set -gx SKIP_MAKE On  ; end
+function makeOn  ; set -gx SKIP_MAKE Off ; end
+makeOn
+
+function isGCE
+  switch (hostname)
+    case 'gce-*'
+      set -gx IS_GCE "true"
+    case '*'
+      set -gx IS_GCE "false"
+  end
+end
+
+if test -z "$IS_GCE" ; isGCE
+else ; set -gx IS_GCE "false" ; end
+
+function defineSccacheGCE
+  if test -z "$SCCACHE_GCS_BUCKET"
+    set -gx SCCACHE_GCS_BUCKET "arangodbbuildcache"
+  end
+  # No S3 for GCE atm
+  set -gx SCCACHE_BUCKET ""
+  # No redis servers for GCE atm
+  set -gx SCCACHE_REDIS ""
+  # No memcached servers for GCE atm
+  set -gx SCCACHE_MEMCACHED ""
+end
+
+function ccacheOn
+  set -gx USE_CCACHE On
+end
+
+function sccacheOn
+  set -gx USE_CCACHE sccache
+  if test $IS_GCE = "true"
+    defineSccacheGCE
+  end
+end
+
+function ccacheOff ; set -gx USE_CCACHE Off ; end
+
+if test -z "$USE_CCACHE"
+  if test $IS_GCE = "false"
+    ccacheOn
+  else
+    sccacheOn
+  end 
+else if test $USE_CCACHE = "sccache" -a $IS_GCE = "true"
+    defineSccacheGCE
+else
+  set -gx USE_CCACHE $USE_CCACHE
+end
+
 function coverageOn ; set -gx COVERAGE On ; debugMode ; end
 function coverageOff ; set -gx COVERAGE Off ; end
 if test -z "$COVERAGE" ; coverageOff
@@ -94,6 +147,7 @@ else ; set -gx VERBOSEBUILD $VERBOSEBUILD ; end
 
 function showDetails ; set -gx SHOW_DETAILS On ; end
 function hideDetails ; set -gx SHOW_DETAILS Off ; end
+function pingDetails ; set -gx SHOW_DETAILS Ping ; end
 
 if test -z "$SHOW_DETAILS"
   if isatty 1
@@ -104,6 +158,10 @@ if test -z "$SHOW_DETAILS"
 else
   set -gx SHOW_DETAILS $SHOW_DETAILS
 end
+
+function ubiDockerImage ; set -gx DOCKER_DISTRO ubi ; end
+function alpineDockerImage ; set -gx DOCKER_DISTRO "" ; end
+alpineDockerImage
 
 function skipNondeterministic ; set -gx SKIPNONDETERMINISTIC true ; end
 function includeNondeterministic ; set -gx SKIPNONDETERMINISTIC false ; end
@@ -133,6 +191,9 @@ else ; set -gx RELEASE_TYPE $RELEASE_TYPE ; end
 function keepBuild ; set -gx NO_RM_BUILD 1 ; end
 function clearBuild ; set -gx NO_RM_BUILD ; end
 
+function githubMirror   ; set -gx GITHUB_MIRROR $argv[1] ; end
+function noGithubMirror ; set -e  GITHUB_MIRROR ; end
+
 function setAllLogsToWorkspace ; set -gx WORKSPACE_LOGS "all" ; end
 function setOnlyFailLogsToWorkspace ; set -gx WORKSPACE_LOGS "fail"; end
 if test -z "$WORKSPACE_LOGS"; setOnlyFailLogsToWorkspace
@@ -140,6 +201,17 @@ else ; set -gx WORKSPACE_LOGS $WORKSPACE_LOGS ; end
 
 function addLogLevel ; set -gx LOG_LEVELS $LOG_LEVELS $argv ; end
 function clearLogLevel ; set -ge LOG_LEVEL ; end
+
+function notarizeApp ; set -gx NOTARIZE_APP On ; end
+function noNotarizeAppp ; set -gx NOTARIZE_APP Off ; end
+if test -z "$NOTARIZE_APP"; noNotarizeAppp
+else ; set -gx NOTARIZE_APP $NOTARIZE_APP ; end
+
+function strictOpenSSL; set -gx USE_STRICT_OPENSSL On ; end
+function nonStrictOpenSSL ; set -gx USE_STRICT_OPENSSL Off ; end
+if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
+  strictOpenSSL
+else ; nonStrictOpenSSL ; end
 
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
@@ -150,6 +222,49 @@ if test ! -d work ; mkdir work ; end
 
 if test -z "$ARANGODB_DOCS_BRANCH" ; set -gx ARANGODB_DOCS_BRANCH "master"
 else ; set -gx ARANGODB_DOCS_BRANCH $ARANGODB_DOCS_BRANCH ; end
+
+function findUseRclone
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+
+  test -f $f
+  or begin
+    #echo "Cannot find $f; make sure source is checked out"
+    set -gx USE_RCLONE "false"
+    return 1
+  end
+
+  set -l v (fgrep USE_RCLONE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    #echo "$f: no USE_RCLONE specified, using false"
+    set -gx USE_RCLONE "false"
+  else
+    #echo "Using rclone '$v' from '$f'"
+    set -gx USE_RCLONE "$v"
+  end
+end
+
+if test -z "$USE_RCLONE" ; findUseRclone ; end
+
+function copyRclone
+  findUseRclone
+
+  if test "$USE_RCLONE" = "false"
+    echo "Not copying rclone since it's not used!"
+    return
+  end
+
+  set -l os "$argv[1]"
+
+  if test -z "$os"
+    echo "need operating system as first argument"
+    return 1
+  end
+
+  echo Copying rclone from rclone/rclone-arangodb-$os to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+  cp rclone/rclone-arangodb-$os $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+end
 
 ## #############################################################################
 ## test
@@ -167,7 +282,7 @@ function createLogLevelsOverride
   end
 end
 
-function oskar1
+function oskarCompile
   showConfig
   showRepository
   set -x NOSTRIP 1
@@ -176,52 +291,35 @@ function oskar1
   else
     buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
   end
-  oskar
+end
+
+function oskar1
+  oskarCompile
+  and oskar
 end
 
 function oskar1Full
-  showConfig
-  showRepository
-  set -x NOSTRIP 1
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  end
-  oskarFull
+  oskarCompile
+  and oskarFull
 end
 
 function oskar2
   set -l testsuite $TESTSUITE
-  set -x NOSTRIP 1
 
-  showConfig
-  showRepository
-
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  end
-
+  oskarCompile
+  and begin
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+  end
 
   set -xg TESTSUITE $testsuite
 end
 
 function oskar4
   set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE
-  set -x NOSTRIP 1
 
-  showConfig
-  showRepository
-
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  end
+  oskarCompile
+  and begin
 
   rocksdb
   cluster ; oskar ; or return $status
@@ -231,24 +329,17 @@ function oskar4
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
   cluster ; rocksdb
+  end
 
   set -xg TESTSUITE $testsuite ; set -xg STORAGEENGINE $storageengine
 end
 
 function oskar8
   set -l testsuite $TESTSUITE ; set -l storageengine $STORAGEENGINE ; set -l enterpriseedition $ENTERPRISEEDITION
-  set -x NOSTRIP 1
-
-  showConfig
-  showRepository
 
   enterprise
-
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  end
+  and oskarCompile
+  and begin
  
   rocksdb
   cluster ; oskar ; or return $status
@@ -257,14 +348,10 @@ function oskar8
   mmfiles
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
-
-  community
-
-  if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
-  else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
   end
+  and community
+  and oskarCompile
+  and begin
 
   rocksdb
   cluster ; oskar ; or return $status
@@ -273,8 +360,10 @@ function oskar8
   mmfiles
   cluster ; oskar ; or return $status
   single ; oskar ; or return $status
+  end
 
   set -xg TESTSUITE $testsuite ; set -xg STORAGEENGINE $storageengine ; set -l ENTERPRISEEDITION $enterpriseedition
+  
 end
 
 ## #############################################################################
@@ -292,6 +381,23 @@ end
 ## #############################################################################
 
 function makeRelease
+  makeEnterpriseRelease
+  and makeCommunityRelease
+end
+
+function makeCommunityRelease
+  if test (count $argv) -lt 2
+    findArangoDBVersion ; or return 1
+  else
+    set -xg ARANGODB_VERSION "$argv[1]"
+    set -xg ARANGODB_PACKAGE_REVISION "$argv[2]"
+    set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
+  end
+
+  buildCommunityPackage
+end
+
+function makeEnterpriseRelease
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
@@ -306,7 +412,6 @@ function makeRelease
   end
 
   buildEnterprisePackage
-  and buildCommunityPackage
 end
 
 ## #############################################################################
@@ -390,6 +495,11 @@ function buildTarGzPackageHelper
   and strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
+    rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
+  else
+    if test -f usr/bin/arangobackup
+      strip usr/bin/arangobackup
+    end
   end
   and cd $WORKDIR/work/ArangoDB/build
   and mv install "$name-$v"
@@ -410,8 +520,10 @@ function buildTarGzPackageHelper
       --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
       --exclude "$name-$v/bin/arangodb" \
+      --exclude "$name-$v/bin/arangosync" \
       --exclude "$name-$v/usr/sbin" \
       --exclude "$name-$v/usr/bin/arangodb" \
+      --exclude "$name-$v/usr/bin/arangosync" \
       --exclude "$name-$v/usr/share/arangodb3/arangodb-update-db" \
       --exclude "$name-$v/usr/share/arangodb3/js/server" \
       "$name-$v"
@@ -419,6 +531,7 @@ function buildTarGzPackageHelper
   end
 
   mv "$name-$v" install
+  and rm -rf install/bin
   and popd
   and return $s 
 end
@@ -465,6 +578,11 @@ function buildSourceSnippet
   set -l SOURCE_TAR_BZ2 "ArangoDB-$ARANGODB_VERSION.tar.bz2"
   set -l SOURCE_ZIP "ArangoDB-$ARANGODB_VERSION.zip"
 
+  set -l SOURCE_TAG "$ARANGODB_VERSION"
+  if string match -qr '^[0-9]+$' "$ARANGODB_VERSION_RELEASE_TYPE"
+    set SOURCE_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH.$ARANGODB_VERSION_RELEASE_TYPE"
+  end
+
   set IN $argv[1]/$ARANGODB_PACKAGES/source
   set OUT $argv[2]/release/snippets
 
@@ -482,7 +600,8 @@ function buildSourceSnippet
 
   set -l n "$OUT/download-source.html"
 
-  sed -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
+  sed -e "s|@SOURCE_TAG@|$SOURCE_TAG|g" \
+      -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
       -e "s|@SOURCE_SIZE_TAR_GZ@|$SOURCE_SIZE_TAR_GZ|g" \
       -e "s|@SOURCE_SHA256_TAR_GZ@|$SOURCE_SHA256_TAR_GZ|g" \
       -e "s|@SOURCE_TAR_BZ2@|$SOURCE_TAR_BZ2|g" \
@@ -492,8 +611,6 @@ function buildSourceSnippet
       -e "s|@SOURCE_SIZE_ZIP@|$SOURCE_SIZE_ZIP|g" \
       -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/source.html.in > $n
 
@@ -796,14 +913,14 @@ function buildBundleSnippet
   set -l BUNDLE_SIZE_SERVER (expr (wc -c < $IN/$BUNDLE_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l BUNDLE_SHA256_SERVER (shasum -a 256 -b < $IN/$BUNDLE_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macosx-$ARANGODB_VERSION.tar.gz"
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macos-$ARANGODB_VERSION.tar.gz"
 
   if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-macos-$ARANGODB_TGZ_UPSTREAM.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
   set -l TARGZ_SHA256_CLIENT ""
 
@@ -1001,12 +1118,21 @@ function showConfig
     set compiler_version "["(findCompilerVersion)"]"
   end
 
+  set -l openssl_version "["(findOpenSSLVersion)"]"
+
+  if test -z "$OPENSSL_VERSION"
+    findRequiredOpenSSL > /dev/null 2>&1
+    set openssl_version "["(findOpenSSLVersion)"]"
+  end
+
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
   printf $fmt3 'ASAN'       $ASAN                '(asanOn/Off)'
   printf $fmt3 'Coverage'   $COVERAGE            '(coverageOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'   "$compiler_version"  '(compiler x.y.z)'
+  printf $fmt3 'OpenSSL'    "$openssl_version"   '(opensslVersion x.y.z)'
+  printf $fmt3 'Use rclone' $USE_RCLONE          '(rclone true or false)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
@@ -1029,16 +1155,28 @@ function showConfig
   echo
   echo 'Package Configuration'
   printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
+  printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
   echo
   echo 'Internal Configuration'
-  printf $fmt3 'Parallelism'   $PARALLELISM  '(parallelism nnn)'
+  printf $fmt3 'Parallelism'   $PARALLELISM   '(parallelism nnn)'
+  printf $fmt3 'Skip MAKE'     $SKIP_MAKE     '(makeOn/Off)'
+  printf $fmt3 'Github Mirror' "$GITHUB_MIRROR" '(githubMirror)'
+  printf $fmt3 'CCACHE'        $USE_CCACHE    '(ccacheOn/Off/sccacheOn)'
   if test "$CCACHESIZE" != ""
-  printf $fmt3 'CCACHE size'   $CCACHESIZE   '(CCACHESIZE)'
+  printf $fmt3 'CCACHE size'   $CCACHESIZE          '(CCACHESIZE)'
   end
-  printf $fmt3 'Verbose Build' $VERBOSEBUILD '(verboseBuild/silentBuild)'
-  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR '(verbose/slient)'
-  printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails)'
-  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
+  if test "$USE_CCACHE" = "sccache"
+    if test "$SCCACHE_BUCKET" != ""
+      printf $fmt3 'S3 Bucket' $SCCACHE_BUCKET      '(SCCACHE_BUCKET)'
+      printf $fmt3 'S3 Server' $SCCACHE_ENDPOINT    '(SCCACHE_ENDPOINT)'
+    end
+  end
+  printf $fmt3 'Verbose Build' $VERBOSEBUILD        '(verboseBuild/silentBuild)'
+  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR        '(verbose/slient)'
+  printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
+  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS      '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
+  printf $fmt3 'Notarize'      $NOTARIZE_APP        '(notarizeApp/noNotarizedApp)'
+  printf $fmt3 'Strict OpenSSL' $USE_STRICT_OPENSSL '(strictOpenSSL/nonStrictOpenSSL)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR
@@ -1262,8 +1400,12 @@ function findArangoDBVersion
 
       set -xg ARANGODB_REPO "arangodb""$ARANGODB_VERSION_MAJOR""$ARANGODB_VERSION_MINOR"
 
-      set -xg DOCKER_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH"
+      set -xg DOCKER_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH.$ARANGODB_VERSION_RELEASE_TYPE"
     end
+  end
+
+  if test -n "$DOCKER_DISTRO"
+    set -xg DOCKER_TAG "$DOCKER_TAG-$DOCKER_DISTRO"
   end
 
   echo '------------------------------------------------------------------------------'
@@ -1279,12 +1421,37 @@ function findArangoDBVersion
   echo "ARANGODB_DEBIAN_UPSTREAM/REVISION: $ARANGODB_DEBIAN_UPSTREAM / $ARANGODB_DEBIAN_REVISION"
   echo "ARANGODB_PACKAGES:                 $ARANGODB_PACKAGES"
   echo "ARANGODB_REPO:                     $ARANGODB_REPO"
-  echo "ARANGODB_RPM_UPDATREAM/REVISION:   $ARANGODB_RPM_UPSTREAM / $ARANGODB_RPM_REVISION"
+  echo "ARANGODB_RPM_UPSTREAM/REVISION:    $ARANGODB_RPM_UPSTREAM / $ARANGODB_RPM_REVISION"
   echo "ARANGODB_SNIPPETS:                 $ARANGODB_SNIPPETS"
   echo "ARANGODB_TGZ_UPSTREAM:             $ARANGODB_TGZ_UPSTREAM"
   echo "DOCKER_TAG:                        $DOCKER_TAG"
   echo '------------------------------------------------------------------------------'
   echo
+end
+
+## #############################################################################
+## CHECK USELESS MACROS
+## #############################################################################
+
+function checkMacros
+  checkoutIfNeeded
+  and pushd $WORKDIR/work/ArangoDB
+  or begin popd; return 1; end
+
+  set -l wrong (find lib arangod arangosh enterprise tests -name "*.cpp" -o -name "*.h" \
+    | xargs grep -P -n '# *ifdef +(WIN32|(TRI_ENABLE_|ARANGODB_USE_|USE_)MAINTAINER_MODE)') 
+  
+  set -l s 0
+
+  if test "$wrong" != ""
+    echo -e "Wrong macros:\n$wrong"
+    set s 1
+  else
+    echo "Wrong macros: NONE"
+  end
+
+  popd
+  return $s
 end
 
 ## #############################################################################
@@ -1297,8 +1464,9 @@ function checkLogId
   or begin popd; return 1; end
 
   set -l ids (find lib arangod arangosh enterprise -name "*.cpp" -o -name "*.h" \
-    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\)("[a-f0-9]*"' \
-    | sed -e 's:^.*LOG_[^(]*("\([a-f0-9]*\)".*:\1:')
+    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\)("[^\"]*"' \
+    | grep -v 'LOG_DEVEL' \
+    | sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
 
   set -l duplicate (echo $ids | tr " " "\n" | sort | uniq -d)
 
@@ -1347,9 +1515,7 @@ function checkoutIfNeeded
       checkoutArangoDB
     end
   end
-  and if test ! -d $WORKDIR/ArangoDB/upgrade-data-tests
-    checkoutUpgradeDataTests
-  end
+  and checkoutUpgradeDataTests
 end
 
 function clearResults
@@ -1385,29 +1551,36 @@ function moveResultsToWorkspace
       else
         for f in $WORKDIR/work/testreport* ; echo "rm $f" ; rm $f ; end
       end
+
+      echo "mv test.log"
       mv $WORKDIR/work/test.log $WORKSPACE
+
       if test -f $WORKDIR/work/testProtocol.txt
+        echo "mv testProtocol.txt"
         mv $WORKDIR/work/testProtocol.txt $WORKSPACE/protocol.log
       end
     end
 
     for x in buildArangoDB.log cmakeArangoDB.log
+      echo "mv $x"
       if test -f $WORKDIR/work/$x ; mv $WORKDIR/work/$x $WORKSPACE ; end
     end
 
     for x in cppcheck.xml
       if test -f $WORKDIR/work/ArangoDB/$x
+        echo "mv $x"
         mv $WORKDIR/work/ArangoDB/$x $WORKSPACE
       end
     end
 
     if test -d "$WORKDIR/work/coverage"
+      echo "mv coverage"
       mv $WORKDIR/work/coverage $WORKSPACE
     end
 
-    set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html}
+    set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html,csv}
     for f in $matches
-      echo $f | grep -v testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"      
+      echo $f | grep -qv testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"
     end
 
     for f in $WORKDIR/work/asan.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end
@@ -1419,6 +1592,7 @@ function moveResultsToWorkspace
     end
 
     if test -d $WORKDIR/work/Documentation
+      echo "mv Documentation"
       mv $WORKDIR/work/Documentation $WORKSPACE/Documentation.generated
     end
 

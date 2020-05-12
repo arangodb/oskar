@@ -4,12 +4,12 @@
   </p>
   <p>
     The processor(s) must support the SSE 4.2 instruction set
-    (Intel Nehalem or better, AMD Bulldozer or better, etc.)
+    (Intel Westmere or better, AMD Bulldozer or better, etc.)
   </p>
   <p>
     In order to install ArangoDB in your Kubernetes Cluster, first deploy the
     latest operator. Instructions how to do so can be found in the documentation:
-    <a href="https://docs.arangodb.com/@ARANGODB_PACKAGES@/Manual/Deployment/Kubernetes/" target="_blank">ArangoDB Kubernetes Operator</a>.
+    <a href="https://www.arangodb.com/docs/@ARANGODB_PACKAGES@/deployment-kubernetes.html" target="_blank">ArangoDB Kubernetes Operator</a>.
   <p>
     Then use the statement below to deploy your license key as secret:
     <pre>kubectl create secret generic arango-license-key --from-literal=token="@ARANGODB_LICENSE_KEY@"</pre>

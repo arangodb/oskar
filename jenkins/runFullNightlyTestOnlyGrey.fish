@@ -7,8 +7,8 @@ and eval $STORAGE_ENGINE
 and eval $TEST_SUITE
 and onlyGreyOn
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and showConfig
 and compiler "$COMPILER_VERSION"
+and pingDetails
 and oskar1Full
 
 set -l s $status

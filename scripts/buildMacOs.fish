@@ -1,80 +1,64 @@
 #!/usr/bin/env fish
+source ./scripts/lib/build.fish
+
 if test "$PARALLELISM" = ""
-    set -xg PARALLELISM 64
+  set -xg PARALLELISM 64
 end
 echo "Using parallelism $PARALLELISM"
 
-cd $INNERWORKDIR
-mkdir -p .ccache.mac
-set -x CCACHE_DIR $INNERWORKDIR/.ccache.mac
-if test "$CCACHEBINPATH" = ""
-  set -xg CCACHEBINPATH /usr/lib/ccache
+set -xg CC_NAME gcc
+set -xg CXX_NAME g++
+
+if test "$OPENSSL_VERSION" = ""
+  set -xg OPENSSL_VERSION 1.0.2
 end
-if test "$CCACHESIZE" = ""
-  set -xg CCACHESIZE 100G
+switch $OPENSSL_VERSION
+  case '1.0.2'
+      set -xg OPENSSL_PATH (set last (brew --prefix)/Cellar/openssl/{$OPENSSL_VERSION}*;and echo $last[-1])
+
+  case '1.1.1'
+      set -xg OPENSSL_PATH (set last (brew --prefix)/Cellar/openssl@1.1/{$OPENSSL_VERSION}*;and echo $last[-1])
+
+  case '*'
+      echo "unknown openssl version $OPENSSL_VERSION"
 end
-ccache -M $CCACHESIZE
-#ccache -o log_file=$INNERWORKDIR/.ccache.mac.log
-ccache -o cache_dir_levels=1
-cd $INNERWORKDIR/ArangoDB
-
-if test -z "$NO_RM_BUILD"
-  echo "Cleaning build directory"
-  rm -rf build
-end
-
-echo "Starting build at "(date)" on "(hostname)
-test -f $INNERWORKDIR/.ccache.mac.log 
-and mv $INNERWORKDIR/.ccache.mac.log $INNERWORKDIR/.ccache.mac.log.old
-ccache --zero-stats
-
-rm -rf build
-mkdir -p build
-cd build
-
-set -g FULLARGS $argv \
-      -DCMAKE_BUILD_TYPE=$BUILDMODE \
-      -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/g++ \
-      -DCMAKE_C_COMPILER=$CCACHEBINPATH/gcc \
-      -DUSE_MAINTAINER_MODE=$MAINTAINER \
-      -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
-      -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-      -DCMAKE_SKIP_RPATH=On \
-      -DPACKAGING=Bundle \
-      -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DOPENSSL_USE_STATIC_LIBS=On
-
-if test "$argv" = ""
-  echo "using default architecture 'nehalem'"
-  set -g FULLARGS $FULLARGS \
-    -DTARGET_ARCHITECTURE=nehalem
-end
-
-if test "$MAINTAINER" != "On"
-  set -g FULLARGS $FULLARGS \
-    -DUSE_CATCH_TESTS=Off \
-    -DUSE_GOOGLE_TESTS=Off
-end
+echo "Using openssl version $OPENSSL_VERSION and path $OPENSSL_PATH"
 
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
 end
 
-echo cmake $FULLARGS ..
-echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
+set -g FULLARGS $argv \
+ -DCMAKE_BUILD_TYPE=$BUILDMODE \
+ -DUSE_MAINTAINER_MODE=$MAINTAINER \
+ -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
+ -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
+ -DCMAKE_SKIP_RPATH=On \
+ -DPACKAGING=Bundle \
+ -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
+ -DOPENSSL_USE_STATIC_LIBS=On \
+ -DCMAKE_LIBRARY_PATH=$OPENSSL_PATH/lib \
+ -DOPENSSL_ROOT_DIR=$OPENSSL_PATH \
+ -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
-cmake $FULLARGS .. ^&1 > $INNERWORKDIR/cmakeArangoDB.log
-or exit $status
-
-echo "Finished cmake at "(date)", now starting build"
-
-set -g MAKEFLAGS -j$PARALLELISM 
-if test "$VERBOSEBUILD" = "On"
-  echo "Building verbosely"
-  set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
+setupCcacheBinPath macos
+and setupCcache macos
+and cleanBuildDirectory
+and cd $INNERWORKDIR/ArangoDB/build
+and TT_init
+and cmakeCcache
+and selectArchitecture $argv
+and selectMaintainer
+and runCmake
+and TT_cmake
+and if test "$SKIP_MAKE" = "On"
+  echo "Finished cmake at "(date)", skipping build"
+else
+  echo "Finished cmake at "(date)", now starting build"
+  and runMake
+  and TT_make
+  and echo "Finished at "(date)
+  and shutdownCcache
+  and TT_strip
 end
-
-echo Running make, output in $INNERWORKDIR/buildArangoDB.log
-and nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1 
-and echo "Finished at "(date)
-and ccache --show-stats
