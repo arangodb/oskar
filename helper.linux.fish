@@ -422,7 +422,7 @@ function oskar
     parallelism 2
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish
   else
-    runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE (findStaticBuildImage) $SCRIPTSDIR/runTests.fish
   end
   set s $status
 
@@ -441,7 +441,7 @@ function oskarFull
       parallelism 2
       runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findStaticBuildImage) $SCRIPTSDIR/runFullTests.fish
     end
     set s $status
   else
@@ -449,7 +449,7 @@ function oskarFull
       parallelism 2
       runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE (findStaticBuildImage) $SCRIPTSDIR/runFullTests.fish
     end
   end
   set s $status
@@ -513,7 +513,7 @@ function signSourcePackage
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
         -v $HOME/.gnupg3:/root/.gnupg \
-	(findBuildImage) $SCRIPTSDIR/signFile.fish \
+	(findStaticBuildImage) $SCRIPTSDIR/signFile.fish \
 	/work/ArangoDB-$SOURCE_TAG.tar.gz \
 	/work/ArangoDB-$SOURCE_TAG.tar.bz2 \
 	/work/ArangoDB-$SOURCE_TAG.zip

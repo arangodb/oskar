@@ -55,13 +55,14 @@ end
 
 if test "$ASAN" = "On"
   set -xg ASAN_OPTIONS "detect_leaks=0"
-else if test "$COVERAGE" = "On"
-  echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \
-    -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
+   -DUSE_JEMALLOC=Off \
    -DCMAKE_C_FLAGS="-pthread -fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=alignment" \
    -DCMAKE_CXX_FLAGS="-pthread -fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=vptr -fno-sanitize=alignment" \
    -DBASE_LIBS="-pthread"
+else if test "$COVERAGE" = "On"
+  echo "COVERAGE is not support in this environment!"
+  exit 1
 else
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=$JEMALLOC_OSKAR

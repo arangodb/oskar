@@ -49,6 +49,7 @@ end
 
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
+  exit 1
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \
