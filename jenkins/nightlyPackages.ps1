@@ -3,6 +3,11 @@ Write-Host "WORKSPACE: $env:WORKSPACE"
 Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 . "$pwd\prepareOskar.ps1"
 
+if (-Not (Test-Path env:MOVE_TO_STAGE2 -ErrorAction SilentlyContinue))
+{
+    $env:MOVE_TO_STAGE2 = $true
+}
+
 If (!$env:ARANGODB_PACKAGES -or $env:ARANGODB_PACKAGES -eq "")
 {
     Write-Host "ARANGODB_PACKAGES required"

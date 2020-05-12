@@ -3,7 +3,7 @@ cd /mirror
 and mkdir -p mirror
 and cd mirror
 and if test ! -d ArangoDB.git
-  git clone --mirror ssh://git@github.com/arangodb/ArangoDB.git
+  git clone --progress --mirror ssh://git@github.com/arangodb/ArangoDB.git
   or exit 1
 else
   pushd ArangoDB.git
@@ -12,7 +12,7 @@ else
   popd
 end
 and if test ! -d enterprise.git
-  git clone --mirror ssh://git@github.com/arangodb/enterprise.git
+  git clone --progress --mirror ssh://git@github.com/arangodb/enterprise.git
   or exit 1
 else
   pushd enterprise.git
@@ -21,7 +21,7 @@ else
   popd
 end
 and if test ! -d upgrade-data-tests.git
-  git clone --mirror ssh://git@github.com/arangodb/upgrade-data-tests.git
+  git clone --progress --mirror ssh://git@github.com/arangodb/upgrade-data-tests.git
   or exit 1
 else
   pushd upgrade-data-tests.git

@@ -31,5 +31,5 @@ if [ -x "$executable" ] ; then
        --javascript.client-module inspector.js \
        "$@"
 fi
-echo "Could not find executable!"
+echo "Could not find executable ${executable}!"
 exit 1

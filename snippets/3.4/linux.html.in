@@ -6,7 +6,7 @@
   </p>
   <p>
     The processor(s) must support the SSE 4.2 instruction set
-    (Intel Nehalem or better, AMD Bulldozer or better, etc.)
+    (Intel Westmere or better, AMD Bulldozer or better, etc.)
   </p>
   <hr/>
   <p><strong>Tar</strong> package</p>

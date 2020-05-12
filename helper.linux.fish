@@ -5,23 +5,42 @@ set -gx SCRIPTSDIR /scripts
 set -gx PLATFORM linux
 set -gx ARCH (uname -m)
 
-set -gx UBUNTUBUILDIMAGE arangodb/ubuntubuildarangodb-$ARCH:1
+set -gx UBUNTUBUILDIMAGE_NAME arangodb/ubuntubuildarangodb-$ARCH
+set -gx UBUNTUBUILDIMAGE_TAG 1
+set -gx UBUNTUBUILDIMAGE $UBUNTUBUILDIMAGE_NAME:$UBUNTUBUILDIMAGE_TAG
+
+set -gx UBUNTUBUILDIMAGE2_NAME arangodb/ubuntubuildarangodb2-$ARCH
+set -gx UBUNTUBUILDIMAGE2_TAG 1
+set -gx UBUNTUBUILDIMAGE2 $UBUNTUBUILDIMAGE2_NAME:$UBUNTUBUILDIMAGE2_TAG
+
+set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
+set -gx UBUNTUBUILDIMAGE3_TAG 1
+set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
+
+set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
+set -gx UBUNTUBUILDIMAGE4_TAG 1
+set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
+
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE_NAME arangodb/alpinebuildarangodb-$ARCH
-set -gx ALPINEBUILDIMAGE_TAG 5
+set -gx ALPINEBUILDIMAGE_TAG 7
 set -gx ALPINEBUILDIMAGE $ALPINEBUILDIMAGE_NAME:$ALPINEBUILDIMAGE_TAG
 
 set -gx ALPINEBUILDIMAGE2_NAME arangodb/alpinebuildarangodb2-$ARCH
-set -gx ALPINEBUILDIMAGE2_TAG 4
+set -gx ALPINEBUILDIMAGE2_TAG 6
 set -gx ALPINEBUILDIMAGE2 $ALPINEBUILDIMAGE2_NAME:$ALPINEBUILDIMAGE2_TAG
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 2
+set -gx ALPINEBUILDIMAGE3_TAG 5
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
+set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
+set -gx ALPINEBUILDIMAGE4_TAG 2
+set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
+
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
-set -gx ALPINEUTILSIMAGE_TAG 3
+set -gx ALPINEUTILSIMAGE_TAG 4
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
@@ -31,7 +50,7 @@ set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TA
 set -gx DOCIMAGE arangodb/arangodb-documentation:1
 
 set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck
-set -gx CPPCHECKIMAGE_TAG 2
+set -gx CPPCHECKIMAGE_TAG 3
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
 
 set -xg IONICE "ionice -c 3"
@@ -61,6 +80,9 @@ function compiler
       set -gx COMPILER_VERSION $cversion
 
     case 9.2.0
+      set -gx COMPILER_VERSION $cversion
+
+    case 9.3.0
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -93,6 +115,30 @@ end
 
 function findBuildImage
   if test "$COMPILER_VERSION" = ""
+      echo $UBUNTUBUILDIMAGE
+  else
+    switch $COMPILER_VERSION
+      case 6.4.0
+        echo $UBUNTUBUILDIMAGE
+
+      case 8.3.0
+        echo $UBUNTUBUILDIMAGE2
+
+      case 9.2.0
+        echo $UBUNTUBUILDIMAGE3
+
+      case 9.3.0
+        echo $UBUNTUBUILDIMAGE4
+
+      case '*'
+        echo "unknown compiler version $version"
+        return 1
+    end
+  end
+end
+
+function findStaticBuildImage
+  if test "$COMPILER_VERSION" = ""
       echo $ALPINEBUILDIMAGE
   else
     switch $COMPILER_VERSION
@@ -105,6 +151,9 @@ function findBuildImage
       case 9.2.0
         echo $ALPINEBUILDIMAGE3
 
+      case 9.3.0
+        echo $ALPINEBUILDIMAGE4
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -113,6 +162,30 @@ function findBuildImage
 end
 
 function findBuildScript
+  if test "$COMPILER_VERSION" = ""
+      echo buildArangoDB.fish
+  else
+    switch $COMPILER_VERSION
+      case 6.4.0
+        echo buildArangoDB.fish
+
+      case 8.3.0
+        echo buildArangoDB2.fish
+
+      case 9.2.0
+        echo buildArangoDB3.fish
+
+      case 9.3.0
+        echo buildArangoDB4.fish
+
+      case '*'
+        echo "unknown compiler version $version"
+        return 1
+    end
+  end
+end
+
+function findStaticBuildScript
   if test "$COMPILER_VERSION" = ""
       echo buildAlpine.fish
   else
@@ -125,6 +198,9 @@ function findBuildScript
 
       case 9.2.0
         echo buildAlpine3.fish
+
+      case 9.3.0
+        echo buildAlpine4.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -142,10 +218,10 @@ function findRequiredCompiler
     return 1
   end
 
-  if test "$COMPILER_VERSION" != ""
-    echo "Compiler version already set to '$COMPILER_VERSION'"
-    return 0
-  end
+  #if test "$COMPILER_VERSION" != ""
+  #  echo "Compiler version already set to '$COMPILER_VERSION'"
+  #  return 0
+  #end
 
   set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
@@ -230,6 +306,7 @@ function switchBranches
 
   checkoutIfNeeded
   and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
+  and findRequiredCompiler
 end
 
 ## #############################################################################
@@ -266,7 +343,9 @@ function buildArangoDB
   #             have to do a 'cd' for a subsequent call.
   #             Fix by not relying on relative locations in other functions
   checkoutIfNeeded
-  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/buildArangoDB.fish $argv
+  and findRequiredCompiler
+  and findRequiredOpenSSL
+  and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -275,7 +354,11 @@ function buildArangoDB
 end
 
 function makeArangoDB
-  runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/makeArangoDB.fish $argv
+  if test "$COMPILER_VERSION" = ""
+    findRequiredCompiler
+    findRequiredOpenSSL
+  end
+  and runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -287,7 +370,7 @@ function buildStaticArangoDB
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
-  and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
+  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -300,7 +383,7 @@ function makeStaticArangoDB
     findRequiredCompiler
     findRequiredOpenSSL
   end
-  and runInContainer (findBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
+  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -318,7 +401,7 @@ function buildExamples
   and if test "$NO_RM_BUILD" != 1
     buildStaticArangoDB
   end
-  and runInContainer $UBUNTUBUILDIMAGE $SCRIPTSDIR/buildExamples.fish $argv
+  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -337,9 +420,9 @@ function oskar
   checkoutIfNeeded
   and if test "$ASAN" = "On"
     parallelism 2
-    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish
   else
-    runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE (findStaticBuildImage) $SCRIPTSDIR/runTests.fish
   end
   set s $status
 
@@ -356,17 +439,17 @@ function oskarFull
     launchLdapServer
     and if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findStaticBuildImage) $SCRIPTSDIR/runFullTests.fish
     end
     set s $status
   else
     if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
     else
-      runInContainer --cap-add SYS_NICE $UBUNTUBUILDIMAGE $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE (findStaticBuildImage) $SCRIPTSDIR/runFullTests.fish
     end
   end
   set s $status
@@ -415,7 +498,7 @@ function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
 
-  runInContainer (findBuildImage) /scripts/coverage.fish
+  runInContainer (findStaticBuildImage) /scripts/coverage.fish
   return $status
 end
 
@@ -430,7 +513,7 @@ function signSourcePackage
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
         -v $HOME/.gnupg3:/root/.gnupg \
-	$UBUNTUBUILDIMAGE $SCRIPTSDIR/signFile.fish \
+	(findStaticBuildImage) $SCRIPTSDIR/signFile.fish \
 	/work/ArangoDB-$SOURCE_TAG.tar.gz \
 	/work/ArangoDB-$SOURCE_TAG.tar.bz2 \
 	/work/ArangoDB-$SOURCE_TAG.zip
@@ -474,7 +557,7 @@ function buildEnterprisePackage
   and releaseMode
   and enterprise
   and set -xg NOSTRIP dont
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and downloadSyncer
   and copyRclone "linux"
@@ -494,7 +577,7 @@ function buildCommunityPackage
   and releaseMode
   and community
   and set -xg NOSTRIP dont
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and buildPackage
 
@@ -596,7 +679,7 @@ end
 
 function buildTarGzPackage
   if test ! -d $WORKDIR/work/ArangoDB/build
-    echo buildRPMPackage: build directory does not exist
+    echo buildTarGzPackage: build directory does not exist
     return 1
   end
 
@@ -694,7 +777,7 @@ function buildDockerRelease
   and asanOff
   and maintainerOff
   and releaseMode
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=nehalem
+  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
     downloadSyncer
@@ -799,7 +882,32 @@ function buildDockerImage
   popd
 
   pushd $containerpath
-  and eval "docker build $BUILD_ARGS --pull -t $imagename ."
+  and eval "docker build $BUILD_ARGS --pull --no-cache -t $imagename ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function buildDockerLocal
+  findArangoDBVersion ; or return 1
+  set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
+  pushd $WORKDIR/work/ArangoDB/build/install
+
+  set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
+
+  if not test -d $containerpath
+    set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
+  end
+  and tar czf $containerpath/install.tar.gz *
+  and buildDockerAddFiles $DOCKER_DISTRO
+  if test $status -ne 0
+    echo Could not create install tarball!
+    popd
+    return 1
+  end
+  popd
+
+  pushd $containerpath
+  and eval "docker build --pull ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -846,17 +954,66 @@ end
 
 function buildUbuntuBuildImage
   pushd $WORKDIR
-  and cp -a scripts/{makeArangoDB,buildArangoDB,checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUbuntu.docker/scripts
   and cd $WORKDIR/containers/buildUbuntu.docker
   and docker build --pull -t $UBUNTUBUILDIMAGE .
-  and rm -f $WORKDIR/containers/buildUbuntu.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushUbuntuBuildImage ; docker push $UBUNTUBUILDIMAGE ; end
+function pushUbuntuBuildImage
+  docker tag $UBUNTUBUILDIMAGE $UBUNTUBUILDIMAGE_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE
+  and docker push $UBUNTUBUILDIMAGE_NAME:latest
+end
 
 function pullUbuntuBuildImage ; docker pull $UBUNTUBUILDIMAGE ; end
+
+function buildUbuntuBuildImage2
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUbuntu2.docker
+  and docker build --pull -t $UBUNTUBUILDIMAGE2 .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushUbuntuBuildImage2
+  docker tag $UBUNTUBUILDIMAGE2 $UBUNTUBUILDIMAGE2_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE2
+  and docker push $UBUNTUBUILDIMAGE2_NAME:latest
+end
+
+function pullUbuntuBuildImage2 ; docker pull $UBUNTUBUILDIMAGE2 ; end
+
+function buildUbuntuBuildImage3
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUbuntu3.docker
+  and docker build --pull -t $UBUNTUBUILDIMAGE3 .
+  popd
+end
+
+function pushUbuntuBuildImage3
+  docker tag $UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE3
+  and docker push $UBUNTUBUILDIMAGE3_NAME:latest
+end
+
+function pullUbuntuBuildImage3 ; docker pull $UBUNTUBUILDIMAGE3 ; end
+
+function buildUbuntuBuildImage4
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUbuntu4.docker
+  and docker build --pull -t $UBUNTUBUILDIMAGE4 .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushUbuntuBuildImage4
+  docker tag $UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE4
+  and docker push $UBUNTUBUILDIMAGE4_NAME:latest
+end
+
+function pullUbuntuBuildImage4 ; docker pull $UBUNTUBUILDIMAGE4 ; end
 
 function buildUbuntuPackagingImage
   pushd $WORKDIR
@@ -919,6 +1076,22 @@ function pushAlpineBuildImage3
 end
 
 function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
+
+function buildAlpineBuildImage4
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine4.docker
+  and docker build --pull -t $ALPINEBUILDIMAGE4 .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage4
+  docker tag $ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:latest
+  and docker push $ALPINEBUILDIMAGE4
+  and docker push $ALPINEBUILDIMAGE4_NAME:latest
+end
+
+function pullAlpineBuildImage4 ; docker pull $ALPINEBUILDIMAGE4 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
@@ -1078,6 +1251,7 @@ function runInContainer
              -e USE_CCACHE="$USE_CCACHE" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1107,6 +1281,19 @@ function runInContainer
 end
 
 function interactiveContainer
+  if test -z "$SSH_AUTH_SOCK"
+    sudo killall --older-than 8h ssh-agent 2>&1 > /dev/null
+    eval (ssh-agent -c) > /dev/null
+    for key in ~/.ssh/id_rsa ~/.ssh/id_deploy
+      if test -f $key
+        ssh-add $key
+      end
+    end
+    set -l agentstarted 1
+  else
+    set -l agentstarted ""
+  end
+
   docker run -it --rm \
              -v $WORKDIR/work:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
@@ -1129,13 +1316,19 @@ function interactiveContainer
              -e SKIPGREY="$SKIPGREY" \
              -e ONLYGREY="$ONLYGREY" \
              -e SSH_AUTH_SOCK=/ssh-agent \
-             -e SSH_AUTH_SOCK=/ssh-agent \
              -e STORAGEENGINE="$STORAGEENGINE" \
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              $argv
+
+  if test -n "$agentstarted"
+    ssh-agent -k > /dev/null
+    set -e SSH_AUTH_SOCK
+    set -e SSH_AGENT_PID
+  end
 end
 
 ## #############################################################################
@@ -1173,11 +1366,11 @@ function transformSpec
 end
 
 function shellInUbuntuContainer
-  interactiveContainer $UBUNTUBUILDIMAGE fish
+  interactiveContainer (findBuildImage) fish
 end
 
 function shellInAlpineContainer
-  interactiveContainer (findBuildImage) fish
+  interactiveContainer (findStaticBuildImage) fish
 end
 
 function pushOskar
@@ -1228,9 +1421,13 @@ end
 function updateOskar
   updateOskarOnly
   and pullUbuntuBuildImage
+  and pullUbuntuBuildImage2
+  and pullUbuntuBuildImage3
+  and pullUbuntuBuildImage4
   and pullAlpineBuildImage
   and pullAlpineBuildImage2
   and pullAlpineBuildImage3
+  and pullAlpineBuildImage4
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
@@ -1242,7 +1439,7 @@ function updateDockerBuildImage
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
-  and docker pull (findBuildImage)
+  and docker pull (findStaticBuildImage)
 end
 
 function downloadStarter
