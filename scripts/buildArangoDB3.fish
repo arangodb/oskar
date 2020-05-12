@@ -7,11 +7,11 @@ end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-  set -xg COMPILER_VERSION 6.4.0
+  set -xg COMPILER_VERSION 9.2.0
 end
 echo "Using compiler version $COMPILER_VERSION"
 
-if test "$COMPILER_VERSION" = "6.4.0"
+if test "$COMPILER_VERSION" = "9.2.0"
   set -xg CC_NAME gcc
   set -xg CXX_NAME g++
 else
@@ -20,11 +20,12 @@ else
 end
 
 if test "$OPENSSL_VERSION" = ""
-  set -xg OPENSSL_VERSION 1.1.0
+  set -xg OPENSSL_VERSION 1.1.1
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-set -l pie "-no-pie"
+set -l pie "-fpic -fPIC -fpie -fPIE"
+set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
@@ -41,7 +42,7 @@ if test "$MAINTAINER" = "On"
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
 end
@@ -73,8 +74,8 @@ else
      -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector"
   else
     set -g FULLARGS $FULLARGS \
-     -DCMAKE_C_FLAGS="$pie -fno-stack-protector" \
-     -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector"
+     -DCMAKE_C_FLAGS="$pie $inline -fno-stack-protector" \
+     -DCMAKE_CXX_FLAGS="$pie $inline -fno-stack-protector"
   end
 end
 

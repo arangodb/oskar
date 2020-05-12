@@ -24,28 +24,10 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-setupCcacheBinPath alpine
-setupCcache alpine
-cd $INNERWORKDIR/ArangoDB
-
-if test -z "$NO_RM_BUILD"
-  echo "Cleaning build directory"
-  rm -rf build
-end
-mkdir -p build
-cd build
-rm -rf install
-and mkdir install
-
-echo "Starting build at "(date)" on "(hostname)
-set -g t0 (date "+%Y%m%d")
-set -g t1 (date -u +%s)
-
-rm -f $INNERWORKDIR/buildTimes.csv
+set -l pie "-no-pie"
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
- -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id -no-pie"\
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=On \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
@@ -54,114 +36,59 @@ set -g FULLARGS $argv \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
-if test "$USE_CCACHE" = "Off"
+if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
-    -DUSE_CCACHE=Off
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
 else
-  # USE_CACHE is not used because the compiler is already ccache
   set -g FULLARGS $FULLARGS \
-   -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/$CXX_NAME \
-   -DCMAKE_C_COMPILER=$CCACHEBINPATH/$CC_NAME \
-   -DUSE_CCACHE=Off
-end
-
-if test "$argv" = ""
-  echo "using default architecture 'westmere'"
-  set -g FULLARGS $FULLARGS \
-    -DTARGET_ARCHITECTURE=westmere
-end
-
-if test "$MAINTAINER" != "On"
-  set -g FULLARGS $FULLARGS \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
 end
 
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
+  exit 1
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-    -DCMAKE_C_FLAGS="-fno-stack-protector -fprofile-arcs -ftest-coverage" \
-    -DCMAKE_CXX_FLAGS="-fno-stack-protector -fprofile-arcs -ftest-coverage"
+    -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
+    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage"
 else
   set -g FULLARGS $FULLARGS \
-   -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-   -DCMAKE_C_FLAGS=-fno-stack-protector \
-   -DCMAKE_CXX_FLAGS=-fno-stack-protector
+   -DUSE_JEMALLOC=$JEMALLOC_OSKAR
+
+  if test "$MAINTAINER" = "On"
+    set -g FULLARGS $FULLARGS \
+     -DCMAKE_C_FLAGS="$pie -fno-stack-protector" \
+     -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector"
+  else
+    set -g FULLARGS $FULLARGS \
+     -DCMAKE_C_FLAGS="$pie -fno-stack-protector" \
+     -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector"
+  end
 end
 
-echo cmake $FULLARGS
-
-if test "$SHOW_DETAILS" = "On"
-  cmake $FULLARGS .. ^&1
-else
-  echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
-  cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log ^&1
-end
-or exit $status
-
-set -g t2 (date -u +%s)
-and echo $t0,cmake,(expr $t2 - $t1) >> $INNERWORKDIR/buildTimes.csv
-
-if test "$SKIP_MAKE" = "On"
+setupCcacheBinPath alpine
+and setupCcache alpine
+and cleanBuildDirectory
+and cd $INNERWORKDIR/ArangoDB/build
+and TT_init
+and cmakeCcache
+and selectArchitecture $argv
+and selectMaintainer
+and runCmake
+and TT_cmake
+and if test "$SKIP_MAKE" = "On"
   echo "Finished cmake at "(date)", skipping build"
 else
   echo "Finished cmake at "(date)", now starting build"
-
-  set -g MAKEFLAGS -j$PARALLELISM 
-  if test "$VERBOSEBUILD" = "On"
-    echo "Building verbosely"
-    set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
-  end
-
-  set -x DESTDIR (pwd)/install
-  echo Running make $MAKEFLAGS for static build
-
-  if test "$SHOW_DETAILS" = "On"
-    make $MAKEFLAGS ^&1
-    make $MAKEFLAGS install ^&1
-    or exit $status
-  else
-    echo make output in work/buildArangoDB.log
-    set -l ep ""
-
-    if test "$SHOW_DETAILS" = "Ping"
-      fish -c "while true; sleep 60; echo == (date) ==; test -f $INNERWORKDIR/buildArangoDB.log; and tail -2 $INNERWORKDIR/buildArangoDB.log; end" &
-      set ep (jobs -p | tail -1)
-    end
-
-    nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1
-    nice make $MAKEFLAGS install >> $INNERWORKDIR/buildArangoDB.log ^&1
-    or begin
-      if test -n "$ep"
-	kill $ep
-      end
-
-      exit 1
-    end
-
-    if test -n "$ep"
-      kill $ep
-    end
-  end
-  and set -g t3 (date -u +%s)
-  and echo $t0,make,(expr $t3 - $t2) >> $INNERWORKDIR/buildTimes.csv
-  or exit 1
-
-  cd install
-  and if test -z "$NOSTRIP"
-    echo Stripping executables...
-    strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
-    if test -f usr/bin/arangobackup
-      strip usr/bin/arangobackup
-    end
-  end
-  or exit 1
-
-  echo "Finished at "(date)
+  and set -xg DESTDIR (pwd)/install
+  and runMake install
+  and TT_make
+  and installTargets
+  and echo "Finished at "(date)
   and shutdownCcache
-  and set -g t4 (date -u +%s)
-  and echo $t0,strip,(expr $t4 - $t3) >> $INNERWORKDIR/buildTimes.csv
+  and TT_strip
 end

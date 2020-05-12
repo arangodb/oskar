@@ -10,6 +10,8 @@ function setupCcacheBinPath
           set -xg SCCACHEBINPATH $SCRIPTSDIR/tools/
       case alpine
           set -xg CCACHEBINPATH /tools
+      case ubuntu
+          set -xg CCACHEBINPATH /tools
       case '*'
           echo "fatal, unknown CCACHETYPE $CCACHETYPE"
           exit
@@ -22,6 +24,8 @@ function setupCcacheBinPath
           set -xg CCACHEBINPATH /usr/local/opt/ccache/libexec
       case alpine
           set -xg CCACHEBINPATH /usr/lib/ccache/bin
+      case ubuntu
+          set -xg CCACHEBINPATH /usr/lib/ccache
       case '*'
           echo "fatal, unknown CCACHETYPE $CCACHETYPE"
           exit
