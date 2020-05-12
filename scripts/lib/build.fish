@@ -143,7 +143,7 @@ function shutdownCcache
   if test "$USE_CCACHE" = "On"
     ccache --show-stats
   else if test "$USE_CCACHE" = "sccache"
-    sccache --stop-server 2> $INNERWORKDIR/sccache.err.log; or echo "warning: cannot stop sccache. See $INNERWORKDIR/sccache.err.log"
+    eval $SCCACHEBINPATH"sccache --stop-server 2> $INNERWORKDIR/sccache.err.log"; or echo "warning: cannot stop sccache. See $INNERWORKDIR/sccache.err.log"
   end
   return 0
 end
