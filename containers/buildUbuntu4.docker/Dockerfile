@@ -1,11 +1,10 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 ENV COMPILER_VERSION 9
 
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
-    add-apt-repository ppa:jonathonf/gcc-9.3 && \
     add-apt-repository ppa:ubuntu-toolchain-r && \
     apt-get update && \
     apt-get upgrade -y
