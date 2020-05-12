@@ -47,8 +47,6 @@ set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
 set -gx CENTOSPACKAGINGIMAGE_TAG 2
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
 
-set -gx DOCIMAGE arangodb/arangodb-documentation:1
-
 set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck
 set -gx CPPCHECKIMAGE_TAG 3
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
@@ -913,24 +911,6 @@ function buildDockerLocal
 end
 
 ## #############################################################################
-## documentation release
-## #############################################################################
-
-function buildDocumentation
-    runInContainer -e "ARANGO_SPIN=$ARANGO_SPIN" \
-                   -e "ARANGO_NO_COLOR=$ARANGO_IN_JENKINS" \
-                   -e "ARANGO_BUILD_DOC=/oskar/work" \
-                   --user "$UID" \
-                   -v "$WORKDIR:/oskar" \
-                   -it "$DOCIMAGE" \
-                   -- "$argv"
-end
-
-function buildDocumentationForRelease
-    buildDocumentation --all-formats
-end
-
-## #############################################################################
 ## create repos
 ## #############################################################################
 
@@ -1128,12 +1108,6 @@ end
 
 function pullCentosPackagingImage ; docker pull $CENTOSPACKAGINGIMAGE ; end
 
-function buildDocumentationImage
-  eval "$WORKDIR/scripts/buildContainerDocumentation" "$DOCIMAGE"
-end
-function pushDocumentationImage ; docker push $DOCIMAGE ; end
-function pullDocumentationImage ; docker pull $DOCIMAGE ; end
-
 function buildCppcheckImage
   pushd $WORKDIR/containers/cppcheck.docker
   and docker build --pull -t $CPPCHECKIMAGE .
@@ -1152,19 +1126,26 @@ function remakeImages
 
   buildUbuntuBuildImage ; or set -l s 1
   pushUbuntuBuildImage ; or set -l s 1
+  buildUbuntuBuildImage2 ; or set -l s 1
+  pushUbuntuBuildImage2 ; or set -l s 1
+  buildUbuntuBuildImage3 ; or set -l s 1
+  pushUbuntuBuildImage3 ; or set -l s 1
+  buildUbuntuBuildImage4 ; or set -l s 1
+  pushUbuntuBuildImage4 ; or set -l s 1
   buildAlpineBuildImage ; or set -l s 1
   pushAlpineBuildImage ; or set -l s 1
   buildAlpineBuildImage2 ; or set -l s 1
   pushAlpineBuildImage2 ; or set -l s 1
   buildAlpineBuildImage3 ; or set -l s 1
   pushAlpineBuildImage3 ; or set -l s 1
+  buildAlpineBuildImage4 ; or set -l s 1
+  pushAlpineBuildImage4 ; or set -l s 1
   buildAlpineUtilsImage ; or set -l s 1
   pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
   pushUbuntuPackagingImage ; or set -l s 1
   buildCentosPackagingImage ; or set -l s 1
   pushCentosPackagingImage ; or set -l s 1
-  buildDocumentationImage ; or set -l s 1
   buildCppcheckImage ; or set -l s 1
 
   return $s
@@ -1381,6 +1362,15 @@ function pushOskar
   and buildUbuntuBuildImage
   and pushUbuntuBuildImage
 
+  and buildUbuntuBuildImage2
+  and pushUbuntuBuildImage2
+
+  and buildUbuntuBuildImage3
+  and pushUbuntuBuildImage3
+
+  and buildUbuntuBuildImage4
+  and pushUbuntuBuildImage4
+
   and buildAlpineBuildImage
   and pushAlpineBuildImage
 
@@ -1390,6 +1380,9 @@ function pushOskar
   and buildAlpineBuildImage3
   and pushAlpineBuildImage3
 
+  and buildAlpineBuildImage4
+  and pushAlpineBuildImage4
+
   and buildAlpineUtilsImage
   and pushAlpineUtilsImage
 
@@ -1398,9 +1391,6 @@ function pushOskar
 
   and buildCentosPackagingImage
   and pushCentosPackagingImage
-
-  and buildDocumentationImage
-  and pushDocumentationImage
 
   and buildCppcheckImage
   and pushCppcheckImage
@@ -1431,7 +1421,6 @@ function updateOskar
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
-  and pullDocumentationImage
   and pullCppcheckImage
 end
 
