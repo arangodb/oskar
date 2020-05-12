@@ -7,6 +7,7 @@ function setupCcacheBinPath
     switch $CCACHETYPE
       case macos
           set -xg CCACHEBINPATH $SCRIPTSDIR/tools
+          set -xg SCCACHEBINPATH $SCRIPTSDIR/tools/
       case alpine
           set -xg CCACHEBINPATH /tools
       case ubuntu
@@ -89,8 +90,8 @@ function setupCcache
     end
 
     pushd $INNERWORKDIR
-    and begin sccache --stop-server; or true; end
-    and sccache --start-server
+    and begin eval $SCCACHEBINPATH"sccache --stop-server"; or true; end
+    and eval $SCCACHEBINPATH"sccache --start-server"
     and popd
     or begin
       echo "warning: cannot start sccache"
