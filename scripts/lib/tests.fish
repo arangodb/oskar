@@ -4,43 +4,51 @@ if test -z "$PARALLELISM"
   set -g PARALLELISM 64
 end
 
-# address sanitizer
-set -xg DOWNSTREAM_ASAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
+# Enable full ASAN mode
+if not test -z $ASAN; and test $ASAN = "On"
+  echo "Use ASAN mode"
 
-test -z "$ASAN_OPTIONS"
-and set -xg ASAN_OPTIONS "$DOWNSTREAM_ASAN_OPTIONS"
-or set -xg ASAN_OPTIONS "$ASAN_OPTIONS:$DOWNSTREAM_ASAN_OPTIONS"
+  # address sanitizer
+  set -xg ASAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true:detect_leaks=0"
 
-# leak sanitizer
-set -xg LSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+  # leak sanitizer
+  set -xg LSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
 
-# undefined behavior sanitizer
-set -xg UBSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+  # undefined behavior sanitizer
+  set -xg UBSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
 
-# thread sanitizer
-set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
+  # thread sanitizer
+  set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
 
-# suppressions
-if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
-  set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
+  # suppressions
+  if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
+    set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
+  end
+
+  if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
+    set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt"
+  end
+
+  if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
+    set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt"
+  end
+
+  if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
+    set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
+  end
+
+  echo "ASAN: $ASAN_OPTIONS"
+  echo "LSAN: $LSAN_OPTIONS"
+  echo "UBSAN: $UBSAN_OPTIONS"
+  echo "TSAN: $TSAN_OPTIONS"
+else
+  echo "Don't use ASAN mode"
+
+  set -e ASAN_OPTIONS
+  set -e LSAN_OPTIONS
+  set -e UBSAN_OPTIONS
+  set -e TSAN_OPTIONS  
 end
-
-if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
-  set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt"
-end
-
-if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
-  set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt"
-end
-
-if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
-  set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
-end
-
-echo "ASAN: $ASAN_OPTIONS"
-echo "LSAN: $LSAN_OPTIONS"
-echo "UBSAN: $UBSAN_OPTIONS"
-echo "TSAN: $TSAN_OPTIONS"
 
 set -xg GCOV_PREFIX /work/gcov
 set -xg GCOV_PREFIX_STRIP 3

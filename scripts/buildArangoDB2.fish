@@ -54,7 +54,6 @@ end
 #end
 
 if test "$ASAN" = "On"
-  set -xg ASAN_OPTIONS "detect_leaks=0"
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=Off \
    -DCMAKE_C_FLAGS="-pthread -fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=alignment" \
