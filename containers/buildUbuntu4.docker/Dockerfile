@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 ENV COMPILER_VERSION 9
