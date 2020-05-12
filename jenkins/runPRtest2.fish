@@ -20,5 +20,6 @@ and oskar
 set -l s $status
 
 TT_tests
+
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s

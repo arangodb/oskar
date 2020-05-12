@@ -29,5 +29,5 @@ if [ -x "$executable" ] ; then
        --javascript.startup-directory "$installation/usr/share/arangodb3/js" \
        "$@"
 fi
-echo "Could not find executable!"
+echo "Could not find executable ${executable}!"
 exit 1

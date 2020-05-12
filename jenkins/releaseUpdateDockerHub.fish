@@ -36,10 +36,16 @@ cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
-and updateDockerHub arangodb $DOCKER_TAG
-and updateDockerHub enterprise $DOCKER_TAG
+and if test -z "$UPDATE_COMMUNITY"; or test "$UPDATE_COMMUNITY" = "true"
+  updateDockerHub arangodb $DOCKER_TAG
+end
+and if test -z "$UPDATE_ENTERPRISE"; or test "$UPDATE_ENTERPRISE" = "true"
+  updateDockerHub enterprise $DOCKER_TAG
+end
 and set -xg RELEASE_IS_HEAD false
-and updateDockerHub enterprise $DOCKER_TAG-ubi
+and if test -z "$UPDATE_UBI"; or test "$UPDATE_UBI" = "true"
+  updateDockerHub enterprise $DOCKER_TAG-ubi
+end
 
 set -l s $status
 unlockDirectory

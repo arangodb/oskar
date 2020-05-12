@@ -3,10 +3,8 @@ source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear2
 and TT_init
-
 and eval $EDITION
 and catchtest
-
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
 and pingDetails
@@ -20,4 +18,3 @@ set -l s $status
 TT_tests
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s
-

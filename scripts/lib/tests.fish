@@ -4,39 +4,51 @@ if test -z "$PARALLELISM"
   set -g PARALLELISM 64
 end
 
-# address sanitizer
-set -xg ASAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
+# Enable full ASAN mode
+if not test -z $ASAN; and test $ASAN = "On"
+  echo "Use ASAN mode"
 
-# leak sanitizer
-set -xg LSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+  # address sanitizer
+  set -xg ASAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
 
-# undefined behavior sanitizer
-set -xg UBSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+  # leak sanitizer
+  set -xg LSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
 
-# thread sanitizer
-set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
+  # undefined behavior sanitizer
+  set -xg UBSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
 
-# suppressions
-if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
-  set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
+  # thread sanitizer
+  set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
+
+  # suppressions
+  if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
+    set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
+  end
+
+  if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
+    set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt"
+  end
+
+  if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
+    set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt"
+  end
+
+  if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
+    set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
+  end
+
+  echo "ASAN: $ASAN_OPTIONS"
+  echo "LSAN: $LSAN_OPTIONS"
+  echo "UBSAN: $UBSAN_OPTIONS"
+  echo "TSAN: $TSAN_OPTIONS"
+else
+  echo "Don't use ASAN mode"
+
+  set -e ASAN_OPTIONS
+  set -e LSAN_OPTIONS
+  set -e UBSAN_OPTIONS
+  set -e TSAN_OPTIONS  
 end
-
-if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
-  set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt"
-end
-
-if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
-  set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt"
-end
-
-if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
-  set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
-end
-
-echo "ASAN: $ASAN_OPTIONS"
-echo "LSAN: $LSAN_OPTIONS"
-echo "UBSAN: $UBSAN_OPTIONS"
-echo "TSAN: $TSAN_OPTIONS"
 
 set -xg GCOV_PREFIX /work/gcov
 set -xg GCOV_PREFIX_STRIP 3
@@ -44,12 +56,12 @@ set -xg GCOV_PREFIX_STRIP 3
 function runAnyTest
   set -l t $argv[1]
   set -l tt $argv[2]
-  set -l l0 "$t"
+  set -l l0 (string replace '*' 'all' $t)
   if test "$tt" = "-"
     set tt ""
   end
   if test "$tt" != ""
-    set l0 "$t"_"$tt"
+    set l0 "$l0"_"$tt"
   end
   set -l l1 "$l0".log
   set -l l2 $TMPDIR/"$l0".out
@@ -57,24 +69,26 @@ function runAnyTest
 
   if test $VERBOSEOSKAR = On ; echo "$launchCount: Launching $l0" ; end
 
-  if grep $t UnitTests/OskarTestSuitesBlackList
-    echo Test suite $t skipped by UnitTests/OskarTestSuitesBlackList
+  if grep -e "\b$t\b" -e "\b$l0\b" UnitTests/OskarTestSuitesBlackList
+    echo Test suite $l0 skipped by UnitTests/OskarTestSuitesBlackList
   else
-    set -l arguments $t \
+    set -l arguments \'"$t"\' \
       (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic "$SKIPNONDETERMINISTIC" \
       --skipTimeCritical "$SKIPTIMECRITICAL" \
-      --testOutput $l2 \
+      --testOutput "$l2" \
       --writeXmlReport false \
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
+      --coreCheck true \
       $argv
 
     echo (pwd) "-" scripts/unittest $arguments
-    mkdir -p $l2
-    fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 ^&1; date -u +%s > $l2/stopped" &
+    mkdir -p "$l2"
+    #echo "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 2>&1; date -u +%s > $l2/stopped"
+    fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 2>&1; date -u +%s > $l2/stopped" &
     set -g portBase (math $portBase + 100)
     sleep 1
   end
@@ -190,10 +204,18 @@ function createReport
  
   popd
   echo $result >> testProtocol.txt
-  pushd $INNERWORKDIR
   and begin
+    pushd $INNERWORKDIR
     echo tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
     eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
+    popd
+  end
+  and begin
+    pushd $INNERWORKDIR/tmp
+    if test (count */UNITTEST_RESULT.json) -gt 0
+      echo tar czvf "$INNERWORKDIR/timings.tar.gz" '*/UNITTEST_RESULT.json'
+      tar czvf "$INNERWORKDIR/timings.tar.gz" */UNITTEST_RESULT.json
+    end
     popd
   end
   
@@ -220,8 +242,8 @@ function createReport
   echo tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
   eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/testreport-$now.tar.gz" $logs testProtocol.txt $archives
 
-  echo rm -rf $cores $archives
-  eval $IONICE nice -n 10 rm -rf $cores $archives
+  echo rm -rf $cores innerlogs.tar.gz
+  eval $IONICE nice -n 10 rm -rf $cores innerlogs.tar.gz
 
   # And finally collect the testfailures.txt:
   rm -rf $INNERWORKDIR/testfailures.txt

@@ -1,0 +1,3 @@
+#!/bin/sh
+TOOLS_DIR=$(cd "$(dirname "$0")"; pwd -P)
+exec $TOOLS_DIR/sccache g++ "$@"
