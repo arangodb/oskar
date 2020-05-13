@@ -336,9 +336,8 @@ function buildTarGzPackage
   and rm -rf install
   and make install DESTDIR=install
   and if test "$ENTERPRISEEDITION" = "On"
-      begin
         pushd install/opt/arangodb/bin
-        and ln -s ../sbin/arangosync
+        ln -s ../sbin/arangosync
         popd
       end
   and mkdir -p install/usr
