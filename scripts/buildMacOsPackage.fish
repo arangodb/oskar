@@ -56,6 +56,12 @@ function setupApp
   and begin
     pushd $INNERWORKDIR/ArangoDB/build
     and make install DESTDIR=$INNERWORKDIR/dmg/$APPNAME/Contents/Resources
+    and if test "$ENTERPRISEEDITION" = "On"
+        begin
+          pushd $INNERWORKDIR/dmg/$APPNAME/Contents/Resources/opt/arangodb/bin
+          ln -s ../sbin/arangosync
+          popd
+        end
     and popd
     or begin popd; exit 1; end
   end
