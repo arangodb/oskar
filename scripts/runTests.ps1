@@ -15,6 +15,8 @@ Function global:registerSingleTests()
     registerTest -testname "upgrade_data_3.2.*"
     registerTest -testname "upgrade_data_3.3.*"
     registerTest -testname "upgrade_data_3.4.*"
+    registerTest -testname "upgrade_data_3.5.*"
+    registerTest -testname "upgrade_data_3.6.*"
     registerTest -testname "replication_static" -weight 2
     registerTest -testname "shell_server"
     registerTest -testname "replication_ongoing_32" -weight 2
@@ -64,6 +66,7 @@ Function global:registerSingleTests()
     registerTest -testname "audit_client"
     registerTest -testname "audit_server"
     registerTest -testname "permissions"
+    registerTest -testname "paths_server"
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that
     # the testing framework does not support automatic restarts of instances
@@ -81,6 +84,8 @@ Function global:registerClusterTests()
 
     $global:TESTSUITE_TIMEOUT = 4200
 
+    registerTest -cluster $true -testname "load_balancing"
+    registerTest -cluster $true -testname "load_balancing_auth"
     registerTest -cluster $true -testname "agency"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "dump"

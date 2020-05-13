@@ -1,32 +1,20 @@
 #!/usr/bin/env fish
-set -l date (date +%Y%m%d)
-set -l t1 (date +%s)
-set -l filename work/totalTimes.csv
-
 source jenkins/helper/jenkins.fish
 
-cleanPrepareLockUpdateClear
+cleanPrepareLockUpdateClear2
+and TT_init
 and eval $EDITION
 and catchtest
-and rm -f $filename
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and set -l t2 (date +%s)
-and echo "$date,setup,"(expr $t2 - $t1) >> $filename
+and updateDockerBuildImage
 and pingDetails
+and TT_setup
 and oskarCompile
-and set -l t3 (date +%s)
-and if test -f work/buildTimes.csv
-  awk -F, "{print \"$date,\" \$2 \",\" \$3}" < work/buildTimes.csv >> $filename
-  and rm -f work/buildTimes.csv
-end
+and TT_compile
 and oskar
 
 set -l s $status
 
-if not test -z "$t3"
-  set -l t4 (date +%s)
-  echo "$date,tests,"(expr $t4 - $t3) >> $filename
-end
-
-cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
+TT_tests
+cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s

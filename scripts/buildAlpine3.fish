@@ -34,18 +34,22 @@ set -g FULLARGS $argv \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
- -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION
+ -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector"
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
+    -DUSE_CATCH_TESTS=Off \
+    -DUSE_GOOGLE_TESTS=Off
 end
 
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
+  exit 1
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \
@@ -73,7 +77,7 @@ and cleanBuildDirectory
 and cd $INNERWORKDIR/ArangoDB/build
 and TT_init
 and cmakeCcache
-and selectArchitecture
+and selectArchitecture $argv
 and selectMaintainer
 and runCmake
 and TT_cmake

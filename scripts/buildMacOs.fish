@@ -14,10 +14,10 @@ if test "$OPENSSL_VERSION" = ""
 end
 switch $OPENSSL_VERSION
   case '1.0.2'
-      set -xg OPENSSL_PATH (brew --prefix)/opt/openssl
+      set -xg OPENSSL_PATH (set last (brew --prefix)/Cellar/openssl/{$OPENSSL_VERSION}*;and echo $last[-1])
 
   case '1.1.1'
-      set -xg OPENSSL_PATH (brew --prefix)/opt/openssl@1.1
+      set -xg OPENSSL_PATH (set last (brew --prefix)/Cellar/openssl@1.1/{$OPENSSL_VERSION}*;and echo $last[-1])
 
   case '*'
       echo "unknown openssl version $OPENSSL_VERSION"
@@ -39,15 +39,16 @@ set -g FULLARGS $argv \
  -DOPENSSL_USE_STATIC_LIBS=On \
  -DCMAKE_LIBRARY_PATH=$OPENSSL_PATH/lib \
  -DOPENSSL_ROOT_DIR=$OPENSSL_PATH \
- -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET
+ -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
-setupCcacheBinPath macosx
-and setupCcache macosx
+setupCcacheBinPath macos
+and setupCcache macos
 and cleanBuildDirectory
 and cd $INNERWORKDIR/ArangoDB/build
 and TT_init
 and cmakeCcache
-and selectArchitecture
+and selectArchitecture $argv
 and selectMaintainer
 and runCmake
 and TT_cmake

@@ -5,10 +5,27 @@ function setupCcacheBinPath
     return 0
   else if test "$USE_CCACHE" = "sccache"
     switch $CCACHETYPE
-      case macosx
+      case macos
           set -xg CCACHEBINPATH $SCRIPTSDIR/tools
+          set -xg SCCACHEBINPATH $SCRIPTSDIR/tools/
       case alpine
           set -xg CCACHEBINPATH /tools
+      case ubuntu
+          set -xg CCACHEBINPATH /tools
+      case '*'
+          echo "fatal, unknown CCACHETYPE $CCACHETYPE"
+          exit
+    end
+
+    return 0
+  else if test "$USE_CCACHE" = "On"
+    switch $CCACHETYPE
+      case macos
+          set -xg CCACHEBINPATH /usr/local/opt/ccache/libexec
+      case alpine
+          set -xg CCACHEBINPATH /usr/lib/ccache/bin
+      case ubuntu
+          set -xg CCACHEBINPATH /usr/lib/ccache
       case '*'
           echo "fatal, unknown CCACHETYPE $CCACHETYPE"
           exit
@@ -73,8 +90,8 @@ function setupCcache
     end
 
     pushd $INNERWORKDIR
-    and begin sccache --stop-server; or true; end
-    and sccache --start-server
+    and begin eval $SCCACHEBINPATH"sccache --stop-server 2>> $INNERWORKDIR/sccache.err.log"; or true; end
+    and eval $SCCACHEBINPATH"sccache --start-server"
     and popd
     or begin
       echo "warning: cannot start sccache"
@@ -126,16 +143,16 @@ function shutdownCcache
   if test "$USE_CCACHE" = "On"
     ccache --show-stats
   else if test "$USE_CCACHE" = "sccache"
-    sccache --stop-server; or echo "warning: cannot stop sccache"
+    eval $SCCACHEBINPATH"sccache --stop-server 2>> $INNERWORKDIR/sccache.err.log"; or echo "warning: cannot stop sccache. See $INNERWORKDIR/sccache.err.log"
   end
   return 0
 end
 
 function selectArchitecture
   if test "$argv" = ""
-    echo "using default architecture 'nehalem'"
+    echo "using default architecture 'westmere'"
     set -g FULLARGS $FULLARGS \
-      -DTARGET_ARCHITECTURE=nehalem
+      -DTARGET_ARCHITECTURE=westmere
   end
   return 0
 end
@@ -167,10 +184,10 @@ function runCmake
   echo cmake $FULLARGS
 
   if test "$SHOW_DETAILS" = "On"
-    cmake $FULLARGS .. ^&1
+    cmake $FULLARGS .. 2>&1
   else
     echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
-    cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log ^&1
+    cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1
   end
 end
 
@@ -182,7 +199,7 @@ function runMake
   end
 
   if test "$SHOW_DETAILS" = "On"
-    make $MAKEFLAGS $argv[1] ^&1
+    make $MAKEFLAGS $argv[1] 2>&1
     or exit $status
   else
     echo make output in work/buildArangoDB.log
@@ -194,9 +211,9 @@ function runMake
     end
 
     if test "$argv[1]" = "install"
-      nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1
+      nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log 2>&1
     end
-    and nice make $MAKEFLAGS $argv[1] >> $INNERWORKDIR/buildArangoDB.log ^&1
+    and nice make $MAKEFLAGS $argv[1] >> $INNERWORKDIR/buildArangoDB.log 2>&1
     or begin
       if test -n "$ep"
         kill $ep

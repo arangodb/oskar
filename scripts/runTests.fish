@@ -10,6 +10,8 @@ set -l ST
 set ST "$ST""1000,runSingleTest1 'upgrade_data_3.2.*' -\n"
 set ST "$ST""1000,runSingleTest1 'upgrade_data_3.3.*' -\n"
 set ST "$ST""1000,runSingleTest1 'upgrade_data_3.4.*' -\n"
+set ST "$ST""1000,runSingleTest1 'upgrade_data_3.5.*' -\n"
+set ST "$ST""1000,runSingleTest1 'upgrade_data_3.6.*' -\n"
 set ST "$ST""250,runSingleTest1 BackupAuthNoSysTests -\n"
 set ST "$ST""250,runSingleTest1 BackupAuthSysTests -\n"
 set ST "$ST""250,runSingleTest1 BackupNoAuthNoSysTests -\n"
@@ -59,6 +61,7 @@ set ST "$ST""250,runSingleTest2 replication_ongoing_frompresent_32 -\n"
 set ST "$ST""500,runSingleTest2 replication_ongoing_global -\n"
 set ST "$ST""250,runSingleTest2 replication_ongoing_global_spec -\n"
 set ST "$ST""500,runSingleTest2 replication_sync -\n"
+set ST "$ST""500,runSingleTest1 paths_server -\n"
 set ST "$ST""250,runSingleTest1 hot_backup -\n"
 set ST "$ST""500,runSingleTest1 permissions -\n"
 
@@ -105,6 +108,8 @@ end
 ################################################################################
 
 set -l CT
+set CT "$CT""500,runClusterTest1 load_balancing - --dumpAgencyOnError true\n"
+set CT "$CT""500,runClusterTest1 load_balancing_auth - --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_server 0 --testBuckets 5/0 --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 shell_server 1 --testBuckets 5/1 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_server 2 --testBuckets 5/2 --dumpAgencyOnError true\n"

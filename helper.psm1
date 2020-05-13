@@ -16,7 +16,7 @@ If(-Not(Test-Path -PathType Container -Path "work"))
     New-Item -ItemType Directory -Path "work"
 }
 
-$global:TSHARK = ((Get-ChildItem -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1) -replace ' ', '` '
+$global:TSHARK = ((Get-ChildItem -ErrorAction SilentlyContinue -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1) -replace ' ', '` '
 
 If((Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
 {
@@ -40,6 +40,12 @@ $global:HANDLE_EXE = $null
 If (Get-Command handle.exe -ErrorAction SilentlyContinue)
 {
     $global:HANDLE_EXE = (Get-Command handle.exe).Source -Replace ' ', '` '
+}
+
+$global:PSKILL_EXE = $null
+If (Get-Command pskill.exe -ErrorAction SilentlyContinue)
+{
+    $global:PSKILL_EXE = (Get-Command pskill.exe).Source -Replace ' ', '` '
 }
 
 $global:REG_WER = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
@@ -1036,18 +1042,51 @@ Function checkoutEnterprise
 
 Function checkoutUpgradeDataTests
 {
-    if($global:ok)
+    If ($global:ok)
     {
         Push-Location $pwd
-        Set-Location $global:ARANGODIR
-        If(-Not(Test-Path -PathType Container -Path "upgrade-data-tests"))
+        If (Test-Path -PathType Container -Path $global:UPGRADEDATADIR)
+        {
+            Set-Location $global:UPGRADEDATADIR
+            If (Test-Path -PathType Container -Path "$global:UPGRADEDATADIR\.git")
+            {
+                proc -process "git" -argument "rev-parse --is-inside-work-tree" -logfile $false -priority "Normal"
+                If ($global:ok)
+                {
+                    If (($(git remote show -n origin) | Select-String -Pattern " Fetch " -CaseSensitive | %{$_.Line.Split("/")[-1]}) -eq 'upgrade-data-tests')
+                    {
+                        Write-Host "=="$(Get-Date)"== started fetch 'upgrade-data-tests'"
+                        proc -process "git" -argument "remote update" -logfile $false -priority "Normal" 
+                        proc -process "git" -argument "checkout -f" -logfile $false -priority "Normal"
+                        Write-Host "=="$(Get-Date)"== finished fetch 'upgrade-data-tests'"
+                        $needReset = $False
+                        If ($(git status -uno) | Select-String -Pattern "behind" -CaseSensitive)
+                        {
+                            Write-Host "=="$(Get-Date)"== started clean and reset 'upgrade-data-tests'"
+							proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
+                            proc -process "git" -argument "reset --hard origin/devel" -logfile $false -priority "Normal"
+                            Write-Host "=="$(Get-Date)"== finished clean and reset 'upgrade-data-tests'"
+                        }
+                    } Else { $needReset = $True }
+                } Else { $needReset = $True }
+            } Else { $needReset = $True }
+            If ($needReset -eq $True)
+            {
+              Set-Location $global:ARANGODIR
+              Remove-Item -Recurse -Force $global:UPGRADEDATADIR
+            }
+        }
+        If(-Not(Test-Path -PathType Container -Path $global:UPGRADEDATADIR))
         {
             If(Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
             {
                 Remove-Item -Force "$HOME\.ssh\known_hosts"
                 proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
             }
+			Set-Location $global:ARANGODIR
+            Write-Host "=="$(Get-Date)"== started clone 'upgrade-data-tests'"
             proc -process "git" -argument "clone ssh://git@github.com/arangodb/upgrade-data-tests" -logfile $false -priority "Normal"
+            Write-Host "=="$(Get-Date)"== finished clone 'upgrade-data-tests'"
         }
         Pop-Location
     }
@@ -1069,10 +1108,7 @@ Function checkoutIfNeeded
             checkoutArangoDB
         }
     }
-    If(-Not(Test-Path -PathType Container -Path $global:UPGRADEDATADIR))
-    {
-        checkoutUpgradeDataTests
-    }
+    checkoutUpgradeDataTests
 }
 
 Function switchBranches($branch_c,$branch_e)
@@ -1324,20 +1360,20 @@ Function configureWindows
               $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
           }
           Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
-          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`""
-          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
       }
       Else
       {
           downloadStarter
           Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
-          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
       }
       if(!$haveCache)
       {
           Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
-          7zip -Path $global:ARANGODIR\build\*  -DestinationPath $cacheZipFN "-xr!*.exe"; comm
+          7zip -Path $global:ARANGODIR\build\* -DestinationPath $cacheZipFN "-xr!*.exe"; comm
       }
       Write-Host "Clcache Statistics"
       showCacheStats

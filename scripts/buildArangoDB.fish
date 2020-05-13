@@ -1,99 +1,102 @@
 #!/usr/bin/env fish
+source ./scripts/lib/build.fish
+
 if test "$PARALLELISM" = ""
-    set -xg PARALLELISM 64
+  set -xg PARALLELISM 64
 end
 echo "Using parallelism $PARALLELISM"
 
-cd $INNERWORKDIR
-mkdir -p .ccache.ubuntu
-set -x CCACHE_DIR $INNERWORKDIR/.ccache.ubuntu
-if test "$CCACHEBINPATH" = ""
-  set -xg CCACHEBINPATH /usr/lib/ccache
+if test "$COMPILER_VERSION" = ""
+  set -xg COMPILER_VERSION 6.4.0
 end
-if test "$CCACHESIZE" = ""
-  set -xg CCACHESIZE 30G
-end
-ccache -M $CCACHESIZE
-cd $INNERWORKDIR/ArangoDB
+echo "Using compiler version $COMPILER_VERSION"
 
-if test -z "$NO_RM_BUILD"
-  echo "Cleaning build directory"
-  rm -rf build
+if test "$COMPILER_VERSION" = "6.4.0"
+  set -xg CC_NAME gcc
+  set -xg CXX_NAME g++
+else
+  set -xg CC_NAME gcc-$COMPILER_VERSION
+  set -xg CXX_NAME g++-$COMPILER_VERSION
 end
-mkdir -p build
-cd build
-rm -rf install
-and mkdir install
 
-echo "Starting build at "(date)" on "(hostname)
-rm -f $INNERWORKDIR/.ccache.log
-ccache --zero-stats
+if test "$OPENSSL_VERSION" = ""
+  set -xg OPENSSL_VERSION 1.1.0
+end
+echo "Using openssl version $OPENSSL_VERSION"
+
+set -l pie "-no-pie"
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
- -DCMAKE_CXX_COMPILER=$CCACHEBINPATH/g++ \
- -DCMAKE_C_COMPILER=$CCACHEBINPATH/gcc \
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=Off \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
- -DUSE_MAINTAINER_MODE=$MAINTAINER
+ -DUSE_MAINTAINER_MODE=$MAINTAINER \
+ -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
+ -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
-if test "$MAINTAINER" != "On"
+if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
+else
+  set -g FULLARGS $FULLARGS \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
 end
 
-if test "$PLATFORM" = "linux"
-  set -g FULLARGS $FULLARGS \
-   -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold \
-   -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold
-end
+#if test "$PLATFORM" = "linux"
+#  set -g FULLARGS $FULLARGS \
+#   -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold \
+#   -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold
+#end
 
 if test "$ASAN" = "On"
-  echo "Building with ASAN"
+  # Suppress leaks detection only during building
+  set -gx ASAN_OPTIONS "detect_leaks=0"
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=Off \
    -DCMAKE_C_FLAGS="-pthread -fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=alignment" \
    -DCMAKE_CXX_FLAGS="-pthread -fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=vptr -fno-sanitize=alignment" \
    -DBASE_LIBS="-pthread"
+else if test "$COVERAGE" = "On"
+  echo "COVERAGE is not support in this environment!"
+  exit 1
 else
   set -g FULLARGS $FULLARGS \
-   -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-   -DCMAKE_C_FLAGS=-fno-stack-protector \
-   -DCMAKE_CXX_FLAGS=-fno-stack-protector
-end
+   -DUSE_JEMALLOC=$JEMALLOC_OSKAR
 
-set -xg ASAN_OPTIONS "detect_leaks=0"
-
-echo cmake $FULLARGS ..
-echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
-
-cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log ^&1
-and echo "configure done"  >> $INNERWORKDIR/cmakeArangoDB.log
-or exit $status
-
-echo "Finished cmake at "(date)", now starting build"
-
-set -g MAKEFLAGS -j$PARALLELISM 
-if test "$VERBOSEBUILD" = "On"
-  echo "Building verbosely"
-  set -g MAKEFLAGS $MAKEFLAGS V=1 VERBOSE=1 Verbose=1
-end
-
-set -x DESTDIR (pwd)/install
-echo Running make for build, output in work/buildArangoDB.log
-nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log ^&1
-nice make $MAKEFLAGS install >> $INNERWORKDIR/buildArangoDB.log ^&1
-and echo "build and install done"  >> $INNERWORKDIR/buildArangoDB.log
-and cd install
-and if test -z "$NOSTRIP"
-  echo Stripping executables...
-  strip usr/sbin/arangod usr/bin/arangoimp usr/bin/arangosh usr/bin/arangovpack usr/bin/arangoexport usr/bin/arangobench usr/bin/arangodump usr/bin/arangorestore
-  if test -f usr/bin/arangobackup
-    strip usr/bin/arangobackup
+  if test "$MAINTAINER" = "On"
+    set -g FULLARGS $FULLARGS \
+     -DCMAKE_C_FLAGS="$pie -fno-stack-protector" \
+     -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector"
+  else
+    set -g FULLARGS $FULLARGS \
+     -DCMAKE_C_FLAGS="$pie -fno-stack-protector" \
+     -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector"
   end
 end
 
-and echo "Finished at "(date)
-and ccache --show-stats
+setupCcacheBinPath ubuntu
+and setupCcache ubuntu
+and cleanBuildDirectory
+and cd $INNERWORKDIR/ArangoDB/build
+and TT_init
+and cmakeCcache
+and selectArchitecture $argv
+and selectMaintainer
+and runCmake
+and TT_cmake
+and if test "$SKIP_MAKE" = "On"
+  echo "Finished cmake at "(date)", skipping build"
+else
+  echo "Finished cmake at "(date)", now starting build"
+  and set -xg DESTDIR (pwd)/install
+  and runMake install
+  and TT_make
+  and installTargets
+  and echo "Finished at "(date)
+  and shutdownCcache
+  and TT_strip
+end

@@ -85,54 +85,38 @@ function defineSccacheGCE
   if test -z "$SCCACHE_GCS_BUCKET"
     set -gx SCCACHE_GCS_BUCKET "arangodbbuildcache"
   end
-  if test -z "$SCCACHE_BUCKET"
-    # No S3 for GCE atm
-    set -gx SCCACHE_BUCKET ""
-  end
-  if test -z "$SCCACHE_REDIS"
-    # No redis servers for GCE atm
-    # set -gx SCCACHE_REDIS "redis://<address>"
-    set -gx SCCACHE_REDIS ""
-  end
-  if test -z "$SCCACHE_MEMCACHED"
-    # No memcached servers for GCE atm
-    # set -gx SCCACHE_MEMCACHED "tcp://<address>:<port>"
-    set -gx SCCACHE_MEMCACHED ""
-  end
-end
-
-function undefSccacheGCE
-  # Don't use sccache at non-GCE environment by default
-  set -e SCCACHE_BUCKET
-  set -e SCCACHE_GCS_BUCKET
-  set -e SCCACHE_REDIS
-  set -e SCCACHE_MEMCACHED
+  # No S3 for GCE atm
+  set -gx SCCACHE_BUCKET ""
+  # No redis servers for GCE atm
+  set -gx SCCACHE_REDIS ""
+  # No memcached servers for GCE atm
+  set -gx SCCACHE_MEMCACHED ""
 end
 
 function ccacheOn
-  if test $IS_GCE = "false"
-    set -gx USE_CCACHE On
-    undefSccacheGCE
-  else
-    echo "Use sccache instead since IS_GCE is true!"
-    sccacheOn
-  end
+  set -gx USE_CCACHE On
 end
 
 function sccacheOn
+  set -gx USE_CCACHE sccache
   if test $IS_GCE = "true"
-    set -gx USE_CCACHE sccache
     defineSccacheGCE
-  else
-    echo "Use ccache instead since IS_GCE is false!"
-    ccacheOn
   end
 end
 
 function ccacheOff ; set -gx USE_CCACHE Off ; end
 
-if test -z "$USE_CCACHE" ; ccacheOn
-else ; set -gx USE_CCACHE $USE_CCACHE ; end
+if test -z "$USE_CCACHE"
+  if test $IS_GCE = "false"
+    ccacheOn
+  else
+    sccacheOn
+  end 
+else if test $USE_CCACHE = "sccache" -a $IS_GCE = "true"
+    defineSccacheGCE
+else
+  set -gx USE_CCACHE $USE_CCACHE
+end
 
 function coverageOn ; set -gx COVERAGE On ; debugMode ; end
 function coverageOff ; set -gx COVERAGE Off ; end
@@ -223,6 +207,11 @@ function noNotarizeAppp ; set -gx NOTARIZE_APP Off ; end
 if test -z "$NOTARIZE_APP"; noNotarizeAppp
 else ; set -gx NOTARIZE_APP $NOTARIZE_APP ; end
 
+function strictOpenSSL; set -gx USE_STRICT_OPENSSL On ; end
+function nonStrictOpenSSL ; set -gx USE_STRICT_OPENSSL Off ; end
+if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
+  strictOpenSSL
+else ; nonStrictOpenSSL ; end
 
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
@@ -589,6 +578,11 @@ function buildSourceSnippet
   set -l SOURCE_TAR_BZ2 "ArangoDB-$ARANGODB_VERSION.tar.bz2"
   set -l SOURCE_ZIP "ArangoDB-$ARANGODB_VERSION.zip"
 
+  set -l SOURCE_TAG "$ARANGODB_VERSION"
+  if string match -qr '^[0-9]+$' "$ARANGODB_VERSION_RELEASE_TYPE"
+    set SOURCE_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH.$ARANGODB_VERSION_RELEASE_TYPE"
+  end
+
   set IN $argv[1]/$ARANGODB_PACKAGES/source
   set OUT $argv[2]/release/snippets
 
@@ -606,7 +600,8 @@ function buildSourceSnippet
 
   set -l n "$OUT/download-source.html"
 
-  sed -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
+  sed -e "s|@SOURCE_TAG@|$SOURCE_TAG|g" \
+      -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
       -e "s|@SOURCE_SIZE_TAR_GZ@|$SOURCE_SIZE_TAR_GZ|g" \
       -e "s|@SOURCE_SHA256_TAR_GZ@|$SOURCE_SHA256_TAR_GZ|g" \
       -e "s|@SOURCE_TAR_BZ2@|$SOURCE_TAR_BZ2|g" \
@@ -616,8 +611,6 @@ function buildSourceSnippet
       -e "s|@SOURCE_SIZE_ZIP@|$SOURCE_SIZE_ZIP|g" \
       -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/source.html.in > $n
 
@@ -927,7 +920,7 @@ function buildBundleSnippet
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-macos-$ARANGODB_TGZ_UPSTREAM.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
   set -l TARGZ_SHA256_CLIENT ""
 
@@ -1183,6 +1176,7 @@ function showConfig
   printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
   printf $fmt3 'Logs preserve' $WORKSPACE_LOGS      '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
   printf $fmt3 'Notarize'      $NOTARIZE_APP        '(notarizeApp/noNotarizedApp)'
+  printf $fmt3 'Strict OpenSSL' $USE_STRICT_OPENSSL '(strictOpenSSL/nonStrictOpenSSL)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR
@@ -1406,7 +1400,7 @@ function findArangoDBVersion
 
       set -xg ARANGODB_REPO "arangodb""$ARANGODB_VERSION_MAJOR""$ARANGODB_VERSION_MINOR"
 
-      set -xg DOCKER_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH"
+      set -xg DOCKER_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH.$ARANGODB_VERSION_RELEASE_TYPE"
     end
   end
 
@@ -1427,7 +1421,7 @@ function findArangoDBVersion
   echo "ARANGODB_DEBIAN_UPSTREAM/REVISION: $ARANGODB_DEBIAN_UPSTREAM / $ARANGODB_DEBIAN_REVISION"
   echo "ARANGODB_PACKAGES:                 $ARANGODB_PACKAGES"
   echo "ARANGODB_REPO:                     $ARANGODB_REPO"
-  echo "ARANGODB_RPM_UPDATREAM/REVISION:   $ARANGODB_RPM_UPSTREAM / $ARANGODB_RPM_REVISION"
+  echo "ARANGODB_RPM_UPSTREAM/REVISION:    $ARANGODB_RPM_UPSTREAM / $ARANGODB_RPM_REVISION"
   echo "ARANGODB_SNIPPETS:                 $ARANGODB_SNIPPETS"
   echo "ARANGODB_TGZ_UPSTREAM:             $ARANGODB_TGZ_UPSTREAM"
   echo "DOCKER_TAG:                        $DOCKER_TAG"
@@ -1521,9 +1515,7 @@ function checkoutIfNeeded
       checkoutArangoDB
     end
   end
-  and if test ! -d $WORKDIR/ArangoDB/upgrade-data-tests
-    checkoutUpgradeDataTests
-  end
+  and checkoutUpgradeDataTests
 end
 
 function clearResults
@@ -1559,29 +1551,36 @@ function moveResultsToWorkspace
       else
         for f in $WORKDIR/work/testreport* ; echo "rm $f" ; rm $f ; end
       end
+
+      echo "mv test.log"
       mv $WORKDIR/work/test.log $WORKSPACE
+
       if test -f $WORKDIR/work/testProtocol.txt
+        echo "mv testProtocol.txt"
         mv $WORKDIR/work/testProtocol.txt $WORKSPACE/protocol.log
       end
     end
 
     for x in buildArangoDB.log cmakeArangoDB.log
+      echo "mv $x"
       if test -f $WORKDIR/work/$x ; mv $WORKDIR/work/$x $WORKSPACE ; end
     end
 
     for x in cppcheck.xml
       if test -f $WORKDIR/work/ArangoDB/$x
+        echo "mv $x"
         mv $WORKDIR/work/ArangoDB/$x $WORKSPACE
       end
     end
 
     if test -d "$WORKDIR/work/coverage"
+      echo "mv coverage"
       mv $WORKDIR/work/coverage $WORKSPACE
     end
 
     set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html,csv}
     for f in $matches
-      echo $f | grep -v testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"      
+      echo $f | grep -qv testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"
     end
 
     for f in $WORKDIR/work/asan.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end
@@ -1593,6 +1592,7 @@ function moveResultsToWorkspace
     end
 
     if test -d $WORKDIR/work/Documentation
+      echo "mv Documentation"
       mv $WORKDIR/work/Documentation $WORKSPACE/Documentation.generated
     end
 

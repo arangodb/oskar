@@ -3,7 +3,7 @@
     The following packages are for Red Hat-based Linux distributions.
   </p>
   <p>
-    The processor(s) must support the SSE 4.2 instruction set (Intel Nehalem or
+    The processor(s) must support the SSE 4.2 instruction set (Intel Westmere or
     better, AMD Bulldozer or better, etc.)
   </p>
   <p>
@@ -62,7 +62,7 @@
   <p>
     Run the following as root in a terminal:
   <pre>cd /etc/yum.repos.d/
-curl -OL https://download.arangodb.com/@ARANGODB_REPO@/RPM/arangodb.repo
+curl -OL https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/RPM/arangodb.repo
 yum -y install @ARANGODB_PKG_NAME@-@ARANGODB_VERSION@</pre>
   </p>
   <p>
