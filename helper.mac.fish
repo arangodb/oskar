@@ -242,12 +242,13 @@ end
 
 function downloadStarter
   mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
-  runLocal $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
+  and runLocal $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
 end
 
 function downloadSyncer
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+  and runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+  and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
 end
 
 function buildPackage
