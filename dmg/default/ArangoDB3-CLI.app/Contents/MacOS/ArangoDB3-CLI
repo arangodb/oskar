@@ -92,14 +92,21 @@ INFOFILE="/tmp/ArangoDB-CLI.info.$$"
 ) > $INFOFILE
 
 # start a Terminal.app session
-
-/usr/bin/osascript <<-EOF
+if test -n "${SECURITYSESSIONID}"; then
+   /usr/bin/osascript <<-EOF
 tell application "Terminal"
   do script "clear && cat $INFOFILE && rm $INFOFILE && sleep 20 && exec tail -1 -f ${HOME}/Library/ArangoDB/opt/arangodb/var/log/arangodb3/arangod.log"
   activate
 end tell
 EOF
 
-# open web ui
-sleep 10;
-open "http://127.0.0.1:8529/"
+   # open web ui
+   sleep 10;
+   open "http://127.0.0.1:8529/"
+else
+    clear && \
+        cat $INFOFILE && \
+        rm $INFOFILE && \
+        sleep 20 && \
+        tail -1 -f ${HOME}/Library/ArangoDB/opt/arangodb/var/log/arangodb3/arangod.log
+fi
