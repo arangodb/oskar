@@ -16,7 +16,7 @@ program=$(basename $me)
 installation=$(dirname $me)
 executable=$installation/opt/arangodb/bin/$program
 if [ -x $executable ] ; then
-  exec $executable -c "${HOME}/Library/ArangoDB-etc/arangoimport.conf" $*
+  exec $executable -c "${HOME}/Library/ArangoDB-etc/arangoimport.conf" "$@"
 fi
 echo "Could not find executable ${executable}!"
 exit 1
