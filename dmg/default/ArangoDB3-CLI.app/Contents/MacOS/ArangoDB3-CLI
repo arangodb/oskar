@@ -44,13 +44,15 @@ else
         echo "database doesn't need an upgrade."
     else
         rm -f "${HOME}/Library/ArangoDB/opt/arangodb/var/lib/arangodb3/LOCK" # FIXME
-        UPGRADE_DB=$(/usr/bin/osascript<<END
+        if test -z "${UPGRADE_DB}"; then
+            UPGRADE_DB=$(/usr/bin/osascript<<END
 tell application "System Events"
 activate
 set the answer to the button returned of (display dialog "Do you want to upgrade your ArangoDB Database directory?" buttons {"Yes", "No"})
 end tell
 END
-              )
+                      )
+        fi
         if test "${UPGRADE_DB}" == "Yes"; then
             echo "Updating the database ..."
             "${ROOTDIR}/arangod" --database.auto-upgrade -c "${ARANGOD_CONF}"
