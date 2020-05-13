@@ -1428,6 +1428,7 @@ function updateDockerBuildImage
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
+  and docker pull (findBuildImage)
   and docker pull (findStaticBuildImage)
 end
 

@@ -66,3 +66,28 @@ function cleanPrepareLockUpdateClear2
   and updateOskarOnly
   and clearResults
 end
+
+function TT_init
+  set -g TT_filename work/totalTimes.csv
+  and set -g TT_date (date +%Y%m%d)
+  and set -g TT_t1 (date +%s)
+  and rm -f $TT_filename
+end
+
+function TT_setup
+  set -g TT_t2 (date +%s)
+  and echo "$TT_date,setup,"(expr $TT_t2 - $TT_t1) >> $TT_filename
+end
+
+function TT_compile
+  set -g TT_t3 (date +%s)
+  and if test -f work/buildTimes.csv
+    awk -F, "{print \"$TT_date,\" \$2 \",\" \$3}" < work/buildTimes.csv >> $TT_filename
+    and rm -f work/buildTimes.csv
+  end
+end
+
+function TT_tests
+  set -g TT_t4 (date +%s)
+  and echo "$TT_date,tests,"(expr $TT_t4 - $TT_t3) >> $TT_filename
+end
