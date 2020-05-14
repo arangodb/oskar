@@ -12,8 +12,7 @@ and buildStaticArangoDB
 
 set -l s $status
 if test $s -ne 0
-  echo Build failure with maintainer mode on in community.
+  echo Build failure with maintainer mode on in $EDITION.
 end
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
 exit $s
-
