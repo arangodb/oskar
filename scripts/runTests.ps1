@@ -17,6 +17,7 @@ Function global:registerSingleTests()
     registerTest -testname "upgrade_data_3.4.*"
     registerTest -testname "upgrade_data_3.5.*"
     registerTest -testname "upgrade_data_3.6.*"
+    registerTest -testname "upgrade_data_3.7.*"
     registerTest -testname "replication_static" -weight 2
     registerTest -testname "shell_server"
     registerTest -testname "replication_ongoing_32" -weight 2
