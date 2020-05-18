@@ -35,13 +35,15 @@ fi
 # check for database engine
 
 if test ! -f "${HOME}/Library/ArangoDB/opt/arangodb/var/lib/arangodb3/SERVER" -a ! -f "${HOME}/Library/ArangoDB/opt/arangodb/var/lib/arangodb3/ENGINE"; then
-    STORAGE_ENGINE=$(
+    if test -z "${STORAGE_ENGINE}"; then
+        STORAGE_ENGINE=$(
         /usr/bin/osascript <<-EOF
 set issueList to {"auto", "rocksdb", "mmfiles"}
 set selectedIssue to {choose from list issueList}
 return selectedIssue
 EOF
-                  )
+                      )
+    fi
 
     if test "$STORAGE_ENGINE" == "false"; then
         STORAGE_ENGINE=auto
@@ -54,13 +56,15 @@ else
         echo "database doesn't need an upgrade."
     else
         rm -f "${HOME}/Library/ArangoDB/opt/arangodb/var/lib/arangodb3/LOCK" # FIXME
-        UPGRADE_DB=$(/usr/bin/osascript<<END
+        if test -z "${UPGRADE_DB}"; then
+            UPGRADE_DB=$(/usr/bin/osascript<<END
 tell application "System Events"
 activate
 set the answer to the button returned of (display dialog "Do you want to upgrade your ArangoDB Database directory?" buttons {"Yes", "No"})
 end tell
 END
-              )
+                      )
+        fi
         if test "${UPGRADE_DB}" == "Yes"; then
             echo "Updating the database ..."
             "${ROOTDIR}/arangod" --database.auto-upgrade -c "${ARANGOD_CONF}"
@@ -100,14 +104,21 @@ INFOFILE="/tmp/ArangoDB-CLI.info.$$"
 ) > $INFOFILE
 
 # start a Terminal.app session
-
-/usr/bin/osascript <<-EOF
+if test "${PPID}" -eq 1; then
+   /usr/bin/osascript <<-EOF
 tell application "Terminal"
   do script "clear && cat $INFOFILE && rm $INFOFILE && sleep 20 && exec tail -1 -f ${HOME}/Library/ArangoDB/opt/arangodb/var/log/arangodb3/arangod.log"
   activate
 end tell
 EOF
 
-# open web ui
-sleep 10;
-open "http://127.0.0.1:8529/"
+   # open web ui
+   sleep 10;
+   open "http://127.0.0.1:8529/"
+else
+    clear && \
+        cat $INFOFILE && \
+        rm $INFOFILE && \
+        sleep 20 && \
+        tail -1 -f ${HOME}/Library/ArangoDB/opt/arangodb/var/log/arangodb3/arangod.log
+fi
