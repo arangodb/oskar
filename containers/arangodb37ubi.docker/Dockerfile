@@ -22,9 +22,7 @@ LABEL name="$name" \
 
 ADD ./LICENSE /licenses/LICENSE
 
-RUN microdnf install gpg nodejs wget binutils && \
-    npm install -g foxx-cli && \
-    rm -rf /root/.npm && \
+RUN microdnf install gpg wget binutils && \
     curl -L -O http://mirror.centos.org/centos/8/BaseOS/x86_64/os/Packages/numactl-libs-2.0.12-7.el8.x86_64.rpm && \
     rpm -i numactl-libs-2.0.12-7.el8.x86_64.rpm && \
     rm numactl-libs-2.0.12-7.el8.x86_64.rpm && \

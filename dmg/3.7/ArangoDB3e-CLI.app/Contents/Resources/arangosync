@@ -16,14 +16,7 @@ program=$(basename $me)
 installation=$(dirname $me)
 executable=$installation/opt/arangodb/bin/$program
 if [ -x "$executable" ] ; then
-  case $1 in
-    abort|auth|create|help|remove|retry|start|stop|upgrade|version)
-      exec "$executable" "$@"
-      ;;
-    *)
-      exec "$executable" --server.arangod="$installation/opt/arangodb/sbin/arangod" --server.js-dir="$installation/opt/arangodb/share/arangodb3/js" "$@"
-      ;;
-  esac
+  exec "$executable" "$@"
 fi
 echo "Could not find executable ${executable}!"
 exit 1

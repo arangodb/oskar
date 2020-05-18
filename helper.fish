@@ -211,7 +211,7 @@ function strictOpenSSL; set -gx USE_STRICT_OPENSSL On ; end
 function nonStrictOpenSSL ; set -gx USE_STRICT_OPENSSL Off ; end
 if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
   strictOpenSSL
-else ; nonStrictOpenSSL ; end
+else; set -gx USE_STRICT_OPENSSL $USE_STRICT_OPENSSL; end
 
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
@@ -263,7 +263,7 @@ function copyRclone
 
   echo Copying rclone from rclone/rclone-arangodb-$os to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp rclone/rclone-arangodb-$os $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+  cp $WORKDIR/rclone/rclone-arangodb-$os $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 ## #############################################################################

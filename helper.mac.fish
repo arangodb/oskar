@@ -242,12 +242,12 @@ end
 
 function downloadStarter
   mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
-  runLocal $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
+  and runLocal $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
 end
 
 function downloadSyncer
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+  and runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
 end
 
 function buildPackage
@@ -335,6 +335,11 @@ function buildTarGzPackage
   pushd $INNERWORKDIR/ArangoDB/build
   and rm -rf install
   and make install DESTDIR=install
+  and if test "$ENTERPRISEEDITION" = "On"
+        pushd install/opt/arangodb/bin
+        ln -s ../sbin/arangosync
+        popd
+      end
   and mkdir -p install/usr
   and mv install/opt/arangodb/bin install/usr
   and mv install/opt/arangodb/sbin install/usr
