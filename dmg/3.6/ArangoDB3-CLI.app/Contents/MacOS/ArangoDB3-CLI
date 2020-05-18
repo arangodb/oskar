@@ -104,7 +104,7 @@ INFOFILE="/tmp/ArangoDB-CLI.info.$$"
 ) > $INFOFILE
 
 # start a Terminal.app session
-if test -n "${SECURITYSESSIONID}"; then
+if test "${PPID}" -eq 1; then
    /usr/bin/osascript <<-EOF
 tell application "Terminal"
   do script "clear && cat $INFOFILE && rm $INFOFILE && sleep 20 && exec tail -1 -f ${HOME}/Library/ArangoDB/opt/arangodb/var/log/arangodb3/arangod.log"
