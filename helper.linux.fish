@@ -6,37 +6,37 @@ set -gx PLATFORM linux
 set -gx ARCH (uname -m)
 
 set -gx UBUNTUBUILDIMAGE_NAME arangodb/ubuntubuildarangodb-$ARCH
-set -gx UBUNTUBUILDIMAGE_TAG 1
+set -gx UBUNTUBUILDIMAGE_TAG 2
 set -gx UBUNTUBUILDIMAGE $UBUNTUBUILDIMAGE_NAME:$UBUNTUBUILDIMAGE_TAG
 
 set -gx UBUNTUBUILDIMAGE2_NAME arangodb/ubuntubuildarangodb2-$ARCH
-set -gx UBUNTUBUILDIMAGE2_TAG 1
+set -gx UBUNTUBUILDIMAGE2_TAG 2
 set -gx UBUNTUBUILDIMAGE2 $UBUNTUBUILDIMAGE2_NAME:$UBUNTUBUILDIMAGE2_TAG
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 1
+set -gx UBUNTUBUILDIMAGE3_TAG 2
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 1
+set -gx UBUNTUBUILDIMAGE4_TAG 2
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE_NAME arangodb/alpinebuildarangodb-$ARCH
-set -gx ALPINEBUILDIMAGE_TAG 7
+set -gx ALPINEBUILDIMAGE_TAG 8
 set -gx ALPINEBUILDIMAGE $ALPINEBUILDIMAGE_NAME:$ALPINEBUILDIMAGE_TAG
 
 set -gx ALPINEBUILDIMAGE2_NAME arangodb/alpinebuildarangodb2-$ARCH
-set -gx ALPINEBUILDIMAGE2_TAG 6
+set -gx ALPINEBUILDIMAGE2_TAG 7
 set -gx ALPINEBUILDIMAGE2 $ALPINEBUILDIMAGE2_NAME:$ALPINEBUILDIMAGE2_TAG
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 5
+set -gx ALPINEBUILDIMAGE3_TAG 6
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 2
+set -gx ALPINEBUILDIMAGE4_TAG 3
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -1147,6 +1147,29 @@ function remakeImages
   buildCentosPackagingImage ; or set -l s 1
   pushCentosPackagingImage ; or set -l s 1
   buildCppcheckImage ; or set -l s 1
+
+  return $s
+end
+
+function remakeBuildImages
+  set -l s 0
+
+  buildUbuntuBuildImage ; or set -l s 1
+  pushUbuntuBuildImage ; or set -l s 1
+  buildUbuntuBuildImage2 ; or set -l s 1
+  pushUbuntuBuildImage2 ; or set -l s 1
+  buildUbuntuBuildImage3 ; or set -l s 1
+  pushUbuntuBuildImage3 ; or set -l s 1
+  buildUbuntuBuildImage4 ; or set -l s 1
+  pushUbuntuBuildImage4 ; or set -l s 1
+  buildAlpineBuildImage ; or set -l s 1
+  pushAlpineBuildImage ; or set -l s 1
+  buildAlpineBuildImage2 ; or set -l s 1
+  pushAlpineBuildImage2 ; or set -l s 1
+  buildAlpineBuildImage3 ; or set -l s 1
+  pushAlpineBuildImage3 ; or set -l s 1
+  buildAlpineBuildImage4 ; or set -l s 1
+  pushAlpineBuildImage4 ; or set -l s 1
 
   return $s
 end
