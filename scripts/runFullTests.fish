@@ -213,6 +213,8 @@ cd $INNERWORKDIR/ArangoDB
 
 if test "$ASAN" = "On"
   ulimit -c 0
+else
+  ulimit -c unlimited
 end
 
 switch $TESTSUITE
