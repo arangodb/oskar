@@ -1301,7 +1301,7 @@ Function getCacheID
         Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
     }
     
-    $hash = "$((Get-FileHash $env:TMP\allHashes.txt).Hash)" + ($env:OPENSSL_ROOT_DIR).GetHashCode()
+    $hash = "$((Get-FileHash $env:TMP\allHashes.txt).Hash)" + ($env:OPENSSL_ROOT_DIR).GetHashCode() + (Split-Path $env:CLCACHE_CL).GetHashCode()
     $hashStr = "$env:CMAKE_CONFIGURE_DIR\${hash}-EP_${ENTERPRISEEDITION}.zip"
     Remove-Item -Force $env:TMP\allHashes.txt
     return $hashStr
