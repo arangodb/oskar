@@ -397,9 +397,9 @@ end
 function buildExamples
   checkoutIfNeeded
   and if test "$NO_RM_BUILD" != 1
-    buildStaticArangoDB
+    buildStaticArangoDB "-DUSE_IPO=Off"
   end
-  and runInContainer (findBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
+  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!

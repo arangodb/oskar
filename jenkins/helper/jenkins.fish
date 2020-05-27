@@ -2,7 +2,8 @@
 
 echo Directory (pwd)
 
-set -xg IS_JENKINS "true"
+if test -z "$IS_JENKINS" ; set -xg IS_JENKINS "true"
+else ; set -gx IS_JENKINS $IS_JENKINS ; end
 
 function prepareOskar
   set -xg OSKAR oskar
@@ -52,19 +53,27 @@ function cleanJenkinsParameter
 end
 
 function cleanPrepareLockUpdateClear
-  cleanJenkinsParameter
-  and prepareOskar
-  and lockDirectory
-  and updateOskar
-  and clearResults
+  if test "$IS_JENKINS" = "true"
+    cleanJenkinsParameter
+    and prepareOskar
+    and lockDirectory
+    and updateOskar
+    and clearResults
+  else
+    source helper.fish
+  end
 end
 
 function cleanPrepareLockUpdateClear2
-  cleanJenkinsParameter
-  and prepareOskar
-  and lockDirectory
-  and updateOskarOnly
-  and clearResults
+  if test "$IS_JENKINS" = "true"
+    cleanJenkinsParameter
+    and prepareOskar
+    and lockDirectory
+    and updateOskarOnly
+    and clearResults
+  else
+    source helper.fish
+  end
 end
 
 function TT_init
