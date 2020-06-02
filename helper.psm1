@@ -1585,7 +1585,7 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\test.log" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "*.zip ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*.zip" -Exclude "ArangoDB3*.zip"))
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*.zip" | ? { $_.Name -notlike "ArangoDB3*.zip"}))
     {
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
