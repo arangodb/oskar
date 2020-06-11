@@ -6,7 +6,7 @@ oskar_dir="$script_dir/.."
 
 echo "run test"
 
-version="$ARANGODB_PACKAGES"
+version="$ARANGODB_VERSION"
 incoming="/packages"
 repo="/repositories"
 
