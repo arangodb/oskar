@@ -43,19 +43,26 @@ with open(options.filename) as csvfile:
 	lines = csv.reader(csvfile, delimiter=',', quotechar='|')
 	for row in lines:
 		print(json.dumps({
-                        "test": row[0],
-                        "average": row[1],
-                        "median": row[2],
-                        "min": row[3],
-                        "max": row[4],
-                        "deviation": row[5],
-                        "collection": row[6],
-                        "size": row[7],
-                        "numberRuns": row[8],
+                        "test": {
+                                "name": row[0],
+                                "average": row[1],
+                                "median": row[2],
+                                "min": row[3],
+                                "max": row[4],
+                                "deviation": row[5],
+                                "numberRuns": row[8]
+                        },
+                        "size": {
+                                "collection": row[6],
+                                "count": row[7],
+                                "size": row[9]
+                        },
+                        "configuration": {
+                                "version": version,
+                                "branch": branch,
+                                "mode": mode,
+                                "edition": edition
+                        },
                         "isoDate": current_date.isoformat(),
-                        "date": current_date.timestamp(),
-                        "version": version,
-                        "branch": branch,
-                        "mode": mode,
-                        "edition": edition
+                        "date": current_date.timestamp()
                 }))
