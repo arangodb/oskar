@@ -45,16 +45,16 @@ with open(options.filename) as csvfile:
 		print(json.dumps({
                         "test": {
                                 "name": row[0],
-                                "average": row[1],
-                                "median": row[2],
-                                "min": row[3],
-                                "max": row[4],
-                                "deviation": row[5],
-                                "numberRuns": row[8]
+                                "average": float(row[1]),
+                                "median": float(row[2]),
+                                "min": float(row[3]),
+                                "max": float(row[4]),
+                                "deviation": float(row[5]),
+                                "numberRuns": int(row[8])
                         },
                         "size": {
                                 "collection": row[6],
-                                "count": row[7],
+                                "count": int(row[7]),
                                 "size": row[9]
                         },
                         "configuration": {
@@ -64,5 +64,6 @@ with open(options.filename) as csvfile:
                                 "edition": edition
                         },
                         "isoDate": current_date.isoformat(),
-                        "date": current_date.timestamp()
+                        "date": current_date.timestamp(),
+                        "ms": 1000 * current_date.timestamp()
                 }))
