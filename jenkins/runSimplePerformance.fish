@@ -36,7 +36,7 @@ and docker run \
   -v $simple:/performance \
   arangodb/arangodb \
   sh -c "cd /performance && \
-    /ArangoDB/build/bin/arangod \
+    /ArangoDB/build/install/usr/sbin/arangod \
       -c none \
       --javascript.app-path /tmp/app \
       --javascript.startup-directory /ArangoDB/js \
