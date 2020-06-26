@@ -9,16 +9,20 @@ parser = OptionParser()
 parser.add_option("-f", "--file", dest="filename", help="input file", metavar="FILE")
 parser.add_option("-V", "--version-file", dest="version_filename", help="version file", metavar="FILE")
 parser.add_option("-d", "--date", dest="date", help="iso date", metavar="DATE")
-parser.add_option("-b", "--branch", dest="branch", help="branch or tag", metavar="BRANCH")
+parser.add_option("-b", "--branch", dest="branch", help="branch", metavar="BRANCH")
+parser.add_option("-n", "--name", dest="name", help="branch or tag", metavar="BRANCH-OR-TAG")
 parser.add_option("-m", "--mode", dest="mode", help="singleserver or cluster", metavar="MODE")
 parser.add_option("-e", "--edition", dest="edition", help="community or enterprise", metavar="EDITION")
+parser.add_option("-s", "--size", dest="size", help="tiny, small, medium, big", metavar="SIZE")
 
 (options, args) = parser.parse_args()
 
 current_date = dt_parser.parse(options.date)
 branch = options.branch
+name = options.name
 mode = options.mode
 edition = options.edition
+default_size = options.size
 version_filename = options.version_filename
 version = None
 
@@ -37,12 +41,20 @@ if version_filename:
                 version = j['version']
 
 if not version:
-        version = branch
+        if name:
+                version = name
+        else:
+                version = branch
 
 with open(options.filename) as csvfile:
-	lines = csv.reader(csvfile, delimiter=',', quotechar='|')
-	for row in lines:
-		print(json.dumps({
+        lines = csv.reader(csvfile, delimiter=',', quotechar='|')
+        for row in lines:
+                size = row[9]
+
+                if not size:
+                        size = default_size
+
+                print(json.dumps({
                         "test": {
                                 "name": row[0],
                                 "average": float(row[1]),
@@ -55,7 +67,7 @@ with open(options.filename) as csvfile:
                         "size": {
                                 "collection": row[6],
                                 "count": int(row[7]),
-                                "size": row[9]
+                                "size": size
                         },
                         "configuration": {
                                 "version": version,
