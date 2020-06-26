@@ -55,7 +55,7 @@ awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
   > $filename
 
-set -l localname results.csv
+set -l localname work/results.csv
 
 echo "storing results in $localname"
 awk "{print \"$ARANGODB_BRANCH,$datetime,\" \$0}" \
