@@ -50,10 +50,17 @@ set -l s $status
 set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
 set -l filename $dest/results-$resultname-$datetime.csv
 
-echo "storing results in $resultname"
+echo "storing results in $filename"
 awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
   < $simple/results.csv \
   > $filename
+
+set -l localname results.csv
+
+echo "storing results in $localname"
+awk "{print \"$ARANGODB_BRANCH,$datetime,\" \$0}" \
+  < $simple/results.csv \
+  > $localname
 
 sudo rm -rf work/database
 
