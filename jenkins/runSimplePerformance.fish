@@ -11,15 +11,15 @@ if test -z "$ARANGODB_TEST_CONFIG"
 end
 
 cleanPrepareLockUpdateClear2
-and enterprise
-and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and updateDockerBuildImage
-and maintainerOff
-and releaseMode
-and pingDetails
-and showConfig
 and if test -z "$DOCKER_IMAGE"
-  buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+  enterprise
+  and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+  and updateDockerBuildImage
+  and maintainerOff
+  and releaseMode
+  and pingDetails
+  and showConfig
+  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
 end
 
 and sudo rm -rf work/database $simple/results.csv
