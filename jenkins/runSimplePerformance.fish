@@ -49,9 +49,7 @@ else
     $DOCKER_IMAGE \
     sh -c "cd /performance && \
     /usr/sbin/arangod \
-    -c none \
     --javascript.app-path /tmp/app \
-    --javascript.startup-directory /ArangoDB/js \
     --server.rest-server false \
     --javascript.module-directory `pwd` \
     --log.foreground-tty \
