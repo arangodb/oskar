@@ -14,37 +14,50 @@ cleanPrepareLockUpdateClear2
 and enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
-#and if echo "$ARANGODB_BRANCH" | grep -q "^v"
-#  pushd work/ArangoDB
-#  set -xg date (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-8)
-#  set -xg datetime (git log -1 --format=%aI  | tr -d -- '-:T+' | cut -b 1-12)
-#  echo "==== date $datetime ===="
-#  popd
-#end
 and maintainerOff
 and releaseMode
 and pingDetails
 and showConfig
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+and if test -z "$DOCKER_IMAGE"
+  buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+end
 
 and sudo rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="
-and docker run \
-  -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
-  -v (pwd)/work/ArangoDB:/ArangoDB \
-  -v (pwd)/work:/data \
-  -v $simple:/performance \
-  arangodb/arangodb \
-  sh -c "cd /performance && \
+and if test -z "$DOCKER_IMAGE"
+  docker run \
+    -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
+    -v (pwd)/work/ArangoDB:/ArangoDB \
+    -v (pwd)/work:/data \
+    -v $simple:/performance \
+    arangodb/arangodb \
+    sh -c "cd /performance && \
     /ArangoDB/build/install/usr/sbin/arangod \
-      -c none \
-      --javascript.app-path /tmp/app \
-      --javascript.startup-directory /ArangoDB/js \
-      --server.rest-server false \
-      --javascript.module-directory `pwd` \
-      --log.foreground-tty \
-      /data/database \
-      --javascript.script $ARANGODB_TEST_CONFIG"
+    -c none \
+    --javascript.app-path /tmp/app \
+    --javascript.startup-directory /ArangoDB/js \
+    --server.rest-server false \
+    --javascript.module-directory `pwd` \
+    --log.foreground-tty \
+    /data/database \
+    --javascript.script $ARANGODB_TEST_CONFIG"
+else
+  docker run \
+    -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
+    -v (pwd)/work:/data \
+    -v $simple:/performance \
+    $DOCKER_IMAGE \
+    sh -c "cd /performance && \
+    /usr/sbin/arangod \
+    -c none \
+    --javascript.app-path /tmp/app \
+    --javascript.startup-directory /ArangoDB/js \
+    --server.rest-server false \
+    --javascript.module-directory `pwd` \
+    --log.foreground-tty \
+    /data/database \
+    --javascript.script $ARANGODB_TEST_CONFIG"
+end
 
 set -l s $status
 set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
