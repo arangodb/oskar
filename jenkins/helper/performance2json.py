@@ -8,6 +8,7 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-f", "--file", dest="filename", help="input file", metavar="FILE")
 parser.add_option("-V", "--version-file", dest="version_filename", help="version file", metavar="FILE")
+parser.add_option("-w", "--force-version", dest="version", help="version", metavar="VERSION")
 parser.add_option("-d", "--date", dest="date", help="iso date", metavar="DATE")
 parser.add_option("-b", "--branch", dest="branch", help="branch", metavar="BRANCH")
 parser.add_option("-n", "--name", dest="name", help="branch or tag", metavar="BRANCH-OR-TAG")
@@ -31,7 +32,7 @@ mode = options.mode
 edition = options.edition
 default_size = options.size
 version_filename = options.version_filename
-version = None
+version = options.version
 input_type = options.input_type
 
 if version_filename:
