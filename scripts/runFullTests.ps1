@@ -120,6 +120,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "resilience_failover_view"
     registerTest -cluster $true -testname "resilience_transactions"
     registerTest -cluster $true -testname "resilience_sharddist"
+    registerTest -cluster $true -testname "resilience_analyzers"
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "http_server" -sniff true

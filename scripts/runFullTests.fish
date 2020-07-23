@@ -143,6 +143,7 @@ set CT "$CT""500,runClusterTest1 resilience_failover_failure - --dumpAgencyOnErr
 set CT "$CT""500,runClusterTest1 resilience_failover_view - --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 resilience_transactions - --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 resilience_sharddist - --dumpAgencyOnError true\n"
+set CT "$CT""500,runClusterTest1 resilience_analyzers - --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_server 0 --testBuckets 5/0 --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 shell_server 1 --testBuckets 5/1 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_server 2 --testBuckets 5/2 --dumpAgencyOnError true\n"
