@@ -1,70 +1,91 @@
+#!/usr/bin/env python3
+
+""" convert performance test figures CSV->json to upload into arangodb """
 import csv
 import json
 import datetime as dt
 import statistics
-
-from dateutil import parser as dt_parser
 from optparse import OptionParser
 
-parser = OptionParser()
-parser.add_option("-f", "--file", dest="filename", help="input file", metavar="FILE")
-parser.add_option("-V", "--version-file", dest="version_filename", help="version file", metavar="FILE")
-parser.add_option("-w", "--force-version", dest="version", help="version", metavar="VERSION")
-parser.add_option("-d", "--date", dest="date", help="iso date", metavar="DATE")
-parser.add_option("-b", "--branch", dest="branch", help="branch", metavar="BRANCH")
-parser.add_option("-n", "--name", dest="name", help="branch or tag", metavar="BRANCH-OR-TAG")
-parser.add_option("-m", "--mode", dest="mode", help="singleserver or cluster", metavar="MODE")
-parser.add_option("-e", "--edition", dest="edition", help="community or enterprise", metavar="EDITION")
-parser.add_option("-s", "--size", dest="size", help="tiny, small, medium, big", metavar="SIZE")
-parser.add_option("-F", "--type", dest="input_type", help="input format", metavar="TYPE")
+from dateutil import parser as dt_parser
 
-parser.add_option("--collectionsPerDatabase", dest="collections_per_database", help="number of collections created in each iteration", metavar="COL_PER_DB")
-parser.add_option("--indexesPerCollection", dest="indexes_per_collection", help="number of indices per collection to be created", metavar="IDX_PER_COL")
-parser.add_option("--numberOfShards", dest="no_shards", help="number of shards created on each collection", metavar="NO_SHARDS")
-parser.add_option("--replicationFactor", dest="replication_factor", help="replication factor on these collections", metavar="REPL_FACTOR")
+PARSER = OptionParser()
+PARSER.add_option("-f", "--file", dest="filename",
+                  help="input file", metavar="FILE")
+PARSER.add_option("-V", "--version-file", dest="version_filename",
+                  help="version file", metavar="FILE")
+PARSER.add_option("-w", "--force-version", dest="version",
+                  help="version", metavar="VERSION")
+PARSER.add_option("-d", "--date", dest="date", help="iso date", metavar="DATE")
+PARSER.add_option("-b", "--branch", dest="branch",
+                  help="branch", metavar="BRANCH")
+PARSER.add_option("-n", "--name", dest="name",
+                  help="branch or tag", metavar="BRANCH-OR-TAG")
+PARSER.add_option("-m", "--mode", dest="mode",
+                  help="singleserver or cluster", metavar="MODE")
+PARSER.add_option("-e", "--edition", dest="edition",
+                  help="community or enterprise", metavar="EDITION")
+PARSER.add_option("-s", "--size", dest="size",
+                  help="tiny, small, medium, big", metavar="SIZE")
+PARSER.add_option("-F", "--type", dest="input_type",
+                  help="input format", metavar="TYPE")
 
-(options, args) = parser.parse_args()
+PARSER.add_option("--collectionsPerDatabase", dest="collections_per_database",
+                  help="number of collections created in each iteration",
+                  metavar="COL_PER_DB")
+PARSER.add_option("--indexesPerCollection", dest="indexes_per_collection",
+                  help="number of indices per collection to be created",
+                  metavar="IDX_PER_COL")
+PARSER.add_option("--numberOfShards", dest="no_shards",
+                  help="number of shards created on each collection",
+                  metavar="NO_SHARDS")
+PARSER.add_option("--replicationFactor", dest="replication_factor",
+                  help="replication factor on these collections",
+                  metavar="REPL_FACTOR")
 
-current_date = None
-headline = []
-values = {}
+(OPTIONS, ARGS) = PARSER.parse_args()
 
-if options.date:
-    current_date = dt_parser.parse(options.date)
+CURRENT_DATE = None
+HEADLINE = []
+VALUES = {}
+
+if OPTIONS.date:
+    CURRENT_DATE = dt_parser.parse(OPTIONS.date)
 else:
-    current_date = dt.datetime.now()
+    CURRENT_DATE = dt.datetime.now()
 
-branch = options.branch
-name = options.name
-mode = options.mode
-edition = options.edition
-default_size = options.size
-version_filename = options.version_filename
-version = options.version
-input_type = options.input_type
+BRANCH = OPTIONS.branch
+NAME = OPTIONS.name
+MODE = OPTIONS.mode
+EDITION = OPTIONS.edition
+DEFAULT_SIZE = OPTIONS.size
+VERSION_FILENAME = OPTIONS.version_filename
+VERSION = OPTIONS.version
+INPUT_TYPE = OPTIONS.input_type
 
-if version_filename:
-    with open(version_filename) as jsonfile:
+if VERSION_FILENAME:
+    with open(VERSION_FILENAME) as jsonfile:
         j = json.load(jsonfile)
 
-    if not edition:
-        edition = j['license']
+    if not EDITION:
+        EDITION = j['license']
 
-    if not mode:
+    if not MODE:
         if j['details']['role'] == 'COORDINATOR':
-            mode = 'cluster'
+            MODE = 'cluster'
 
-    if not version:
-        version = j['version']
+    if not VERSION:
+        VERSION = j['version']
 
-if not version:
-    if name:
-        version = name
+if not VERSION:
+    if NAME:
+        VERSION = NAME
     else:
-        version = branch
+        VERSION = BRANCH
 
 def simple_performance(row):
-    global version, current_date, default_size, branch, mode, edition
+    """ translate simple performance output """
+    global VERSION, CURRENT_DATE, DEFAULT_SIZE, BRANCH, MODE, EDITION
 
     size = "big"
 
@@ -72,31 +93,31 @@ def simple_performance(row):
         size = row[11]
 
     if not size:
-        size = default_size
+        size = DEFAULT_SIZE
 
     count = 1000000
 
     if len(row) > 9:
         count = int(row[9])
 
-    if not version:
-        version = row[0]
+    if not VERSION:
+        VERSION = row[0]
 
-    if not branch:
-        if version == "3.4":
-            branch = "3.4"
-        elif version == "3.5":
-            branch = "3.5"
-        elif version == "3.6":
-            branch = "3.6"
-        elif version == "3.7":
-            branch = "3.7"
-        elif version == "3.8":
-            branch = "3.8"
-        elif version == "devel":
-            branch = "devel"
+    if not BRANCH:
+        if VERSION == "3.4":
+            BRANCH = "3.4"
+        elif VERSION == "3.5":
+            BRANCH = "3.5"
+        elif VERSION == "3.6":
+            BRANCH = "3.6"
+        elif VERSION == "3.7":
+            BRANCH = "3.7"
+        elif VERSION == "3.8":
+            BRANCH = "3.8"
+        elif VERSION == "devel":
+            BRANCH = "devel"
 
-    date = current_date
+    date = CURRENT_DATE
 
     if not date:
         date = dt_parser.parse(row[1])
@@ -122,10 +143,10 @@ def simple_performance(row):
             "size": size
         },
         "configuration": {
-            "version": version,
-            "branch": branch,
-            "mode": mode,
-            "edition": edition
+            "version": VERSION,
+            "branch": BRANCH,
+            "mode": MODE,
+            "edition": EDITION
         },
         "isoDate": date.isoformat(),
         "date": date.timestamp(),
@@ -133,10 +154,11 @@ def simple_performance(row):
     }))
 
 def simple_performance_cluster(row):
-    global version, current_date, branch, mode, edition
+    """ convert the simple performance cluster to json"""
+    global VERSION, CURRENT_DATE, BRANCH, MODE, EDITION
 
     count = row[7]
-    date = current_date
+    date = CURRENT_DATE
     name = row[0]
     number_runs = row[8]
     size = row[9]
@@ -157,10 +179,10 @@ def simple_performance_cluster(row):
             "size": size
         },
         "configuration": {
-            "version": version,
-            "branch": branch,
-            "mode": mode,
-            "edition": edition
+            "version": VERSION,
+            "branch": BRANCH,
+            "mode": MODE,
+            "edition": EDITION
         },
         "isoDate": date.isoformat(),
         "date": date.timestamp(),
@@ -168,19 +190,21 @@ def simple_performance_cluster(row):
     }))
 
 def ddl_performance_cluster(rownum, row):
-    global version, current_date, branch, mode, edition, headline, values, options
+    """ convert the DDL-CSV to json """
+    global VERSION, CURRENT_DATE, BRANCH, MODE
+    global EDITION, HEADLINE, VALUES, OPTIONS
 
     if rownum == 0:
-        headline = row
-        for header in headline:
-            values[header] = []
+        HEADLINE = row
+        for header in HEADLINE:
+            VALUES[header] = []
     elif rownum == -1:
-        count = len(values[headline[0]])
-        number_runs = len(values[headline[0]])
-        date = current_date
+        count = len(VALUES[HEADLINE[0]])
+        number_runs = len(VALUES[HEADLINE[0]])
+        date = CURRENT_DATE
 
         i = 1
-        total_list = values[headline[1]]
+        total_list = VALUES[HEADLINE[1]]
         count_monotonic = 0
         while i < len(total_list):
             if total_list[i] >= total_list[i-1]:
@@ -193,60 +217,59 @@ def ddl_performance_cluster(rownum, row):
             "monotonicity": count_monotonic / len(total_list),
             "size": {
                 "count": count,
-                "collectionCount": options.collections_per_database,
-                "indexesPercollection": options.indexes_per_collection,
-                "numberOfShards": options.no_shards,
-                "replicationFactor": options.replication_factor
+                "collectionCount": OPTIONS.collections_per_database,
+                "indexesPercollection": OPTIONS.indexes_per_collection,
+                "numberOfShards": OPTIONS.no_shards,
+                "replicationFactor": OPTIONS.replication_factor
             },
             "configuration": {
-                "version": version,
-                "branch": branch,
-                "mode": mode,
-                "edition": edition
+                "version": VERSION,
+                "branch": BRANCH,
+                "mode": MODE,
+                "edition": EDITION
             },
             "isoDate": date.isoformat(),
             "date": date.timestamp(),
             "ms": 1000 * date.timestamp()
         }
 
-            
         i = 1
-        while i < len(headline):
-            result['test'][headline[i]] = {
-                "average": statistics.fmean(values[headline[i]]),
-                "median": statistics.median(values[headline[i]]),
-                "min": min(values[headline[i]]),
-                "max": max(values[headline[i]]),
+        while i < len(HEADLINE):
+            result['test'][HEADLINE[i]] = {
+                "average": statistics.fmean(VALUES[HEADLINE[i]]),
+                "median": statistics.median(VALUES[HEADLINE[i]]),
+                "min": min(VALUES[HEADLINE[i]]),
+                "max": max(VALUES[HEADLINE[i]]),
                 "deviation": {
-                    "pst": statistics.pstdev(values[headline[i]]),
-                    "pvariance": statistics.pvariance(values[headline[i]]),
-                    "stdev": statistics.stdev(values[headline[i]]),
-                    "variance": statistics.variance(values[headline[i]])
+                    "pst": statistics.pstdev(VALUES[HEADLINE[i]]),
+                    "pvariance": statistics.pvariance(VALUES[HEADLINE[i]]),
+                    "stdev": statistics.stdev(VALUES[HEADLINE[i]]),
+                    "variance": statistics.variance(VALUES[HEADLINE[i]])
                 },
-                "values": values[headline[i]],
+                "values": VALUES[HEADLINE[i]],
                 "numberRuns": number_runs
             }
             i += 1
-        
+
         print(json.dumps(result))
     else:
         i = 0
-        while i < len(headline):
-            values[headline[i]].append(float(row[i]))
+        while i < len(HEADLINE):
+            VALUES[HEADLINE[i]].append(float(row[i]))
             i += 1
-        
-with open(options.filename) as csvfile:
-    lines = csv.reader(csvfile, delimiter=',', quotechar='|')
-    i = 0;
-    for row in lines:
-        if input_type == "simple-performance":
-            simple_performance(row)
-        elif input_type == "simple-performance-cluster":
-            simple_performance_cluster(row)
-        elif input_type == "ddl-performance-cluster":
-            ddl_performance_cluster(i, row)
+
+with open(OPTIONS.filename) as csvfile:
+    CSV_LINES = csv.reader(csvfile, delimiter=',', quotechar='|')
+    ROW_NUM = 0
+    for row_data in CSV_LINES:
+        if INPUT_TYPE == "simple-performance":
+            simple_performance(row_data)
+        elif INPUT_TYPE == "simple-performance-cluster":
+            simple_performance_cluster(row_data)
+        elif INPUT_TYPE == "ddl-performance-cluster":
+            ddl_performance_cluster(ROW_NUM, row_data)
         else:
-            print("unknown output format '%s'" % (input_type))
-        i += 1
-    if input_type == "ddl-performance-cluster":
+            print("unknown output format '%s'" % (INPUT_TYPE))
+        ROW_NUM += 1
+    if INPUT_TYPE == "ddl-performance-cluster":
         ddl_performance_cluster(-1, [])
