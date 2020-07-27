@@ -1,6 +1,7 @@
 import csv
 import json
 import datetime as dt
+import statistics
 
 from dateutil import parser as dt_parser
 from optparse import OptionParser
@@ -17,9 +18,16 @@ parser.add_option("-e", "--edition", dest="edition", help="community or enterpri
 parser.add_option("-s", "--size", dest="size", help="tiny, small, medium, big", metavar="SIZE")
 parser.add_option("-F", "--type", dest="input_type", help="input format", metavar="TYPE")
 
+parser.add_option("--collectionsPerDatabase", dest="collections_per_database", help="number of collections created in each iteration", metavar="COL_PER_DB")
+parser.add_option("--indexesPerCollection", dest="indexes_per_collection", help="number of indices per collection to be created", metavar="IDX_PER_COL")
+parser.add_option("--numberOfShards", dest="no_shards", help="number of shards created on each collection", metavar="NO_SHARDS")
+parser.add_option("--replicationFactor", dest="replication_factor", help="replication factor on these collections", metavar="REPL_FACTOR")
+
 (options, args) = parser.parse_args()
 
 current_date = None
+headline = []
+values = {}
 
 if options.date:
         current_date = dt_parser.parse(options.date)
@@ -159,12 +167,86 @@ def simple_performance_cluster(row):
                 "ms": 1000 * date.timestamp()
         }))
 
+def ddl_performance_cluster(rownum, row):
+        global version, current_date, branch, mode, edition, headline, values, options
+
+        if rownum == 0:
+                headline = row
+                for header in headline:
+                        values[header] = []
+        elif rownum == -1:
+                count = len(values[headline[0]])
+                number_runs = len(values[headline[0]])
+                date = current_date
+
+                i = 1
+                total_list = values[headline[1]]
+                count_monotonic = 0
+                while i < len(total_list):
+                        if total_list[i] >= total_list[i-1]:
+                                count_monotonic += 1
+                        i += 1
+                result = {
+                        "test": {
+                                "name": "ddl"
+                        },
+                        "monotonicity": count_monotonic / len(total_list),
+                        "size": {
+                                "count": count,
+                                "collectionCount": options.collections_per_database,
+                                "indexesPercollection": options.indexes_per_collection,
+                                "numberOfShards": options.no_shards,
+                                "replicationFactor": options.replication_factor
+                        },
+                        "configuration": {
+                                "version": version,
+                                "branch": branch,
+                                "mode": mode,
+                                "edition": edition
+                        },
+                        "isoDate": date.isoformat(),
+                        "date": date.timestamp(),
+                        "ms": 1000 * date.timestamp()
+                }
+
+                        
+                i = 1
+                while i < len(headline):
+                        result['test'][headline[i]] = {
+                                "average": statistics.fmean(values[headline[i]]),
+                                "median": statistics.median(values[headline[i]]),
+                                "min": min(values[headline[i]]),
+                                "max": max(values[headline[i]]),
+                                "deviation": {
+                                        "pst": statistics.pstdev(values[headline[i]]),
+                                        "pvariance": statistics.pvariance(values[headline[i]]),
+                                        "stdev": statistics.stdev(values[headline[i]]),
+                                        "variance": statistics.variance(values[headline[i]])
+                                },
+                                "values": values[headline[i]],
+                                "numberRuns": number_runs
+                        }
+                        i += 1
+                
+                print(json.dumps(result))
+        else:
+                i = 0
+                while i < len(headline):
+                        values[headline[i]].append(float(row[i]))
+                        i += 1
+                
 with open(options.filename) as csvfile:
         lines = csv.reader(csvfile, delimiter=',', quotechar='|')
+        i = 0;
         for row in lines:
                 if input_type == "simple-performance":
                         simple_performance(row)
                 elif input_type == "simple-performance-cluster":
                         simple_performance_cluster(row)
+                elif input_type == "ddl-performance-cluster":
+                        ddl_performance_cluster(i, row)
                 else:
                         print("unknown output format '%s'" % (input_type))
+                i += 1
+        if input_type == "ddl-performance-cluster":
+                ddl_performance_cluster(-1, [])
