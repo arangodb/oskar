@@ -206,7 +206,7 @@ def ddl_performance_cluster(rownum, row):
                                         "pst": statistics.pstdev(values[headline[i]]),
                                         "pvariance": statistics.pvariance(values[headline[i]]),
                                         "stdev": statistics.stdev(values[headline[i]]),
-                                        "variance": (values[headline[i]])
+                                        "variance": statistics.variance(values[headline[i]])
                                 },
                                 "values": values[headline[i]],
                                 "numberRuns": number_runs
