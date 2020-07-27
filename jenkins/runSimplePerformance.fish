@@ -4,7 +4,6 @@ source jenkins/helper/jenkins.fish
 set -xg simple (pwd)/performance
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
-set -xg dest /mnt/buildfiles/performance/Linux/Simple/RAW
 
 if test -z "$ARANGODB_TEST_CONFIG"
   set -xg ARANGODB_TEST_CONFIG run-small-edges.js
@@ -59,13 +58,6 @@ end
 
 set -l s $status
 set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
-set -l filename $dest/results-$resultname-$datetime.csv
-
-echo "storing results in $filename"
-awk "{print \"$ARANGODB_BRANCH,$date,\" \$0}" \
-  < $simple/results.csv \
-  > $filename
-
 set -l localname work/results.csv
 
 echo "storing results in $localname"
