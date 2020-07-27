@@ -39,7 +39,7 @@ and if test -z "$DOCKER_IMAGE"
     --javascript.module-directory `pwd` \
     --log.foreground-tty \
     /data/database \
-    --javascript.script simple/$ARANGODB_TEST_CONFIG"
+    --javascript.script $ARANGODB_TEST_CONFIG"
 else
   docker run \
     -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
@@ -53,7 +53,7 @@ else
     --javascript.module-directory `pwd` \
     --log.foreground-tty \
     /data/database \
-    --javascript.script simple/$ARANGODB_TEST_CONFIG"
+    --javascript.script $ARANGODB_TEST_CONFIG"
 end
 
 set -l s $status
