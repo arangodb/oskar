@@ -14,10 +14,10 @@ if count $src/results-*.csv > /dev/null
     | awk -F/ '{key = substr($NF,9,length($NF)-16); if (a[key] != 1) print $0; a[key] = 1 }' | sort)
 
   if test -z "$DAYS_AGO"
-    cat $csvfiles > $results
+    awk -F, '{$2 = substr($2,1,8); print $0;}' $csvfiles > $results
     set dst /mnt/userfiles/SL/performance/$PERF_OUT/ALL
   else
-    cat $csvfiles | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") '$2 >= start {print $0}' > $results
+    cat $csvfiles | awk -F, -v start=(date "+%Y%m%d" -d "$DAYS_AGO days ago") 'substr($2,1,8) >= start {$2 = substr($2,1,8); print $0}' > $results
     set dst /mnt/userfiles/SL/performance/$PERF_OUT/$DAYS_AGO
   end
 
