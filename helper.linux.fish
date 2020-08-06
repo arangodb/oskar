@@ -745,29 +745,34 @@ function buildDockerRelease
   # latest tag
   set -l IMAGE_NAME3 ""
 
-  if test "$ENTERPRISEEDITION" = "On"
-    if test "$RELEASE_TYPE" = "stable"
-      set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
-    else
-      set IMAGE_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
-    end
-
-    set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
-
-    if test "$RELEASE_IS_HEAD" = "true"
-      set IMAGE_NAME3 arangodb/enterprise-preview:latest
-    end
+  if echo "$DOCKER_TAG" | fgrep -q :
+     set IMAGE_NAME1 $DOCKER_TAG
+     set IMAGE_NAME2 $DOCKER_TAG
   else
-    if test "$RELEASE_TYPE" = "stable"
-      set IMAGE_NAME1 arangodb/arangodb:$DOCKER_TAG
+    if test "$ENTERPRISEEDITION" = "On"
+      if test "$RELEASE_TYPE" = "stable"
+        set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
+      else
+        set IMAGE_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
+      end
+
+      set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
+
+      if test "$RELEASE_IS_HEAD" = "true"
+        set IMAGE_NAME3 arangodb/enterprise-preview:latest
+      end
     else
-      set IMAGE_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
-    end
+      if test "$RELEASE_TYPE" = "stable"
+        set IMAGE_NAME1 arangodb/arangodb:$DOCKER_TAG
+      else
+        set IMAGE_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
+      end
 
-    set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
+      set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
 
-    if test "$RELEASE_IS_HEAD" = "true"
-      set IMAGE_NAME3 arangodb/arangodb-preview:latest
+      if test "$RELEASE_IS_HEAD" = "true"
+        set IMAGE_NAME3 arangodb/arangodb-preview:latest
+      end
     end
   end
 
