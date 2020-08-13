@@ -36,6 +36,12 @@ Package: arangodb3-dbg
 Architecture: amd64
 Section: debug
 Priority: extra
+Conflicts:
+    arangodb3e,
+    arangodb3e-client,
+    arangodb3e-dbg,
+    arangodb3 (< ${binary:Version}),
+    arangodb3 (> ${binary:Version})
 Depends:
     arangodb3 (= ${binary:Version}),
     ${misc:Depends}
