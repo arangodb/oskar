@@ -43,7 +43,7 @@ Conflicts:
     arangodb3 (< ${binary:Version}),
     arangodb3 (> ${binary:Version})
 Depends:
-    arangodb3 (= ${binary:Version}),
+    arangodb3 (= ${binary:Version}) | arangodb3-client (= ${binary:Version}),
     ${misc:Depends}
 Description: debugging symbols for arangodb
  A distributed free and open-source database with a flexible data model for documents,
