@@ -40,10 +40,10 @@ Conflicts:
     arangodb3e,
     arangodb3e-client,
     arangodb3e-dbg,
-    arangodb3 (< ${binary:Version}),
-    arangodb3 (> ${binary:Version}),
-    arangodb3-client (< ${binary:Version}),
-    arangodb3-client (> ${binary:Version})
+    arangodb3 (<< ${binary:Version}),
+    arangodb3 (>> ${binary:Version}),
+    arangodb3-client (<< ${binary:Version}),
+    arangodb3-client (>> ${binary:Version})
 Depends:
     arangodb3 (= ${binary:Version}) | arangodb3-client (= ${binary:Version}),
     ${misc:Depends}
