@@ -44,7 +44,7 @@ Conflicts:
     arangodb3e (>> ${binary:Version}),
     arangodb3e-client (<< ${binary:Version}),
     arangodb3e-client (>> ${binary:Version})
-Depends:
+Pre-Depends:$
     arangodb3e (= ${binary:Version}) | arangodb3e-client (= ${binary:Version}),
     ${misc:Depends}
 Description: debugging symbols for arangodb
