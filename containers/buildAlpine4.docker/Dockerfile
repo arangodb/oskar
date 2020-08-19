@@ -2,7 +2,8 @@ FROM alpine:3.12
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 RUN apk update && \
-    apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool g++
+    apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool && \
+    apk add g++ --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
 
 COPY ./tools/install-poll.sh /tools/
 RUN /tools/install-poll.sh
