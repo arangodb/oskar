@@ -22,6 +22,8 @@ LABEL name="$name" \
 
 ADD ./LICENSE /licenses/LICENSE
 
+ENV GLIBCXX_FORCE_NEW=1
+
 RUN microdnf install gpg wget binutils && \
     curl -L -O http://mirror.centos.org/centos/8/BaseOS/x86_64/os/Packages/numactl-libs-2.0.12-9.el8.x86_64.rpm && \
     rpm -i numactl-libs-2.0.12-9.el8.x86_64.rpm && \

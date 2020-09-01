@@ -22,6 +22,8 @@ LABEL name="$name" \
 
 ADD ./LICENSE /licenses/LICENSE
 
+ENV GLIBCXX_FORCE_NEW=1
+
 RUN microdnf install gpg nodejs wget binutils && \
     npm install -g foxx-cli && \
     rm -rf /root/.npm && \
