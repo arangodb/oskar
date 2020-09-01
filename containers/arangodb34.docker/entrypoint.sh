@@ -6,7 +6,6 @@ if [ -z "$ARANGO_INIT_PORT" ] ; then
 fi
 
 AUTHENTICATION="true"
-export GLIBCXX_FORCE_NEW=1
 
 # if command starts with an option, prepend arangod
 case "$1" in
