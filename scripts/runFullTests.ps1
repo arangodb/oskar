@@ -77,6 +77,7 @@ Function global:registerSingleTests()
     registerTest -testname "endpoints"
     registerTest -testname "export"
     registerTest -testname "foxx_manager"
+    registerTest -testname "fuerte"
     registerTest -testname "communication"
     registerTest -testname "communication_ssl"
     registerTest -testname "http_replication" -weight 2
