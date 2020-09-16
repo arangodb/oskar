@@ -8,7 +8,7 @@ If(-Not($ENV:WORKSPACE))
 
 If(-Not($ENV:OSKAR_BRANCH))
 {
-    $ENV:OSKAR_BRANCH = "master"
+    $ENV:OSKAR_BRANCH = "main"
 }
 
 If(-Not(Test-Path -PathType Container -Path "work"))
