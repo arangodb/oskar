@@ -61,6 +61,7 @@ Function global:registerSingleTests()
     registerTest -testname "dump_multiple"
     registerTest -testname "dump_encrypted"
     registerTest -testname "endpoints"
+    registerTest -testname "fuerte"
     registerTest -testname "http_replication" -weight 2
     registerTest -testname "http_server" -sniff true
     registerTest -testname "ssl_server"
