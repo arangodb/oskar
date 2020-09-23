@@ -1343,6 +1343,31 @@ function interactiveContainer
 end
 
 ## #############################################################################
+## build rclone
+## #############################################################################
+
+function buildRclone
+  pushd $WORKDIR
+  if test (count $argv) != 1
+    popd
+    echo "buildRclone: expecting version (ie, v1.51.0)"
+    return 1
+  end
+
+  rm -rf rclone/$argv[1]
+  mkdir rclone/$argv[1]
+
+  docker run \
+    -v (pwd)/scripts:/scripts \
+    -v (pwd)/rclone/$argv[1]:/data \
+    -e RCLONE_VERSION=$argv[1] \
+    -it \
+    golang:1.15.2 \
+    bash -c /scripts/buildRclone.bash
+  and popd
+end
+
+## #############################################################################
 ## helper functions
 ## #############################################################################
 
