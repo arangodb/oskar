@@ -1007,7 +1007,7 @@ Function copyRclone
         return
     }
     Write-Host "Copying rclone from rclone\rclone-arangodb-windows.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."
-    Copy-Item ("$global:WORKDIR\rclone\" + $(Get-Content "$global:WORKDIR\rclone\rclone-arangodb-windows.exe")) -Destination "C:\qa\rclone-arangodb.exe"
+    Copy-Item ("$global:WORKDIR\rclone\" + $(Get-Content "$global:WORKDIR\rclone\rclone-arangodb-windows.exe")) -Destination "$global:ARANGODIR\build\rclone-arangodb.exe"
 }
 
 ################################################################################
