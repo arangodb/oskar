@@ -125,6 +125,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "http_server" -sniff true
+    registerTest -cluster $true -testname "restart"
     registerTest -cluster $true -testname "server_secrets"
     registerTest -cluster $true -testname "server_permissions"
     registerTest -cluster $true -testname "server_parameters"
