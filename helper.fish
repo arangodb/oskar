@@ -488,10 +488,12 @@ function buildTarGzPackageHelper
   end
 
   pushd $WORKDIR/work/ArangoDB/build/install
-  and rm -rf bin
+  and rm -rf bin sbin
   and cp -a $WORKDIR/binForTarGz bin
   and rm -f "bin/*~" "bin/*.bak"
   and mv bin/README .
+  and mkdir sbin
+  and mv bin/arangod sbin
   and strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
