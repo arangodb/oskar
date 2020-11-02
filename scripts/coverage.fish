@@ -49,7 +49,8 @@ and gcovr --root /work/ArangoDB \
         -e /work/ArangoDB/tests \
         -e include/jemalloc/internal \
         -o coverage/coverage.xml \
-        /work/combined/result
+        --print-summary \
+        /work/combined/result > /work/coverage/summary.txt
 and cat coverage/coverage.xml \
       | sed -e "s:filename=\":filename=\"./coverage/:g" \
       > coverage/coverage.xml.tmp
