@@ -16,6 +16,7 @@ and begin
 
   enterprise
   and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DTARGET_ARCHITECTURE=westmere
+  and ./build/bin/arangod --version > $WORKDIR/work/version-enterprise.txt
   and showConfig
 
   and begin
@@ -26,6 +27,7 @@ and begin
 
   and community
   and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DTARGET_ARCHITECTURE=westmere
+  and ./build/bin/arangod --version > $WORKDIR/work/version-community.txt
   and showConfig 
 
   and begin
