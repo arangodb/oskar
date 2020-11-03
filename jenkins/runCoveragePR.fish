@@ -37,6 +37,8 @@ and begin
   end
 
   collectCoverage
+  and mv $WORKDIR/work/version-enterprise.txt $WORKDIR/work/coverage/version-enterprise.txt
+  and mv $WORKDIR/work/version-community.txt $WORKDIR/work/coverage/version-community.txt
   or set s $status
 end
 or set s $status

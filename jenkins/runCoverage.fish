@@ -27,6 +27,7 @@ and begin
   cluster    ; oskarFull ; or set s $status
 
   collectCoverage
+  and mv $WORKDIR/work/version.txt $WORKDIR/work/coverage/version.txt
   or set s $status
 end
 or set s $status
