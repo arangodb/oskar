@@ -257,7 +257,10 @@ def ddl_performance_cluster(rownum, row):
             i += 1
         
 def coverage(lines):
+    global version, current_date, branch
+
     result = {}
+    date = current_date
 
     for line in lines:
         s = line.strip()
@@ -272,7 +275,10 @@ def coverage(lines):
         "configuration": {
             "version": version,
             "branch": branch
-        }
+        },
+        "isoDate": date.isoformat(),
+        "date": date.timestamp(),
+        "ms": 1000 * date.timestamp()
     }))
 
 
