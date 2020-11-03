@@ -1,6 +1,7 @@
 import csv
 import json
 import datetime as dt
+import re
 import statistics
 
 from dateutil import parser as dt_parser
@@ -9,6 +10,7 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-f", "--file", dest="filename", help="input file", metavar="FILE")
 parser.add_option("-V", "--version-file", dest="version_filename", help="version file", metavar="FILE")
+parser.add_option("-T", "--version-text", dest="version_textname", help="version text file", metavar="FILE")
 parser.add_option("-w", "--force-version", dest="version", help="version", metavar="VERSION")
 parser.add_option("-d", "--date", dest="date", help="iso date", metavar="DATE")
 parser.add_option("-b", "--branch", dest="branch", help="branch", metavar="BRANCH")
@@ -40,6 +42,7 @@ mode = options.mode
 edition = options.edition
 default_size = options.size
 version_filename = options.version_filename
+version_textname = options.version_textname
 version = options.version
 input_type = options.input_type
 
@@ -56,6 +59,24 @@ if version_filename:
 
     if not version:
         version = j['version']
+
+if version_textname:
+    with open(version_textname) as textfile:
+        c = 0
+        for line in textfile.readlines():
+            c += 1
+            s = line.strip()
+
+            if c == 1:
+                if not version:
+                    version = s
+            else:
+                m = re.search('(license):\W*(.+)$', s)
+
+                if m:
+                    if m.group(1):
+                        if not edition:
+                            edition = m.group(2)
 
 if not version:
     if name:
@@ -235,18 +256,42 @@ def ddl_performance_cluster(rownum, row):
             values[headline[i]].append(float(row[i]))
             i += 1
         
-with open(options.filename) as csvfile:
-    lines = csv.reader(csvfile, delimiter=',', quotechar='|')
-    i = 0;
-    for row in lines:
-        if input_type == "simple-performance":
-            simple_performance(row)
-        elif input_type == "simple-performance-cluster":
-            simple_performance_cluster(row)
-        elif input_type == "ddl-performance-cluster":
-            ddl_performance_cluster(i, row)
-        else:
-            print("unknown output format '%s'" % (input_type))
-        i += 1
-    if input_type == "ddl-performance-cluster":
-        ddl_performance_cluster(-1, [])
+def coverage(lines):
+    result = {}
+
+    for line in lines:
+        s = line.strip()
+
+        m = re.search('(lines|branches):\W*([0-9\.]+)%', s)
+
+        if m:
+            result[m.group(1)] = m.group(2)
+
+    print(json.dumps({
+        "coverage": result,
+        "configuration": {
+            "version": version,
+            "branch": branch
+        }
+    }))
+
+
+if input_type == "coverage":
+    with open(options.filename) as textfile:
+        coverage(textfile.readlines())
+else:
+    with open(options.filename) as csvfile:
+        lines = csv.reader(csvfile, delimiter=',', quotechar='|')
+        i = 0;
+        for row in lines:
+            if input_type == "simple-performance":
+                simple_performance(row)
+            elif input_type == "simple-performance-cluster":
+                simple_performance_cluster(row)
+            elif input_type == "ddl-performance-cluster":
+                ddl_performance_cluster(i, row)
+            else:
+                print("unknown output format '%s'" % (input_type))
+            i += 1
+        if input_type == "ddl-performance-cluster":
+            ddl_performance_cluster(-1, [])
