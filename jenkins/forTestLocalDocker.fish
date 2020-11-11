@@ -34,7 +34,7 @@ and buildDockerLocal | tee ./buildDocker.log; and grep -oP "Successfully built \
 
 if test $status -ne 0
   echo Production of Community image failed, giving up...
-  exit 1
+  moveResultsToWorkspace; exit 1
 end
 
 enterprise
@@ -47,6 +47,6 @@ and buildDockerLocal | tee ./buildDocker.log; and grep -oP "Successfully built \
 
 if test $status -ne 0
   echo Production of Enterprise image failed, giving up...
-  exit 1
+  moveResultsToWorkspace; exit 1
 end
 

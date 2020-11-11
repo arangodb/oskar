@@ -31,7 +31,7 @@ and begin
   and showConfig 
 
   and begin
-    mmfiles
+    rocksdb
     cluster ; oskar ; or set s $status
     single  ; oskar ; or set s $status
   end

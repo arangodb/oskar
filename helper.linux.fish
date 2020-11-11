@@ -6,20 +6,20 @@ set -gx PLATFORM linux
 set -gx ARCH (uname -m)
 
 set -gx UBUNTUBUILDIMAGE_NAME arangodb/ubuntubuildarangodb-$ARCH
-set -gx UBUNTUBUILDIMAGE_TAG 2
+set -gx UBUNTUBUILDIMAGE_TAG 3
 set -gx UBUNTUBUILDIMAGE $UBUNTUBUILDIMAGE_NAME:$UBUNTUBUILDIMAGE_TAG
 
 set -gx UBUNTUBUILDIMAGE2_NAME arangodb/ubuntubuildarangodb2-$ARCH
-set -gx UBUNTUBUILDIMAGE2_TAG 2
+set -gx UBUNTUBUILDIMAGE2_TAG 3
 set -gx UBUNTUBUILDIMAGE2 $UBUNTUBUILDIMAGE2_NAME:$UBUNTUBUILDIMAGE2_TAG
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 2
+set -gx UBUNTUBUILDIMAGE3_TAG 3
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 2
-set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
+set -gx UBUNTUBUILDIMAGE4_TAG 3
+set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
@@ -496,7 +496,7 @@ function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
 
-  runInContainer (findBuildImage) /scripts/coverage.fish
+  runInContainer (findStaticBuildImage) /scripts/coverage.fish
   return $status
 end
 

@@ -13,7 +13,6 @@ and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and set -gx NOSTRIP 1
 and showConfig
 and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DTARGET_ARCHITECTURE=westmere
-and eval $WORKDIR/work/ArangoDB/build/bin/arangod --version > $WORKDIR/work/version.txt
 and begin
   rm -rf $WORKDIR/work/gcov.old
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
@@ -22,12 +21,7 @@ and begin
   single     ; oskarFull ; or set s $status
   cluster    ; oskarFull ; or set s $status
 
-  mmfiles
-  single     ; oskarFull ; or set s $status
-  cluster    ; oskarFull ; or set s $status
-
   collectCoverage
-  and mv $WORKDIR/work/version.txt $WORKDIR/work/coverage/version.txt
   or set s $status
 end
 or set s $status
