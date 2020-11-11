@@ -87,6 +87,7 @@ function runAnyTest
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
       --coreCheck true \
+      $ADDITIONAL_OPTIONS \
       $argv
 
     echo (pwd) "-" scripts/unittest $arguments

@@ -2,6 +2,8 @@
 set -g SCRIPTS (dirname (status -f))
 source $SCRIPTS/lib/tests.fish
 
+set -xg ADDITIONAL_OPTIONS $argv
+
 ################################################################################
 ## Single tests: runtime,command
 ################################################################################
