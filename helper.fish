@@ -1575,7 +1575,12 @@ function moveResultsToWorkspace
       end
     end
 
-    if test -d "$WORKDIR/work/coverage"
+    if test -d $WORKDIR/work/coverage
+      if test -d $WORKSPACE/coverage
+        rm -rf $WORKSPACE/coverage.old
+	mv $WORKSPACE/coverage $WORKSPACE/coverage.old
+      end
+
       echo "mv coverage"
       mv $WORKDIR/work/coverage $WORKSPACE
     end
