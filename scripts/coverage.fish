@@ -41,7 +41,7 @@ and tar x -f /tmp/gcno.tar -C /work/combined/result
 and rm -rf coverage
 and mkdir coverage
 and mkdir coverage/enterprise
-and gcovr --root /work/ArangoDB \
+and gcovr --exclude-throw-branches --root /work/ArangoDB \
         -x \
         -e /work/ArangoDB/build \
         -e /work/ArangoDB/3rdParty \
