@@ -15,7 +15,7 @@ RUN curl -L https://github.com/mozilla/sccache/releases/download/0.2.12/sccache-
 
 COPY ./tools/* /tools/
 
-RUN [ "/tools/install.sh", "1.1.1", "g" ]
+RUN [ "/tools/install.sh", "1.1.1", "h" ]
 
 COPY ./scripts /scripts
 
