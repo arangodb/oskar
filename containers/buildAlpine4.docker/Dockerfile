@@ -3,7 +3,7 @@ MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 RUN apk update && \
     apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool && \
-    apk add g++ --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
+    apk add g++ --repository=http://dl-cdn.alpinelinux.org/alpine/v3.12/main
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
