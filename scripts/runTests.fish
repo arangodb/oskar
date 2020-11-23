@@ -186,6 +186,7 @@ cd $INNERWORKDIR/ArangoDB
 
 if test "$ASAN" = "On"
   ulimit -c 0
+  ulimit -s 16384
 else
   ulimit -c unlimited
 end
