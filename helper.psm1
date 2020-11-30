@@ -21,25 +21,26 @@ $global:TSHARK = ((Get-ChildItem -ErrorAction SilentlyContinue -Recurse "${env:P
 If(-Not($global:TSHARK))
 {
     Write-Host "failed to locate TSHARK"
-    Exit 1
-}
-
-If((Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
-{
-    $global:dumpDevice = $Matches[1]
-    if ($global:dumpDevice -notmatch '\d+') {
-        Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
-        Invoke-Expression $global:TSHARK -D
-        Exit 1
-    }
-    Else {
-        $global:TSHARK = $global:TSHARK -replace '` ', ' '
-    }
 }
 Else
 {
-    Write-Host "failed to get loopbackdevice - check NCAP Driver installation"
-    Exit 1
+    If((Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
+    {
+        $global:dumpDevice = $Matches[1]
+        if ($global:dumpDevice -notmatch '\d+') {
+            Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
+            Invoke-Expression $global:TSHARK -D
+            Exit 1
+        }
+        Else {
+            $global:TSHARK = $global:TSHARK -replace '` ', ' '
+        }
+    }
+    Else
+    {
+        Write-Host "failed to get loopbackdevice - check NCAP Driver installation"
+        $global:TSHARK = ""
+  }
 }
 
 $global:HANDLE_EXE = $null
