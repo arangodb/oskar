@@ -195,6 +195,7 @@ set CT "$CT""250,runClusterTest1 dump_maskings - --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 dump_multiple - --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 dump_encrypted - --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 hot_backup -\n"
+set ST "$CT""250,runClusterTest1 arangobench  -\n"
 
 set -g CTS (echo -e $CT | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g CTL (count $CTS)

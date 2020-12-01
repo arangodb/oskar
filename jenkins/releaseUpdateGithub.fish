@@ -7,7 +7,7 @@ if test -z "$RELEASE_TAG"
 end
 
 if test "$RELEASE_TYPE" = "stable"
-  set -g GIT_BRANCH master
+  set -g GIT_BRANCH main
 else if test "$RELEASE_TYPE" = "preview"
   set -g GIT_BRANCH unstable
 else
