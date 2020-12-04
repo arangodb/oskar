@@ -6,7 +6,8 @@ if test -d /mirror/upgrade-data-tests.git
 end
 
 cd $INNERWORKDIR/ArangoDB
-if test -d upgrade-data-tests
+and git config --global http.postBuffer 524288000
+and if test -d upgrade-data-tests
   cd upgrade-data-tests
   and test -d .git
   and git rev-parse --is-inside-work-tree 1>/dev/null 2>1

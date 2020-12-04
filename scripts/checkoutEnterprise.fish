@@ -7,6 +7,7 @@ end
 
 eval $SCRIPTSDIR/checkoutArangoDB.fish
 and cd $INNERWORKDIR/ArangoDB
+and git config --global http.postBuffer 524288000
 and if test ! -d enterprise/.git
   rm -rf enterprise
 end

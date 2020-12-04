@@ -6,6 +6,7 @@ if test -d /mirror/ArangoDB.git
 end
 
 cd $INNERWORKDIR
+and git config --global http.postBuffer 524288000
 and if test ! -d ArangoDB/.git
   rm -rf ArangoDB
 end
