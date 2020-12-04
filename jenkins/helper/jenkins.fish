@@ -15,10 +15,13 @@ function prepareOskar
   mkdir -p "$HOME/$NODE_NAME" ; cd "$HOME/$NODE_NAME"
 
   if not cd $OSKAR ^ /dev/null 
+    echo clone --progress  -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR
     git clone --progress  -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR ; and cd $OSKAR
   else
+    echo git checkout $OSKAR_BRANCH
     git fetch --tags ; and git fetch ; and git reset --hard ; and git checkout $OSKAR_BRANCH ; and git reset --hard origin/$OSKAR_BRANCH
   end
+  and echo "oskar updated"
   and source helper.fish
   if test $status -ne 0 ; echo Did not find oskar and helpers ; exit 1 ; end
 
