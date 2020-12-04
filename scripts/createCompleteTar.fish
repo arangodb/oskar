@@ -12,7 +12,7 @@ set -g STARTER_REV "unknown"
 function checkoutCommunity
   echo "Checkout ArangoDB Community $RELEASE_TAG"
   pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch $RELEASE_TAG git@github.com:arangodb/arangodb ArangoDB-$RELEASE_TAG
+  and git clone --progress --single-branch --branch $RELEASE_TAG ssh://git@github.com/arangodb/arangodb ArangoDB-$RELEASE_TAG
   and eval "set "(grep SYNCER_REV ArangoDB-$RELEASE_TAG/VERSIONS)
   and eval "set "(grep STARTER_REV ArangoDB-$RELEASE_TAG/VERSIONS)
   or begin popd; return 1; end
@@ -22,7 +22,7 @@ end
 function checkoutEnterprise
   echo "Checkout ArangoDB Enterprise $RELEASE_TAG"
   pushd $INNERWORKDIR/CompleteTar/ArangoDB-$RELEASE_TAG
-  and git clone --progress --single-branch --branch $RELEASE_TAG git@github.com:arangodb/enterprise enterprise
+  and git clone --progress --single-branch --branch $RELEASE_TAG ssh://git@github.com/arangodb/enterprise enterprise
   or begin popd; return 1; end
   popd
 end
@@ -38,7 +38,7 @@ end
 function checkoutStarter
   echo "Checkout ArangoDB Starter $STARTER_REV"
   pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch $STARTER_REV git@github.com:arangodb-helper/arangodb Starter-$STARTER_REV
+  and git clone --progress --single-branch --branch $STARTER_REV ssh://git@github.com/arangodb-helper/arangodb Starter-$STARTER_REV
   or begin popd; return 1; end
   popd
 end
@@ -46,7 +46,7 @@ end
 function checkoutSyncer
   echo "Checkout ArangoDB Syncer $SYNCER_REV"
   pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch $SYNCER_REV git@github.com:arangodb/arangosync arangosync-$SYNCER_REV
+  and git clone --progress --single-branch --branch $SYNCER_REV ssh://git@github.com/arangodb/arangosync arangosync-$SYNCER_REV
   or begin popd; return 1; end
   popd
 end
@@ -54,7 +54,7 @@ end
 function checkoutOskar
   echo "Checkout OSKAR"
   pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch master git@github.com:arangodb/oskar
+  and git clone --progress --single-branch --branch master ssh://git@github.com/arangodb/oskar
   or begin popd; return 1; end
   popd
 end

@@ -20,8 +20,8 @@ function prepareOskar
 
   git config --global http.postBuffer 524288000
   and if not cd $OSKAR ^ /dev/null
-    echo clone --progress  -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR
-    git clone --progress  -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR ; and cd $OSKAR
+    echo clone --progress  -b $OSKAR_BRANCH ssh://git@github.com/arangodb/oskar $OSKAR
+    git clone --progress  -b $OSKAR_BRANCH ssh://git@github.com/arangodb/oskar $OSKAR ; and cd $OSKAR
   else
     echo git checkout $OSKAR_BRANCH
     git fetch --tags ; and git fetch ; and git reset --hard ; and git checkout $OSKAR_BRANCH ; and git reset --hard origin/$OSKAR_BRANCH
