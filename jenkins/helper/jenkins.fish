@@ -14,7 +14,8 @@ function prepareOskar
 
   mkdir -p "$HOME/$NODE_NAME" ; cd "$HOME/$NODE_NAME"
 
-  if not cd $OSKAR ^ /dev/null 
+  git config --global http.postBuffer 524288000
+  and if not cd $OSKAR ^ /dev/null
     echo clone --progress  -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR
     git clone --progress  -b $OSKAR_BRANCH https://github.com/arangodb/oskar $OSKAR ; and cd $OSKAR
   else
