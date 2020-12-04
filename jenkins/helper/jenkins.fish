@@ -5,9 +5,9 @@ echo Directory (pwd)
 if test -z "$IS_JENKINS" ; set -xg IS_JENKINS "true"
 else ; set -gx IS_JENKINS $IS_JENKINS ; end
 
-export GIT_TRACE_PACKET=1
-export GIT_TRACE=1
-export GIT_CURL_VERBOSE=1
+# set -xg GIT_TRACE_PACKET 1
+# set -xg GIT_TRACE 1
+# set -xg GIT_CURL_VERBOSE 1
 
 function prepareOskar
   set -xg OSKAR oskar
