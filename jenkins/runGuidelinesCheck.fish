@@ -2,10 +2,6 @@
 source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear
-and eval $EDITION
-and eval $STORAGE_ENGINE
-and eval $TEST_SUITE
-and skipGrey
 and echo ARANGODB_BRANCH: "<$ARANGODB_BRANCH>"
 and echo ENTERPRISE_BRANCH: "<$ENTERPRISE_BRANCH>"
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
