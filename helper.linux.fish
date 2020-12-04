@@ -1228,6 +1228,9 @@ function runInContainer
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
+             -e GIT_TRACE_PACKET="$GIT_TRACE_PACKET" \
+             -e GIT_TRACE="$GIT_TRACE" \
+             -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
              -e INNERWORKDIR="$INNERWORKDIR" \
              -e IONICE="$IONICE" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
