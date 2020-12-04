@@ -8,6 +8,7 @@ end
 cd $INNERWORKDIR
 and git config --global http.postBuffer 524288000
 and git config --global https.postBuffer 524288000
+and git config pull.rebase true
 and if test ! -d ArangoDB/.git
   rm -rf ArangoDB
 end
