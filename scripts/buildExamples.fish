@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+ssh -o StrictHostKeyChecking=no -T git@github.com
+
 pushd $INNERWORKDIR/ArangoDB
 and if test -d docs
   rm -rf docs

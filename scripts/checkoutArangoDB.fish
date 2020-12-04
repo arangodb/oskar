@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+ssh -o StrictHostKeyChecking=no -T git@github.com
+
 set -l mirror
 
 if test -d /mirror/ArangoDB.git

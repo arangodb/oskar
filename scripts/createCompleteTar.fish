@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+ssh -o StrictHostKeyChecking=no -T git@github.com
 
 if test (count $argv) -ne 1
     echo "usage: createCompleteTar.fish <RELEASE-TAG>"

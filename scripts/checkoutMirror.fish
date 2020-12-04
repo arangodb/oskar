@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+ssh -o StrictHostKeyChecking=no -T git@github.com
+
 cd /mirror
 and mkdir -p mirror
 and cd mirror
