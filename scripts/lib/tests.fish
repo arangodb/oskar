@@ -4,7 +4,11 @@ if test -z "$PARALLELISM"
   set -g PARALLELISM 64
 end
 
-# Turn off internal crash handler for tests that don't specify it explicitly
+if test "$ENTERPRISEEDITION" = "On"
+   set EncryptionAtRest "--encryptionAtRest true"
+end
+
+# Turn off internal crash handler for tests that don''t specify it explicitly
 # Meaningful for ArangoDB 3.7+ versions only
 set -xg ARANGODB_OVERRIDE_CRASH_HANDLER "Off"
 
