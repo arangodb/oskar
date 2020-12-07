@@ -5,7 +5,7 @@ if test -z "$PARALLELISM"
 end
 
 if test "$ENTERPRISEEDITION" = "On"
-   set EncryptionAtRest "--encryptionAtRest true"
+   set -xg EncryptionAtRest "--encryptionAtRest true"
 end
 
 # Turn off internal crash handler for tests that don''t specify it explicitly
