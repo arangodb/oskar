@@ -142,6 +142,7 @@ set CT "$CT""1500,runClusterTest1 shell_server_aql 14 --testBuckets 16/14 --dump
 set CT "$CT""1500,runClusterTest1 shell_server_aql 15 --testBuckets 16/15 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 server_http - --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 server_secrets - --dumpAgencyOnError true\n"
+set CT "$CT""1000,runClusterTest1 restart - --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 server_permissions - --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 server_parameters - --dumpAgencyOnError true\n"
 set CT "$CT""1000,runClusterTest1 ssl_server - --dumpAgencyOnError true\n"
