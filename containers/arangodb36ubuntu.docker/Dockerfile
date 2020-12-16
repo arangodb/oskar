@@ -10,7 +10,7 @@ RUN apt-get update && \
     apt-get update && \
     apt-get upgrade -y
 
-RUN apt-get install -y git libjemalloc-dev vim gdb fish sudo jq wget curl libatomic1 gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION}
+RUN apt-get install -y git libjemalloc-dev vim gdb fish sudo jq wget curl libatomic1 gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} graphviz ghostscript
 
 # only if foxx is requires
 # apt-get install -y nodejs npm && npm install -g foxx-cli && apt remove npm && apt autoremove
