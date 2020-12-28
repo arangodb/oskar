@@ -123,6 +123,10 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "resilience_transactions"
     registerTest -cluster $true -testname "resilience_sharddist"
     registerTest -cluster $true -testname "resilience_analyzers"
+    registerTest -testname "recovery" -index "0" -bucket "4/0" "arangosearch"
+    registerTest -testname "recovery" -index "1" -bucket "4/1" "arangosearch"
+    registerTest -testname "recovery" -index "2" -bucket "4/2" "arangosearch"
+    registerTest -testname "recovery" -index "3" -bucket "4/3" "arangosearch"
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "http_server" -sniff true

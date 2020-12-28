@@ -26,10 +26,10 @@ Function global:registerSingleTests()
     registerTest -testname "replication_ongoing_global_spec" -weight 2
     registerTest -testname "replication_ongoing_global" -weight 2
     registerTest -testname "replication_ongoing" -weight 2
-    registerTest -testname "recovery" -index "0" -bucket "4/0"
-    registerTest -testname "recovery" -index "1" -bucket "4/1"
-    registerTest -testname "recovery" -index "2" -bucket "4/2"
-    registerTest -testname "recovery" -index "3" -bucket "4/3"
+    registerTest -testname "recovery" -index "0" -bucket "4/0" "arangosearch"
+    registerTest -testname "recovery" -index "1" -bucket "4/1" "arangosearch"
+    registerTest -testname "recovery" -index "2" -bucket "4/2" "arangosearch"
+    registerTest -testname "recovery" -index "3" -bucket "4/3" "arangosearch"
     registerTest -testname "shell_server_aql" -index "0" -bucket "5/0"
     registerTest -testname "shell_server_aql" -index "1" -bucket "5/1"
     registerTest -testname "shell_server_aql" -index "2" -bucket "5/2"
@@ -108,6 +108,10 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "resilience_sharddist"
     registerTest -cluster $true -testname "resilience_analyzers"
     registerTest -cluster $true -testname "restart"
+    registerTest -cluster $true -testname "recovery" -index "0" -bucket "4/0"
+    registerTest -cluster $true -testname "recovery" -index "1" -bucket "4/1"
+    registerTest -cluster $true -testname "recovery" -index "2" -bucket "4/2"
+    registerTest -cluster $true -testname "recovery" -index "3" -bucket "4/3"
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
