@@ -80,8 +80,14 @@ function compiler
     case 9.2.0
       set -gx COMPILER_VERSION $cversion
 
-    case 9.3.0 9.3.0-r0 9.3.0-r2
-      set -gx COMPILER_VERSION (string replace -r '\-.*$' "" $cversion)
+    case 9.3.0
+      set -gx COMPILER_VERSION $cversion
+
+    case 9.3.0-r0
+      set -gx COMPILER_VERSION $cversion
+
+    case 9.3.0-r2
+      set -gx COMPILER_VERSION $cversion
 
     case '*'
       echo "unknown compiler version $cversion"
@@ -1223,7 +1229,7 @@ function runInContainer
              -e ASAN="$ASAN" \
              -e BUILDMODE="$BUILDMODE" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
-             -e COMPILER_VERSION="$COMPILER_VERSION" \
+             -e COMPILER_VERSION=(echo (string replace -r '\-.*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
