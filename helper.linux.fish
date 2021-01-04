@@ -122,10 +122,10 @@ function findBuildImage
       case 8.3.0
         echo $UBUNTUBUILDIMAGE2
 
-      case 9.2.0
+      case 9.3.0-r0
         echo $UBUNTUBUILDIMAGE3
 
-      case 9.3.0
+      case 9.3.0-r2
         echo $UBUNTUBUILDIMAGE4
 
       case '*'
@@ -146,10 +146,10 @@ function findStaticBuildImage
       case 8.3.0
         echo $ALPINEBUILDIMAGE2
 
-      case 9.2.0
+      case 9.3.0-r0
         echo $ALPINEBUILDIMAGE3
 
-      case 9.3.0
+      case 9.3.0-r2
         echo $ALPINEBUILDIMAGE4
 
       case '*'
@@ -170,10 +170,10 @@ function findBuildScript
       case 8.3.0
         echo buildArangoDB2.fish
 
-      case 9.2.0
+      case 9.3.0-r0
         echo buildArangoDB3.fish
 
-      case 9.3.0
+      case 9.3.0-r2
         echo buildArangoDB4.fish
 
       case '*'
@@ -194,10 +194,10 @@ function findStaticBuildScript
       case 8.3.0
         echo buildAlpine2.fish
 
-      case 9.2.0
+      case 9.3.0-r0
         echo buildAlpine3.fish
 
-      case 9.3.0
+      case 9.3.0-r2
         echo buildAlpine4.fish
 
       case '*'
