@@ -14,11 +14,11 @@ set -gx UBUNTUBUILDIMAGE2_TAG 4
 set -gx UBUNTUBUILDIMAGE2 $UBUNTUBUILDIMAGE2_NAME:$UBUNTUBUILDIMAGE2_TAG
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 4
+set -gx UBUNTUBUILDIMAGE3_TAG 5
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 4
+set -gx UBUNTUBUILDIMAGE4_TAG 5
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
@@ -32,11 +32,11 @@ set -gx ALPINEBUILDIMAGE2_TAG 8
 set -gx ALPINEBUILDIMAGE2 $ALPINEBUILDIMAGE2_NAME:$ALPINEBUILDIMAGE2_TAG
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 7
+set -gx ALPINEBUILDIMAGE3_TAG 8
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 5
+set -gx ALPINEBUILDIMAGE4_TAG 6
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -83,6 +83,12 @@ function compiler
     case 9.3.0
       set -gx COMPILER_VERSION $cversion
 
+    case 9.3.0-r0
+      set -gx COMPILER_VERSION $cversion
+
+    case 9.3.0-r2
+      set -gx COMPILER_VERSION $cversion
+
     case '*'
       echo "unknown compiler version $cversion"
   end
@@ -122,10 +128,10 @@ function findBuildImage
       case 8.3.0
         echo $UBUNTUBUILDIMAGE2
 
-      case 9.2.0
+      case 9.3.0-r0
         echo $UBUNTUBUILDIMAGE3
 
-      case 9.3.0
+      case 9.3.0-r2
         echo $UBUNTUBUILDIMAGE4
 
       case '*'
@@ -146,10 +152,10 @@ function findStaticBuildImage
       case 8.3.0
         echo $ALPINEBUILDIMAGE2
 
-      case 9.2.0
+      case 9.3.0-r0
         echo $ALPINEBUILDIMAGE3
 
-      case 9.3.0
+      case 9.3.0-r2
         echo $ALPINEBUILDIMAGE4
 
       case '*'
@@ -170,10 +176,10 @@ function findBuildScript
       case 8.3.0
         echo buildArangoDB2.fish
 
-      case 9.2.0
+      case 9.3.0-r0
         echo buildArangoDB3.fish
 
-      case 9.3.0
+      case 9.3.0-r2
         echo buildArangoDB4.fish
 
       case '*'
@@ -194,10 +200,10 @@ function findStaticBuildScript
       case 8.3.0
         echo buildAlpine2.fish
 
-      case 9.2.0
+      case 9.3.0-r0
         echo buildAlpine3.fish
 
-      case 9.3.0
+      case 9.3.0-r2
         echo buildAlpine4.fish
 
       case '*'
@@ -1223,7 +1229,7 @@ function runInContainer
              -e ASAN="$ASAN" \
              -e BUILDMODE="$BUILDMODE" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
-             -e COMPILER_VERSION="$COMPILER_VERSION" \
+             -e COMPILER_VERSION=(echo (string replace -r '\-.*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \

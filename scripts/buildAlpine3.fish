@@ -7,11 +7,11 @@ end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-  set -xg COMPILER_VERSION 9.2.0
+  set -xg COMPILER_VERSION 9.3.0
 end
 echo "Using compiler version $COMPILER_VERSION"
 
-if test "$COMPILER_VERSION" = "9.2.0"
+if test "$COMPILER_VERSION" = "9.3.0"
   set -xg CC_NAME gcc
   set -xg CXX_NAME g++
 else

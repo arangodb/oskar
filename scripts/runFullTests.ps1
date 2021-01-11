@@ -59,6 +59,7 @@ Function global:registerSingleTests()
     registerTest -testname "BackupNoAuthSysTests"
     registerTest -testname "active_failover"
     registerTest -testname "agency" -weight 2 -sniff true
+    registerTest -testname "agency-restart"
     registerTest -testname "arangobench"
     registerTest -testname "arangosh"
     registerTest -testname "audit"
@@ -125,6 +126,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "http_server" -sniff true
+    registerTest -cluster $true -testname "restart"
     registerTest -cluster $true -testname "server_secrets"
     registerTest -cluster $true -testname "server_permissions"
     registerTest -cluster $true -testname "server_parameters"
