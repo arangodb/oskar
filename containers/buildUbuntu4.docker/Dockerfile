@@ -5,7 +5,6 @@ ENV COMPILER_VERSION 9
 
 RUN apt-get update && \
     apt-get install -y software-properties-common && \
-    add-apt-repository ppa:ubuntu-toolchain-r && \
     apt-get update && \
     apt-get upgrade -y
 
@@ -15,7 +14,7 @@ RUN curl -L https://github.com/mozilla/sccache/releases/download/0.2.12/sccache-
 
 COPY ./tools/* /tools/
 
-RUN [ "/tools/install.sh", "1.1.1", "h" ]
+RUN [ "/tools/install.sh", "1.1.1", "i" ]
 
 COPY ./scripts /scripts
 
