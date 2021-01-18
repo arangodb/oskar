@@ -69,6 +69,10 @@ function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
 
+function packageSeperateDebugOff ; set -gx PACKAGE_SEPERATE_DEBUG Off ; end
+function packageSeperateDebugOn  ; set -gx PACKAGE_SEPERATE_DEBUG On  ; end
+packageSeperateDebugOn
+
 function isGCE
   switch (hostname)
     case 'gce-*'
@@ -394,7 +398,8 @@ function makeCommunityRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
-  buildCommunityPackage
+  packageSeperateDebugOn
+  and buildCommunityPackage
 end
 
 function makeEnterpriseRelease
@@ -411,7 +416,8 @@ function makeEnterpriseRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
-  buildEnterprisePackage
+  packageSeperateDebugOn
+  and buildEnterprisePackage
 end
 
 ## #############################################################################
@@ -492,12 +498,14 @@ function buildTarGzPackageHelper
   and cp -a $WORKDIR/binForTarGz bin
   and rm -f "bin/*~" "bin/*.bak"
   and mv bin/README .
-  and strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
+  and if test $PACKAGE_SEPERATE_DEBUG = On
+    strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
+  end
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
     rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
   else
-    if test -f usr/bin/arangobackup
+    if test -f usr/bin/arangobackup -a $PACKAGE_SEPERATE_DEBUG = On
       strip usr/bin/arangobackup
     end
   end
@@ -1158,6 +1166,7 @@ function showConfig
   echo 'Package Configuration'
   printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
   printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
+  printf $fmt3 'Debug Packages' $PACKAGE_SEPERATE_DEBUG '(packageSeperateDebugOn/Off)'
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM   '(parallelism nnn)'

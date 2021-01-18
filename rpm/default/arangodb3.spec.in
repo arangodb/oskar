@@ -38,12 +38,13 @@ Conflicts:	arangodb3e, arangodb3-client, arangodb3e-client
 Url:            https://www.arangodb.com
 Vendor:         ArangoDB
 
+@RPM_SEPERATE_DEBUG@%debug_package
+@RPM_IMPLICIT_DEBUG@%define debug_package %{nil}
+
 %package client
 Summary:        ArangoDB shell as stand-alone package
 Group:          Productivity/Databases/Servers
 Conflicts:	arangodb3e, arangodb3, arangodb3e-client
-
-%debug_package
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                       description
@@ -84,8 +85,10 @@ mkdir -p %{buildroot}%{_databasedir}
 mkdir -p %{buildroot}%{_appdir}
 mkdir -p %{buildroot}%{_logdir}
 mkdir -p %{buildroot}%{_piddir}
+rm -f $INNERWORKDIR/ArangoDB/build/install/README 
 cp -a $INNERWORKDIR/ArangoDB/build/install/* %{buildroot}
 # Move go executables out of the way to prevent debug info from being stripped:
+@RPM_IMPLICIT_DEBUG@mv %{buildroot}/usr/sbin/arangod /tmp
 mv %{buildroot}/usr/bin/arangodb /tmp
 if [ -x %{buildroot}/usr/sbin/arangosync ] ; then
   mv %{buildroot}/usr/sbin/arangosync /tmp
@@ -98,6 +101,7 @@ fi
 %check
 echo check: We assume that there is nothing to check.
 # Move go executables back to where they belong:
+@RPM_IMPLICIT_DEBUG@mv /tmp/arangod %{buildroot}/usr/sbin/arangod
 mv /tmp/arangodb %{buildroot}/usr/bin/arangodb
 if [ -x /tmp/arangosync ] ; then
   mv /tmp/arangosync %{buildroot}/usr/sbin/arangosync

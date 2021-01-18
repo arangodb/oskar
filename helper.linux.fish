@@ -630,6 +630,11 @@ function buildDebianPackage
   and for f in arangodb3.init arangodb3.service compat config templates preinst prerm postinst postrm rules
     cp $SOURCE/common/$f $TARGET/$f
     sed -e "s/@EDITION@/$EDITION/g" -i $TARGET/$f
+    if test $PACKAGE_SEPERATE_DEBUG = On
+      sed -i -e "s/@DEBIAN_SEPERATE_DEBUG@//" -i $TARGET/$f
+    else
+      sed -i -e "s/@DEBIAN_SEPERATE_DEBUG@/echo /" -i $TARGET/$f
+    end
   end
   and echo -n "$EDITION " > $ch
   and cp -a $SOURCE/common/source $TARGET
@@ -1393,21 +1398,22 @@ function clearWorkDir
 end
 
 function transformSpec
+  set -l filename $argv[2]
   if test (count $argv) != 2
     echo transformSpec: wrong number of arguments
     return 1
   end
-  and cp "$argv[1]" "$argv[2]"
-  and sed -i -e "s/@PACKAGE_VERSION@/$ARANGODB_RPM_UPSTREAM/" "$argv[2]"
-  and sed -i -e "s/@PACKAGE_REVISION@/$ARANGODB_RPM_REVISION/" "$argv[2]"
-  and sed -i -e "s~@JS_DIR@~~" "$argv[2]"
-
-  # in case of version number inside JS directory
-  # and if test "(" "$ARANGODB_VERSION_MAJOR" -eq "3" ")" -a "(" "$ARANGODB_VERSION_MINOR" -le "3" ")"
-  #  sed -i -e "s~@JS_DIR@~~" "$argv[2]"
-  # else
-  #  sed -i -e "s~@JS_DIR@~/$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH~" "$argv[2]"
-  # end
+  and cp "$argv[1]" "$filename"
+  and sed -i -e "s/@PACKAGE_VERSION@/$ARANGODB_RPM_UPSTREAM/" "$filename"
+  and sed -i -e "s/@PACKAGE_REVISION@/$ARANGODB_RPM_REVISION/" "$filename"
+  and if test $PACKAGE_SEPERATE_DEBUG = On
+    sed -i -e "s/@RPM_SEPERATE_DEBUG@//" "$filename"
+    sed -i -e "s/@RPM_IMPLICIT_DEBUG@/# /" "$filename"
+  else
+    sed -i -e "s/@RPM_SEPERATE_DEBUG@/# /" "$filename"
+    sed -i -e "s/@RPM_IMPLICIT_DEBUG@//" "$filename"
+  end
+  and sed -i -e "s~@JS_DIR@~~" "$filename"
 end
 
 function shellInUbuntuContainer
