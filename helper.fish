@@ -499,10 +499,15 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
-  pushd $WORKDIR/work/ArangoDB/build/install
+  pushd $WORKDIR/work
+  and rm -rf targz
+  and mkdir targz
+  and cd $WORKDIR/work/ArangoDB/build/install
+  and cp -a * $WORKDIR/work/targz
+  and cd $WORKDIR/work/targz
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
-  and rm -f "bin/*~" "bin/*.bak"
+  and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and mv bin/README .
   and if test $PACKAGE_SEPERATE_DEBUG = On
     strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
@@ -522,9 +527,9 @@ function buildTarGzPackageHelper
   or begin ; popd ; return 1 ; end
 
   tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" --exclude "etc" --exclude "var" "$name-$v"
-  set s $status
+  and set s $status
 
-  if test "$s" -eq 0
+  and if test "$s" -eq 0
     tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" \
       --exclude "etc" \
       --exclude "var" \
@@ -546,10 +551,11 @@ function buildTarGzPackageHelper
     set s $status
   end
 
-  mv "$name-$v" install
+  and mv "$name-$v" install
   and rm -rf install/bin
   and popd
   and return $s 
+  or begin ; popd ; return 1 ; end
 end
 
 ## #############################################################################

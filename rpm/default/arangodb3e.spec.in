@@ -85,8 +85,8 @@ mkdir -p %{buildroot}%{_databasedir}
 mkdir -p %{buildroot}%{_appdir}
 mkdir -p %{buildroot}%{_logdir}
 mkdir -p %{buildroot}%{_piddir}
-rm -f $INNERWORKDIR/ArangoDB/build/install/README 
 cp -a $INNERWORKDIR/ArangoDB/build/install/* %{buildroot}
+rm -f %{buildroot}/README
 # Move go executables out of the way to prevent debug info from being stripped:
 @RPM_IMPLICIT_DEBUG@mv %{buildroot}/usr/sbin/arangod /tmp
 mv %{buildroot}/usr/bin/arangodb /tmp
