@@ -632,8 +632,10 @@ function buildDebianPackage
     sed -e "s/@EDITION@/$EDITION/g" -i $TARGET/$f
     if test $PACKAGE_SEPERATE_DEBUG = On
       sed -i -e "s/@DEBIAN_SEPERATE_DEBUG@//" -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_IMPLICIT_DEBUG@/echo /" -i $TARGET/$f
     else
       sed -i -e "s/@DEBIAN_SEPERATE_DEBUG@/echo /" -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_IMPLICIT_DEBUG@//" -i $TARGET/$f
     end
   end
   and echo -n "$EDITION " > $ch
@@ -1225,23 +1227,24 @@ function runInContainer
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
              $mirror \
+	     -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
-             -e ARANGODB_VERSION="$ARANGODB_VERSION" \
-             -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
+             -e ARANGODB_REPO="$ARANGODB_REPO" \
+             -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+             -e ASAN="$ASAN" \
              -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
              -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
-             -e ASAN="$ASAN" \
              -e BUILDMODE="$BUILDMODE" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '\-.*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
-             -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
-             -e GIT_TRACE_PACKET="$GIT_TRACE_PACKET" \
-             -e GIT_TRACE="$GIT_TRACE" \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
+             -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
+             -e GIT_TRACE="$GIT_TRACE" \
+             -e GIT_TRACE_PACKET="$GIT_TRACE_PACKET" \
              -e INNERWORKDIR="$INNERWORKDIR" \
              -e IONICE="$IONICE" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
@@ -1256,10 +1259,10 @@ function runInContainer
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCCACHE_BUCKET="$SCCACHE_BUCKET" \
-             -e SCCACHE_IDLE_TIMEOUT="$SCCACHE_IDLE_TIMEOUT" \
              -e SCCACHE_ENDPOINT="$SCCACHE_ENDPOINT" \
              -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
              -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
+             -e SCCACHE_IDLE_TIMEOUT="$SCCACHE_IDLE_TIMEOUT" \
              -e SCCACHE_MEMCACHED="$SCCACHE_MEMCACHED" \
              -e SCCACHE_REDIS="$SCCACHE_REDIS" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
@@ -1274,9 +1277,9 @@ function runInContainer
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
              -e USE_CCACHE="$USE_CCACHE" \
+             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
-             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"

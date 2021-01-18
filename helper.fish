@@ -73,6 +73,10 @@ function packageSeperateDebugOff ; set -gx PACKAGE_SEPERATE_DEBUG Off ; end
 function packageSeperateDebugOn  ; set -gx PACKAGE_SEPERATE_DEBUG On  ; end
 packageSeperateDebugOn
 
+function minimalDebugInfoOff ; set -gx MINIMAL_DEBUG_INFO Off ; end
+function minimalDebugInfoOn  ; set -gx MINIMAL_DEBUG_INFO On  ; end
+minimalDebugInfoOff
+
 function isGCE
   switch (hostname)
     case 'gce-*'
@@ -399,6 +403,7 @@ function makeCommunityRelease
   end
 
   packageSeperateDebugOn
+  and minimalDebugInfoOff
   and buildCommunityPackage
 end
 
@@ -417,6 +422,7 @@ function makeEnterpriseRelease
   end
 
   packageSeperateDebugOn
+  and minimalDebugInfoOff
   and buildEnterprisePackage
 end
 
@@ -1167,6 +1173,7 @@ function showConfig
   printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
   printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
   printf $fmt3 'Debug Packages' $PACKAGE_SEPERATE_DEBUG '(packageSeperateDebugOn/Off)'
+  printf $fmt3 'Minimal Debug Info' $MINIMAL_DEBUG_INFO '(minimalDebugInfoOn/Off)'
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM   '(parallelism nnn)'
