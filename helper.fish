@@ -506,6 +506,8 @@ function buildTarGzPackageHelper
   and mv bin/README .
   and if test $PACKAGE_SEPERATE_DEBUG = On
     strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
+  else
+    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
   end
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
