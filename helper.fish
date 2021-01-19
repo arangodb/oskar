@@ -1173,12 +1173,12 @@ function showConfig
       printf $fmt3 'S3 Server' $SCCACHE_ENDPOINT    '(SCCACHE_ENDPOINT)'
     end
   end
-  printf $fmt3 'Verbose Build' $VERBOSEBUILD        '(verboseBuild/silentBuild)'
-  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR        '(verbose/slient)'
-  printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
-  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS      '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
-  printf $fmt3 'Notarize'      $NOTARIZE_APP        '(notarizeApp/noNotarizedApp)'
-  printf $fmt3 'Strict OpenSSL' $USE_STRICT_OPENSSL '(strictOpenSSL/nonStrictOpenSSL)'
+  printf $fmt3 'Verbose Build' $VERBOSEBUILD          '(verboseBuild/silentBuild)'
+  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR          '(verbose/slient)'
+  printf $fmt3 'Details during build' $SHOW_DETAILS   '(showDetails/hideDetails/pingDetails)'
+  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS        '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
+  printf $fmt3 'Notarize'      $NOTARIZE_APP          '(notarizeApp/noNotarizedApp)'
+  printf $fmt3 'Strict OpenSSL' "$USE_STRICT_OPENSSL" '(strictOpenSSL/nonStrictOpenSSL)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR

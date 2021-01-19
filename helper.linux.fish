@@ -560,7 +560,7 @@ function buildEnterprisePackage
   and maintainerOff
   and releaseMode
   and enterprise
-  and set -xg NOSTRIP dont
+  and set -xg NOSTRIP 1
   and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and downloadSyncer
@@ -580,7 +580,7 @@ function buildCommunityPackage
   and maintainerOff
   and releaseMode
   and community
-  and set -xg NOSTRIP dont
+  and set -xg NOSTRIP 1
   and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and buildPackage

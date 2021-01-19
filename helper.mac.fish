@@ -283,7 +283,7 @@ function buildEnterprisePackage
   and maintainerOff
   and releaseMode
   and enterprise
-  and set -xg NOSTRIP dont
+  and set -xg NOSTRIP 1
   and cleanupThirdParty
   and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
   and downloadStarter
@@ -314,7 +314,7 @@ function buildCommunityPackage
   and maintainerOff
   and releaseMode
   and community
-  and set -xg NOSTRIP dont
+  and set -xg NOSTRIP 1
   and cleanupThirdParty
   and downloadStarter
   and buildArangoDB \
