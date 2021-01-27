@@ -12,9 +12,9 @@ source jenkins/helper/runAnyPerformanceResults.fish
 
 begin
   echo '<a href="#Linux"/>Linux</a>'
-  #echo '<a href="#MAC"/>MAC</a>'
+  echo '<a href="#MAC"/>MAC</a>'
   echo '<hr/>'
   cat work/description-Linux.html
-  #echo '<hr/>'
-  #cat work/description-MAC.html
+  echo '<hr/>'
+  cat work/description-MAC.html
 end > work/description.html
