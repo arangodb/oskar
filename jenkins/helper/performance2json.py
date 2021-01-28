@@ -61,21 +61,22 @@ class CSVTranslator(ABC):
             with open(self.version_filename) as jsonfile:
                 j = json.load(jsonfile)
 
-        if not self.edition:
-            self.edition = j['license']
+            if not self.edition:
+                print(self.edition)
+                self.edition = j['license']
 
-        if not self.mode:
-            if j['details']['role'] == 'COORDINATOR':
-                self.mode = 'cluster'
+            if not self.mode:
+                if j['details']['role'] == 'COORDINATOR':
+                    self.mode = 'cluster'
 
-        if not self.version:
-            self.version = j['version']
+            if not self.version:
+               self.version = j['version']
 
-        if not self.version:
-            if self.name:
-                self.version = self.name
-            else:
-                self.version = self.branch
+            if not self.version:
+                if self.name:
+                    self.version = self.name
+                else:
+                    self.version = self.branch
 
     def process_csv_file(self):
         """ load the CSV file and iterate it line by line """
