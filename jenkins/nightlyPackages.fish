@@ -16,8 +16,8 @@ set -xg SRC work
 set -xg DST /mnt/buildfiles/stage2/nightly/$PACKAGES
 
 function mountMacCatalinaStage2
-  if test (sw_vers -productVersion | cut -d. -f2) -ge 15
-    echo "Use Catalina-specific stage2 mount to /Users/$USER/buildfiles"
+  if test (sw_vers -productVersion | cut -d. -f1 -f2) -ge 10.15
+    echo "Use 10.15+ specific stage2 mount to /Users/$USER/buildfiles"
     if not test -d /System/Volumes/Data/Users/$USER/buildfiles
       mkdir -p /System/Volumes/Data/Users/$USER/buildfiles
     end

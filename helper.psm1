@@ -18,22 +18,29 @@ If(-Not(Test-Path -PathType Container -Path "work"))
 
 $global:TSHARK = ((Get-ChildItem -ErrorAction SilentlyContinue -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1) -replace ' ', '` '
 
-If((Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
+If(-Not($global:TSHARK))
 {
-    $global:dumpDevice = $Matches[1]
-    if ($global:dumpDevice -notmatch '\d+') {
-        Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
-        Invoke-Expression $global:TSHARK -D
-        Exit 1
-    }
-    Else {
-        $global:TSHARK = $global:TSHARK -replace '` ', ' '
-    }
+    Write-Host "failed to locate TSHARK"
 }
 Else
 {
-    Write-Host "failed to get loopbackdevice - check NCAP Driver installation"
-    Exit 1
+    If((Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
+    {
+        $global:dumpDevice = $Matches[1]
+        if ($global:dumpDevice -notmatch '\d+') {
+            Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
+            Invoke-Expression $global:TSHARK -D
+            Exit 1
+        }
+        Else {
+            $global:TSHARK = $global:TSHARK -replace '` ', ' '
+        }
+    }
+    Else
+    {
+        Write-Host "failed to get loopbackdevice - check NCAP Driver installation"
+        $global:TSHARK = ""
+  }
 }
 
 $global:HANDLE_EXE = $null
@@ -1293,12 +1300,12 @@ Function getCacheID
        
     If ($ENTERPRISEEDITION -eq "On")
     {
-        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
+        Get-ChildItem -Include "CMakeLists.txt","VERSIONS","*.cmake" -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
     }
     else
     {
         # if there happenes to be an enterprise directory, we ignore it.
-        Get-ChildItem -Include "CMakeLists.txt","VERSIONS" -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
+        Get-ChildItem -Include "CMakeLists.txt","VERSIONS","*.cmake" -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
     }
     
     $hash = "$((Get-FileHash $env:TMP\allHashes.txt).Hash)" + ($env:OPENSSL_ROOT_DIR).GetHashCode() + (Split-Path $env:CLCACHE_CL).GetHashCode()

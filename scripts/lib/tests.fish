@@ -4,7 +4,11 @@ if test -z "$PARALLELISM"
   set -g PARALLELISM 64
 end
 
-# Turn off internal crash handler for tests that don't specify it explicitly
+if test "$ENTERPRISEEDITION" = "On"
+   set -xg EncryptionAtRest "--encryptionAtRest true"
+end
+
+# Turn off internal crash handler for tests that don''t specify it explicitly
 # Meaningful for ArangoDB 3.7+ versions only
 set -xg ARANGODB_OVERRIDE_CRASH_HANDLER "Off"
 
@@ -87,6 +91,7 @@ function runAnyTest
       --skipGrey "$SKIPGREY" \
       --onlyGrey "$ONLYGREY" \
       --coreCheck true \
+      $ADDITIONAL_OPTIONS \
       $argv
 
     echo (pwd) "-" scripts/unittest $arguments
@@ -365,13 +370,14 @@ function waitOrKill
   set launcher $argv[2]
   echo Controlling subprocesses...
   if waitForProcesses $timeout $launcher
+    echo (date) timeout after $timeout
     set -l ids (jobs -p)
     if test (count $ids) -gt 0
-      kill $ids
+      kill -6 $ids
       if waitForProcesses 30 ""
         set -l ids (jobs -p)
         if test (count $ids) -gt 0
-          kill -9 $ids
+          kill -6 $ids
           waitForProcesses 60 ""   # give jobs some time to finish
         end
       end

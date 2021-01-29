@@ -287,7 +287,7 @@ function oskarCompile
   showRepository
   set -x NOSTRIP 1
   if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DUNCONDITIONALLY_BUILD_LOG_MESSAGES=On ; or return $status
   else
     buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
   end
@@ -1175,12 +1175,12 @@ function showConfig
       printf $fmt3 'S3 Server' $SCCACHE_ENDPOINT    '(SCCACHE_ENDPOINT)'
     end
   end
-  printf $fmt3 'Verbose Build' $VERBOSEBUILD        '(verboseBuild/silentBuild)'
-  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR        '(verbose/slient)'
-  printf $fmt3 'Details during build' $SHOW_DETAILS '(showDetails/hideDetails/pingDetails)'
-  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS      '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
-  printf $fmt3 'Notarize'      $NOTARIZE_APP        '(notarizeApp/noNotarizedApp)'
-  printf $fmt3 'Strict OpenSSL' $USE_STRICT_OPENSSL '(strictOpenSSL/nonStrictOpenSSL)'
+  printf $fmt3 'Verbose Build' $VERBOSEBUILD          '(verboseBuild/silentBuild)'
+  printf $fmt3 'Verbose Oskar' $VERBOSEOSKAR          '(verbose/slient)'
+  printf $fmt3 'Details during build' $SHOW_DETAILS   '(showDetails/hideDetails/pingDetails)'
+  printf $fmt3 'Logs preserve' $WORKSPACE_LOGS        '(setAllLogsToWorkspace/setOnlyFailLogsToWorkspace)'
+  printf $fmt3 'Notarize'      $NOTARIZE_APP          '(notarizeApp/noNotarizedApp)'
+  printf $fmt3 'Strict OpenSSL' "$USE_STRICT_OPENSSL" '(strictOpenSSL/nonStrictOpenSSL)'
   echo
   echo 'Directories'
   printf $fmt2 'Inner workdir' $INNERWORKDIR
@@ -1577,7 +1577,12 @@ function moveResultsToWorkspace
       end
     end
 
-    if test -d "$WORKDIR/work/coverage"
+    if test -d $WORKDIR/work/coverage
+      if test -d $WORKSPACE/coverage
+        rm -rf $WORKSPACE/coverage.old
+	mv $WORKSPACE/coverage $WORKSPACE/coverage.old
+      end
+
       echo "mv coverage"
       mv $WORKDIR/work/coverage $WORKSPACE
     end

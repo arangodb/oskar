@@ -51,6 +51,7 @@ Function global:registerSingleTests()
     registerTest -testname "BackupNoAuthNoSysTests"
     registerTest -testname "BackupNoAuthSysTests"
     registerTest -testname "agency" -weight 2
+    registerTest -testname "agency-restart"
     registerTest -testname "active_failover"
     registerTest -testname "arangosh"
     registerTest -testname "authentication"
@@ -59,8 +60,10 @@ Function global:registerSingleTests()
     registerTest -testname "dump_authentication"
     registerTest -testname "dump_maskings"
     registerTest -testname "dump_multiple"
+    registerTest -testname "dump_no_envelope"
     registerTest -testname "dump_encrypted"
     registerTest -testname "endpoints"
+    registerTest -testname "export"
     registerTest -testname "fuerte"
     registerTest -testname "http_replication" -weight 2
     registerTest -testname "http_server" -sniff true
@@ -95,7 +98,9 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_authentication"
     registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "dump_multiple"
+    registerTest -cluster $true -testname "dump_no_envelope"
     registerTest -cluster $true -testname "dump_encrypted"
+    registerTest -cluster $true -testname "export"
     registerTest -cluster $true -testname "http_server"  -sniff true
     registerTest -cluster $true -testname "server_secrets"
     registerTest -cluster $true -testname "server_permissions"
@@ -104,6 +109,11 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "resilience_failover"
     registerTest -cluster $true -testname "resilience_sharddist"
     registerTest -cluster $true -testname "resilience_analyzers"
+    registerTest -cluster $true -testname "restart"
+    registerTest -cluster $true -testname "recovery_cluster" -index "0" -bucket "4/0" "arangosearch"
+    registerTest -cluster $true -testname "recovery_cluster" -index "1" -bucket "4/1" "arangosearch"
+    registerTest -cluster $true -testname "recovery_cluster" -index "2" -bucket "4/2" "arangosearch"
+    registerTest -cluster $true -testname "recovery_cluster" -index "3" -bucket "4/3" "arangosearch"
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"

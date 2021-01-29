@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+ssh -o StrictHostKeyChecking=no -T git@github.com
+
 set -l mirror
 
 if test -d /mirror/upgrade-data-tests.git
@@ -6,7 +8,10 @@ if test -d /mirror/upgrade-data-tests.git
 end
 
 cd $INNERWORKDIR/ArangoDB
-if test -d upgrade-data-tests
+and git config --global http.postBuffer 524288000
+and git config --global https.postBuffer 524288000
+and git config --global pull.rebase true
+and if test -d upgrade-data-tests
   cd upgrade-data-tests
   and test -d .git
   and git rev-parse --is-inside-work-tree 1>/dev/null 2>1
