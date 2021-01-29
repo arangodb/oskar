@@ -18,6 +18,7 @@ class CSVTranslator(ABC):
     def __init__(self,
                  csv_filename,
                  version_filename,
+                 version_textname,
                  version,
                  date,
                  branch,
@@ -46,6 +47,7 @@ class CSVTranslator(ABC):
         self.edition = edition
         self.default_size = size
         self.version_filename = version_filename
+        self.version_textname = version_textname
         self.version = version
         self.csv_filename = csv_filename
 
@@ -77,6 +79,23 @@ class CSVTranslator(ABC):
                     self.version = self.name
                 else:
                     self.version = self.branch
+        elif self.version_textname:
+            with open(self.version_textname) as textfile:
+                c = 0
+                for line in textfile.readlines():
+                    c += 1
+                    s = line.strip()
+
+                if c == 1:
+                    if not version:
+                        self.version = s
+                else:
+                    m = re.search('(license):\W*(.+)$', s)
+
+                    if m:
+                        if m.group(1):
+                            if not edition:
+                                self.edition = m.group(2)
 
     def process_csv_file(self):
         """ load the CSV file and iterate it line by line """
@@ -265,11 +284,67 @@ class DDLPerformanceCluster(CSVTranslator):
 
         print(json.dumps(result))
 
+class Coverage():
+    def __init__(self,
+                 csv_filename,
+                 version_filename,
+                 version,
+                 date,
+                 branch,
+                 name,
+                 mode,
+                 edition,
+                 size,
+                 collections_per_database,
+                 indexes_per_collection,
+                 no_shards,
+                 replication_factor):
+        self.version = version
+        self.branch = branch
+        self.current_date = None
+
+        if date:
+            self.current_date = dt_parser.parse(date)
+        else:
+            self.current_date = dt.datetime.now()
+
+    def load_version_file(self):
+        pass
+
+    def process_csv_file():
+        lines = []
+        with open(options.filename) as textfile:
+            lines = textfile.readlines()
+
+        result = {}
+        date = self.current_date
+
+        for line in lines:
+            s = line.strip()
+
+            m = re.search('(lines|branches):\W*([0-9\.]+)%', s)
+
+            if m:
+                result[m.group(1)] = m.group(2)
+
+        print(json.dumps({
+            "coverage": result,
+            "configuration": {
+                "version": version,
+                "branch": branch
+            },
+            "isoDate": date.isoformat(),
+            "date": date.timestamp(),
+            "ms": 1000 * date.timestamp()
+        }))
+
 
 @click.command()
 @click.option("-f", "--file", "filename", help="input file")
 @click.option("-V", "--version-file", "version_filename",
               help="version file")
+@click.option("-T", "--version-text", "version_textname",
+              help="version text file")
 @click.option("-w", "--force-version", "version",
               help="version")
 @click.option("-d", "--date", "date", help="iso date")
@@ -297,6 +372,7 @@ class DDLPerformanceCluster(CSVTranslator):
 #pylint: disable=no-value-for-parameter
 def convert_file(filename,
                  version_filename,
+                 version_textname,
                  version,
                  date,
                  branch,
@@ -317,12 +393,15 @@ def convert_file(filename,
         create_class = SimplePerformanceCluster
     elif input_type == "ddl-performance-cluster":
         create_class = DDLPerformanceCluster
+    elif input_type == "coverage":
+        create_class = Coverage
     else:
         print("unknown output format '%s'" % (input_type))
         return 1
 
     inst = create_class(filename,
                         version_filename,
+                        version_textname,
                         version,
                         date,
                         branch,
