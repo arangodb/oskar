@@ -36,8 +36,16 @@ Package: arangodb3e-dbg
 Architecture: amd64
 Section: debug
 Priority: extra
-Depends:
-    arangodb3e (= ${binary:Version}),
+Conflicts:
+    arangodb3,
+    arangodb3-client,
+    arangodb3-dbg,
+    arangodb3e (<< ${binary:Version}),
+    arangodb3e (>> ${binary:Version}),
+    arangodb3e-client (<< ${binary:Version}),
+    arangodb3e-client (>> ${binary:Version})
+Pre-Depends:
+    arangodb3e (= ${binary:Version}) | arangodb3e-client (= ${binary:Version}),
     ${misc:Depends}
 Description: debugging symbols for arangodb
  A distributed free and open-source database with a flexible data model for documents,

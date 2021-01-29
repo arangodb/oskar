@@ -1,7 +1,12 @@
 #!/usr/bin/env fish
+ssh -o StrictHostKeyChecking=no -T git@github.com
+
 cd /mirror
 and mkdir -p mirror
 and cd mirror
+and git config --global http.postBuffer 524288000
+and git config --global https.postBuffer 524288000
+and git config --global pull.rebase true
 and if test ! -d ArangoDB.git
   git clone --progress --mirror ssh://git@github.com/arangodb/ArangoDB.git
   or exit 1

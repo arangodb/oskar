@@ -5,6 +5,8 @@ RUN apk add --no-cache pwgen binutils numactl numactl-tools
 RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.11/main/ nodejs
 RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.11/main/ npm && npm install -g foxx-cli && apk del npm
 
+ENV GLIBCXX_FORCE_NEW=1
+
 ADD install.tar.gz /
 COPY setup.sh /setup.sh
 RUN /setup.sh && rm /setup.sh

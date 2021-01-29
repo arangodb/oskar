@@ -41,7 +41,16 @@ and tar x -f /tmp/gcno.tar -C /work/combined/result
 and rm -rf coverage
 and mkdir coverage
 and mkdir coverage/enterprise
-and gcovr --root /work/ArangoDB -x -e /work/ArangoDB/build -e /work/ArangoDB/3rdParty -e /work/ArangoDB/usr/ -e /work/ArangoDB/tests -o coverage/coverage.xml /work/combined/result
+and gcovr --exclude-throw-branches --root /work/ArangoDB \
+        -x \
+        -e /work/ArangoDB/build \
+        -e /work/ArangoDB/3rdParty \
+        -e /work/ArangoDB/usr/ \
+        -e /work/ArangoDB/tests \
+        -e include/jemalloc/internal \
+        -o coverage/coverage.xml \
+        --print-summary \
+        /work/combined/result > /work/coverage/summary.txt
 and cat coverage/coverage.xml \
       | sed -e "s:filename=\":filename=\"./coverage/:g" \
       > coverage/coverage.xml.tmp

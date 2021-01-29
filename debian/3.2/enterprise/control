@@ -36,7 +36,7 @@ Package: arangodb3e-dbg
 Architecture: amd64
 Section: debug
 Priority: extra
-Depends:
+Pre-Depends:
     arangodb3e (= ${binary:Version}),
     ${misc:Depends}
 Description: debugging symbols for arangodb

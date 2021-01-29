@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+ssh -o StrictHostKeyChecking=no -T git@github.com
+
 set -l mirror
 
 if test -d /mirror/enterprise.git
@@ -7,6 +9,9 @@ end
 
 eval $SCRIPTSDIR/checkoutArangoDB.fish
 and cd $INNERWORKDIR/ArangoDB
+and git config --global http.postBuffer 524288000
+and git config --global https.postBuffer 524288000
+and git config --global pull.rebase true
 and if test ! -d enterprise/.git
   rm -rf enterprise
 end

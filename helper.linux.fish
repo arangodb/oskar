@@ -6,37 +6,37 @@ set -gx PLATFORM linux
 set -gx ARCH (uname -m)
 
 set -gx UBUNTUBUILDIMAGE_NAME arangodb/ubuntubuildarangodb-$ARCH
-set -gx UBUNTUBUILDIMAGE_TAG 2
+set -gx UBUNTUBUILDIMAGE_TAG 3
 set -gx UBUNTUBUILDIMAGE $UBUNTUBUILDIMAGE_NAME:$UBUNTUBUILDIMAGE_TAG
 
 set -gx UBUNTUBUILDIMAGE2_NAME arangodb/ubuntubuildarangodb2-$ARCH
-set -gx UBUNTUBUILDIMAGE2_TAG 2
+set -gx UBUNTUBUILDIMAGE2_TAG 4
 set -gx UBUNTUBUILDIMAGE2 $UBUNTUBUILDIMAGE2_NAME:$UBUNTUBUILDIMAGE2_TAG
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 2
+set -gx UBUNTUBUILDIMAGE3_TAG 5
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 2
-set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
+set -gx UBUNTUBUILDIMAGE4_TAG 5
+set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE_NAME arangodb/alpinebuildarangodb-$ARCH
-set -gx ALPINEBUILDIMAGE_TAG 8
+set -gx ALPINEBUILDIMAGE_TAG 9
 set -gx ALPINEBUILDIMAGE $ALPINEBUILDIMAGE_NAME:$ALPINEBUILDIMAGE_TAG
 
 set -gx ALPINEBUILDIMAGE2_NAME arangodb/alpinebuildarangodb2-$ARCH
-set -gx ALPINEBUILDIMAGE2_TAG 7
+set -gx ALPINEBUILDIMAGE2_TAG 8
 set -gx ALPINEBUILDIMAGE2 $ALPINEBUILDIMAGE2_NAME:$ALPINEBUILDIMAGE2_TAG
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 6
+set -gx ALPINEBUILDIMAGE3_TAG 8
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 3
+set -gx ALPINEBUILDIMAGE4_TAG 6
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -83,6 +83,12 @@ function compiler
     case 9.3.0
       set -gx COMPILER_VERSION $cversion
 
+    case 9.3.0-r0
+      set -gx COMPILER_VERSION $cversion
+
+    case 9.3.0-r2
+      set -gx COMPILER_VERSION $cversion
+
     case '*'
       echo "unknown compiler version $cversion"
   end
@@ -122,10 +128,10 @@ function findBuildImage
       case 8.3.0
         echo $UBUNTUBUILDIMAGE2
 
-      case 9.2.0
+      case 9.3.0-r0
         echo $UBUNTUBUILDIMAGE3
 
-      case 9.3.0
+      case 9.3.0-r2
         echo $UBUNTUBUILDIMAGE4
 
       case '*'
@@ -146,10 +152,10 @@ function findStaticBuildImage
       case 8.3.0
         echo $ALPINEBUILDIMAGE2
 
-      case 9.2.0
+      case 9.3.0-r0
         echo $ALPINEBUILDIMAGE3
 
-      case 9.3.0
+      case 9.3.0-r2
         echo $ALPINEBUILDIMAGE4
 
       case '*'
@@ -170,10 +176,10 @@ function findBuildScript
       case 8.3.0
         echo buildArangoDB2.fish
 
-      case 9.2.0
+      case 9.3.0-r0
         echo buildArangoDB3.fish
 
-      case 9.3.0
+      case 9.3.0-r2
         echo buildArangoDB4.fish
 
       case '*'
@@ -194,10 +200,10 @@ function findStaticBuildScript
       case 8.3.0
         echo buildAlpine2.fish
 
-      case 9.2.0
+      case 9.3.0-r0
         echo buildAlpine3.fish
 
-      case 9.3.0
+      case 9.3.0-r2
         echo buildAlpine4.fish
 
       case '*'
@@ -391,7 +397,7 @@ end
 
 function buildStaticCoverage
   coverageOn
-  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On
+  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DUNCONDITIONALLY_BUILD_LOG_MESSAGES=On
 end
 
 function buildExamples
@@ -418,9 +424,9 @@ function oskar
   checkoutIfNeeded
   and if test "$ASAN" = "On"
     parallelism 2
-    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
   else
-    runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish
+    runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
   end
   set s $status
 
@@ -437,17 +443,17 @@ function oskarFull
     launchLdapServer
     and if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     end
     set s $status
   else
     if test "$ASAN" = "On"
       parallelism 2
-      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     else
-      runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish
+      runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     end
   end
   set s $status
@@ -496,7 +502,7 @@ function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
 
-  runInContainer (findBuildImage) /scripts/coverage.fish
+  runInContainer (findStaticBuildImage) /scripts/coverage.fish
   return $status
 end
 
@@ -554,7 +560,7 @@ function buildEnterprisePackage
   and maintainerOff
   and releaseMode
   and enterprise
-  and set -xg NOSTRIP dont
+  and set -xg NOSTRIP 1
   and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and downloadSyncer
@@ -574,7 +580,7 @@ function buildCommunityPackage
   and maintainerOff
   and releaseMode
   and community
-  and set -xg NOSTRIP dont
+  and set -xg NOSTRIP 1
   and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
   and downloadStarter
   and buildPackage
@@ -745,29 +751,34 @@ function buildDockerRelease
   # latest tag
   set -l IMAGE_NAME3 ""
 
-  if test "$ENTERPRISEEDITION" = "On"
-    if test "$RELEASE_TYPE" = "stable"
-      set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
-    else
-      set IMAGE_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
-    end
-
-    set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
-
-    if test "$RELEASE_IS_HEAD" = "true"
-      set IMAGE_NAME3 arangodb/enterprise-preview:latest
-    end
+  if echo "$DOCKER_TAG" | fgrep -q :
+     set IMAGE_NAME1 $DOCKER_TAG
+     set IMAGE_NAME2 $DOCKER_TAG
   else
-    if test "$RELEASE_TYPE" = "stable"
-      set IMAGE_NAME1 arangodb/arangodb:$DOCKER_TAG
+    if test "$ENTERPRISEEDITION" = "On"
+      if test "$RELEASE_TYPE" = "stable"
+        set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
+      else
+        set IMAGE_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
+      end
+
+      set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
+
+      if test "$RELEASE_IS_HEAD" = "true"
+        set IMAGE_NAME3 arangodb/enterprise-preview:latest
+      end
     else
-      set IMAGE_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
-    end
+      if test "$RELEASE_TYPE" = "stable"
+        set IMAGE_NAME1 arangodb/arangodb:$DOCKER_TAG
+      else
+        set IMAGE_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
+      end
 
-    set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
+      set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
 
-    if test "$RELEASE_IS_HEAD" = "true"
-      set IMAGE_NAME3 arangodb/arangodb-preview:latest
+      if test "$RELEASE_IS_HEAD" = "true"
+        set IMAGE_NAME3 arangodb/arangodb-preview:latest
+      end
     end
   end
 
@@ -1218,11 +1229,14 @@ function runInContainer
              -e ASAN="$ASAN" \
              -e BUILDMODE="$BUILDMODE" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
-             -e COMPILER_VERSION="$COMPILER_VERSION" \
+             -e COMPILER_VERSION=(echo (string replace -r '\-.*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
+             -e GIT_TRACE_PACKET="$GIT_TRACE_PACKET" \
+             -e GIT_TRACE="$GIT_TRACE" \
+             -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
              -e INNERWORKDIR="$INNERWORKDIR" \
              -e IONICE="$IONICE" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
@@ -1335,6 +1349,31 @@ function interactiveContainer
     set -e SSH_AUTH_SOCK
     set -e SSH_AGENT_PID
   end
+end
+
+## #############################################################################
+## build rclone
+## #############################################################################
+
+function buildRclone
+  pushd $WORKDIR
+  if test (count $argv) != 1
+    popd
+    echo "buildRclone: expecting version (ie, v1.51.0)"
+    return 1
+  end
+
+  rm -rf rclone/$argv[1]
+  mkdir rclone/$argv[1]
+
+  docker run \
+    -v (pwd)/scripts:/scripts \
+    -v (pwd)/rclone/$argv[1]:/data \
+    -e RCLONE_VERSION=$argv[1] \
+    -it \
+    golang:1.15.2 \
+    bash -c /scripts/buildRclone.bash
+  and popd
 end
 
 ## #############################################################################

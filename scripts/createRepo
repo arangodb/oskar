@@ -65,10 +65,10 @@ provided(){
 create_repo(){
     #set -x
     provided "$@"
-    local version="$1"                     # X.Y.Z[-(alpha | beta | milestone | rc).R]
+    local version="$1"                     # X.Y.Z[-(H | (alpha | beta | milestone | rc).R)]
     local major_minor=$(expr "$version" : '\([0-9].[0-9]\)')      # X.Y
     local version_fs="${major_minor/./}"   # XY[-(alpha | beta | milestone | rc).R]
-    [[ "${version%%-*}" = "${version}" ]] || version_fs="${version_fs}-${version#*-}"
+    [[ "${version%%-*}" = "${version}" ]] || [[ "${version##*-}" =~ ^[1-9]+$ ]] || version_fs="${version_fs}-${version##*-}"
     local in_path="$2"                     # /mnt/data/fileserver
     local repo_path="$3"                   # /mnt/data/localstage
     local in_name="$4"                     # debianjessie

@@ -6,7 +6,6 @@ if [ -z "$ARANGO_INIT_PORT" ] ; then
 fi
 
 AUTHENTICATION="true"
-export GLIBCXX_FORCE_NEW=1
 
 # if command starts with an option, prepend arangod
 case "$1" in
@@ -64,19 +63,19 @@ if [ "$1" = 'arangod' ]; then
             echo >&2 "  You need to specify one of ARANGO_ROOT_PASSWORD, ARANGO_ROOT_PASSWORD_FILE, ARANGO_NO_AUTH and ARANGO_RANDOM_ROOT_PASSWORD"
             exit 1
         fi
-        
+
         if [ ! -z "$ARANGO_RANDOM_ROOT_PASSWORD" ]; then
             ARANGO_ROOT_PASSWORD=$(pwgen -s -1 16)
             echo "==========================================="
             echo "GENERATED ROOT PASSWORD: $ARANGO_ROOT_PASSWORD"
             echo "==========================================="
         fi
-        
+
         if [ ! -z "${ARANGO_ROOT_PASSWORD+x}" ]; then
             echo "Initializing root user...Hang on..."
             ARANGODB_DEFAULT_ROOT_PASSWORD="$ARANGO_ROOT_PASSWORD" /usr/sbin/arango-init-database -c /tmp/arangod.conf --server.rest-server false --log.level error --database.init-database true || true
             export ARANGO_ROOT_PASSWORD
-        
+
             if [ ! -z "${ARANGO_ROOT_PASSWORD}" ]; then
                 ARANGOSH_ARGS=" --server.password ${ARANGO_ROOT_PASSWORD} "
             fi

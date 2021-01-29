@@ -59,6 +59,7 @@ Function global:registerSingleTests()
     registerTest -testname "BackupNoAuthSysTests"
     registerTest -testname "active_failover"
     registerTest -testname "agency" -weight 2 -sniff true
+    registerTest -testname "agency-restart"
     registerTest -testname "arangobench"
     registerTest -testname "arangosh"
     registerTest -testname "audit"
@@ -73,10 +74,12 @@ Function global:registerSingleTests()
     registerTest -testname "dump_encrypted"
     registerTest -testname "dump_maskings"
     registerTest -testname "dump_multiple"
+    registerTest -testname "dump_no_envelope"
     registerTest -testname "dump_encrypted"
     registerTest -testname "endpoints"
     registerTest -testname "export"
     registerTest -testname "foxx_manager"
+    registerTest -testname "fuerte"
     registerTest -testname "communication"
     registerTest -testname "communication_ssl"
     registerTest -testname "http_replication" -weight 2
@@ -121,9 +124,14 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "resilience_transactions"
     registerTest -cluster $true -testname "resilience_sharddist"
     registerTest -cluster $true -testname "resilience_analyzers"
+    registerTest -cluster $true -testname "recovery_cluster" -index "0" -bucket "4/0" "arangosearch"
+    registerTest -cluster $true -testname "recovery_cluster" -index "1" -bucket "4/1" "arangosearch"
+    registerTest -cluster $true -testname "recovery_cluster" -index "2" -bucket "4/2" "arangosearch"
+    registerTest -cluster $true -testname "recovery_cluster" -index "3" -bucket "4/3" "arangosearch"
     registerTest -cluster $true -testname "shell_client"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "http_server" -sniff true
+    registerTest -cluster $true -testname "restart"
     registerTest -cluster $true -testname "server_secrets"
     registerTest -cluster $true -testname "server_permissions"
     registerTest -cluster $true -testname "server_parameters"
@@ -139,10 +147,13 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump"
     registerTest -cluster $true -testname "dump_maskings"
     registerTest -cluster $true -testname "dump_multiple"
+    registerTest -cluster $true -testname "dump_no_envelope"
     registerTest -cluster $true -testname "dump_encrypted"
+    registerTest -cluster $true -testname "export"
     registerTest -cluster $true -testname "server_http"
     registerTest -cluster $true -testname "audit_client"
     registerTest -cluster $true -testname "audit_server"
+    registerTest -cluster $true -testname "arangobench"
     # registerTest -cluster $true -testname "agency" -weight 2
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that
