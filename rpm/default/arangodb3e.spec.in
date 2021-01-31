@@ -107,10 +107,10 @@ fi
 %check
 echo check: We assume that there is nothing to check.
 # Move go executables back to where they belong:
-if ls -1q /tmp/sbin/ | grep -q .
+if ls -1q /tmp/sbin/ | grep -q . ; then
   mv /tmp/sbin/* %{buildroot}/usr/sbin/
 fi
-if ls -1q /tmp/bin/ | grep -q .
+if ls -1q /tmp/bin/ | grep -q . ; then
   mv /tmp/sbin/* %{buildroot}/usr/bin/
 fi
 rmdir /tmp/sbin /tmp/bin
