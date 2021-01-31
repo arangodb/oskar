@@ -630,12 +630,18 @@ function buildDebianPackage
   and for f in arangodb3.init arangodb3.service compat config templates preinst prerm postinst postrm rules
     cp $SOURCE/common/$f $TARGET/$f
     sed -e "s/@EDITION@/$EDITION/g" -i $TARGET/$f
-    if test $PACKAGE_SEPERATE_DEBUG = On
-      sed -i -e "s/@DEBIAN_SEPERATE_DEBUG@//" -i $TARGET/$f
-      sed -i -e "s/@DEBIAN_IMPLICIT_DEBUG@/echo /" -i $TARGET/$f
+    if test $PACKAGE_STRIP = All
+      sed -i -e "s/@DEBIAN_STRIP_ALL@//"                 -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@/echo /" -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_NONE@/echo /"           -i $TARGET/$f
+    elif  test $PACKAGE_STRIP = ExceptArangod
+      sed -i -e "s/@DEBIAN_STRIP_ALL@/echo /"            -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@//"      -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_NONE@/echo /"           -i $TARGET/$f
     else
-      sed -i -e "s/@DEBIAN_SEPERATE_DEBUG@/echo /" -i $TARGET/$f
-      sed -i -e "s/@DEBIAN_IMPLICIT_DEBUG@//" -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_ALL@/echo /"            -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@/echo /" -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_NONE@//"                -i $TARGET/$f
     end
   end
   and echo -n "$EDITION " > $ch
@@ -1409,12 +1415,18 @@ function transformSpec
   and cp "$argv[1]" "$filename"
   and sed -i -e "s/@PACKAGE_VERSION@/$ARANGODB_RPM_UPSTREAM/" "$filename"
   and sed -i -e "s/@PACKAGE_REVISION@/$ARANGODB_RPM_REVISION/" "$filename"
-  and if test $PACKAGE_SEPERATE_DEBUG = On
-    sed -i -e "s/@RPM_SEPERATE_DEBUG@//" "$filename"
-    sed -i -e "s/@RPM_IMPLICIT_DEBUG@/# /" "$filename"
+  and if test $PACKAGE_STRIP = All
+    sed -i -e "s/@RPM_STRIP_ALL@//"              "$filename"
+    sed -i -e "s/@RPM_STRIP_EXCEPT_ARANGOD@/# /" "$filename"
+    sed -i -e "s/@RPM_STRIP_NONE@/# /"           "$filename"
+  elif test $PACKAGE_STRIP = ExceptArangod
+    sed -i -e "s/@RPM_STRIP_ALL@/# /"            "$filename"
+    sed -i -e "s/@RPM_STRIP_EXCEPT_ARANGOD@//"   "$filename"
+    sed -i -e "s/@RPM_STRIP_NONE@/# /"           "$filename"
   else
-    sed -i -e "s/@RPM_SEPERATE_DEBUG@/# /" "$filename"
-    sed -i -e "s/@RPM_IMPLICIT_DEBUG@//" "$filename"
+    sed -i -e "s/@RPM_STRIP_ALL@/# /"            "$filename"
+    sed -i -e "s/@RPM_STRIP_EXCEPT_ARANGOD@/# /" "$filename"
+    sed -i -e "s/@RPM_STRIP_NONE@//"             "$filename"
   end
   and sed -i -e "s~@JS_DIR@~~" "$filename"
 end

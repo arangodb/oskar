@@ -25,10 +25,12 @@ override_dh_auto_install:
 	cd build/install ; if test -x usr/bin/arangobackup ; then cp -a --parents etc/arangodb3/arangobackup.conf usr/bin/arangobackup ../../debian/@EDITION@-client ; fi
 
 override_dh_strip:
-	@DEBIAN_SEPERATE_DEBUG@dh_strip --exclude usr/bin/arangodb --exclude usr/sbin/arangosync --dbg-package @EDITION@-dbg
-	@DEBIAN_IMPLICIT_DEBUG@dh_strip --exclude usr/bin/arangodb --exclude usr/sbin/arangosync --exclude usr/sbin/arangod --dbg-package @EDITION@-dbg
+	@DEBIAN_STRIP_ALL@dh_strip --exclude usr/bin/arangodb --exclude usr/sbin/arangosync --dbg-package @EDITION@-dbg
+	@DEBIAN_STRIP_EXCEPT_ARANGOD@dh_strip --exclude usr/bin/arangodb --exclude usr/sbin/arangosync --exclude usr/sbin/arangod --dbg-package @EDITION@-dbg
+	@DEBIAN_STRIP_NONE@
 
 override_dh_builddeb:
 	dpkg-deb -Zgzip --build debian/@EDITION@ .. 
 	dpkg-deb -Zgzip --build debian/@EDITION@-client ..
-	@DEBIAN_SEPERATE_DEBUG@dpkg-deb -Zgzip --build debian/@EDITION@-dbg ..
+	@DEBIAN_STRIP_ALL@dpkg-deb -Zgzip --build debian/@EDITION@-dbg ..
+	@DEBIAN_STRIP_EXCEPT_ARANGOD@dpkg-deb -Zgzip --build debian/@EDITION@-dbg ..

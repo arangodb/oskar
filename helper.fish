@@ -69,9 +69,10 @@ function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
 
-function packageSeperateDebugOff ; set -gx PACKAGE_SEPERATE_DEBUG Off ; end
-function packageSeperateDebugOn  ; set -gx PACKAGE_SEPERATE_DEBUG On  ; end
-packageSeperateDebugOn
+function packageStripNone          ; set -gx PACKAGE_STRIP None    ; end
+function packageStripExceptArangod ; set -gx PACKAGE_STRIP ExceptArangod ; end
+function packageStripAll           ; set -gx PACKAGE_STRIP All     ; end
+packageStripAll
 
 function minimalDebugInfoOff ; set -gx MINIMAL_DEBUG_INFO Off ; end
 function minimalDebugInfoOn  ; set -gx MINIMAL_DEBUG_INFO On  ; end
@@ -402,7 +403,7 @@ function makeCommunityRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
-  packageSeperateDebugOn
+  packageStripAll
   and minimalDebugInfoOff
   and buildCommunityPackage
 end
@@ -421,7 +422,7 @@ function makeEnterpriseRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
-  packageSeperateDebugOn
+  packageStripAll
   and minimalDebugInfoOff
   and buildEnterprisePackage
 end
@@ -509,16 +510,16 @@ function buildTarGzPackageHelper
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and mv bin/README .
-  and if test $PACKAGE_SEPERATE_DEBUG = On
+  and if test $PACKAGE_STRIP = All
     strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
-  else
+  elif test $PACKAGE_STRIP = ExceptArangod
     strip usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
   end
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
     rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
   else
-    if test -f usr/bin/arangobackup -a $PACKAGE_SEPERATE_DEBUG = On
+    if test -f usr/bin/arangobackup -a $PACKAGE_STRIP != None
       strip usr/bin/arangobackup
     end
   end
@@ -1180,7 +1181,7 @@ function showConfig
   echo 'Package Configuration'
   printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
   printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
-  printf $fmt3 'Debug Packages' $PACKAGE_SEPERATE_DEBUG '(packageSeperateDebugOn/Off)'
+  printf $fmt3 'Strip Packages' $PACKAGE_STRIP '(packageStripAll/ExceptArangod/None)'
   printf $fmt3 'Minimal Debug Info' $MINIMAL_DEBUG_INFO '(minimalDebugInfoOn/Off)'
   echo
   echo 'Internal Configuration'

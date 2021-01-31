@@ -87,11 +87,18 @@ mkdir -p %{buildroot}%{_piddir}
 cp -a $INNERWORKDIR/ArangoDB/build/install/* %{buildroot}
 rm -f %{buildroot}/README
 # Move go executables out of the way to prevent debug info from being stripped:
-@RPM_IMPLICIT_DEBUG@mv %{buildroot}/usr/sbin/arangod /tmp
-mv %{buildroot}/usr/bin/arangodb /tmp
+mkdir /tmp/sbin /tmp/bin
+# arangodb
+mv %{buildroot}/usr/bin/arangodb /tmp/bin
+# arangosync
 if [ -x %{buildroot}/usr/sbin/arangosync ] ; then
-  mv %{buildroot}/usr/sbin/arangosync /tmp
+  mv %{buildroot}/usr/sbin/arangosync /tmp/sbin
 fi
+# arangod
+@RPM_STRIP_BUT_ARANGOD@mv %{buildroot}/usr/sbin/arangod /tmp/sbin
+# or all binaries
+@RPM_STRIP_NONE@mv %{buildroot}/usr/bin/* /tmp/bin
+@RPM_STRIP_NONE@mv %{buildroot}/usr/sbin/* /tmp/sbin
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                             check
@@ -100,11 +107,13 @@ fi
 %check
 echo check: We assume that there is nothing to check.
 # Move go executables back to where they belong:
-@RPM_IMPLICIT_DEBUG@mv /tmp/arangod %{buildroot}/usr/sbin/arangod
-mv /tmp/arangodb %{buildroot}/usr/bin/arangodb
-if [ -x /tmp/arangosync ] ; then
-  mv /tmp/arangosync %{buildroot}/usr/sbin/arangosync
+if ls -1q /tmp/sbin/ | grep -q .
+  mv /tmp/sbin/* %{buildroot}/usr/sbin/
 fi
+if ls -1q /tmp/bin/ | grep -q .
+  mv /tmp/sbin/* %{buildroot}/usr/bin/
+fi
+rmdir /tmp/sbin /tmp/bin
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                             files
