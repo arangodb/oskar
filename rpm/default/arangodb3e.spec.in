@@ -111,7 +111,7 @@ if ls -1q /tmp/sbin/ | grep -q . ; then
   mv /tmp/sbin/* %{buildroot}/usr/sbin/
 fi
 if ls -1q /tmp/bin/ | grep -q . ; then
-  mv /tmp/sbin/* %{buildroot}/usr/bin/
+  mv /tmp/bin/* %{buildroot}/usr/bin/
 fi
 rmdir /tmp/sbin /tmp/bin
 
