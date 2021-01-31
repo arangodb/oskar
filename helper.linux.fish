@@ -634,7 +634,7 @@ function buildDebianPackage
       sed -i -e "s/@DEBIAN_STRIP_ALL@//"                 -i $TARGET/$f
       sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@/echo /" -i $TARGET/$f
       sed -i -e "s/@DEBIAN_STRIP_NONE@/echo /"           -i $TARGET/$f
-    elif  test $PACKAGE_STRIP = ExceptArangod
+    else if  test $PACKAGE_STRIP = ExceptArangod
       sed -i -e "s/@DEBIAN_STRIP_ALL@/echo /"            -i $TARGET/$f
       sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@//"      -i $TARGET/$f
       sed -i -e "s/@DEBIAN_STRIP_NONE@/echo /"           -i $TARGET/$f
@@ -1419,7 +1419,7 @@ function transformSpec
     sed -i -e "s/@RPM_STRIP_ALL@//"              "$filename"
     sed -i -e "s/@RPM_STRIP_EXCEPT_ARANGOD@/# /" "$filename"
     sed -i -e "s/@RPM_STRIP_NONE@/# /"           "$filename"
-  elif test $PACKAGE_STRIP = ExceptArangod
+  else if test $PACKAGE_STRIP = ExceptArangod
     sed -i -e "s/@RPM_STRIP_ALL@/# /"            "$filename"
     sed -i -e "s/@RPM_STRIP_EXCEPT_ARANGOD@//"   "$filename"
     sed -i -e "s/@RPM_STRIP_NONE@/# /"           "$filename"

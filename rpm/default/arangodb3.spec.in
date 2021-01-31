@@ -95,7 +95,7 @@ if [ -x %{buildroot}/usr/sbin/arangosync ] ; then
   mv %{buildroot}/usr/sbin/arangosync /tmp/sbin
 fi
 # arangod
-@RPM_STRIP_BUT_ARANGOD@mv %{buildroot}/usr/sbin/arangod /tmp/sbin
+@RPM_STRIP_EXCEPT_ARANGOD@mv %{buildroot}/usr/sbin/arangod /tmp/sbin
 # or all binaries
 @RPM_STRIP_NONE@mv %{buildroot}/usr/bin/* /tmp/bin
 @RPM_STRIP_NONE@mv %{buildroot}/usr/sbin/* /tmp/sbin

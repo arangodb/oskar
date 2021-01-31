@@ -512,7 +512,7 @@ function buildTarGzPackageHelper
   and mv bin/README .
   and if test $PACKAGE_STRIP = All
     strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
-  elif test $PACKAGE_STRIP = ExceptArangod
+  else if test $PACKAGE_STRIP = ExceptArangod
     strip usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
   end
   and if test "$ENTERPRISEEDITION" != "On"
