@@ -13,6 +13,7 @@ function checkoutRepo
   and git fetch
   and git checkout -f "$branch"
   and if test "$clean" = "true"
+    rm -rf $WORKDIR/sourceInfo.log
     if echo "$branch" | grep -q "^v"
       git checkout -- .
     else
@@ -59,6 +60,7 @@ end
 
 cd $INNERWORKDIR/ArangoDB
 and checkoutRepo $arango $force_clean
+and echo "Community:" (git rev-parse --verify HEAD) > $INNERWORKDIR/sourceInfo.log
 if test $status -ne 0
   echo "Failed to checkout community branch"
   exit 1
@@ -67,6 +69,7 @@ end
 if test $ENTERPRISEEDITION = On
   cd enterprise
   and checkoutRepo $enterprise $force_clean
+  and echo "Enterprise:" (git rev-parse --verify HEAD) >> $INNERWORKDIR/sourceInfo.log
   if test $status -ne 0
     echo "Failed to checkout enterprise branch"
     exit 1

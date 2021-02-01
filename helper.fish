@@ -1566,7 +1566,7 @@ function moveResultsToWorkspace
       end
     end
 
-    for x in buildArangoDB.log cmakeArangoDB.log
+    for x in buildArangoDB.log cmakeArangoDB.log sourceInfo.log
       echo "mv $x"
       if test -f $WORKDIR/work/$x ; mv $WORKDIR/work/$x $WORKSPACE ; end
     end
