@@ -237,7 +237,7 @@ function installTargets
     echo Stripping executables...
     strip \
       usr/sbin/arangod \
-      usr/bin/arangoimp \
+      usr/bin/arangoimport \
       usr/bin/arangosh \
       usr/bin/arangovpack \
       usr/bin/arangoexport \
