@@ -728,7 +728,10 @@ end
 function makeDockerCommunityRelease
   findArangoDBVersion ; or return 1
 
-  community
+  packageStripAll
+  and minimalDebugInfoOff
+  and buildCommunityPackage
+  and community  
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
@@ -744,7 +747,10 @@ function makeDockerEnterpriseRelease
 
   findArangoDBVersion ; or return 1
 
-  enterprise
+  packageStripAll
+  and minimalDebugInfoOff
+  and buildCommunityPackage
+  and enterprise
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
