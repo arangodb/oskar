@@ -758,7 +758,7 @@ function makeDockerEnterpriseRelease
   end
 end
 
-function makeDockerOskarRelease
+function makeDockerDebugRelease
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
@@ -766,14 +766,14 @@ function makeDockerOskarRelease
 
   findArangoDBVersion ; or return 1
 
-  packageStripAll
-  and minimalDebugInfoOn
+  packageStripOff
+  and minimalDebugInfoOff
   and buildEnterprisePackage
   and enterprise
   and if test (count $argv) -ge 1
-    buildDockerRelease $argv[1]-oasis
+    buildDockerRelease $argv[1]-debug
   else
-    buildDockerRelease $DOCKER_TAG-oasis
+    buildDockerRelease $DOCKER_TAG-debug
   end
 end
 
