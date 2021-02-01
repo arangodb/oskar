@@ -528,9 +528,9 @@ function buildTarGzPackageHelper
   or begin ; popd ; return 1 ; end
 
   tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" --exclude "etc" --exclude "var" "$name-$v"
-  and set s $status
+  set s $status
 
-  and if test "$s" -eq 0
+  if test "$s" -eq 0
     tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" \
       --exclude "etc" \
       --exclude "var" \
