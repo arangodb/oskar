@@ -728,8 +728,15 @@ end
 function makeDockerCommunityRelease
   findArangoDBVersion ; or return 1
 
-  packageStripAll
-  and minimalDebugInfoOff
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
   and buildCommunityPackage
   and community  
   and if test (count $argv) -ge 1
@@ -747,8 +754,15 @@ function makeDockerEnterpriseRelease
 
   findArangoDBVersion ; or return 1
 
-  packageStripAll
-  and minimalDebugInfoOff
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
   and buildEnterprisePackage
   and enterprise
   and if test (count $argv) -ge 1
@@ -758,7 +772,7 @@ function makeDockerEnterpriseRelease
   end
 end
 
-function makeDockerDebugRelease
+function makeDockerEnterpriseDebug
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
@@ -1258,7 +1272,7 @@ function runInContainer
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
              $mirror \
-	     -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
+             -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ARANGODB_REPO="$ARANGODB_REPO" \

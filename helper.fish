@@ -74,9 +74,33 @@ function packageStripExceptArangod ; set -gx PACKAGE_STRIP ExceptArangod ; end
 function packageStripAll           ; set -gx PACKAGE_STRIP All     ; end
 packageStripAll
 
-function minimalDebugInfoOff ; set -gx MINIMAL_DEBUG_INFO Off ; end
+function findMinimalDebugInfo
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+  set -l MINIMAL_DEBUG_INFO ""
+
+  test -f $f
+  and begin
+    set -l v (fgrep MINIMAL_DEBUG_INFO $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+    if test "$v" = "" -o "$v" = "Off" -o "$v" != "On"
+      set MINIMAL_DEBUG_INFO Off
+    else
+      set MINIMAL_DEBUG_INFO On
+    end
+  end
+  or begin
+    set MINIMAL_DEBUG_INFO Off
+  end
+
+  echo $MINIMAL_DEBUG_INFO
+end
+
 function minimalDebugInfoOn  ; set -gx MINIMAL_DEBUG_INFO On  ; end
-minimalDebugInfoOff
+function minimalDebugInfoOff ; set -gx MINIMAL_DEBUG_INFO Off ; end
+
+if test -z "$MINIMAL_DEBUG_INFO"
+  set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
+end
 
 function isGCE
   switch (hostname)
@@ -403,8 +427,15 @@ function makeCommunityRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
-  packageStripAll
-  and minimalDebugInfoOff
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
   and buildCommunityPackage
 end
 
@@ -422,8 +453,15 @@ function makeEnterpriseRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
-  packageStripAll
-  and minimalDebugInfoOff
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
   and buildEnterprisePackage
 end
 
