@@ -1,6 +1,10 @@
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
-set -xg dest /mnt/buildfiles/performance/$OS/Compiler/RAW
+if test $OS = "MAC"
+  set -xg dest /Users/$USER/buildfiles/performance/$OS/Compiler/RAW
+else
+  set -xg dest /mnt/buildfiles/performance/$OS/Compiler/RAW
+end
 
 mkdir -p $dest
 and cleanPrepareLockUpdateClear

@@ -541,6 +541,7 @@ function buildTarGzPackageHelper
       --exclude "arangod.8" \
       --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
+      --exclude "$name-$v/sbin" \
       --exclude "$name-$v/bin/arangodb" \
       --exclude "$name-$v/bin/arangosync" \
       --exclude "$name-$v/usr/sbin" \
