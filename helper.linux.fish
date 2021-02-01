@@ -1446,11 +1446,12 @@ function clearWorkDir
 end
 
 function transformSpec
-  set -l filename $argv[2]
   if test (count $argv) != 2
     echo transformSpec: wrong number of arguments
     return 1
   end
+
+  set -l filename $argv[2]
   and cp "$argv[1]" "$filename"
   and sed -i -e "s/@PACKAGE_VERSION@/$ARANGODB_RPM_UPSTREAM/" "$filename"
   and sed -i -e "s/@PACKAGE_REVISION@/$ARANGODB_RPM_REVISION/" "$filename"
