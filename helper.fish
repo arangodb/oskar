@@ -552,7 +552,7 @@ function buildTarGzPackageHelper
     set s $status
   end
 
-  and mv "$name-$v" install
+  mv "$name-$v" install
   and rm -rf install/bin
   and popd
   and return $s 
