@@ -549,9 +549,9 @@ function buildTarGzPackageHelper
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and mv bin/README .
   and if test $PACKAGE_STRIP = All
-    strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
+    strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
   else if test $PACKAGE_STRIP = ExceptArangod
-    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
+    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
   end
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
