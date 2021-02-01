@@ -13,7 +13,7 @@ function checkoutRepo
   and git fetch
   and git checkout -f "$branch"
   and if test "$clean" = "true"
-    rm -rf $WORKDIR/sourceInfo.log
+    rm -rf $INNERWORKDIR/sourceInfo.log
     if echo "$branch" | grep -q "^v"
       git checkout -- .
     else
