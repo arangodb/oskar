@@ -63,8 +63,9 @@ and checkoutRepo $arango $force_clean
 if test $status -ne 0
   echo "Failed to checkout community branch"
   exit 1
+else
+  echo "Community:" (git rev-parse --verify HEAD) > $INNERWORKDIR/sourceInfo.log  
 end
-or echo "Community:" (git rev-parse --verify HEAD) > $INNERWORKDIR/sourceInfo.log
 
 if test $ENTERPRISEEDITION = On
   cd enterprise
@@ -72,6 +73,7 @@ if test $ENTERPRISEEDITION = On
   if test $status -ne 0
     echo "Failed to checkout enterprise branch"
     exit 1
+  else
+    echo "Enterprise:" (git rev-parse --verify HEAD) >> $INNERWORKDIR/sourceInfo.log
   end
-  or echo "Enterprise:" (git rev-parse --verify HEAD) >> $INNERWORKDIR/sourceInfo.log
 end
