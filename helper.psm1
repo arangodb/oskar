@@ -1070,7 +1070,7 @@ Function checkoutUpgradeDataTests
                         If ($(git status -uno) | Select-String -Pattern "behind" -CaseSensitive)
                         {
                             Write-Host "=="$(Get-Date)"== started clean and reset 'upgrade-data-tests'"
-							proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
+                            proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
                             proc -process "git" -argument "reset --hard origin/devel" -logfile $false -priority "Normal"
                             Write-Host "=="$(Get-Date)"== finished clean and reset 'upgrade-data-tests'"
                         }
@@ -1090,7 +1090,7 @@ Function checkoutUpgradeDataTests
                 Remove-Item -Force "$HOME\.ssh\known_hosts"
                 proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
             }
-			Set-Location $global:ARANGODIR
+            Set-Location $global:ARANGODIR
             Write-Host "=="$(Get-Date)"== started clone 'upgrade-data-tests'"
             proc -process "git" -argument "clone ssh://git@github.com/arangodb/upgrade-data-tests" -logfile $false -priority "Normal"
             Write-Host "=="$(Get-Date)"== finished clone 'upgrade-data-tests'"
@@ -1160,6 +1160,10 @@ Function switchBranches($branch_c,$branch_e)
             proc -process "git" -argument "reset --hard origin/$branch_c" -logfile $false -priority "Normal"
         }
     }
+    If ($global:ok)
+    {
+        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File "$global:INNERWORKDIR\sourceInfo.log"
+    }
     If($ENTERPRISEEDITION -eq "On")
     {
         Push-Location $pwd
@@ -1197,6 +1201,10 @@ Function switchBranches($branch_c,$branch_e)
             {
                 proc -process "git" -argument "reset --hard origin/$branch_e" -logfile $false -priority "Normal"
             }
+        }
+        If ($global:ok)
+        {
+            Write-Output "Enterprise: $(git rev-parse --verify HEAD)" | Out-File "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
         }
         Pop-Location
     }
@@ -1608,6 +1616,11 @@ Function moveResultsToWorkspace
     {
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
+    }
+    If(Test-Path -PathType Leaf "$INNERWORKDIR\sourceInfo.log")
+    {
+        Write-Host "Move $INNERWORKDIR\sourceInfo.log"
+        Move-Item -Force -Path "$INNERWORKDIR\sourceInfo.log" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "package* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "package*"))
