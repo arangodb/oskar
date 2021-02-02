@@ -37,28 +37,29 @@ function movePackagesToStage2
     rm -rf $DST/Linux
     and mkdir -p $DST/Linux
     or return 1
-  end
-
-  for pattern in "arangodb3*_*.deb" "arangodb3*-*.deb" "arangodb3*-*.rpm" "arangodb3*-linux-*.tar.gz" "sourceInfo.log"
-    set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
-    for file in $files
-      mv $SRC/$file $DST/Linux ; or set -g s 1
+    
+    for pattern in "arangodb3*_*.deb" "arangodb3*-*.deb" "arangodb3*-*.rpm" "arangodb3*-linux-*.tar.gz" "sourceInfo.log"
+      set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
+      for file in $files
+        mv $SRC/$file $DST/Linux ; or set -g s 1
+      end
     end
-  end
-
-  if test "$SYSTEM_IS_MACOSX" = "true"
+  else if test "$SYSTEM_IS_MACOSX" = "true"
     mountMacCatalinaStage2
     and rm -rf $DST/MacOSX
     and mkdir -p $DST/MacOSX
     and chmod 777 $DST/MacOSX
     or return 1
-  end
 
-  for pattern in "arangodb3*-*.dmg" "arangodb3*-mac*-*.tar.gz" "sourceInfo.log"
-    set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
-    for file in $files
-      mv $SRC/$file $DST/MacOSX ; or set -g s 1
+    for pattern in "arangodb3*-*.dmg" "arangodb3*-mac*-*.tar.gz" "sourceInfo.log"
+      set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
+      for file in $files
+        mv $SRC/$file $DST/MacOSX ; or set -g s 1
+      end
     end
+  else
+    echo "Unknown platform!"
+    set -g s 1
   end
 
   return $s
