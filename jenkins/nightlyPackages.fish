@@ -6,8 +6,8 @@ if test -z "$ARANGODB_PACKAGES"
   exit 1
 end
 
-if test -z "$MOVE_TO_STAGE2"
-  set -xg MOVE_TO_STAGE2 true
+if test -z "$COPY_TO_STAGE2"
+  set -xg COPY_TO_STAGE2 false
 end
 
 set -xg PACKAGES "$ARANGODB_PACKAGES"
@@ -29,7 +29,7 @@ function mountMacCatalinaStage2
   end
 end
 
-function movePackagesToStage2
+function copyPackagesToStage2
   echo "Moving packages to stage2..."
   umask 000
 
@@ -37,11 +37,11 @@ function movePackagesToStage2
     rm -rf $DST/Linux
     and mkdir -p $DST/Linux
     or return 1
-    
+
     for pattern in "arangodb3*_*.deb" "arangodb3*-*.deb" "arangodb3*-*.rpm" "arangodb3*-linux-*.tar.gz" "sourceInfo.log"
       set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
       for file in $files
-        mv $SRC/$file $DST/Linux ; or set -g s 1
+        cp $SRC/$file $DST/Linux ; or set -g s 1
       end
     end
   else if test "$SYSTEM_IS_MACOSX" = "true"
@@ -54,7 +54,7 @@ function movePackagesToStage2
     for pattern in "arangodb3*-*.dmg" "arangodb3*-mac*-*.tar.gz" "sourceInfo.log"
       set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
       for file in $files
-        mv $SRC/$file $DST/MacOSX ; or set -g s 1
+        cp $SRC/$file $DST/MacOSX ; or set -g s 1
       end
     end
   else
@@ -69,8 +69,8 @@ cleanPrepareLockUpdateClear
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and makeRelease
-and if test "$MOVE_TO_STAGE2" = "true"
-  movePackagesToStage2
+and if test "$COPY_TO_STAGE2" = "true"
+  copyPackagesToStage2
 end
 
 set -l s $status

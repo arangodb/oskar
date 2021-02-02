@@ -3,9 +3,9 @@ Write-Host "WORKSPACE: $env:WORKSPACE"
 Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 . "$pwd\prepareOskar.ps1"
 
-if (-Not (Test-Path env:MOVE_TO_STAGE2 -ErrorAction SilentlyContinue))
+if (-Not (Test-Path env:COPY_TO_STAGE2 -ErrorAction SilentlyContinue))
 {
-    $env:MOVE_TO_STAGE2 = $true
+    $env:COPY_TO_STAGE2 = $true
 }
 
 If (!$env:ARANGODB_PACKAGES -or $env:ARANGODB_PACKAGES -eq "")
@@ -43,7 +43,7 @@ Else
 
 $PACKAGES="$env:ARANGODB_PACKAGES"
 
-Function movePackagesToStage2
+Function copyPackagesToStage2
 {
     $SRC="$global:INNERWORKDIR"
     Write-Host "SRC: $SRC"
@@ -61,7 +61,7 @@ Function movePackagesToStage2
 
     ForEach ($file in $(Get-ChildItem $SRC\* -Filter ArangoDB3* -Include *.zip, *.exe))
     {
-        Move-Item -Force -Path "$file" -Destination $DST\Windows;comm
+        Copy-Item -Force -Path "$file" -Destination $DST\Windows;comm
     }
 
   return $global:ok
@@ -74,10 +74,10 @@ If ($global:ok )
     makeRelease
 }
 $s = $global:ok
-If ($global:ok -And $env:MOVE_TO_STAGE2 -eq $true) 
+If ($global:ok -And $env:COPY_TO_STAGE2 -eq $true) 
 {
     storeSymbols
-    movePackagesToStage2
+    copyPackagesToStage2
     $s = $global:ok
 }
 moveResultsToWorkspace
