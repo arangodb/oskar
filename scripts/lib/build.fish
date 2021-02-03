@@ -53,7 +53,7 @@ function setupCcache
       set -xg SCCACHE_CACHE_SIZE $CCACHESIZE
     end
 
-    if test "$SCCACHE_BUCKET" != "" -a "$AWS_ACCESS_KEY_ID" != "" -a 
+    if test "$SCCACHE_BUCKET" != "" -a "$AWS_ACCESS_KEY_ID" != ""
       echo "using sccache at S3 ($SCCACHE_BUCKET)"
       set -e SCCACHE_DIR
       set -e SCCACHE_GCS_BUCKET
