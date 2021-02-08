@@ -1569,6 +1569,26 @@ function moveResultsToWorkspace
     for x in buildArangoDB.log cmakeArangoDB.log sourceInfo.log
       echo "mv $x"
       if test -f $WORKDIR/work/$x ; mv $WORKDIR/work/$x $WORKSPACE ; end
+
+      if test $x = "sourceInfo.log"
+        set -l fields ""
+        and begin
+          cat $WORKSPACE/sourceInfo.log | while read -l line
+          set -l var (echo $line | cut -f1 -d ':')
+          switch "$var"
+            case "VERSION" "Community" "Enterprise"
+              set -l val (echo $line | cut -f2 -d ' ')
+              if test -n $val
+                set fields "$fields  \"$var\":\""(echo $line | cut -f2 -d ' ')\"\n""
+              end
+            end
+          end
+          if test -n "$fields"
+            echo "convert $WORKSPACE/sourceInfo.log to $WORKSPACE/sourceInfo.json"
+            printf "{\n"(printf $fields | string join ",\n")"\n}" > $WORKSPACE/sourceInfo.json
+          end
+        end
+      end
     end
 
     for x in cppcheck.xml
