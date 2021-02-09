@@ -374,6 +374,13 @@ function setNightlyRelease
   checkoutIfNeeded
   sed -i -e "s/set(ARANGODB_VERSION_RELEASE_TYPE .*/set(ARANGODB_VERSION_RELEASE_TYPE \"nightly\")/" $WORKDIR/work/ArangoDB/CMakeLists.txt
   sed -i -e "s/set(ARANGODB_VERSION_RELEASE_NUMBER .*/set(ARANGODB_VERSION_RELEASE_NUMBER \""(date +%Y%m%d)"\")/" $WORKDIR/work/ArangoDB/CMakeLists.txt
+  findArangoDBVersion
+  and set -l ARANGODB_FULL_VERSION "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH"
+  and if test -n "$ARANGODB_VERSION_RELEASE_TYPE"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION-$ARANGODB_VERSION_RELEASE_TYPE"; end
+  and if test -n "$ARANGODB_VERSION_RELEASE_NUMBER"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION.$ARANGODB_VERSION_RELEASE_NUMBER"; end
+  and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/VERSION
+  and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
+  and ls -1 $WORKDIR/work/sourceInfo.* | xargs sed -i 's/\("\?VERSION"\?: \?"\?\)\([0-9a-z.]\+\)/\1'$ARANGODB_FULL_VERSION'/g'
 end
 
 ## #############################################################################
