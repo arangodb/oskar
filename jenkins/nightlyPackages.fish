@@ -30,7 +30,7 @@ function mountMacCatalinaStage2
 end
 
 function copyPackagesToStage2
-  echo "Moving packages to stage2..."
+  echo "Copy packages to stage2..."
   umask 000
 
   if test "$SYSTEM_IS_LINUX" = "true"

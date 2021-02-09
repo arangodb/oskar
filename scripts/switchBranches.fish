@@ -29,6 +29,28 @@ function checkoutRepo
   return $status
 end
 
+function convertSItoJSON
+  if test -f $INNERWORKDIR/sourceInfo.log
+    set -l fields ""
+    and begin
+      cat $INNERWORKDIR/sourceInfo.log | while read -l line
+      set -l var (echo $line | cut -f1 -d ':')
+      switch "$var"
+        case "VERSION" "Community" "Enterprise"
+          set -l val (echo $line | cut -f2 -d ' ')
+          if test -n $val
+            set fields "$fields  \"$var\":\""(echo $line | cut -f2 -d ' ')\"\n""
+          end
+        end
+      end
+      if test -n "$fields"
+        echo "convert $INNERWORKDIR/sourceInfo.log to $INNERWORKDIR/sourceInfo.json"
+        printf "{\n"(printf $fields | string join ",\n")"\n}" > $INNERWORKDIR/sourceInfo.json
+      end
+    end
+  end
+end
+
 if test "$argv[1]" = "help"
     echo "\
 
@@ -77,3 +99,5 @@ if test $ENTERPRISEEDITION = On
     echo "Enterprise:" (git rev-parse --verify HEAD) >> $INNERWORKDIR/sourceInfo.log
   end
 end
+
+convertSItoJSON
