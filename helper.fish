@@ -383,7 +383,7 @@ function setNightlyRelease
   and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/VERSION
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
   and ls -1 $WORKDIR/work/sourceInfo.* | xargs sed -i$suffix -E "s/(\"?VERSION\"?: ?\"?)([0-9a-z.-]+)/\1$ARANGODB_FULL_VERSION/g"
-  test -n "$suffix"; and rm -f $WORKDIR/work/sourceInfo*$suffix
+  and if test -n "$suffix"; rm -f $WORKDIR/work/sourceInfo*$suffix; end
 end
 
 ## #############################################################################
