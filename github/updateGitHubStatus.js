@@ -89,8 +89,8 @@ const githubRepository = repository.split('/')[1] || "arangodb";
 const stateToDescriptionMap = {
   setPending: "The build started. Waiting ...",
   setSuccess: "The build succeeded! Ready to be merged after valid review!",
-  setFailure: "The build failed! Check the Details and take care of the failure!",
-  setError: "The build errored! Check the Details and take care of the error!"
+  setFailure: "The build failed! Check the details and take care of the failure!",
+  setError: "The build errored! Check the details and take care of the error!"
 };
 
 const stateToGitHubStateMap = {
