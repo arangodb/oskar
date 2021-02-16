@@ -35,7 +35,6 @@ const exitAndWriteResultToFile = (error, message, status, extra) => {
     if (pullRequestExtraInformation.hasOwnProperty('info')) {
       result.info = pullRequestExtraInformation.info;
     }
-    console.log(pullRequestExtraInformation)
     result.status = 'SUCCESS';
   } else {
     // error case
