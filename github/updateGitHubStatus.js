@@ -164,13 +164,13 @@ const postStatus = (postData, sha) => {
 
   let req = https.request(options, (response) => {
     response.on('error', (e) => {
-      exitAndWriteResultToFile(true, JSON.stringify(e));
+      exitAndWriteResultToFile(true, e.message);
     });
     response.on('end', () => {
       try {
         evaluatePostStatusResponse(JSON.parse(responseData));
       } catch (e) {
-        exitAndWriteResultToFile(true, JSON.stringify(e));
+        exitAndWriteResultToFile(true, e.message);
       }
     });
   });
@@ -235,7 +235,16 @@ const checkPRMethod = (prCheckData, sha) => {
 
   if (prCheckData.hasOwnProperty('total_count')) {
     if (prCheckData.total_count >= 1) {
-      let infoItem = prCheckData.items[0];
+      let elementPositionToUse = prCheckData.total_count - 1;
+      let infoItem = prCheckData.items[elementPositionToUse];
+
+      if (infoItem.hasOwnProperty('state')) {
+        if (infoItem.state !== 'open') {
+          // we can abort - we found a PR, but this one is already closed
+          exitAndWriteResultToFile(true, "We've only found a closed PR. Exiting.", "FAIL_NO_PR");
+        }
+      }
+
       if (infoItem.hasOwnProperty('body')) {
         // just additional information, let's not fail here
         pullRequestExtraInformation.info = infoItem.body;
@@ -291,17 +300,23 @@ const getCommitSha = () => {
   getRequest(getCommitShaUrl, (data) => {
     if (data) {
       try {
+
         data = JSON.parse(data);
         commitExtraInformation = data[0];
-        let sha = data[0].sha; // as only last item + sha is out of interest here
-        if (!sha) {
-          exitAndWriteResultToFile(true, "Could not parse commit SHA information!");
+        try {
+          let sha = data[0].sha; // as only last item + sha is out of interest here
+          if (!sha) {
+            exitAndWriteResultToFile(true, "Could not parse commit SHA information!");
+          }
+          // We now do have all information we need, either supplied via Jenkins Environment or this GitHub API
+          checkPRExists(sha);
+        } catch (e) {
+          exitAndWriteResultToFile(true,
+            "Probably SHA not found - " + JSON.stringify(data, null, 2) + " : " + e.message
+          );
         }
-
-        // We now do have all information we need, either supplied via Jenkins Environment or this GitHub API
-        checkPRExists(sha);
       } catch (e) {
-        exitAndWriteResultToFile(true, JSON.stringify(e));
+        exitAndWriteResultToFile(true, e.message);
       }
     }
   });
