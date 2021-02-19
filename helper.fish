@@ -69,6 +69,39 @@ function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
 
+function packageStripNone          ; set -gx PACKAGE_STRIP None    ; end
+function packageStripExceptArangod ; set -gx PACKAGE_STRIP ExceptArangod ; end
+function packageStripAll           ; set -gx PACKAGE_STRIP All     ; end
+packageStripAll
+
+function findMinimalDebugInfo
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+  set -l MINIMAL_DEBUG_INFO ""
+
+  test -f $f
+  and begin
+    set -l v (fgrep MINIMAL_DEBUG_INFO $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+    if test "$v" = "" -o "$v" = "Off" -o "$v" != "On"
+      set MINIMAL_DEBUG_INFO Off
+    else
+      set MINIMAL_DEBUG_INFO On
+    end
+  end
+  or begin
+    set MINIMAL_DEBUG_INFO Off
+  end
+
+  echo $MINIMAL_DEBUG_INFO
+end
+
+function minimalDebugInfoOn  ; set -gx MINIMAL_DEBUG_INFO On  ; end
+function minimalDebugInfoOff ; set -gx MINIMAL_DEBUG_INFO Off ; end
+
+if test -z "$MINIMAL_DEBUG_INFO"
+  set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
+end
+
 function isGCE
   switch (hostname)
     case 'gce-*'
@@ -404,7 +437,16 @@ function makeCommunityRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
-  buildCommunityPackage
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
+  and buildCommunityPackage
 end
 
 function makeEnterpriseRelease
@@ -421,7 +463,16 @@ function makeEnterpriseRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
-  buildEnterprisePackage
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
+  and buildEnterprisePackage
 end
 
 ## #############################################################################
@@ -497,19 +548,26 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
-  pushd $WORKDIR/work/ArangoDB/build/install
-  and rm -rf bin sbin
+  pushd $WORKDIR/work
+  and rm -rf targz
+  and mkdir targz
+  and cd $WORKDIR/work/ArangoDB/build/install
+  and cp -a * $WORKDIR/work/targz
+  and cd $WORKDIR/work/targz
+  and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
-  and rm -f "bin/*~" "bin/*.bak"
+  and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and mv bin/README .
-  and mkdir sbin
-  and mv bin/arangod sbin
-  and strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
+  and if test $PACKAGE_STRIP = All
+    strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+  else if test $PACKAGE_STRIP = ExceptArangod
+    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+  end
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
     rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
   else
-    if test -f usr/bin/arangobackup
+    if test -f usr/bin/arangobackup -a $PACKAGE_STRIP != None
       strip usr/bin/arangobackup
     end
   end
@@ -547,6 +605,7 @@ function buildTarGzPackageHelper
   and rm -rf install/bin
   and popd
   and return $s 
+  or begin ; popd ; return 1 ; end
 end
 
 ## #############################################################################
@@ -1171,6 +1230,8 @@ function showConfig
   echo 'Package Configuration'
   printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
   printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
+  printf $fmt3 'Strip Packages' $PACKAGE_STRIP '(packageStripAll/ExceptArangod/None)'
+  printf $fmt3 'Minimal Debug Info' $MINIMAL_DEBUG_INFO '(minimalDebugInfoOn/Off)'
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM   '(parallelism nnn)'

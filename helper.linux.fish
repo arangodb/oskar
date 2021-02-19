@@ -630,6 +630,19 @@ function buildDebianPackage
   and for f in arangodb3.init arangodb3.service compat config templates preinst prerm postinst postrm rules
     cp $SOURCE/common/$f $TARGET/$f
     sed -e "s/@EDITION@/$EDITION/g" -i $TARGET/$f
+    if test $PACKAGE_STRIP = All
+      sed -i -e "s/@DEBIAN_STRIP_ALL@//"                 -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@/echo /" -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_NONE@/echo /"           -i $TARGET/$f
+    else if  test $PACKAGE_STRIP = ExceptArangod
+      sed -i -e "s/@DEBIAN_STRIP_ALL@/echo /"            -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@//"      -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_NONE@/echo /"           -i $TARGET/$f
+    else
+      sed -i -e "s/@DEBIAN_STRIP_ALL@/echo /"            -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@/echo /" -i $TARGET/$f
+      sed -i -e "s/@DEBIAN_STRIP_NONE@//"                -i $TARGET/$f
+    end
   end
   and echo -n "$EDITION " > $ch
   and cp -a $SOURCE/common/source $TARGET
@@ -715,7 +728,17 @@ end
 function makeDockerCommunityRelease
   findArangoDBVersion ; or return 1
 
-  community
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
+  and buildCommunityPackage
+  and community  
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
@@ -731,11 +754,40 @@ function makeDockerEnterpriseRelease
 
   findArangoDBVersion ; or return 1
 
-  enterprise
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
+  and buildEnterprisePackage
+  and enterprise
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
     buildDockerRelease $DOCKER_TAG
+  end
+end
+
+function makeDockerEnterpriseDebug
+  if test "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
+  end
+
+  findArangoDBVersion ; or return 1
+
+  packageStripOff
+  and minimalDebugInfoOff
+  and buildEnterprisePackage
+  and enterprise
+  and if test (count $argv) -ge 1
+    buildDockerRelease $argv[1]-debug
+  else
+    buildDockerRelease $DOCKER_TAG-debug
   end
 end
 
@@ -1220,23 +1272,24 @@ function runInContainer
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
              $mirror \
+             -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
-             -e ARANGODB_VERSION="$ARANGODB_VERSION" \
-             -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
+             -e ARANGODB_REPO="$ARANGODB_REPO" \
+             -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+             -e ASAN="$ASAN" \
              -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
              -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
-             -e ASAN="$ASAN" \
              -e BUILDMODE="$BUILDMODE" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '\-.*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
-             -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
-             -e GIT_TRACE_PACKET="$GIT_TRACE_PACKET" \
-             -e GIT_TRACE="$GIT_TRACE" \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
+             -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
+             -e GIT_TRACE="$GIT_TRACE" \
+             -e GIT_TRACE_PACKET="$GIT_TRACE_PACKET" \
              -e INNERWORKDIR="$INNERWORKDIR" \
              -e IONICE="$IONICE" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
@@ -1251,10 +1304,10 @@ function runInContainer
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCCACHE_BUCKET="$SCCACHE_BUCKET" \
-             -e SCCACHE_IDLE_TIMEOUT="$SCCACHE_IDLE_TIMEOUT" \
              -e SCCACHE_ENDPOINT="$SCCACHE_ENDPOINT" \
              -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
              -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
+             -e SCCACHE_IDLE_TIMEOUT="$SCCACHE_IDLE_TIMEOUT" \
              -e SCCACHE_MEMCACHED="$SCCACHE_MEMCACHED" \
              -e SCCACHE_REDIS="$SCCACHE_REDIS" \
              -e SCRIPTSDIR="$SCRIPTSDIR" \
@@ -1269,9 +1322,9 @@ function runInContainer
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
              -e USE_CCACHE="$USE_CCACHE" \
+             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
-             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1397,17 +1450,25 @@ function transformSpec
     echo transformSpec: wrong number of arguments
     return 1
   end
-  and cp "$argv[1]" "$argv[2]"
-  and sed -i -e "s/@PACKAGE_VERSION@/$ARANGODB_RPM_UPSTREAM/" "$argv[2]"
-  and sed -i -e "s/@PACKAGE_REVISION@/$ARANGODB_RPM_REVISION/" "$argv[2]"
-  and sed -i -e "s~@JS_DIR@~~" "$argv[2]"
 
-  # in case of version number inside JS directory
-  # and if test "(" "$ARANGODB_VERSION_MAJOR" -eq "3" ")" -a "(" "$ARANGODB_VERSION_MINOR" -le "3" ")"
-  #  sed -i -e "s~@JS_DIR@~~" "$argv[2]"
-  # else
-  #  sed -i -e "s~@JS_DIR@~/$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH~" "$argv[2]"
-  # end
+  set -l filename $argv[2]
+  and cp "$argv[1]" "$filename"
+  and sed -i -e "s/@PACKAGE_VERSION@/$ARANGODB_RPM_UPSTREAM/" "$filename"
+  and sed -i -e "s/@PACKAGE_REVISION@/$ARANGODB_RPM_REVISION/" "$filename"
+  and if test $PACKAGE_STRIP = All
+    sed -i -e "s/@RPM_STRIP_ALL@//"              "$filename"
+    sed -i -e "s/@RPM_STRIP_EXCEPT_ARANGOD@/# /" "$filename"
+    sed -i -e "s/@RPM_STRIP_NONE@/# /"           "$filename"
+  else if test $PACKAGE_STRIP = ExceptArangod
+    sed -i -e "s/@RPM_STRIP_ALL@/# /"            "$filename"
+    sed -i -e "s/@RPM_STRIP_EXCEPT_ARANGOD@//"   "$filename"
+    sed -i -e "s/@RPM_STRIP_NONE@/# /"           "$filename"
+  else
+    sed -i -e "s/@RPM_STRIP_ALL@/# /"            "$filename"
+    sed -i -e "s/@RPM_STRIP_EXCEPT_ARANGOD@/# /" "$filename"
+    sed -i -e "s/@RPM_STRIP_NONE@//"             "$filename"
+  end
+  and sed -i -e "s~@JS_DIR@~~" "$filename"
 end
 
 function shellInUbuntuContainer

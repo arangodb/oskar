@@ -71,6 +71,10 @@ else
   end
 end
 
+if test "$MINIMAL_DEBUG_INFO" = "On"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_MINIMAL_DEBUGINFO=On
+end
 setupCcacheBinPath alpine
 and setupCcache alpine
 and cleanBuildDirectory
