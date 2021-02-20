@@ -446,7 +446,8 @@ function makeCommunityRelease
     packageStripAll
     minimalDebugInfoOff
   end
-  and buildCommunityPackage
+  echo ""
+  buildCommunityPackage
 end
 
 function makeEnterpriseRelease
@@ -472,7 +473,8 @@ function makeEnterpriseRelease
     packageStripAll
     minimalDebugInfoOff
   end
-  and buildEnterprisePackage
+  echo ""
+  buildEnterprisePackage
 end
 
 ## #############################################################################
