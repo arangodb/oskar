@@ -737,7 +737,8 @@ function makeDockerCommunityRelease
     packageStripAll
     minimalDebugInfoOff
   end
-  and buildCommunityPackage
+  echo ""
+  buildCommunityPackage
   and community  
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
@@ -763,7 +764,8 @@ function makeDockerEnterpriseRelease
     packageStripAll
     minimalDebugInfoOff
   end
-  and buildEnterprisePackage
+  echo ""
+  buildEnterprisePackage
   and enterprise
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
