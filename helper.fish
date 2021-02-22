@@ -573,15 +573,21 @@ function buildTarGzPackageHelper
       strip usr/bin/arangobackup
     end
   end
-  and cd $WORKDIR/work/ArangoDB/build
-  and mv install "$name-$v"
+  and rm -rf "$WORKDIR/work/$name-$v"
+  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
+  and cd $WORKDIR/work
   or begin ; popd ; return 1 ; end
 
-  tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" --exclude "etc" --exclude "var" "$name-$v"
+  rm -rf "$name-$os-$v"
+  and ln -s "$name-$v" "$name-$os-$v"
+  and tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" -h --exclude "etc" --exclude "var" "$name-$os-$v"
+  and rm -rf "$name-$os-$v"
   set s $status
 
   if test "$s" -eq 0
-    tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" \
+    rm -rf "$name-client-$os-$v"
+    and ln -s "$name-$v" "$name-client-$os-$v"
+    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" -h \
       --exclude "etc" \
       --exclude "var" \
       --exclude "*.initd" \
@@ -591,21 +597,21 @@ function buildTarGzPackageHelper
       --exclude "arangod.8" \
       --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
-      --exclude "$name-$v/sbin" \
-      --exclude "$name-$v/bin/arangodb" \
-      --exclude "$name-$v/bin/arangosync" \
-      --exclude "$name-$v/usr/sbin" \
-      --exclude "$name-$v/usr/bin/arangodb" \
-      --exclude "$name-$v/usr/bin/arangosync" \
-      --exclude "$name-$v/usr/share/arangodb3/arangodb-update-db" \
-      --exclude "$name-$v/usr/share/arangodb3/js/server" \
-      "$name-$v"
+      --exclude "$name-client-$os-$v/sbin" \
+      --exclude "$name-client-$os-$v/bin/arangod" \
+      --exclude "$name-client-$os-$v/bin/arangodb" \
+      --exclude "$name-client-$os-$v/bin/arangosync" \
+      --exclude "$name-client-$os-$v/usr/sbin" \
+      --exclude "$name-client-$os-$v/usr/bin/arangodb" \
+      --exclude "$name-client-$os-$v/usr/bin/arangosync" \
+      --exclude "$name-client-$os-$v/usr/share/arangodb3/arangodb-update-db" \
+      --exclude "$name-client-$os-$v/usr/share/arangodb3/js/server" \
+      "$name-client-$os-$v"
+    and rm -rf "$name-client-$os-$v"
     set s $status
   end
 
-  mv "$name-$v" install
-  and rm -rf install/bin
-  and popd
+  popd
   and return $s 
   or begin ; popd ; return 1 ; end
 end
