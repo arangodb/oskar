@@ -527,6 +527,39 @@ function buildSourcePackage
 end
 
 ## #############################################################################
+## PREPARE binaries
+## #############################################################################
+
+function prepareInstall
+  set -l path "$argv[1]"
+
+  if test -z "$path" -o ! -d "$path"
+    echo "need valid path as first argument"
+    return 1
+  end
+
+  pushd $path
+  and if test $PACKAGE_STRIP = All
+    strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+  else if test $PACKAGE_STRIP = ExceptArangod
+    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+  end
+  and if test "$ENTERPRISEEDITION" != "On"
+    rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
+    rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
+  else
+    if test -f usr/bin/arangobackup -a $PACKAGE_STRIP != None
+      strip usr/bin/arangobackup
+    end
+  end
+  set s $status
+
+  popd
+  and return $s
+  or begin ; popd ; return 1 ; end
+end
+
+## #############################################################################
 ## TAR release
 ## #############################################################################
 
@@ -560,19 +593,7 @@ function buildTarGzPackageHelper
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and mv bin/README .
-  and if test $PACKAGE_STRIP = All
-    strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
-  else if test $PACKAGE_STRIP = ExceptArangod
-    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
-  end
-  and if test "$ENTERPRISEEDITION" != "On"
-    rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
-    rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
-  else
-    if test -f usr/bin/arangobackup -a $PACKAGE_STRIP != None
-      strip usr/bin/arangobackup
-    end
-  end
+  and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v"
   and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
   and cd $WORKDIR/work

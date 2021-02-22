@@ -928,13 +928,22 @@ function buildDockerImage
 
   findArangoDBVersion ; or return 1
   set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
-  pushd $WORKDIR/work/ArangoDB/build/install
-
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
 
   if not test -d $containerpath
     set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
   end
+
+  pushd $WORKDIR/work
+  and rm -rf docker
+  and mkdir docker
+  and cp -a $WORKDIR/work/ArangoDB/build/install/* $WORKDIR/work/docker
+  and cd $WORKDIR/work/docker
+  and prepareInstall $WORKDIR/work/docker
+  and popd
+  or begin ; rm -rf $WORKDIR/work/docker ; popd ; return 1 ; end
+  
+  pushd $WORKDIR/work/docker
   and tar czf $containerpath/install.tar.gz *
   and buildDockerAddFiles $DOCKER_DISTRO
   if test $status -ne 0
