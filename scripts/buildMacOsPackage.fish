@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+source ./scripts/lib/build.fish
+
 set -xg IDENTITY "Developer ID Application: ArangoDB GmbH (W7UC4UQXPV)"
 
 # sanity checks
@@ -56,6 +58,7 @@ function setupApp
   and begin
     pushd $INNERWORKDIR/ArangoDB/build
     and make install DESTDIR=$INNERWORKDIR/dmg/$APPNAME/Contents/Resources
+    and generateJsSha1Sum dmg/$APPNAME/Contents/Resources/opt/arangodb/share/arangodb3/js
     and if test "$ENTERPRISEEDITION" = "On"
           pushd $INNERWORKDIR/dmg/$APPNAME/Contents/Resources/opt/arangodb/bin
           ln -s ../sbin/arangosync

@@ -252,9 +252,6 @@ end
 
 function buildPackage
   # This assumes that a build has already happened
-  # Must have set ARANGODB_DARWIN_UPSTREAM and ARANGODB_DARWIN_REVISION,
-  # for example by running findArangoDBVersion.
-  set v "$ARANGODB_DARWIN_UPSTREAM"
 
   if test "$ENTERPRISEEDITION" = "On"
     echo Building enterprise edition MacOs bundle...
@@ -335,7 +332,7 @@ function buildTarGzPackage
   pushd $INNERWORKDIR/ArangoDB/build
   and rm -rf install
   and make install DESTDIR=install
-  and makeJsSha1Sum (pwd)/install
+  and makeJsSha1Sum (pwd)/install/opt/arangodb/share/arangodb3/js
   and if test "$ENTERPRISEEDITION" = "On"
         pushd install/opt/arangodb/bin
         ln -s ../sbin/arangosync

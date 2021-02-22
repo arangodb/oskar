@@ -275,7 +275,7 @@ function TT_strip
 end
 
 function generateJsSha1Sum
-  set -l jsdir $INNERWORKDIR/ArangoDB/build/install/usr/share/arangodb3/js
+  set -l jsdir $INNERWORKDIR/$argv[1]
   if test -d $jsdir
     pushd $jsdir
     and rm -f JS_FILES.txt JS_SHA1SUM.txt

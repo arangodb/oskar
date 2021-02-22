@@ -479,12 +479,10 @@ end
 
 function makeJsSha1Sum
   if test (count $argv) -lt 1
-    set jsdir $WORKDIR/work/ArangoDB/build/install
+    set jsdir $WORKDIR/work/ArangoDB/build/install/usr/share/arangodb3/js
   else
     set jsdir $argv[1]
   end
-
-  set jsdir $jsdir/usr/share/arangodb3/js
 
   if test -d $jsdir
     pushd $jsdir
