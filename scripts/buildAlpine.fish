@@ -86,6 +86,7 @@ else
   echo "Finished cmake at "(date)", now starting build"
   and set -xg DESTDIR (pwd)/install
   and runMake install
+  and generateJsSha1Sum
   and TT_make
   and installTargets
   and echo "Finished at "(date)

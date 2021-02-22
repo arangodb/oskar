@@ -335,6 +335,7 @@ function buildTarGzPackage
   pushd $INNERWORKDIR/ArangoDB/build
   and rm -rf install
   and make install DESTDIR=install
+  and makeJsSha1Sum (pwd)/install
   and if test "$ENTERPRISEEDITION" = "On"
         pushd install/opt/arangodb/bin
         ln -s ../sbin/arangosync
