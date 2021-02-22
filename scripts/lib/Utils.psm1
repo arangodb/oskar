@@ -212,7 +212,7 @@ Function launchTest($which) {
 Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst, [switch]$http2)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
-    $checkname = If ($index) { $testname + "_$index" } Else { $testname }
+    $checkname = If ($vst) { $testname + "_$vst" } ElseIf ($http2) { $testname + "_$http2" } Else { $testname }
     
     If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern "^$checkname$" | select line))
     {
