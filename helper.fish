@@ -477,6 +477,26 @@ function makeEnterpriseRelease
   buildEnterprisePackage
 end
 
+function makeJsSha1Sum
+  if test (count $argv) -lt 1
+    set jsdir $WORKDIR/work/ArangoDB/build/install/usr/share/arangodb3/js
+  else
+    set jsdir $argv[1]
+  end
+
+  if test -d $jsdir
+    pushd $jsdir
+    and rm -f JS_FILES.txt JS_SHA1SUM.txt
+    and begin
+      find . -type f | sort | xargs sha1sum > JS_FILES.txt
+    end
+    and sha1sum JS_FILES.txt > JS_SHA1SUM.txt
+    and rm -f JS_FILES.txt
+  end
+  or begin popd ; return 1 ; end
+  popd
+end
+
 ## #############################################################################
 ## source release
 ## #############################################################################

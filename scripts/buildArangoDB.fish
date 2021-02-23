@@ -94,6 +94,7 @@ else
   echo "Finished cmake at "(date)", now starting build"
   and set -xg DESTDIR (pwd)/install
   and runMake install
+  and generateJsSha1Sum ArangoDB/build/install/usr/share/arangodb3/js
   and TT_make
   and installTargets
   and echo "Finished at "(date)

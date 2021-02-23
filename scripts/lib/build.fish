@@ -273,3 +273,18 @@ function TT_strip
   set -g TT_t4 (date -u +%s)
   and echo $TT_t0,strip,(expr $TT_t4 - $TT_t3) >> $INNERWORKDIR/buildTimes.csv
 end
+
+function generateJsSha1Sum
+  set -l jsdir $INNERWORKDIR/$argv[1]
+  if test -d $jsdir
+    pushd $jsdir
+    and rm -f JS_FILES.txt JS_SHA1SUM.txt
+    and begin
+      find . -type f | sort | xargs sha1sum > JS_FILES.txt
+    end
+    and sha1sum JS_FILES.txt > JS_SHA1SUM.txt
+    and rm -f JS_FILES.txt
+  end
+  or begin popd ; return 1 ; end
+  popd
+end
