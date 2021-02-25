@@ -211,10 +211,10 @@ Function launchTest($which) {
 
 Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst, [switch]$http2)
 {
-    Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList"
+    Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlockList"
     $checkname = If ($vst) { $testname + "_$vst" } ElseIf ($http2) { $testname + "_$http2" } Else { $testname }
     
-    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlackList" -pattern "^$checkname$" | select line))
+    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlockList" -pattern "^$checkname$" | select line))
     {
         $testWeight = 1
         $testparams = ""
@@ -289,7 +289,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     }
     Else
     {
-        Write-Host "Test suite $checkname skipped by UnitTests/OskarTestSuitesBlackList"
+        Write-Host "Test suite $checkname skipped by UnitTests/OskarTestSuitesBlockList"
     }
     comm
 }
