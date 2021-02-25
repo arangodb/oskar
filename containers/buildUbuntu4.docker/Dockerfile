@@ -12,10 +12,9 @@ RUN apt-get install -y build-essential gcc-${COMPILER_VERSION} g++-${COMPILER_VE
 
 RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-x86_64-unknown-linux-musl
 
-
 COPY ./tools/* /tools/
 
-RUN [ "/tools/install.sh", "1.1.1", "i" ]
+RUN [ "/tools/install.sh", "1.1.1", "j" ]
 
 COPY ./scripts /scripts
 

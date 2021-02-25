@@ -11,12 +11,10 @@ COPY ./tools/install-poll.sh /tools/
 RUN /tools/install-poll.sh
 
 COPY ./tools/install-openssl.sh /tools/
-RUN [ "/tools/install-openssl.sh", "1.1.1", "i" ]
-RUN [ "/tools/install-openssl.sh", "1.1.0", "l" ]
+RUN [ "/tools/install-openssl.sh", "1.1.1", "j" ]
 
 COPY ./tools/install-openldap.sh /tools/
-RUN [ "/tools/install-openldap.sh", "1.1.1i" ]
-RUN [ "/tools/install-openldap.sh", "1.1.0l" ]
+RUN [ "/tools/install-openldap.sh", "1.1.1j" ]
 
 RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.2.15-x86_64-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-x86_64-unknown-linux-musl
 
