@@ -1326,6 +1326,49 @@ Function getCacheID
 # Compiling & package generation
 ################################################################################
 
+Function generateJsSha1Sum ($jsdir = "")
+{
+    If ($jsdir -eq $null -or $jsdir -eq "")
+    {
+      $jsdir="$global:ARANGODIR\js"
+    }
+
+    If (Test-Path $jsdir)
+    {
+        pushd $jsdir
+        Try
+        {
+            $files = new HashMap()
+            Remove-Item -Force .\* -Include JS_FILES.txt, JS_SHA1SUM.txt
+            ForEach ($file in Get-ChildItem -Recurse -File -Name)
+            {
+              $files[$file] = ""
+            }
+            If($ENTERPRISEEDITION -eq "On")
+            {
+                pushd "$jsdir\..\enterprise\js"
+                ForEach ($file in Get-ChildItem -Recurse -File -Name)
+                {
+                  $files[$file] = "$jsdir\..\enterprise\js\"
+                }
+                popd
+            }
+            ForEach ($file in $files.GetEnumerator() | sort -Property Name)
+            {
+                $fileHash += (Get-FileHash -Algorithm SHA1 -Path ($file.Value + $file.Name)).Hash.toLower() + "  .\" + $file.Name.toString() | Out-File -Append -FilePath JS_FILES.txt
+            }
+            $hash = (Get-FileHash -Algorithm SHA1 -Path "JS_FILES.txt").Hash.toLower() + "  JS_FILES.txt"  > "JS_SHA1SUM.txt"
+            Remove-Item -Force "$jsdir\JS_FILES.txt"
+            popd
+        }
+        Catch
+        {
+          popd
+          $global:ok = $false
+        }
+    }
+}
+
 Function configureWindows
 {
     If(Test-Path -PathType Container -Path "$global:ARANGODIR\build")
@@ -1410,6 +1453,7 @@ Function buildWindows
         {
           Copy-Item "$global:ARANGODIR\build\tests\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\tests\"; comm
         }
+        generateJsSha1Sum
     }
     Write-Host "Clcache Statistics"
     showCacheStats
