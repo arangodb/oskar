@@ -63,6 +63,7 @@ Function global:registerSingleTests()
     registerTest -testname "dump_multiple"
     registerTest -testname "dump_no_envelope"
     registerTest -testname "dump_encrypted"
+    registerTest -testname "dump_with_crashes"
     registerTest -testname "endpoints"
     registerTest -testname "export"
     registerTest -testname "fuerte"
@@ -102,6 +103,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_multiple"
     registerTest -cluster $true -testname "dump_no_envelope"
     registerTest -cluster $true -testname "dump_encrypted"
+    registerTest -cluster $true -testname "dump_with_crashes"
     registerTest -cluster $true -testname "export"
     registerTest -cluster $true -testname "http_server"  -sniff true
     registerTest -cluster $true -testname "server_secrets"
