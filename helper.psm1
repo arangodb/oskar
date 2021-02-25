@@ -1338,7 +1338,7 @@ Function generateJsSha1Sum ($jsdir = "")
         Push-Location $jsdir
         Try
         {
-            $files = new HashMap()
+            $files = @{}
             Remove-Item -Force .\* -Include JS_FILES.txt, JS_SHA1SUM.txt
             ForEach ($file in Get-ChildItem -Recurse -File -Name)
             {
