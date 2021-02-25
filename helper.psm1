@@ -1335,7 +1335,7 @@ Function generateJsSha1Sum ($jsdir = "")
 
     If (Test-Path $jsdir)
     {
-        pushd $jsdir
+        Push-Location $jsdir
         Try
         {
             $files = new HashMap()
@@ -1346,12 +1346,12 @@ Function generateJsSha1Sum ($jsdir = "")
             }
             If($ENTERPRISEEDITION -eq "On")
             {
-                pushd "$jsdir\..\enterprise\js"
+                Push-Location "$jsdir\..\enterprise\js"
                 ForEach ($file in Get-ChildItem -Recurse -File -Name)
                 {
                   $files[$file] = "$jsdir\..\enterprise\js\"
                 }
-                popd
+                Pop-Location
             }
             ForEach ($file in $files.GetEnumerator() | sort -Property Name)
             {
@@ -1359,11 +1359,11 @@ Function generateJsSha1Sum ($jsdir = "")
             }
             $hash = (Get-FileHash -Algorithm SHA1 -Path "JS_FILES.txt").Hash.toLower() + "  JS_FILES.txt"  > "JS_SHA1SUM.txt"
             Remove-Item -Force "$jsdir\JS_FILES.txt"
-            popd
+            Pop-Location
         }
         Catch
         {
-          popd
+          Pop-Location
           $global:ok = $false
         }
     }
