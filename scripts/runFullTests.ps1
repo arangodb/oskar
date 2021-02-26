@@ -144,8 +144,6 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "shell_server_aql" -index "3" -bucket "5/3"
     registerTest -cluster $true -testname "shell_server_aql" -index "4" -bucket "5/4"
     registerTest -cluster $true -testname "shell_client_aql"
-    registerTest -cluster $true -testname "communication"
-    registerTest -cluster $true -testname "communication_ssl"
     registerTest -cluster $true -testname "dump"
     registerTest -cluster $true -testname "dump_jwt"
     registerTest -cluster $true -testname "dump_maskings"
@@ -158,6 +156,8 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "audit_client"
     registerTest -cluster $true -testname "audit_server"
     registerTest -cluster $true -testname "arangobench"
+    registerTest -cluster $true -testname "communication" -weight $global:launcheableTests.Length -1
+    registerTest -cluster $true -testname "communication_ssl" -weight $global:launcheableTests.Length -1 
     # registerTest -cluster $true -testname "agency" -weight 2
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that
