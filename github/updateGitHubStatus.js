@@ -304,16 +304,17 @@ const getCommitSha = () => {
       try {
   
         data = JSON.parse(data);
-        commitExtraInformation = data[0];
         try {
           let sha = "";
           if (githubCommitSHA) {
             for(i = 0; ++i; i < data.length) {
-              if (data[i].sha == githubCommitSHA) {
+              if (data[i].hasOwnProperty("sha") && data[i].sha == githubCommitSHA) {
                 sha = data[i].sha;
+                commitExtraInformation = data[i];
               }
             }
           } else {
+            commitExtraInformation = data[0];
             sha = data[0].sha; // as only last item + sha is out of interest here
           }
           if (!sha) {
