@@ -326,7 +326,7 @@ const getCommitSha = () => {
           checkPRExists(sha);
         } catch (e) {
           exitAndWriteResultToFile(true,
-            "Probably SHA not found - " + JSON.stringify(data, null, 2) + " : " + e.message
+            "Probably SHA not found - " + JSON.stringify(data, null, 2) + " : " + e.toString()
           );
         }
       } catch (e) {
