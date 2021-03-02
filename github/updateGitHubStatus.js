@@ -310,7 +310,7 @@ const getCommitSha = () => {
           if (githubCommitSHA) {
             for(i = 0; ++i; i < data.length) {
               if (data[i].sha == githubCommitSHA) {
-                sha = value.sha;
+                sha = data[i].sha;
               }
             }
           } else {
