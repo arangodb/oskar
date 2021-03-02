@@ -30,6 +30,9 @@ const exitAndWriteResultToFile = (error, message, status, extra) => {
     if (commitExtraInformation.hasOwnProperty('commit')) {
       result.extra.commit = commitExtraInformation.commit;
     }
+    if (commitExtraInformation.hasOwnProperty('sha')) {
+      result.extra.sha = commitExtraInformation.sha;
+    }
     if (pullRequestExtraInformation.hasOwnProperty('url')) {
       result.url = pullRequestExtraInformation.url;
     }
@@ -297,17 +300,18 @@ const getCommitSha = () => {
 
   // read branch name and find last commit SHA ID
   // Example: https://api.github.com/repos/arangodb/arangodb/commits?sha=bug-fix%2Fdevsup-720
-  
-  let getCommitShaUrl = `/repos/${githubOwner}/${githubRepository}/commits?sha=${encodeURIComponent(githubBranchName)}` + githubCommitSHA ? "&per_page=100" : "";
+
+  let getCommitShaUrl = `/repos/${githubOwner}/${githubRepository}/commits?sha=${encodeURIComponent(githubBranchName)}`;
+  if (githubCommitSHA) { getCommitShaUrl += "&per_page=100" }
   getRequest(getCommitShaUrl, (data) => {
     if (data) {
       try {
-  
+
         data = JSON.parse(data);
         try {
           let sha = "";
           if (githubCommitSHA) {
-            for(i = 0; ++i; i < data.length) {
+            for(i = 0; i < data.length; ++i) {
               if (data[i].hasOwnProperty("sha") && data[i].sha == githubCommitSHA) {
                 sha = data[i].sha;
                 commitExtraInformation = data[i];
@@ -326,7 +330,7 @@ const getCommitSha = () => {
           checkPRExists(sha);
         } catch (e) {
           exitAndWriteResultToFile(true,
-            "Probably SHA not found - " + JSON.stringify(data, null, 2) + " : " + e.toString()
+            "Probably SHA not found - " + JSON.stringify(data, null, 2) + " : " + e.message
           );
         }
       } catch (e) {
