@@ -308,8 +308,8 @@ const getCommitSha = () => {
         try {
           let sha = "";
           if (githubCommitSHA) {
-            data.each{ key, value -> 
-              if (value.sha == githubCommitSHA) {
+            for(i = 0; ++i; i < data.length) {
+              if (data[i].sha == githubCommitSHA) {
                 sha = value.sha;
               }
             }
