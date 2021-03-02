@@ -14,6 +14,7 @@ const repository = process.env.REPO;          // Format: arangodb/arangodb
 const targetUrl = process.env.JOB_ID;         // Format: https://www.abc.de/#123
 const actionState = process.env.ACTION_STATE; // States: setPending, setError, setFailure, setSuccess
 const githubBranchName = process.env.ARANGODB_BRANCH;
+const githubCommitSHA = process.env.ARANGODB_COMMIT;
 
 // error = bool, message = string, extra = object
 const exitAndWriteResultToFile = (error, message, status, extra) => {
@@ -293,20 +294,32 @@ const getCommitSha = () => {
   if (!githubBranchName) {
     exitAndWriteResultToFile(true, "No valid ARANGODB_BRANCH env found!");
   }
+
   // read branch name and find last commit SHA ID
   // Example: https://api.github.com/repos/arangodb/arangodb/commits?sha=bug-fix%2Fdevsup-720
-
-  let getCommitShaUrl = `/repos/${githubOwner}/${githubRepository}/commits?sha=${encodeURIComponent(githubBranchName)}`;
+  
+  let getCommitShaUrl = `/repos/${githubOwner}/${githubRepository}/commits?sha=${encodeURIComponent(githubBranchName)}` + githubCommitSHA ? "&per_page=100" : "";
   getRequest(getCommitShaUrl, (data) => {
     if (data) {
       try {
-
+  
         data = JSON.parse(data);
         commitExtraInformation = data[0];
         try {
-          let sha = data[0].sha; // as only last item + sha is out of interest here
+          let sha = "";
+          if (githubCommitSHA) {
+            data.each{ key, value -> 
+              if (value.sha == githubCommitSHA) {
+                sha = value.sha;
+              }
+            }
+          } else {
+            sha = data[0].sha; // as only last item + sha is out of interest here
+          }
           if (!sha) {
             exitAndWriteResultToFile(true, "Could not parse commit SHA information!");
+          } else {
+            commitExtraInformation.sha = sha;
           }
           // We now do have all information we need, either supplied via Jenkins Environment or this GitHub API
           checkPRExists(sha);
