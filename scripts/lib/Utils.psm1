@@ -181,7 +181,19 @@ Function runTests
     }
 }
 
+Function waitForTimeWaitSockets() {
+    $TimeWait = 0
+    do {
+      $TimeWait = (Get-NetTCPConnection -State TimeWait | Measure-Object).Count
+      if ($TimeWait -gt 10000) {
+        Write-Host "waiting for connections to go away ${TimeWait}"
+        Start-Sleep 20
+      }
+    } while ($TimeWait -gt 10000)
+}
+
 Function launchTest($which) {
+    waitForTimeWaitSockets
     Push-Location $pwd
     Set-Location $global:ARANGODIR; comm
     $arangosh = "$global:ARANGODIR\build\bin\$BUILDMODE\arangosh.exe"
