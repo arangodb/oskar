@@ -185,11 +185,11 @@ Function waitForTimeWaitSockets() {
     $TimeWait = 0
     do {
       $TimeWait = (Get-NetTCPConnection -State TimeWait | Measure-Object).Count
-      if ($TimeWait -gt 7500) {
+      if ($TimeWait -gt 2500) {
         Write-Host "waiting for connections to go away ${TimeWait}"
         Start-Sleep 20
       }
-    } while ($TimeWait -gt 7500)
+    } while ($TimeWait -gt 2500)
 }
 
 Function launchTest($which) {
