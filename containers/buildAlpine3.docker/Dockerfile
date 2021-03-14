@@ -2,7 +2,7 @@ FROM alpine:3.11
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 RUN apk update && \
-    apk add groff g++ bison flex make cmake ccache python git linux-headers vim boost-dev ctags man gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool
+    apk add groff g++ bison flex make cmake ccache python git linux-headers vim boost-dev ctags man gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool nodejs npm
 
 COPY ./tools/install-poll.sh /tools/
 RUN /tools/install-poll.sh
