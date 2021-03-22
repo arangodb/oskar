@@ -1,5 +1,5 @@
 FROM alpine:3.13
-MAINTAINER Max Neunhoeffer <max@arangodb.com>
+MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 RUN apk add --no-cache pwgen nodejs binutils numactl numactl-tools
 RUN apk add --no-cache npm && npm install -g foxx-cli && apk del npm

@@ -1,5 +1,5 @@
 FROM ubuntu:20.04
-MAINTAINER Max Neunhoeffer <max@arangodb.com>
+MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 ENV COMPILER_VERSION 10
 
