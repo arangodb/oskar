@@ -69,6 +69,9 @@ function compiler
     case 9.3.0-r2
       set -gx COMPILER_VERSION $cversion
 
+    case 10.2.1_pre1-r3
+      set -gx COMPILER_VERSION $cversion
+
     case '*'
       echo "unknown compiler version $cversion"
   end
