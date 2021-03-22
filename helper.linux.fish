@@ -27,6 +27,10 @@ set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
 set -gx ALPINEBUILDIMAGE4_TAG 9
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
+set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
+set -gx ALPINEBUILDIMAGE5_TAG 1
+set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
+
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
@@ -1062,6 +1066,22 @@ function pushAlpineBuildImage4
 end
 
 function pullAlpineBuildImage4 ; docker pull $ALPINEBUILDIMAGE4 ; end
+
+function buildAlpineBuildImage5
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine5.docker
+  and docker build --pull -t $ALPINEBUILDIMAGE5 .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage5
+  docker tag $ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:latest
+  and docker push $ALPINEBUILDIMAGE5
+  and docker push $ALPINEBUILDIMAGE5_NAME:latest
+end
+
+function pullAlpineBuildImage5 ; docker pull $ALPINEBUILDIMAGE5 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR

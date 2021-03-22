@@ -2,8 +2,7 @@ FROM alpine:3.13
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 RUN apk update && \
-    apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool nodejs npm && \
-    apk add g++
+    apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool nodejs npm && apk add g++
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
