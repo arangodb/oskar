@@ -24,7 +24,8 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-set -l pie "-fpic -fPIC -fpie -fPIE"
+set -l pie ""
+#set -l pie "-fpic -fPIC -fpie -fPIE"
 set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
 
 set -g FULLARGS $argv \
