@@ -6,7 +6,7 @@ and enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and findArangoDBVersion
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+and buildStaticArangoDB
 and downloadStarter
 and downloadSyncer
 and buildDockerImage $IMAGE_NAME

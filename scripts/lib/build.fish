@@ -149,10 +149,10 @@ function shutdownCcache
 end
 
 function selectArchitecture
-  if test "$argv" = ""
-    echo "using default architecture 'westmere'"
+  if test "$DEFAULT_ARCHITECTURE" != ""
+    echo "using architecture '$DEFAULT_ARCHITECTURE'"
     set -g FULLARGS $FULLARGS \
-      -DTARGET_ARCHITECTURE=westmere
+      -DTARGET_ARCHITECTURE=$DEFAULT_ARCHITECTURE
   else
     echo "using provided architecture '"$argv"'"
     set -g FULLARGS $FULLARGS \

@@ -85,7 +85,7 @@ and cleanBuildDirectory
 and cd $INNERWORKDIR/ArangoDB/build
 and TT_init
 and cmakeCcache
-and selectArchitecture "sandy-bridge"
+and selectArchitecture
 and selectMaintainer
 and runCmake
 and TT_cmake
