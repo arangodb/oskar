@@ -53,6 +53,7 @@ Function global:registerSingleTests()
     registerTest -testname "agency" -weight 2
     registerTest -testname "agency-restart"
     registerTest -testname "active_failover"
+    registerTest -testname "arangobench"
     registerTest -testname "arangosh"
     registerTest -testname "authentication"
     registerTest -testname "catch"
@@ -95,6 +96,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "load_balancing"
     registerTest -cluster $true -testname "load_balancing_auth"
     registerTest -cluster $true -testname "agency"
+    registerTest -cluster $true -testname "arangobench"
     registerTest -cluster $true -testname "shell_server"
     registerTest -cluster $true -testname "dump"
     registerTest -cluster $true -testname "dump_authentication"

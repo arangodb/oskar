@@ -38,12 +38,12 @@ Conflicts:	arangodb3, arangodb3-client, arangodb3e-client
 Url:            https://www.arangodb.com
 Vendor:         ArangoDB
 
+%debug_package
+
 %package client
 Summary:        ArangoDB shell as stand-alone package
 Group:          Productivity/Databases/Servers
 Conflicts:	arangodb3e, arangodb3, arangodb3e-client
-
-%debug_package
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                       description
@@ -85,11 +85,20 @@ mkdir -p %{buildroot}%{_appdir}
 mkdir -p %{buildroot}%{_logdir}
 mkdir -p %{buildroot}%{_piddir}
 cp -a $INNERWORKDIR/ArangoDB/build/install/* %{buildroot}
+rm -f %{buildroot}/README
 # Move go executables out of the way to prevent debug info from being stripped:
-mv %{buildroot}/usr/bin/arangodb /tmp
+mkdir /tmp/sbin /tmp/bin
+# arangodb
+mv %{buildroot}/usr/bin/arangodb /tmp/bin
+# arangosync
 if [ -x %{buildroot}/usr/sbin/arangosync ] ; then
-  mv %{buildroot}/usr/sbin/arangosync /tmp
+  mv %{buildroot}/usr/sbin/arangosync /tmp/sbin
 fi
+# arangod
+@RPM_STRIP_EXCEPT_ARANGOD@mv %{buildroot}/usr/sbin/arangod /tmp/sbin
+# or all binaries
+@RPM_STRIP_NONE@mv %{buildroot}/usr/bin/* /tmp/bin
+@RPM_STRIP_NONE@mv %{buildroot}/usr/sbin/* /tmp/sbin
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                             check
@@ -98,10 +107,13 @@ fi
 %check
 echo check: We assume that there is nothing to check.
 # Move go executables back to where they belong:
-mv /tmp/arangodb %{buildroot}/usr/bin/arangodb
-if [ -x /tmp/arangosync ] ; then
-  mv /tmp/arangosync %{buildroot}/usr/sbin/arangosync
+if ls -1q /tmp/sbin/ | grep -q . ; then
+  mv /tmp/sbin/* %{buildroot}/usr/sbin/
 fi
+if ls -1q /tmp/bin/ | grep -q . ; then
+  mv /tmp/bin/* %{buildroot}/usr/bin/
+fi
+rmdir /tmp/sbin /tmp/bin
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                             files
