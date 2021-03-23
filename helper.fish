@@ -122,7 +122,7 @@ function findDefaultArchitecture
   defaultArchecture $v
 end
 
-test -z "$DEFAULT_ARCHITECTURE"; and (findDefaultArchitecture)
+test -z "$DEFAULT_ARCHITECTURE"; and findDefaultArchitecture
 
 function isGCE
   switch (hostname)
