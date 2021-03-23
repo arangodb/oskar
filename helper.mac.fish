@@ -121,6 +121,10 @@ function findRequiredOpenSSL
   end
 end
 
+findArchitecture
+  defaultArchtecture westmere
+end
+
 ## #############################################################################
 ## run without docker
 ## #############################################################################
@@ -178,8 +182,9 @@ end
 function buildArangoDB
   checkoutIfNeeded
   and findRequiredOpenSSL
+  and findArchitecture
   and findRequiredMinMacOS
-  runLocal $SCRIPTSDIR/buildMacOs.fish $argv
+  and runLocal $SCRIPTSDIR/buildMacOs.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -189,8 +194,9 @@ end
 
 function makeArangoDB
   findRequiredOpenSSL
-  findRequiredMinMacOS
-  runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
+  and findArchitecture
+  and findRequiredMinMacOS
+  and runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!

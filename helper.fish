@@ -246,6 +246,15 @@ if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
   strictOpenSSL
 else; set -gx USE_STRICT_OPENSSL $USE_STRICT_OPENSSL; end
 
+function defaultArchecture
+  if test (count $argv) -lt 1
+    set -gx DEFAULT_ARCHITECTURE "westmere"
+  else
+    set -gx DEFAULT_ARCHITECTURE $argv[1]
+  end
+end
+defaultArchitecture
+
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
 # else is available before proceeding
@@ -1250,15 +1259,16 @@ function showConfig
 
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
-  printf $fmt3 'ASAN'       $ASAN                '(asanOn/Off)'
-  printf $fmt3 'Coverage'   $COVERAGE            '(coverageOn/Off)'
-  printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
-  printf $fmt3 'Compiler'   "$compiler_version"  '(compiler x.y.z)'
-  printf $fmt3 'OpenSSL'    "$openssl_version"   '(opensslVersion x.y.z)'
-  printf $fmt3 'Use rclone' $USE_RCLONE          '(rclone true or false)'
-  printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
-  printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
-  printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
+  printf $fmt3 'ASAN'       $ASAN                   '(asanOn/Off)'
+  printf $fmt3 'Coverage'   $COVERAGE               '(coverageOn/Off)'
+  printf $fmt3 'Buildmode'  $BUILDMODE              '(debugMode/releaseMode)'
+  printf $fmt3 'Compiler'   "$compiler_version"     '(compiler x.y.z)'
+  printf $fmt3 'OpenSSL'    "$openssl_version"      '(opensslVersion x.y.z)'
+  printf $fmt3 'CPU'        "$DEFAULT_ARCHITECTURE" '(defaultArchitecture cpuname)'
+  printf $fmt3 'Use rclone' $USE_RCLONE             '(rclone true or false)'
+  printf $fmt3 'Enterprise' $ENTERPRISEEDITION      '(community/enterprise)'
+  printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
+  printf $fmt3 'Maintainer' $MAINTAINER             '(maintainerOn/Off)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'

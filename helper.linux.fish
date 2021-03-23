@@ -234,6 +234,10 @@ function findRequiredOpenSSL
   end
 end
 
+findArchitecture
+  defaultArchtecture westmere
+end
+
 ## #############################################################################
 ## checkout and switch functions
 ## #############################################################################
@@ -320,6 +324,7 @@ function buildArangoDB
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
+  and findArchitecture
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -331,7 +336,8 @@ end
 function makeArangoDB
   if test "$COMPILER_VERSION" = ""
     findRequiredCompiler
-    findRequiredOpenSSL
+    and findRequiredOpenSSL
+    and findArchitecture
   end
   and runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
@@ -345,6 +351,7 @@ function buildStaticArangoDB
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
+  and findArchitecture
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -356,7 +363,8 @@ end
 function makeStaticArangoDB
   if test "$COMPILER_VERSION" = ""
     findRequiredCompiler
-    findRequiredOpenSSL
+    and findRequiredOpenSSL
+    and findArchitecture
   end
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   set -l s $status
@@ -472,8 +480,7 @@ end
 function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
-
-  runInContainer (findStaticBuildImage) /scripts/coverage.fish
+  and runInContainer (findStaticBuildImage) /scripts/coverage.fish
   return $status
 end
 
@@ -499,8 +506,7 @@ end
 function createCompleteTar
   set -l RELEASE_TAG $argv[1]
 
-  pushd $WORKDIR/work
-  and runInContainer \
+  pushd $WORKDIR/work and runInContainer \
 	$ALPINEUTILSIMAGE $SCRIPTSDIR/createCompleteTar.fish \
 	$RELEASE_TAG
   and popd
@@ -1234,6 +1240,7 @@ function runInContainer
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
+	     -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
