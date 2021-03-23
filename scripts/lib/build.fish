@@ -153,6 +153,10 @@ function selectArchitecture
     echo "using architecture '$DEFAULT_ARCHITECTURE'"
     set -g FULLARGS $FULLARGS \
       -DTARGET_ARCHITECTURE=$DEFAULT_ARCHITECTURE
+  else
+    echo "using provided architecture '"$argv"'"
+    set -g FULLARGS $FULLARGS \
+    -DTARGET_ARCHITECTURE=$argv
   end
   return 0
 end

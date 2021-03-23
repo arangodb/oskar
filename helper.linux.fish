@@ -234,10 +234,6 @@ function findRequiredOpenSSL
   end
 end
 
-findArchitecture
-  defaultArchtecture westmere
-end
-
 ## #############################################################################
 ## checkout and switch functions
 ## #############################################################################
@@ -286,6 +282,8 @@ function switchBranches
   checkoutIfNeeded
   and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
   and findRequiredCompiler
+  and findMinimalDebugInfo
+  and findDefaultArchitecture
 end
 
 ## #############################################################################
@@ -324,7 +322,7 @@ function buildArangoDB
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
-  and findArchitecture
+  and findDefaultArchitecture
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -337,7 +335,7 @@ function makeArangoDB
   if test "$COMPILER_VERSION" = ""
     findRequiredCompiler
     and findRequiredOpenSSL
-    and findArchitecture
+    and findDefaultArchitecture
   end
   and runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
@@ -351,7 +349,7 @@ function buildStaticArangoDB
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
-  and findArchitecture
+  and findDefaultArchitecture
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -364,7 +362,7 @@ function makeStaticArangoDB
   if test "$COMPILER_VERSION" = ""
     findRequiredCompiler
     and findRequiredOpenSSL
-    and findArchitecture
+    and findDefaultArchitecture
   end
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   set -l s $status

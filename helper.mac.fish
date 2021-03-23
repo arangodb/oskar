@@ -121,10 +121,6 @@ function findRequiredOpenSSL
   end
 end
 
-findArchitecture
-  defaultArchtecture westmere
-end
-
 ## #############################################################################
 ## run without docker
 ## #############################################################################
@@ -173,6 +169,8 @@ end
 function switchBranches
   checkoutIfNeeded
   runLocal $SCRIPTSDIR/switchBranches.fish $argv
+  and findMinimalDebugInfo
+  and findDefaultArchitecture
 end
 
 function clearWorkdir
@@ -182,7 +180,7 @@ end
 function buildArangoDB
   checkoutIfNeeded
   and findRequiredOpenSSL
-  and findArchitecture
+  and findDefaultArchitecture
   and findRequiredMinMacOS
   and runLocal $SCRIPTSDIR/buildMacOs.fish $argv
   set -l s $status
@@ -194,7 +192,7 @@ end
 
 function makeArangoDB
   findRequiredOpenSSL
-  and findArchitecture
+  and findDefaultArchitecture
   and findRequiredMinMacOS
   and runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
