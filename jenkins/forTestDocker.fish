@@ -16,7 +16,7 @@ and rm -rf $WORKSPACE/imagenames.log
 and community
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+and buildStaticArangoDB
 and downloadStarter
 and buildDockerImage $HUB_COMMUNITY
 and docker push $HUB_COMMUNITY
@@ -31,7 +31,7 @@ end
 enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+and buildStaticArangoDB
 and downloadStarter
 and downloadSyncer
 and buildDockerImage $HUB_ENTERPRISE

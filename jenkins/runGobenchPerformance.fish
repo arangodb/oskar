@@ -20,7 +20,7 @@ and enterprise
 and maintainerOff
 and releaseMode
 and showConfig
-and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+and buildStaticArangoDB
 
 # make gobench
 and pushd $gobenchdir
