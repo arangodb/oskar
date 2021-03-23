@@ -102,6 +102,28 @@ if test -z "$MINIMAL_DEBUG_INFO"
   set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
 end
 
+function defaultArchecture
+  if test (count $argv) -lt 1
+    set -gx DEFAULT_ARCHITECTURE "westmere"
+  else
+    set -gx DEFAULT_ARCHITECTURE $argv[1]
+  end
+end
+
+function findDefaultArchitecture
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+  set -l v ""
+
+  test -f $f
+  and begin
+    set v (fgrep DEFAULT_ARCHITECTURE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  end
+
+  defaultArchecture $v
+end
+
+test -z "$DEFAULT_ARCHITECTURE"; and (findDefaultArchitecture)
+
 function isGCE
   switch (hostname)
     case 'gce-*'
@@ -246,14 +268,6 @@ if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
   strictOpenSSL
 else; set -gx USE_STRICT_OPENSSL $USE_STRICT_OPENSSL; end
 
-function defaultArchecture
-  if test (count $argv) -lt 1
-    set -gx DEFAULT_ARCHITECTURE "westmere"
-  else
-    set -gx DEFAULT_ARCHITECTURE $argv[1]
-  end
-end
-defaultArchitecture
 
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
