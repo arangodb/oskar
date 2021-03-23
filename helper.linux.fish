@@ -282,6 +282,7 @@ function switchBranches
   checkoutIfNeeded
   and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
   and findRequiredCompiler
+  and findMinimalDebugInfo
 end
 
 ## #############################################################################

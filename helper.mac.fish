@@ -169,6 +169,7 @@ end
 function switchBranches
   checkoutIfNeeded
   runLocal $SCRIPTSDIR/switchBranches.fish $argv
+  and findMinimalDebugInfo
 end
 
 function clearWorkdir
