@@ -1232,7 +1232,7 @@ function runInContainer
              -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
              -e BUILDMODE="$BUILDMODE" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
-             -e COMPILER_VERSION=(echo (string replace -r '\-.*$' "" $COMPILER_VERSION)) \
+             -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
