@@ -536,7 +536,7 @@ function buildEnterprisePackage
   and releaseMode
   and enterprise
   and set -xg NOSTRIP 1
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+  and buildStaticArangoDB
   and downloadStarter
   and downloadSyncer
   and copyRclone "linux"
@@ -556,7 +556,7 @@ function buildCommunityPackage
   and releaseMode
   and community
   and set -xg NOSTRIP 1
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+  and buildStaticArangoDB
   and downloadStarter
   and buildPackage
 
@@ -815,7 +815,7 @@ function buildDockerRelease
   and asanOff
   and maintainerOff
   and releaseMode
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+  and buildStaticArangoDB
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
     downloadSyncer
