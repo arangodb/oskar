@@ -169,7 +169,7 @@ end
 function switchBranches
   checkoutIfNeeded
   runLocal $SCRIPTSDIR/switchBranches.fish $argv
-  and findMinimalDebugInfo
+  and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
 end
 

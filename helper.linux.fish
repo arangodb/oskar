@@ -282,7 +282,7 @@ function switchBranches
   checkoutIfNeeded
   and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
   and findRequiredCompiler
-  and findMinimalDebugInfo
+  and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
 end
 
