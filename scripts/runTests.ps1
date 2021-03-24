@@ -18,6 +18,7 @@ Function global:registerSingleTests()
     registerTest -testname "upgrade_data_3.5.*"
     registerTest -testname "upgrade_data_3.6.*"
     registerTest -testname "upgrade_data_3.7.*"
+    registerTest -testname "dump_with_crashes"
     registerTest -testname "replication_static" -weight 2
     registerTest -testname "shell_server"
     registerTest -testname "replication_ongoing_32" -weight 2
@@ -64,7 +65,6 @@ Function global:registerSingleTests()
     registerTest -testname "dump_multiple"
     registerTest -testname "dump_no_envelope"
     registerTest -testname "dump_encrypted"
-    registerTest -testname "dump_with_crashes"
     registerTest -testname "endpoints"
     registerTest -testname "export"
     registerTest -testname "fuerte"
@@ -95,6 +95,7 @@ Function global:registerClusterTests()
 
     registerTest -cluster $true -testname "load_balancing"
     registerTest -cluster $true -testname "load_balancing_auth"
+    registerTest -cluster $true -testname "dump_with_crashes"
     registerTest -cluster $true -testname "agency"
     registerTest -cluster $true -testname "arangobench"
     registerTest -cluster $true -testname "shell_server"
@@ -105,7 +106,6 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_multiple"
     registerTest -cluster $true -testname "dump_no_envelope"
     registerTest -cluster $true -testname "dump_encrypted"
-    registerTest -cluster $true -testname "dump_with_crashes"
     registerTest -cluster $true -testname "export"
     registerTest -cluster $true -testname "http_server"  -sniff true
     registerTest -cluster $true -testname "server_secrets"
