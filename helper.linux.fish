@@ -1238,7 +1238,7 @@ function runInContainer
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
-	     -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
+	           -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
@@ -1251,11 +1251,13 @@ function runInContainer
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
              -e MAINTAINER="$MAINTAINER" \
+             -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
              -e NODE_NAME="$NODE_NAME" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
              -e ONLYGREY="$ONLYGREY" \
              -e OPENSSL_VERSION="$OPENSSL_VERSION" \
+             -e PACKAGE_STRIP="$PACKAGE_STRIP" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
              -e SCCACHE_BUCKET="$SCCACHE_BUCKET" \
