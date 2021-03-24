@@ -142,7 +142,7 @@ end
 ################################################################################
 
 set -l CT
-set CT "$CT""250,runClusterTest1 dump_with_crashes - --dumpAgencyOnError true\n"
+set CT "$CT""2500,runClusterTest1 dump_with_crashes - --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 load_balancing - --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 load_balancing_auth - --dumpAgencyOnError true\n"
 set CT "$CT""600,runClusterTest1 resilience_move - --dumpAgencyOnError true\n"
