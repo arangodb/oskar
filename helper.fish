@@ -76,20 +76,15 @@ packageStripAll
 
 function findMinimalDebugInfo
   set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
-  set -l MINIMAL_DEBUG_INFO ""
+  set -l MINIMAL_DEBUG_INFO "Off"
 
   test -f $f
   and begin
     set -l v (fgrep MINIMAL_DEBUG_INFO $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
-    if test "$v" = "" -o "$v" = "Off" -o "$v" != "On"
-      set MINIMAL_DEBUG_INFO Off
-    else
+    if test "$v" = "On"
       set MINIMAL_DEBUG_INFO On
     end
-  end
-  or begin
-    set MINIMAL_DEBUG_INFO Off
   end
 
   echo $MINIMAL_DEBUG_INFO

@@ -80,6 +80,11 @@ else
   end
 end
 
+if test "$MINIMAL_DEBUG_INFO" = "On"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_MINIMAL_DEBUGINFO=On
+end
+
 setupCcacheBinPath ubuntu
 and setupCcache ubuntu
 and cleanBuildDirectory

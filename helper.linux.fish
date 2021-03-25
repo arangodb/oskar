@@ -1226,7 +1226,6 @@ function runInContainer
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/scripts":"/scripts" \
              $mirror \
-             -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ARANGODB_REPO="$ARANGODB_REPO" \
