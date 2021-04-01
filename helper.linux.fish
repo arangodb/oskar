@@ -1199,7 +1199,7 @@ function runInContainer
   if test -z "$SSH_AUTH_SOCK"
     sudo killall --older-than 8h ssh-agent 2>&1 > /dev/null
     eval (ssh-agent -c) > /dev/null
-    for key in ~/.ssh/id_rsa ~/.ssh/id_deploy
+    for key in ~/.ssh/id_rsa ~/.ssh/id_ed25519 ~/.ssh/id_deploy
       if test -f $key
         ssh-add $key
       end
@@ -1313,7 +1313,7 @@ function interactiveContainer
   if test -z "$SSH_AUTH_SOCK"
     sudo killall --older-than 8h ssh-agent 2>&1 > /dev/null
     eval (ssh-agent -c) > /dev/null
-    for key in ~/.ssh/id_rsa ~/.ssh/id_deploy
+    for key in ~/.ssh/id_rsa ~/.ssh/id_ed25519 ~/.ssh/id_deploy
       if test -f $key
         ssh-add $key
       end
