@@ -265,6 +265,11 @@ function checkoutEnterprise
   enterprise
 end
 
+function checkoutMiniChaos
+  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMiniChaos.fish
+  or return $status
+end
+
 function switchBranches
   set -l force_clean false
 
@@ -609,7 +614,7 @@ function buildDebianPackage
       sed -i -e "s/@DEBIAN_STRIP_ALL@//"                 -i $TARGET/$f
       sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@/echo /" -i $TARGET/$f
       sed -i -e "s/@DEBIAN_STRIP_NONE@/echo /"           -i $TARGET/$f
-    else if  test $PACKAGE_STRIP = ExceptArangod
+    else if test $PACKAGE_STRIP = ExceptArangod
       sed -i -e "s/@DEBIAN_STRIP_ALL@/echo /"            -i $TARGET/$f
       sed -i -e "s/@DEBIAN_STRIP_EXCEPT_ARANGOD@//"      -i $TARGET/$f
       sed -i -e "s/@DEBIAN_STRIP_NONE@/echo /"           -i $TARGET/$f
@@ -663,6 +668,130 @@ function buildRPMPackage
   and cp $WORKDIR/rpm/$pd/arangodb3.service $WORKDIR/work
   and cp $WORKDIR/rpm/$pd/arangodb3.logrotate $WORKDIR/work
   and runInContainer $CENTOSPACKAGINGIMAGE $SCRIPTSDIR/buildRPMPackage.fish
+end
+
+## #############################################################################
+## Mini-Chaos
+## #############################################################################
+
+function runMiniChaos
+  if test (count $argv) -lt 1
+    echo "usage: runMiniChaos <package>"
+    return 1
+  end
+
+  set -l package "$argv[1]"
+  set -l duration "$argv[2]"
+
+  mkdir -p $WORKDIR/work/mini-chaos
+
+  test -e $WORKDIR/work/{$package}.tar.gz
+  and rm -rf $WORKDIR/work/mini-chaos/$package
+  and mkdir -p $WORKDIR/work/mini-chaos/$package/ArangoDB
+  and tar -xf $WORKDIR/work/{$package}.tar.gz --strip-components=1 -C $WORKDIR/work/mini-chaos/$package/ArangoDB
+  #and checkoutMiniChaos
+  and rm -rf "$WORKDIR/work/mini-chaos/$package/output"
+  and mkdir -p "$WORKDIR/work/mini-chaos/$package/output"
+  runInContainer \
+      -v $WORKDIR/work/ArangoDB/mini-chaos:/mini-chaos \
+      -v $WORKDIR/work/mini-chaos/$package:/$package \
+      -e ARANGODB_OVERRIDE_CRASH_HANDLER=0 \
+      (findBuildImage) $SCRIPTSDIR/startMiniChaos.fish $package $duration
+end
+
+
+## #############################################################################
+## TAR server test
+## #############################################################################
+
+function makeTestPackageLinux
+  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER for Enterprise package or use Community."
+    return 1
+  end
+
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
+  echo ""
+
+  findArangoDBVersion
+  and asanOff
+  and maintainerOff
+  and releaseMode
+  and set -xg NOSTRIP 1
+  and buildStaticArangoDB
+  and downloadStarter
+  and if test "$ENTERPRISEEDITION" = "On"; downloadSyncer; and copyRclone "linux"; end
+  and buildTarGzServerLinuxTestPackage
+
+  if test $status -ne 0
+    echo Building test package failed, stopping!
+    return 1
+  end
+end
+
+function buildTarGzServerLinuxTestPackage
+  # This assumes that a static build has already happened
+  # Must have set ARANGODB_TGZ_UPSTREAM
+  # for example by running findArangoDBVersion.
+  set -l v "$ARANGODB_TGZ_UPSTREAM"
+  set -l name
+
+  if test "$ENTERPRISEEDITION" = "On"
+    set name arangodb3e
+  else
+    set name arangodb3
+  end
+
+  pushd $WORKDIR/work
+  and rm -rf targz
+  and mkdir targz
+  and cd $WORKDIR/work/ArangoDB/build/install
+  and cp -a * $WORKDIR/work/targz
+  and cd $WORKDIR/work/targz
+  and rm -rf bin
+  and cp -a $WORKDIR/binForTarGz bin
+  and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
+  and mv bin/README .
+  and prepareInstall $WORKDIR/work/targz
+  and rm -rf "$WORKDIR/work/$name-$v"
+  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
+  and cd $WORKDIR/work
+  or begin ; popd ; return 1 ; end
+
+  rm -rf "$name-linux-$v"
+  and ln -s "$name-$v" "$name-linux-$v"
+  and tar -c -z -f "$WORKDIR/work/$name-linux-$v.tar.gz" -h --exclude "etc" --exclude "var" "$name-linux-$v"
+  and rm -rf "$name-linux-$v"
+  set s $status
+
+  popd
+  echo "$WORKDIR/work/$name-linux-$v.tar.gz"
+  and return $s
+  or begin ; popd ; return 1 ; end
+end
+
+function getTestPackageLinuxName
+  # This assumes that a static build has already happened
+  # Must have set ARANGODB_TGZ_UPSTREAM
+  # for example by running findArangoDBVersion.
+  set -l v "$ARANGODB_TGZ_UPSTREAM"
+  set -l name
+
+  if test "$ENTERPRISEEDITION" = "On"
+    set name arangodb3e
+  else
+    set name arangodb3
+  end
+
+  echo "$name-linux-$v"
 end
 
 ## #############################################################################
