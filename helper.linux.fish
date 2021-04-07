@@ -1300,6 +1300,7 @@ function runInContainer
       -e UID=(id -u) \
       -e GID=(id -g) \
       -e INNERWORKDIR=$INNERWORKDIR \
+      --rm \
       $ALPINEUTILSIMAGE $SCRIPTSDIR/recursiveChown.fish
 
   if test -n "$agentstarted"
