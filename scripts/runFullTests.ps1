@@ -20,8 +20,6 @@ Function global:registerSingleTests()
     registerTest -testname "upgrade_data_3.7.*"
     registerTest -testname "replication_static" -weight 2
     registerTest -testname "shell_server"
-    registerTest -testname "replication_ongoing_32" -weight 2
-    registerTest -testname "replication_ongoing_frompresent_32" -weight 2
     registerTest -testname "replication_ongoing_frompresent" -weight 2
     registerTest -testname "replication_ongoing_global_spec" -weight 2
     registerTest -testname "replication_ongoing_global" -weight 2
