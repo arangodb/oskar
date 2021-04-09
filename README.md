@@ -155,6 +155,16 @@ enterprise edition do
 
 The test results as well as logs will be left in the `work` directory.
 
+## Re-generate error files
+
+After modifications to `lib/Basics/errors.dat`, you can update the generated files
+that are based on it by running:
+
+    shellInAlpineContainer
+
+    cd /work/ArangoDB/build
+    cmake --build . --target errorfiles
+
 ## Cleaning up
 
 To erase the build directories and checked out sources, use
