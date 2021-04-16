@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-if test ! -f /etc/default/locale -o "$(grep -v ^# /etc/default/locale |wc -l)" -eq 0  ; then
+if test ! -f /etc/default/locale -o "$(grep -v ^# /etc/default/locale | wc -l)" -eq 0  ; then
     > &2 echo "ArangoDB requires a properly setup locale environment to work"
     exit 1
 fi
