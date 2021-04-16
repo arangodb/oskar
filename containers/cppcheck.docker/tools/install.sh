@@ -5,8 +5,8 @@ set -e
 apk update
 apk add groff g++ make curl fish bash pcre-dev python
 
-# Compile openssl1.1 library:
-export CPPCHECK_VERSION=1.90
+# Compile cppcheck library:
+export CPPCHECK_VERSION=2.4
 cd /tmp
 curl -L -O https://github.com/danmar/cppcheck/archive/$CPPCHECK_VERSION.tar.gz
 tar xzvf $CPPCHECK_VERSION.tar.gz

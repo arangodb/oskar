@@ -69,6 +69,58 @@ function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
 
+function packageStripNone          ; set -gx PACKAGE_STRIP None    ; end
+function packageStripExceptArangod ; set -gx PACKAGE_STRIP ExceptArangod ; end
+function packageStripAll           ; set -gx PACKAGE_STRIP All     ; end
+packageStripAll
+
+function findMinimalDebugInfo
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+  set -l MINIMAL_DEBUG_INFO "Off"
+
+  test -f $f
+  and begin
+    set -l v (fgrep MINIMAL_DEBUG_INFO $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+    if test "$v" = "On"
+      set MINIMAL_DEBUG_INFO On
+    end
+  end
+
+  echo $MINIMAL_DEBUG_INFO
+end
+
+function minimalDebugInfoOn  ; set -gx MINIMAL_DEBUG_INFO On  ; end
+function minimalDebugInfoOff ; set -gx MINIMAL_DEBUG_INFO Off ; end
+
+if test -z "$MINIMAL_DEBUG_INFO"
+  set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
+end
+
+function defaultArchecture
+  if test (count $argv) -lt 1
+    set -gx DEFAULT_ARCHITECTURE "westmere"
+  else
+    set -gx DEFAULT_ARCHITECTURE $argv[1]
+  end
+
+  return 0
+end
+
+function findDefaultArchitecture
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+  set -l v ""
+
+  test -f $f
+  and begin
+    set v (fgrep DEFAULT_ARCHITECTURE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  end
+
+  defaultArchecture $v
+end
+
+test -z "$DEFAULT_ARCHITECTURE"; and findDefaultArchitecture
+
 function isGCE
   switch (hostname)
     case 'gce-*'
@@ -213,6 +265,7 @@ if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
   strictOpenSSL
 else; set -gx USE_STRICT_OPENSSL $USE_STRICT_OPENSSL; end
 
+
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
 # else is available before proceeding
@@ -286,8 +339,10 @@ function oskarCompile
   showConfig
   showRepository
   set -x NOSTRIP 1
+  
+  # note: DEBUG_SYNC_REPLICATION is removed from 3.8 onwards an can be removed here too soon 
   if test "$ASAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DUNCONDITIONALLY_BUILD_LOG_MESSAGES=On ; or return $status
+    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
   else
     buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
   end
@@ -404,6 +459,16 @@ function makeCommunityRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
+  echo ""
   buildCommunityPackage
 end
 
@@ -421,7 +486,37 @@ function makeEnterpriseRelease
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
   end
 
+  test (findMinimalDebugInfo) = "On"
+  and begin
+    packageStripExceptArangod
+    minimalDebugInfoOn
+  end
+  or begin
+    packageStripAll
+    minimalDebugInfoOff
+  end
+  echo ""
   buildEnterprisePackage
+end
+
+function makeJsSha1Sum
+  if test (count $argv) -lt 1
+    set jsdir $WORKDIR/work/ArangoDB/build/install/usr/share/arangodb3/js
+  else
+    set jsdir $argv[1]
+  end
+
+  if test -d $jsdir
+    pushd $jsdir
+    and rm -f JS_FILES.txt JS_SHA1SUM.txt
+    and begin
+      find . -type f | sort | xargs sha1sum > JS_FILES.txt
+    end
+    and sha1sum JS_FILES.txt > JS_SHA1SUM.txt
+    and rm -f JS_FILES.txt
+  end
+  or begin popd ; return 1 ; end
+  popd
 end
 
 ## #############################################################################
@@ -474,6 +569,39 @@ function buildSourcePackage
 end
 
 ## #############################################################################
+## PREPARE binaries
+## #############################################################################
+
+function prepareInstall
+  set -l path "$argv[1]"
+
+  if test -z "$path" -o ! -d "$path"
+    echo "need valid path as first argument"
+    return 1
+  end
+
+  pushd $path
+  and if test $PACKAGE_STRIP = All
+    strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+  else if test $PACKAGE_STRIP = ExceptArangod
+    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+  end
+  and if test "$ENTERPRISEEDITION" != "On"
+    rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
+    rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
+  else
+    if test -f usr/bin/arangobackup -a $PACKAGE_STRIP != None
+      strip usr/bin/arangobackup
+    end
+  end
+  set s $status
+
+  popd
+  and return $s
+  or begin ; popd ; return 1 ; end
+end
+
+## #############################################################################
 ## TAR release
 ## #############################################################################
 
@@ -497,31 +625,32 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
-  pushd $WORKDIR/work/ArangoDB/build/install
-  and rm -rf bin sbin
+  pushd $WORKDIR/work
+  and rm -rf targz
+  and mkdir targz
+  and cd $WORKDIR/work/ArangoDB/build/install
+  and cp -a * $WORKDIR/work/targz
+  and cd $WORKDIR/work/targz
+  and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
-  and rm -f "bin/*~" "bin/*.bak"
+  and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and mv bin/README .
-  and mkdir sbin
-  and mv bin/arangod sbin
-  and strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimp,arangorestore,arangosh,arangovpack}
-  and if test "$ENTERPRISEEDITION" != "On"
-    rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
-    rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
-  else
-    if test -f usr/bin/arangobackup
-      strip usr/bin/arangobackup
-    end
-  end
-  and cd $WORKDIR/work/ArangoDB/build
-  and mv install "$name-$v"
+  and prepareInstall $WORKDIR/work/targz
+  and rm -rf "$WORKDIR/work/$name-$v"
+  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
+  and cd $WORKDIR/work
   or begin ; popd ; return 1 ; end
 
-  tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" --exclude "etc" --exclude "var" "$name-$v"
+  rm -rf "$name-$os-$v"
+  and ln -s "$name-$v" "$name-$os-$v"
+  and tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" -h --exclude "etc" --exclude "var" "$name-$os-$v"
+  and rm -rf "$name-$os-$v"
   set s $status
 
   if test "$s" -eq 0
-    tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" \
+    rm -rf "$name-client-$os-$v"
+    and ln -s "$name-$v" "$name-client-$os-$v"
+    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" -h \
       --exclude "etc" \
       --exclude "var" \
       --exclude "*.initd" \
@@ -531,22 +660,23 @@ function buildTarGzPackageHelper
       --exclude "arangod.8" \
       --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
-      --exclude "$name-$v/sbin" \
-      --exclude "$name-$v/bin/arangodb" \
-      --exclude "$name-$v/bin/arangosync" \
-      --exclude "$name-$v/usr/sbin" \
-      --exclude "$name-$v/usr/bin/arangodb" \
-      --exclude "$name-$v/usr/bin/arangosync" \
-      --exclude "$name-$v/usr/share/arangodb3/arangodb-update-db" \
-      --exclude "$name-$v/usr/share/arangodb3/js/server" \
-      "$name-$v"
+      --exclude "$name-client-$os-$v/sbin" \
+      --exclude "$name-client-$os-$v/bin/arangod" \
+      --exclude "$name-client-$os-$v/bin/arangodb" \
+      --exclude "$name-client-$os-$v/bin/arangosync" \
+      --exclude "$name-client-$os-$v/usr/sbin" \
+      --exclude "$name-client-$os-$v/usr/bin/arangodb" \
+      --exclude "$name-client-$os-$v/usr/bin/arangosync" \
+      --exclude "$name-client-$os-$v/usr/share/arangodb3/arangodb-update-db" \
+      --exclude "$name-client-$os-$v/usr/share/arangodb3/js/server" \
+      "$name-client-$os-$v"
+    and rm -rf "$name-client-$os-$v"
     set s $status
   end
 
-  mv "$name-$v" install
-  and rm -rf install/bin
-  and popd
+  popd
   and return $s 
+  or begin ; popd ; return 1 ; end
 end
 
 ## #############################################################################
@@ -1142,15 +1272,16 @@ function showConfig
 
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
-  printf $fmt3 'ASAN'       $ASAN                '(asanOn/Off)'
-  printf $fmt3 'Coverage'   $COVERAGE            '(coverageOn/Off)'
-  printf $fmt3 'Buildmode'  $BUILDMODE           '(debugMode/releaseMode)'
-  printf $fmt3 'Compiler'   "$compiler_version"  '(compiler x.y.z)'
-  printf $fmt3 'OpenSSL'    "$openssl_version"   '(opensslVersion x.y.z)'
-  printf $fmt3 'Use rclone' $USE_RCLONE          '(rclone true or false)'
-  printf $fmt3 'Enterprise' $ENTERPRISEEDITION   '(community/enterprise)'
-  printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR      '(jemallocOn/jemallocOff)'
-  printf $fmt3 'Maintainer' $MAINTAINER          '(maintainerOn/Off)'
+  printf $fmt3 'ASAN'       $ASAN                   '(asanOn/Off)'
+  printf $fmt3 'Coverage'   $COVERAGE               '(coverageOn/Off)'
+  printf $fmt3 'Buildmode'  $BUILDMODE              '(debugMode/releaseMode)'
+  printf $fmt3 'Compiler'   "$compiler_version"     '(compiler x.y.z)'
+  printf $fmt3 'OpenSSL'    "$openssl_version"      '(opensslVersion x.y.z)'
+  printf $fmt3 'CPU'        "$DEFAULT_ARCHITECTURE" '(defaultArchitecture cpuname)'
+  printf $fmt3 'Use rclone' $USE_RCLONE             '(rclone true or false)'
+  printf $fmt3 'Enterprise' $ENTERPRISEEDITION      '(community/enterprise)'
+  printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
+  printf $fmt3 'Maintainer' $MAINTAINER             '(maintainerOn/Off)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
@@ -1171,6 +1302,8 @@ function showConfig
   echo 'Package Configuration'
   printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
   printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
+  printf $fmt3 'Strip Packages' $PACKAGE_STRIP '(packageStripAll/ExceptArangod/None)'
+  printf $fmt3 'Minimal Debug Info' $MINIMAL_DEBUG_INFO '(minimalDebugInfoOn/Off)'
   echo
   echo 'Internal Configuration'
   printf $fmt3 'Parallelism'   $PARALLELISM   '(parallelism nnn)'

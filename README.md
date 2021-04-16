@@ -73,7 +73,7 @@ You can then do
 
 and add `cmake` options if you need like for example:
 
-    buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+    buildStaticArangoDB -DUSE_IPO=Off
 
 The first time this will take some time, but then the configured
 `ccache` will make things a lot quicker. Once you have built for the
@@ -154,6 +154,16 @@ enterprise edition do
     oskar8
 
 The test results as well as logs will be left in the `work` directory.
+
+## Re-generate error files
+
+After modifications to `lib/Basics/errors.dat`, you can update the generated files
+that are based on it by running:
+
+    shellInAlpineContainer
+
+    cd /work/ArangoDB/build
+    cmake --build . --target errorfiles
 
 ## Cleaning up
 

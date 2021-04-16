@@ -128,7 +128,11 @@ end
 function runLocal
   if test -z "$SSH_AUTH_SOCK"
     eval (ssh-agent -c) > /dev/null
-    ssh-add ~/.ssh/id_rsa
+    for key in ~/.ssh/id_rsa ~/.ssh/id_ed25519
+      if test -f $key
+        ssh-add $key
+      end
+    end
     set -l agentstarted 1
   else
     set -l agentstarted ""
@@ -169,6 +173,8 @@ end
 function switchBranches
   checkoutIfNeeded
   runLocal $SCRIPTSDIR/switchBranches.fish $argv
+  and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
+  and findDefaultArchitecture
 end
 
 function clearWorkdir
@@ -178,8 +184,9 @@ end
 function buildArangoDB
   checkoutIfNeeded
   and findRequiredOpenSSL
+  and findDefaultArchitecture
   and findRequiredMinMacOS
-  runLocal $SCRIPTSDIR/buildMacOs.fish $argv
+  and runLocal $SCRIPTSDIR/buildMacOs.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -189,8 +196,9 @@ end
 
 function makeArangoDB
   findRequiredOpenSSL
-  findRequiredMinMacOS
-  runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
+  and findDefaultArchitecture
+  and findRequiredMinMacOS
+  and runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -252,9 +260,6 @@ end
 
 function buildPackage
   # This assumes that a build has already happened
-  # Must have set ARANGODB_DARWIN_UPSTREAM and ARANGODB_DARWIN_REVISION,
-  # for example by running findArangoDBVersion.
-  set v "$ARANGODB_DARWIN_UPSTREAM"
 
   if test "$ENTERPRISEEDITION" = "On"
     echo Building enterprise edition MacOs bundle...
@@ -335,6 +340,7 @@ function buildTarGzPackage
   pushd $INNERWORKDIR/ArangoDB/build
   and rm -rf install
   and make install DESTDIR=install
+  and makeJsSha1Sum (pwd)/install/opt/arangodb/share/arangodb3/js
   and if test "$ENTERPRISEEDITION" = "On"
         pushd install/opt/arangodb/bin
         ln -s ../sbin/arangosync

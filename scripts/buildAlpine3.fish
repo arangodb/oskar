@@ -71,13 +71,17 @@ else
   end
 end
 
+if test "$MINIMAL_DEBUG_INFO" = "On"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_MINIMAL_DEBUGINFO=On
+end
 setupCcacheBinPath alpine
 and setupCcache alpine
 and cleanBuildDirectory
 and cd $INNERWORKDIR/ArangoDB/build
 and TT_init
 and cmakeCcache
-and selectArchitecture $argv
+and selectArchitecture
 and selectMaintainer
 and runCmake
 and TT_cmake
@@ -87,6 +91,7 @@ else
   echo "Finished cmake at "(date)", now starting build"
   and set -xg DESTDIR (pwd)/install
   and runMake install
+  and generateJsSha1Sum ArangoDB/build/install/usr/share/arangodb3/js
   and TT_make
   and installTargets
   and echo "Finished at "(date)

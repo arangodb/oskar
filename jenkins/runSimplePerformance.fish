@@ -18,7 +18,7 @@ and if test -z "$DOCKER_IMAGE"
   and releaseMode
   and pingDetails
   and showConfig
-  and buildStaticArangoDB -DTARGET_ARCHITECTURE=westmere
+  and buildStaticArangoDB
 end
 
 and sudo rm -rf work/database $simple/results.csv

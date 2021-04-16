@@ -149,10 +149,14 @@ function shutdownCcache
 end
 
 function selectArchitecture
-  if test "$argv" = ""
-    echo "using default architecture 'westmere'"
+  if test "$DEFAULT_ARCHITECTURE" != ""
+    echo "using architecture '$DEFAULT_ARCHITECTURE'"
     set -g FULLARGS $FULLARGS \
-      -DTARGET_ARCHITECTURE=westmere
+      -DTARGET_ARCHITECTURE=$DEFAULT_ARCHITECTURE
+  else
+    echo "using provided architecture '"$argv"'"
+    set -g FULLARGS $FULLARGS \
+    -DTARGET_ARCHITECTURE=$argv
   end
   return 0
 end
@@ -237,7 +241,7 @@ function installTargets
     echo Stripping executables...
     strip \
       usr/sbin/arangod \
-      usr/bin/arangoimp \
+      usr/bin/arangoimport \
       usr/bin/arangosh \
       usr/bin/arangovpack \
       usr/bin/arangoexport \
@@ -272,4 +276,19 @@ end
 function TT_strip
   set -g TT_t4 (date -u +%s)
   and echo $TT_t0,strip,(expr $TT_t4 - $TT_t3) >> $INNERWORKDIR/buildTimes.csv
+end
+
+function generateJsSha1Sum
+  set -l jsdir $INNERWORKDIR/$argv[1]
+  if test -d $jsdir
+    pushd $jsdir
+    and rm -f JS_FILES.txt JS_SHA1SUM.txt
+    and begin
+      find . -type f | sort | xargs sha1sum > JS_FILES.txt
+    end
+    and sha1sum JS_FILES.txt > JS_SHA1SUM.txt
+    and rm -f JS_FILES.txt
+  end
+  or begin popd ; return 1 ; end
+  popd
 end
