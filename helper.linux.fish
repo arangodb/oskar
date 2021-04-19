@@ -690,10 +690,11 @@ function runMiniChaos
   and rm -rf $WORKDIR/work/mini-chaos/$package
   and mkdir -p $WORKDIR/work/mini-chaos/$package/ArangoDB
   and tar -xf $WORKDIR/work/{$package}.tar.gz --strip-components=1 -C $WORKDIR/work/mini-chaos/$package/ArangoDB
-  #and checkoutMiniChaos
+  and checkoutMiniChaos
   and rm -rf "$WORKDIR/work/mini-chaos/$package/output"
   and mkdir -p "$WORKDIR/work/mini-chaos/$package/output"
   runInContainer \
+      --pid=host \
       -v $WORKDIR/work/ArangoDB/mini-chaos:/mini-chaos \
       -v $WORKDIR/work/mini-chaos/$package:/$package \
       -e ARANGODB_OVERRIDE_CRASH_HANDLER=0 \
