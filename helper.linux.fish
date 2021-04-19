@@ -378,8 +378,9 @@ function makeStaticArangoDB
 end
 
 function buildStaticCoverage
+  # note: DEBUG_SYNC_REPLICATION is removed from 3.8 onwards an can be removed here too soon 
   coverageOn
-  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On -DUNCONDITIONALLY_BUILD_LOG_MESSAGES=On
+  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On 
 end
 
 function buildExamples
@@ -1328,7 +1329,7 @@ function runInContainer
   if test -z "$SSH_AUTH_SOCK"
     sudo killall --older-than 8h ssh-agent 2>&1 > /dev/null
     eval (ssh-agent -c) > /dev/null
-    for key in ~/.ssh/id_rsa ~/.ssh/id_deploy
+    for key in ~/.ssh/id_rsa ~/.ssh/id_ed25519 ~/.ssh/id_deploy
       if test -f $key
         ssh-add $key
       end
@@ -1428,6 +1429,7 @@ function runInContainer
       -e UID=(id -u) \
       -e GID=(id -g) \
       -e INNERWORKDIR=$INNERWORKDIR \
+      --rm \
       $ALPINEUTILSIMAGE $SCRIPTSDIR/recursiveChown.fish
 
   if test -n "$agentstarted"
@@ -1442,7 +1444,7 @@ function interactiveContainer
   if test -z "$SSH_AUTH_SOCK"
     sudo killall --older-than 8h ssh-agent 2>&1 > /dev/null
     eval (ssh-agent -c) > /dev/null
-    for key in ~/.ssh/id_rsa ~/.ssh/id_deploy
+    for key in ~/.ssh/id_rsa ~/.ssh/id_ed25519 ~/.ssh/id_deploy
       if test -f $key
         ssh-add $key
       end

@@ -7,9 +7,28 @@ source $SCRIPTS/lib/tests.fish
 ################################################################################
 
 set -l ST
-set ST "$ST""750,runSingleTest1 shell_client http $EncryptionAtRest -\n"
-set ST "$ST""750,runSingleTest1 shell_client vst --vst true -\n"
-set ST "$ST""750,runSingleTest1 shell_client http2 --http2 true -\n"
+set ST "$ST""500,runSingleTest1 shell_client_aql http -\n"
+set ST "$ST""500,runSingleTest1 shell_client_aql vst --vst true -\n"
+set ST "$ST""500,runSingleTest1 shell_client_aql http2 --http2 true -\n"
+set ST "$ST""250,runSingleTest1 shell_replication -\n"
+set ST "$ST""1000,runSingleTest1 shell_server -\n"
+set ST "$ST""250,runSingleTest1 shell_server_aql 0 --testBuckets 5/0\n"
+set ST "$ST""750,runSingleTest1 shell_server_aql 1 --testBuckets 5/1\n"
+set ST "$ST""500,runSingleTest1 shell_server_aql 2 --testBuckets 5/2\n"
+set ST "$ST""250,runSingleTest1 shell_server_aql 3 --testBuckets 5/3\n"
+set ST "$ST""250,runSingleTest1 shell_server_aql 4 --testBuckets 5/4\n"
+set ST "$ST""500,runSingleTest1 ssl_server -\n"
+set ST "$ST""250,runSingleTest1 version -\n"
+set ST "$ST""500,runSingleTest1 audit_client -\n"
+set ST "$ST""500,runSingleTest1 audit_server -\n"
+set ST "$ST""500,runSingleTest2 replication_ongoing -\n"
+set ST "$ST""250,runSingleTest2 replication_ongoing_frompresent -\n"
+set ST "$ST""500,runSingleTest2 replication_ongoing_global -\n"
+set ST "$ST""250,runSingleTest2 replication_ongoing_global_spec -\n"
+set ST "$ST""500,runSingleTest2 replication_sync -\n"
+set ST "$ST""500,runSingleTest1 paths_server -\n"
+set ST "$ST""250,runSingleTest1 hot_backup -\n"
+set ST "$ST""500,runSingleTest1 permissions -\n"
 
 set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g STL (count $STS)
