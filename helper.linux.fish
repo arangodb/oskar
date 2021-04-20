@@ -444,6 +444,38 @@ function oskarFull
   return $s
 end
 
+function oskarOneTest
+  set -l s 1
+  set -l p $PARALLELISM
+
+  checkoutIfNeeded
+  and if test "$ENTERPRISEEDITION" = "On"
+    launchLdapServer
+    and if test "$ASAN" = "On"
+      parallelism 2
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
+    else
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
+    end
+    set s $status
+  else
+    if test "$ASAN" = "On"
+      parallelism 2
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
+    else
+      runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
+    end
+  end
+  set s $status
+
+  if test "$ENTERPRISEEDITION" = "On"
+    stopLdapServer
+  end
+
+  parallelism $p
+  return $s
+end
+
 ## #############################################################################
 ## jslint
 ## #############################################################################

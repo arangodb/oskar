@@ -63,14 +63,16 @@ set -xg GCOV_PREFIX_STRIP 3
 
 function runAnyTest
   set -l t $argv[1]
-  set -l tt $argv[2]
   set -l l0 (string replace '*' 'all' $t)
+
+  set -l tt $argv[2]
   if test "$tt" = "-"
     set tt ""
   end
   if test "$tt" != ""
     set l0 "$l0"_"$tt"
   end
+
   set -l l1 "$l0".log
   set -l l2 $TMPDIR/"$l0".out
   set -e argv[1..2]
@@ -96,7 +98,6 @@ function runAnyTest
 
     echo (pwd) "-" scripts/unittest $arguments
     mkdir -p "$l2"
-    #echo "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 2>&1; date -u +%s > $l2/stopped"
     fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 2>&1; date -u +%s > $l2/stopped" &
     set -g portBase (math $portBase + 100)
     sleep 1
@@ -278,8 +279,8 @@ function createReport
 end
 
 function hasLDAPHOST
-    test ! -z "$LDAPHOST"
-    return $status
+  test ! -z "$LDAPHOST"
+  return $status
 end
 
 set -g repoState ""
@@ -399,7 +400,7 @@ function setupTmp
   and mkdir tmp
   and set -xg TMPDIR $INNERWORKDIR/tmp
   and cd $INNERWORKDIR/ArangoDB
-  and for f in *.log ; rm -f $f ; end
+  and for f in *.log ; rm -f -- $f ; end
   and popd
   or begin popd; return 1; end
 end
