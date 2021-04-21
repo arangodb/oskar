@@ -273,9 +273,9 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
           $testparams = $testparams + " --sniff true --sniffProgram `"$global:TSHARK`" --sniffDevice $global:dumpDevice"
         }
 
-        Remove-Item –path "$env:TMP\$output.out"
         $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE --disableMonitor true"
 
+        Remove-Item –Path "$env:TMP\$output.out"
         New-Item -Path "$env:TMP\$output.out" -ItemType Directory
         $testparams = $testparams + " --testOutput $env:TMP\$output.out"
         $testparams = $testparams + " " + $moreParams
