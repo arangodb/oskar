@@ -184,7 +184,7 @@ Function runTests
 Function waitForTimeWaitSockets() {
     $TimeWait = 0
     do {
-      $TimeWait = (Get-NetTCPConnection -State TimeWait | Measure-Object).Count
+      $TimeWait = (Get-NetTCPConnection -State TimeWait -ErrorAction SilentlyContinue | Measure-Object).Count
       if ($TimeWait -gt 2500) {
         Write-Host "waiting for connections to go away ${TimeWait}"
         Start-Sleep 20
