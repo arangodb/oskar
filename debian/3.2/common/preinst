@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
-
+if test ! -f /etc/default/locale -o "$(grep -v ^# /etc/default/locale | wc -l)" -eq 0  ; then
+    > &2 echo "ArangoDB requires a properly setup locale environment to work"
+    exit 1
+fi
 getent group arangodb >/dev/null || groupadd -r arangodb 
 getent passwd arangodb >/dev/null || useradd -r -g arangodb -d /usr/share/arangodb3 -s /bin/false -c "ArangoDB Application User" arangodb
  
