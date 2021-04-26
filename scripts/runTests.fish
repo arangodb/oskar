@@ -72,6 +72,7 @@ set ST "$ST""500,runSingleTest2 replication_sync -\n"
 set ST "$ST""500,runSingleTest1 paths_server -\n"
 set ST "$ST""250,runSingleTest1 hot_backup -\n"
 set ST "$ST""500,runSingleTest1 permissions -\n"
+#set ST "$ST""250,runSingleTest1 replication2_client -\n"
 
 set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g STL (count $STS)
@@ -173,6 +174,7 @@ set CT "$CT""250,runClusterTest1 dump_with_crashes - --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 export - --dumpAgencyOnError true\n"
 set CT "$CT""750,runClusterTest1 http_server - --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 hot_backup - --dumpAgencyOnError true\n"
+set ST "$ST""250,runSingleTest1 replication2_client -\n"
 
 set -g CTS (echo -e $CT | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g CTL (count $CTS)
