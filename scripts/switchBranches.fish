@@ -85,7 +85,7 @@ if test $status -ne 0
   echo "Failed to checkout community branch"
   exit 1
 else
-  echo "VERSION:" (cat $INNERWORKDIR/ArangoDB/VERSION) > $INNERWORKDIR/sourceInfo.log
+  echo "VERSION:" (cat $INNERWORKDIR/ArangoDB/ARANGO-VERSION) > $INNERWORKDIR/sourceInfo.log
   echo "Community:" (git rev-parse --verify HEAD) >> $INNERWORKDIR/sourceInfo.log
 end
 

@@ -435,7 +435,7 @@ function setNightlyRelease
   and set -l ARANGODB_FULL_VERSION "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH"
   and if test -n "$ARANGODB_VERSION_RELEASE_TYPE"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION-$ARANGODB_VERSION_RELEASE_TYPE"; end
   and if test -n "$ARANGODB_VERSION_RELEASE_NUMBER"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION.$ARANGODB_VERSION_RELEASE_NUMBER"; end
-  and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/VERSION
+  and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/ARANGO-VERSION
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
   and ls -1 $WORKDIR/work/sourceInfo.* | xargs sed -i$suffix -E "s/(\"?VERSION\"?: ?\"?)([0-9a-z.-]+)/\1$ARANGODB_FULL_VERSION/g"
   and if test -n "$suffix"; rm -f $WORKDIR/work/sourceInfo*$suffix; end
