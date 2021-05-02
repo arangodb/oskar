@@ -311,10 +311,11 @@ set -gx LDAPHOST2 "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
 
 function stopLdapServer
   docker stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
-  docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+  and docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
   docker stop "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
-  docker rm "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
+  and docker rm "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
   docker network rm "$LDAPNETWORK$LDAPEXT"
+  echo "LDAP servers stopped"
   true
 end
 
@@ -323,6 +324,7 @@ function launchLdapServer
   and docker network create "$LDAPNETWORK$LDAPEXT"
   and docker run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
   and docker run -d --name "$LDAPHOST2" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
+  and echo "LDAP servers launched"
 end
 
 ## #############################################################################
