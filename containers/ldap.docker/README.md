@@ -106,7 +106,7 @@ docker run -v /my-certs:/etc/ssl/certs \
   -e CA_FILE /etc/ssl/certs/ca.pem \
   -e KEY_FILE /etc/ssl/certs/server.key \
   -e CERT_FILE /etc/ssl/certs/server.pem \
-  neunhoef/ldap-alpine
+  arangodb/ldap-test
 ```
 
 Where `/my-certs` on the host contains the three certificate files `ca.pem`,

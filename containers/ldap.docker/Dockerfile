@@ -1,6 +1,6 @@
 FROM alpine
 
-MAINTAINER Max Neunhoeffer <max@arangodb.com>
+MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 RUN apk add --update openldap openldap-back-mdb && \
     mkdir -p /run/openldap /var/lib/openldap/openldap-data && \
