@@ -757,7 +757,7 @@ function makeTestPackageLinux
 
   findArangoDBVersion
   and asanOff
-  and maintainerOff
+  and maintainerOn
   and releaseMode
   and set -xg NOSTRIP 1
   and buildStaticArangoDB
