@@ -374,9 +374,11 @@ function waitOrKill
     echo (date) timeout after $timeout
     set -l ids (jobs -p)
     if test (count $ids) -gt 0
+      echo (date) First attempt to kill $ids
       kill -6 $ids
       if waitForProcesses 30 ""
         set -l ids (jobs -p)
+        echo (date) Second attempt to kill $ids
         if test (count $ids) -gt 0
           kill -6 $ids
           waitForProcesses 60 ""   # give jobs some time to finish

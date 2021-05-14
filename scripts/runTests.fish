@@ -212,7 +212,7 @@ switch $TESTSUITE
     and if test "$ASAN" = "On"
       waitOrKill 16800 launchClusterTests
     else
-      waitOrKill 4200 launchClusterTests
+      waitOrKill 400 launchClusterTests
     end
     createReport
   case "single"
@@ -220,7 +220,7 @@ switch $TESTSUITE
     and if test "$ASAN" = "On"
       waitOrKill 15600 launchSingleTests
     else
-      waitOrKill 3900 launchSingleTests
+      waitOrKill 400 launchSingleTests
     end
     createReport
   case "catchtest"
