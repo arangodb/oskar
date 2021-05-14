@@ -333,12 +333,17 @@ function waitForProcesses
   set launcher $argv[2]
   set start (date -u +%s)
   while true
+    echo (date) Inside wait processes
     # Launch if necessary:
     while test (math (count (jobs -p))"*$launchFactor") -lt "$PARALLELISM"
+      echo (date) Inside wait, evaluating launcher
       if test -z "$launcher" ; break ; end
+      echo (date) Inside wait, running launcher
       if eval "$launcher" ; break ; end
       sleep 30
     end
+
+    echo (date) After launch
 
     # Check subprocesses:
     if test (count (jobs -p)) -eq 0
@@ -378,6 +383,7 @@ function waitOrKill
     if test (count $ids) -gt 0
       echo (date) First attempt to kill $ids
       kill -6 $ids
+      echo (date) Waiting on processes $ids
       if waitForProcesses 30 ""
         set -l ids (jobs -p)
         echo (date) Second attempt to kill $ids
