@@ -128,6 +128,7 @@ function runClusterTest3
 end
 
 function createReport
+  echo (date) Creating the Report
   set -g result GOOD
 
   set -l now (date -u +%F_%H.%M.%SZ)
@@ -141,6 +142,7 @@ function createReport
   set -l totalStarted (date -u +%s)
   set -l totalStopped 0
 
+  echo (date) Files in local Folder (ls)
   for d in *.out
     set -l localresult GOOD
     echo Looking at directory $d
@@ -386,6 +388,7 @@ function waitOrKill
       end
     end
   end
+  echo (date) Returning 0
   return 0
 end
 
