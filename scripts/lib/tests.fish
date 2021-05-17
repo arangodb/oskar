@@ -329,18 +329,23 @@ function resetLaunch
 end
 
 function waitForProcesses
+  echo (date) Starting WaitForProcesses
   set i $argv[1]
+  echo (date) Set i := $i
   set launcher $argv[2]
+  echo (date) Set launcher := $launcher 
   set start (date -u +%s)
+  echo (date) Set start := $start 
   while true
     echo (date) Inside wait processes
     # Launch if necessary:
-    while test (math (count (jobs -p))"*$launchFactor") -lt "$PARALLELISM"
-      echo (date) Inside wait, evaluating launcher
-      if test -z "$launcher" ; break ; end
-      echo (date) Inside wait, running launcher
-      if eval "$launcher" ; break ; end
-      sleep 30
+    if not test -z "$launcher"
+      while test (math (count (jobs -p))"*$launchFactor") -lt "$PARALLELISM"
+        echo (date) Inside wait, evaluating launcher
+        echo (date) Inside wait, running launcher
+        if eval "$launcher" ; break ; end
+        sleep 30
+      end
     end
 
     echo (date) After launch
