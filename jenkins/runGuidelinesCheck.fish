@@ -11,5 +11,6 @@ and checkMacros >> work/test.log
 and checkMetrics >> work/test.log
 
 set -l s $status
-cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
+cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
+echo $s
 exit $s

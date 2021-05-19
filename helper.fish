@@ -1669,6 +1669,8 @@ function checkMetrics
     echo "Wrong metrics: NONE"
   end
 
+  echo $s
+
   popd
   return $s
 end
