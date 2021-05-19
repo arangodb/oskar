@@ -1,10 +1,11 @@
 #!/usr/bin/env fish
 source jenkins/helper/jenkins.fish
 
+set s 0
+
 cleanPrepareLockUpdateClear
 and enterprise
 and maintainerOn
-and rocksdb
 and asanOff
 and coverageOn
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true

@@ -1,6 +1,9 @@
 #!/usr/bin/env fish
 ssh -o StrictHostKeyChecking=no -T git@github.com
 
+set -xg GCOV_PREFIX /work/gcov
+set -xg GCOV_PREFIX_STRIP 3
+
 pushd $INNERWORKDIR/ArangoDB
 and if test -d docs
   rm -rf docs
