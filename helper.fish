@@ -1663,7 +1663,9 @@ function checkMetrics
     and ./utils/generateAllMetricsDocumentation.py -d
     and ./utils/generateAllMetricsDocumentation.py
     set s $status
-  else
+  end
+
+  if test $s = 0
     echo "Wrong metrics: NONE"
   end
 
