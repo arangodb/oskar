@@ -1662,7 +1662,7 @@ function checkMetrics
     rm -rf ./Documentation/Metrics/allMetrics.yaml
     and ./utils/generateAllMetricsDocumentation.py -d
     and ./utils/generateAllMetricsDocumentation.py
-    set s $status
+    or set s 1
   end
 
   if test $s = 0
