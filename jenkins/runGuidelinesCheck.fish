@@ -12,5 +12,4 @@ and checkMetrics >> work/test.log
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
-echo $s
 exit $s

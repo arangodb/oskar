@@ -1660,7 +1660,6 @@ function checkMetrics
 
   if test -f ./utils/generateAllMetricsDocumentation.py
     rm -rf ./Documentation/Metrics/allMetrics.yaml
-    and ./utils/generateAllMetricsDocumentation.py -d
     and ./utils/generateAllMetricsDocumentation.py
     or set s 1
   end
@@ -1668,8 +1667,6 @@ function checkMetrics
   if test $s = 0
     echo "Wrong metrics: NONE"
   end
-
-  echo $s
 
   popd
   return $s
