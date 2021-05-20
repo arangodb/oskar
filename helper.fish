@@ -1648,6 +1648,30 @@ function checkLogId
 end
 
 ## #############################################################################
+## CHECK METRICS
+## #############################################################################
+
+function checkMetrics
+  checkoutIfNeeded
+  and pushd $WORKDIR/work/ArangoDB
+  or begin popd; return 1; end
+
+  set -l s 0
+
+  if test -f ./utils/generateAllMetricsDocumentation.py
+    rm -rf ./Documentation/Metrics/allMetrics.yaml
+    and ./utils/generateAllMetricsDocumentation.py
+    or set s 1
+  end
+
+  if test $s = 0
+    echo "Wrong metrics: NONE"
+  end
+
+  popd
+  return $s
+end
+## #############################################################################
 ## helper functions
 ## #############################################################################
 
