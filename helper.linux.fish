@@ -416,6 +416,7 @@ function oskar
   set -l p $PARALLELISM
 
   checkoutIfNeeded
+  and findRequiredCompiler
   and if test "$ASAN" = "On"
     parallelism 2
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
@@ -433,6 +434,7 @@ function oskarFull
   set -l p $PARALLELISM
 
   checkoutIfNeeded
+  and findRequiredCompiler
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
     and if test "$ASAN" = "On"
@@ -465,6 +467,7 @@ function oskarOneTest
   set -l p $PARALLELISM
 
   checkoutIfNeeded
+  and findRequiredCompiler
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
     and if test "$ASAN" = "On"
@@ -1425,7 +1428,7 @@ function runInContainer
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
-	           -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
+             -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
