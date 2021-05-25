@@ -388,7 +388,10 @@ function waitOrKill
     if test (count $ids) -gt 0
       echo (date) First attempt to kill $ids
       echo All Jobs: (jobs)
-      kill -6 $ids
+      for id in $ids
+        echo ps: (ps aux | grep $id)
+      end
+      kill -SIGABRT $ids
       echo (date) Waiting on processes $ids
       if waitForProcesses 30 ""
         set -l ids (jobs -p)
