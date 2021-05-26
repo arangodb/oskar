@@ -21,5 +21,5 @@ set -l s $status
 
 TT_tests
 
-cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
+cd "$HOME/$NODE_NAME/$OSKAR" ; createReport ; moveResultsToWorkspace ; unlockDirectory 
 exit $s
