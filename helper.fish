@@ -1700,9 +1700,6 @@ function moveResultsToWorkspace
   if test ! -z "$WORKSPACE"
     # Used in jenkins test
     echo Moving reports and logs to $WORKSPACE ...
-    echo Making sure we actually call create report
-    createReport
-    echo Called create report
     if test -f $WORKDIR/work/test.log
       if head -1 $WORKDIR/work/test.log | grep BAD > /dev/null; or test $WORKSPACE_LOGS = "all"
         for f in $WORKDIR/work/testreport* ; echo "mv $f" ; mv $f $WORKSPACE ; end
