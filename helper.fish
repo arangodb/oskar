@@ -69,6 +69,11 @@ function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
 
+set -xg GCR_REG_PREFIX "gcr.io/gcr-for-testing/"
+function gcrRegOff ; set -gx GCR_REG "Off"  ; end
+function gcrRegOn  ; set -gx GCR_REG "On"   ; end
+gcrRegOn
+
 function packageStripNone          ; set -gx PACKAGE_STRIP None    ; end
 function packageStripExceptArangod ; set -gx PACKAGE_STRIP ExceptArangod ; end
 function packageStripAll           ; set -gx PACKAGE_STRIP All     ; end
@@ -1300,9 +1305,10 @@ function showConfig
   printf $fmt2 'Log Levels'     (echo $LOG_LEVELS)
   echo
   echo 'Package Configuration'
-  printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
-  printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
-  printf $fmt3 'Strip Packages' $PACKAGE_STRIP '(packageStripAll/ExceptArangod/None)'
+  printf $fmt3 'Stable/preview'     $RELEASE_TYPE       '(stable/preview)'
+  printf $fmt3 'Docker Distro'      $DOCKER_DISTRO      '(alpineDockerImage/ubiDockerImage)'
+  printf $fmt3 'Use GCR Registry'   $GCR_REG            '(gcrRegOn/gcrRegOff)'
+  printf $fmt3 'Strip Packages'     $PACKAGE_STRIP      '(packageStripAll/ExceptArangod/None)'
   printf $fmt3 'Minimal Debug Info' $MINIMAL_DEBUG_INFO '(minimalDebugInfoOn/Off)'
   echo
   echo 'Internal Configuration'
