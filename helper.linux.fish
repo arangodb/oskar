@@ -1001,6 +1001,10 @@ function buildDockerRelease
   and if test "$IMAGE_NAME3" != ""
     docker tag $IMAGE_NAME1 $IMAGE_NAME3
     and pushDockerImage $IMAGE_NAME3
+    and  if test "$GCR_REG" = "On"
+      docker tag $IMAGE_NAME3 $GCR_REG_PREFIX$IMAGE_NAME3
+      and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME3
+    end
   end
 end
 
@@ -1113,6 +1117,8 @@ function pushDockerImage
     echo Given image is not present locally
     return 1
   end
+
+  docker push $imagename
 end
 
 function buildDockerLocal
