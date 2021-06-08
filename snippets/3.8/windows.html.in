@@ -1,8 +1,14 @@
 <div>
   <p>
-    The following packages are for Windows 7 (Service Pack 1), Windows 10 (1803
+    The following <strong>ArangoDB @ARANGODB_VERSION_MAJOR@.@ARANGODB_VERSION_MINOR@.@ARANGODB_VERSION_PATCH@
+    @ARANGODB_VERSION_UNSTABLE@</strong> packages are for Windows 7 (Service Pack 1), Windows 10 (1803
     and higher), Windows Server 2008 R2 and higher.
   </p>
+  @UNSTABLE_BEGIN@
+  <p>
+    This version is for <strong>testing only</strong> and should <strong>never be used in production</strong>.
+  </p>
+  @UNSTABLE_END@
   <p>
     The processor(s) must support the SSE 4.2 instruction set (Intel Westmere or
     better, AMD Bulldozer or better, etc.)

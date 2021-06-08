@@ -1,5 +1,14 @@
 <div>
   <p>
+    The following <strong>ArangoDB @ARANGODB_VERSION_MAJOR@.@ARANGODB_VERSION_MINOR@.@ARANGODB_VERSION_PATCH@
+    @ARANGODB_VERSION_UNSTABLE@</strong> packages are for any Linux distribution.
+  </p>
+  @UNSTABLE_BEGIN@
+  <p>
+    This version is for <strong>testing only</strong> and should <strong>never be used in production</strong>.
+  </p>
+  @UNSTABLE_END@
+  <p>
     We provide a <strong>Tar</strong> package containing the server
     and client tools, which can be unpacked in any location and which
     does not require root rights for installation.

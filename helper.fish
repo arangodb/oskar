@@ -762,7 +762,16 @@ function buildSourceSnippet
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_VERSION_UNSTABLE@|$ARANGODB_VERSION_UNSTABLE|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/source.html.in > $n
+
+  if test "$ARANGODB_VERSION_UNSTABLE" = ""
+    # Delete all lines from start to end marker for stable releases
+    sed -e "|@UNSTABLE_BEGIN@|,|@UNSTABLE_END@|d" < $n > $n
+  else
+    # Remove just the markers to keep the unstable release warning
+    sed -e "|@UNSTABLE_BEGIN@|d" -e "|@UNSTABLE_END@|d" < $n > $n
+  end
 
   and echo "Source Snippet: $n"
 end
@@ -849,7 +858,16 @@ function buildDebianSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_UNSTABLE@|$ARANGODB_VERSION_UNSTABLE|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
+
+  if test "$ARANGODB_VERSION_UNSTABLE" = ""
+    # Delete all lines from start to end marker for stable releases
+    sed -e "|@UNSTABLE_BEGIN@|,|@UNSTABLE_END@|d" < $n > $n
+  else
+    # Remove just the markers to keep the unstable release warning
+    sed -e "|@UNSTABLE_BEGIN@|d" -e "|@UNSTABLE_END@|d" < $n > $n
+  end
 
   and echo "Debian Snippet: $n"
 end
@@ -937,7 +955,16 @@ function buildRPMSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_VERSION_UNSTABLE@|$ARANGODB_VERSION_UNSTABLE|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
+
+  if test "$ARANGODB_VERSION_UNSTABLE" = ""
+    # Delete all lines from start to end marker for stable releases
+    sed -e "|@UNSTABLE_BEGIN@|,|@UNSTABLE_END@|d" < $n > $n
+  else
+    # Remove just the markers to keep the unstable release warning
+    sed -e "|@UNSTABLE_BEGIN@|d" -e "|@UNSTABLE_END@|d" < $n > $n
+  end
 
   and echo "RPM Snippet: $n"
 
@@ -968,7 +995,16 @@ function buildRPMSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_VERSION_UNSTABLE@|$ARANGODB_VERSION_UNSTABLE|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
+
+  if test "$ARANGODB_VERSION_UNSTABLE" = ""
+    # Delete all lines from start to end marker for stable releases
+    sed -e "|@UNSTABLE_BEGIN@|,|@UNSTABLE_END@|d" < $n > $n
+  else
+    # Remove just the markers to keep the unstable release warning
+    sed -e "|@UNSTABLE_BEGIN@|d" -e "|@UNSTABLE_END@|d" < $n > $n
+  end
 
   and echo "SUSE Snippet: $n"
 end
@@ -1028,7 +1064,16 @@ function buildTarGzSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_VERSION_UNSTABLE@|$ARANGODB_VERSION_UNSTABLE|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
+
+  if test "$ARANGODB_VERSION_UNSTABLE" = ""
+    # Delete all lines from start to end marker for stable releases
+    sed -e "|@UNSTABLE_BEGIN@|,|@UNSTABLE_END@|d" < $n > $n
+  else
+    # Remove just the markers to keep the unstable release warning
+    sed -e "|@UNSTABLE_BEGIN@|d" -e "|@UNSTABLE_END@|d" < $n > $n
+  end
 
   and echo "TarGZ Snippet: $n"
 end
@@ -1098,7 +1143,16 @@ function buildBundleSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_VERSION_UNSTABLE@|$ARANGODB_VERSION_UNSTABLE|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/macosx.html.in > $n
+
+  if test "$ARANGODB_VERSION_UNSTABLE" = ""
+    # Delete all lines from start to end marker for stable releases
+    sed -e "|@UNSTABLE_BEGIN@|,|@UNSTABLE_END@|d" < $n > $n
+  else
+    # Remove just the markers to keep the unstable release warning
+    sed -e "|@UNSTABLE_BEGIN@|d" -e "|@UNSTABLE_END@|d" < $n > $n
+  end
 
   and echo "MacOSX Bundle Snippet: $n"
 end
@@ -1164,7 +1218,16 @@ function buildWindowsSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_VERSION_UNSTABLE@|$ARANGODB_VERSION_UNSTABLE|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/windows.html.in > $n
+
+  if test "$ARANGODB_VERSION_UNSTABLE" = ""
+    # Delete all lines from start to end marker for stable releases
+    sed -e "|@UNSTABLE_BEGIN@|,|@UNSTABLE_END@|d" < $n > $n
+  else
+    # Remove just the markers to keep the unstable release warning
+    sed -e "|@UNSTABLE_BEGIN@|d" -e "|@UNSTABLE_END@|d" < $n > $n
+  end
 
   and echo "Windows Snippet: $n"
 end
@@ -1218,7 +1281,16 @@ function transformDockerSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_VERSION_UNSTABLE@|$ARANGODB_VERSION_UNSTABLE|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/docker.$edition.html.in > $n
+
+  if test "$ARANGODB_VERSION_UNSTABLE" = ""
+    # Delete all lines from start to end marker for stable releases
+    sed -e "|@UNSTABLE_BEGIN@|,|@UNSTABLE_END@|d" < $n > $n
+  else
+    # Remove just the markers to keep the unstable release warning
+    sed -e "|@UNSTABLE_BEGIN@|d" -e "|@UNSTABLE_END@|d" < $n > $n
+  end
 
   and echo "Docker Snippet: $n"
 end
@@ -1249,7 +1321,16 @@ function transformK8SSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_VERSION_UNSTABLE@|$ARANGODB_VERSION_UNSTABLE|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/k8s.$edition.html.in > $n
+
+  if test "$ARANGODB_VERSION_UNSTABLE" = ""
+    # Delete all lines from start to end marker for stable releases
+    sed -e "|@UNSTABLE_BEGIN@|,|@UNSTABLE_END@|d" < $n > $n
+  else
+    # Remove just the markers to keep the unstable release warning
+    sed -e "|@UNSTABLE_BEGIN@|d" -e "|@UNSTABLE_END@|d" < $n > $n
+  end
 
   and echo "Kubernetes Snippet: $n"
 end
@@ -1421,7 +1502,7 @@ function findArangoDBVersion
   set -xg ARANGODB_SNIPPETS "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR"
   set -xg ARANGODB_PACKAGES "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR"
 
-  # old version scheme (upto 3.3.x)
+  # old version scheme (up to 3.3.x)
   if grep -q "$APR" $CMAKELIST
     set -l SEDFIX2 's/\([0-9a-zA-Z]*\)\(-\([0-9a-zA-Z]*\)\)*$/\1/'
     set -l SEDFIX3 's/.*"\([0-9a-zA-Z]*\(\.\([0-9a-zA-Z]*\)\)*\)".*$/\1/'
@@ -1449,7 +1530,7 @@ function findArangoDBVersion
 
     set -xg DOCKER_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR"
 
-  # new version scheme (from 3.4.x)  
+  # new version scheme (from 3.4.x)
   else
     set -xg ARANGODB_VERSION_PATCH (grep "$AV""_PATCH" $CMAKELIST | grep -v unset | sed -e $SEDFIX)
     set -g  ARANGODB_VERSION_RELEASE_TYPE (grep "$AV""_RELEASE_TYPE" $CMAKELIST | grep -v unset | sed -e $SEDFIX)
@@ -1511,14 +1592,19 @@ function findArangoDBVersion
       end
 
       if test "$ARANGODB_VERSION_RELEASE_TYPE" = "alpha"
+        set -xg ARANGODB_VERSION_UNSTABLE = "Alpha $ARANGODB_VERSION_RELEASE_NUMBER"
         set N 100
       else if test "$ARANGODB_VERSION_RELEASE_TYPE" = "beta"
+        set -xg ARANGODB_VERSION_UNSTABLE = "Beta $ARANGODB_VERSION_RELEASE_NUMBER"
         set N 200
       else if test "$ARANGODB_VERSION_RELEASE_TYPE" = "milestone"
+        set -xg ARANGODB_VERSION_UNSTABLE = "Milestone $ARANGODB_VERSION_RELEASE_NUMBER"
         set N 300
       else if test "$ARANGODB_VERSION_RELEASE_TYPE" = "preview"
+        set -xg ARANGODB_VERSION_UNSTABLE = "Preview $ARANGODB_VERSION_RELEASE_NUMBER"
         set N 400
       else if test "$ARANGODB_VERSION_RELEASE_TYPE" = "rc"
+        set -xg ARANGODB_VERSION_UNSTABLE = "Release Candidate $ARANGODB_VERSION_RELEASE_NUMBER"
         set N 500
       end
 

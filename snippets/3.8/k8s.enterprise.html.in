@@ -1,7 +1,13 @@
 <div>
   <p>
-    ArangoDB is available for Kubernetes.
+    <strong>ArangoDB @ARANGODB_VERSION_MAJOR@.@ARANGODB_VERSION_MINOR@.@ARANGODB_VERSION_PATCH@
+    @ARANGODB_VERSION_UNSTABLE@</strong> is available for Kubernetes.
   </p>
+  @UNSTABLE_BEGIN@
+  <p>
+    This version is for <strong>testing only</strong> and should <strong>never be used in production</strong>.
+  </p>
+  @UNSTABLE_END@
   <p>
     The processor(s) must support the SSE 4.2 instruction set (Intel
     Westmere or better, AMD Bulldozer or better, etc.)
