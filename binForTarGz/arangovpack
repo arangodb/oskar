@@ -19,7 +19,7 @@ fi
 me=$(realpath "$0")
 program=$(basename "$me")
 installation=$(dirname "$(dirname "$me")")
-executable=$installation/usr/sbin/$program
+executable=$installation/usr/bin/$program
 if [ -x "$executable" ] ; then
   exec "$executable" --configuration none "$@"
 fi
