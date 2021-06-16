@@ -1699,6 +1699,10 @@ function downloadStarter
 end
 
 function downloadSyncer
+  if test "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
+  end
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
   and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
   and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
