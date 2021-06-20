@@ -771,7 +771,6 @@ function makeTestPackageLinux
 
   findArangoDBVersion
   and asanOff
-  and maintainerOff
   and releaseMode
   and set -xg NOSTRIP 1
   and buildStaticArangoDB
@@ -1001,8 +1000,13 @@ function buildDockerRelease
   and buildDockerImage $IMAGE_NAME1
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
     docker tag $IMAGE_NAME1 $IMAGE_NAME2
+  else
+    if test "$GCR_REG" = "On"
+      docker tag $IMAGE_NAME1 $GCR_REG_PREFIX$IMAGE_NAME1
+      and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME1
+    end
   end
-  and docker push $IMAGE_NAME2
+  and pushDockerImage $IMAGE_NAME2
   and if test "$ENTERPRISEEDITION" = "On"
     echo $IMAGE_NAME1 > $WORKDIR/work/arangodb3e.docker
   else
@@ -1010,7 +1014,11 @@ function buildDockerRelease
   end
   and if test "$IMAGE_NAME3" != ""
     docker tag $IMAGE_NAME1 $IMAGE_NAME3
-    and docker push $IMAGE_NAME3
+    and pushDockerImage $IMAGE_NAME3
+    and  if test "$GCR_REG" = "On"
+      docker tag $IMAGE_NAME3 $GCR_REG_PREFIX$IMAGE_NAME3
+      and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME3
+    end
   end
 end
 
@@ -1109,6 +1117,22 @@ function buildDockerImage
   and eval "docker build $BUILD_ARGS --pull --no-cache -t $imagename ."
   or begin ; popd ; return 1 ; end
   popd
+end
+
+function pushDockerImage
+  if test (count $argv) -eq 0
+    echo Must give image name as argument
+    return 1
+  end
+
+  set -l imagename $argv[1]
+
+  if test (docker images -q $imagename 2> /dev/null) = ""
+    echo Given image is not present locally
+    return 1
+  end
+
+  docker push $imagename
 end
 
 function buildDockerLocal
@@ -1709,6 +1733,10 @@ function downloadStarter
 end
 
 function downloadSyncer
+  if test "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
+  end
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
   and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
   and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv

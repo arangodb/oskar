@@ -1,6 +1,9 @@
 #!/usr/bin/env fish
 ssh -o StrictHostKeyChecking=no -T git@github.com
 
+set -xg GCOV_PREFIX /work/gcov
+set -xg GCOV_PREFIX_STRIP 3
+
 pushd $INNERWORKDIR/ArangoDB
 and if test -d docs
   rm -rf docs
@@ -36,12 +39,12 @@ and begin
     echo "No Drivers book present!"
   end
 end
-and rm -rf js/apps/system/_admin/aardvark/APP/api-docs.json
 and rm -rf Documentation/Examples
 and mkdir Documentation/Examples
 and echo "Generating examples"
 and bash -c ./utils/generateExamples.sh
 and echo "Generating swagger"
+and rm -rf js/apps/system/_admin/aardvark/APP/api-docs.json
 and bash -c ./utils/generateSwagger.sh
 and bash -c "cd Documentation/Scripts && python ./codeBlockReader.py"
 and rm -rf ../Documentation
