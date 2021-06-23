@@ -1469,6 +1469,11 @@ Function packageWindows
     {
         Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$TARGET`""
         proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --target `"$TARGET`"" -logfile "$INNERWORKDIR\$TARGET-package" -priority "Normal"
+        if (-not $global:ok)
+        {
+            Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$TARGET`" failed!"
+            break
+        }
     }
     Write-Host "Clcache Statistics"
     showCacheStats
