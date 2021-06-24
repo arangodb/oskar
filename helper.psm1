@@ -116,14 +116,14 @@ Function proc($process,$argument,$logfile,$priority)
         $p.PriorityClass = $priority
         $h = $p.Handle
         $p.WaitForExit()
-        If($p.ExitCode -eq 0)
-        {
-            Set-Variable -Name "ok" -Value $true -Scope global
-        }
-        Else
+        If($p.ExitCode -ne 0)
         {
             Set-Variable -Name "ok" -Value $false -Scope global
         }
+        #Else
+        #{
+        #    Set-Variable -Name "ok" -Value $true -Scope global
+        #}
     }
     Else
     {
@@ -131,14 +131,14 @@ Function proc($process,$argument,$logfile,$priority)
         $p.PriorityClass = $priority
         $h = $p.Handle
         $p.WaitForExit()
-        If($p.ExitCode -eq 0)
-        {
-            Set-Variable -Name "ok" -Value $true -Scope global
-        }
-        Else
+        If($p.ExitCode -ne 0)
         {
             Set-Variable -Name "ok" -Value $false -Scope global
         }
+        #Else
+        #{
+        #    Set-Variable -Name "ok" -Value $true -Scope global
+        #
     }
 }
 
