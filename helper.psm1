@@ -1575,6 +1575,7 @@ Function buildArangoDB
         if($global:ok)
         {
             Write-Host "Build OK."
+            preserveSymbolsToWorkdir
             if($SKIPPACKAGING -eq "Off")
             {
                 packageWindows
@@ -1591,6 +1592,8 @@ Function buildArangoDB
                         Else
                         {
                             Write-Host "Sign error, see $INNERWORKDIR\sign.* for details."
+                            movePackagesToWorkdir
+                            $global:ok = $false
                         }
                     }
                     movePackagesToWorkdir
@@ -1598,8 +1601,7 @@ Function buildArangoDB
                 Else
                 {
                     Write-Host "Package error, see $INNERWORKDIR\package.* for details."
-                }
-                preserveSymbolsToWorkdir
+                }                
             }
         }
         Else
@@ -1860,7 +1862,10 @@ Function makeEnterpriseRelease
 Function makeRelease
 {
     makeEnterpriseRelease
-    makeCommunityRelease
+    If ($global:ok) 
+    {
+        makeCommunityRelease
+    }
 }
 
 parallelism ([int]$env:NUMBER_OF_PROCESSORS)
