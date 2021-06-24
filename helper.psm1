@@ -120,10 +120,10 @@ Function proc($process,$argument,$logfile,$priority)
         {
             Set-Variable -Name "ok" -Value $false -Scope global
         }
-        #Else
-        #{
-        #    Set-Variable -Name "ok" -Value $true -Scope global
-        #}
+        Else
+        {
+            Set-Variable -Name "ok" -Value $true -Scope global
+        }
     }
     Else
     {
@@ -135,10 +135,10 @@ Function proc($process,$argument,$logfile,$priority)
         {
             Set-Variable -Name "ok" -Value $false -Scope global
         }
-        #Else
-        #{
-        #    Set-Variable -Name "ok" -Value $true -Scope global
-        #
+        Else
+        {
+            Set-Variable -Name "ok" -Value $true -Scope global
+        
     }
 }
 
@@ -1393,8 +1393,8 @@ Function configureWindows
     if ($global:ok)
     {
       configureCache
-      $cacheZipFN = getCacheID
-      $haveCache = $(Test-Path -Path $cacheZipFN)
+      #$cacheZipFN = getCacheID
+      $haveCache = $False #$(Test-Path -Path $cacheZipFN)
       Push-Location $pwd
       Set-Location "$global:ARANGODIR\build"
       if($haveCache)
@@ -1428,11 +1428,11 @@ Function configureWindows
           Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
           proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
       }
-      if(!$haveCache)
-      {
-          Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
-          7zip -Path $global:ARANGODIR\build\* -DestinationPath $cacheZipFN "-xr!*.exe"; comm
-      }
+      #if(!$haveCache)
+      #{
+      #    Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
+      #    7zip -Path $global:ARANGODIR\build\* -DestinationPath $cacheZipFN "-xr!*.exe"; comm
+      #}
       Write-Host "Clcache Statistics"
       showCacheStats
       Pop-Location
