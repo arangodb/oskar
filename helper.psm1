@@ -138,7 +138,7 @@ Function proc($process,$argument,$logfile,$priority)
         Else
         {
             Set-Variable -Name "ok" -Value $true -Scope global
-        
+        }
     }
 }
 
