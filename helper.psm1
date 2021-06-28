@@ -1445,6 +1445,7 @@ Function buildWindows
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
+    Remove-Item -Force "${global:INNERWORKDIR}\*.pdb" -ErrorAction SilentlyContinue
     proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
     If($global:ok)
     {
