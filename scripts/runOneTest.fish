@@ -20,21 +20,25 @@ else
 end
 
 set -xg TESTSUITE $argv[1]
+set -xg TEST $argv[2]
 
 switch $TESTSUITE
   case "cluster"
     resetLaunch 1
-    and runClusterTest1 $argv[2] -
+    and echo "Running $TEST in $TESTUITE with args '$argv[3..-1]'"
+    and runClusterTest1 $TEST - $argv[3..-1]
     and wait
     createReport
   case "single"
     resetLaunch 1
-    and runSingleTest1 $argv[2] -
+    and echo "Running $TEST in $TESTUITE with args '$argv[3..-1]'"
+    and runSingleTest1 $TEST - $argv[3..-1]
     and wait
     createReport
   case "catchtest"
     resetLaunch 1
-    and runCatchTest1 catch -
+    and echo "Running $TEST in $TESTUITE with args '$argv[3..-1]'"
+    and runCatchTest1 catch - $argv[3..-1]
     and wait
     createReport
   case "*"

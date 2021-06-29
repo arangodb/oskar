@@ -1,0 +1,24 @@
+version: '3'
+
+services:
+
+  cert:
+    image: pgarrett/openssl-alpine
+    volumes:
+      - ./certs:/etc/ssl/certs
+
+  ldap:
+    build:
+      context: .
+    ports:
+      - 636:636
+    environment:
+      - CA_FILE=/etc/ssl/certs/ca.pem
+      - KEY_FILE=/etc/ssl/certs/public.key
+      - CERT_FILE=/etc/ssl/certs/public.crt
+    volumes:
+      - ./certs:/etc/ssl/certs
+      - ldap_data:/var/lib/openldap/openldap-data
+
+volumes:
+  ldap_data:
