@@ -1468,6 +1468,7 @@ function runInContainer
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e PROMTOOL_PATH="$PROMTOOL_PATH" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1539,6 +1540,7 @@ function interactiveContainer
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
+             -e PROMTOOL_PATH="$PROMTOOL_PATH" \
              $argv
 
   if test -n "$agentstarted"
