@@ -1427,6 +1427,7 @@ function runInContainer
              -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
              -e ASAN="$ASAN" \
+             -e ASAN_MODE="$ASAN_MODE" \
              -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
              -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
              -e BUILDMODE="$BUILDMODE" \

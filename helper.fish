@@ -55,6 +55,11 @@ function asanOff ; set -gx ASAN Off ; end
 if test -z "$ASAN" ; asanOff
 else ; set -gx ASAN $ASAN ; end
 
+function asanModeAULsan ; set -gx ASAN_MODE AULsan ; end
+function asanModeTSan ; set -gx ASAN_MODE TSan ; end
+if test -z "$ASAN_MODE" ; asanModeAULsan
+else ; set -gx ASAN_MODE $ASAN_MODE ; end
+
 function jemallocOn; set -gx JEMALLOC_OSKAR On ; end
 function jemallocOff; set -gx JEMALLOC_OSKAR Off ; end
 if test -z "$JEMALLOC_OSKAR" ; jemallocOn
@@ -1280,7 +1285,8 @@ function showConfig
 
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
-  printf $fmt3 'ASAN'       $ASAN                   '(asanOn/Off)'
+  printf $fmt3 'ASan'       $ASAN                   '(asanOn/Off)'
+  printf $fmt3 'ASan mode'  $ASAN_MODE              '(asanModeAULSan/TSan)'
   printf $fmt3 'Coverage'   $COVERAGE               '(coverageOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE              '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'   "$compiler_version"     '(compiler x.y.z)'
