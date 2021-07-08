@@ -217,8 +217,7 @@ switch $TESTSUITE
     set suiteRunner "launchClusterTests"
   case "single"
     resetLaunch 1
-    set timeLimit 10
-    #set timeLimit 3900
+    set timeLimit 3900
     set suiteRunner "launchSingleTests"
   case "catchtest"
     resetLaunch 1
@@ -235,14 +234,16 @@ switch $TESTSUITE
 end
 
 if test "$ASAN" = "On"
-  set timeLimit timeLimit*4
+  set timeLimit (math $timeLimit \* 4)
 end
 
-eval "set timeout (waitOrKill $timeLimit $suiteRunner)"
-echo "TIMEOUT: $timeout"
+set evalCmd "waitOrKill $timeLimit $suiteRunner"
+eval $evalCmd
+set timeout $status
+
 createReport
 
-if test "$result" -eq "GOOD" -a "$timeout" -eq 0
+if test $result = GOOD -a $timeout = 0
   exit 0
 else
   exit 1
