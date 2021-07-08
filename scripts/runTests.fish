@@ -206,45 +206,42 @@ else
   ulimit -c unlimited
 end
 
+set -g timeout 0
+set -g timeLimit -1
+set -g suiteRunner ""
+
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
-    and if test "$ASAN" = "On"
-      waitOrKill 16800 launchClusterTests
-    else
-      waitOrKill 4200 launchClusterTests
-    end
-    createReport
+    set timeLimit 4200
+    set suiteRunner "launchClusterTests"
   case "single"
     resetLaunch 1
-    and if test "$ASAN" = "On"
-      waitOrKill 15600 launchSingleTests
-    else
-      waitOrKill 3900 launchSingleTests
-    end
-    createReport
+    set timeLimit 10
+    #set timeLimit 3900
+    set suiteRunner "launchSingleTests"
   case "catchtest"
     resetLaunch 1
-    and if test "$ASAN" = "On"
-      waitOrKill 7200 launchCatchTest
-    else
-      waitOrKill 1800 launchCatchTest
-    end
-    createReport
+    set timeLimit 1800
+    set suiteRunner "launchCatchTests"
   case "resilience"
     resetLaunch 4
-    and if test "$ASAN" = "On"
-      waitOrKill 14400 launchResilienceTests
-    else
-      waitOrKill 3600 launchResilienceTests
-    end
-    createReport
+    set timeLimit 3600
+    set suiteRunner "launchResilienceTests"
   case "*"
     echo Unknown test suite $TESTSUITE
     set -g result BAD
+    exit 0
 end
 
-if test $result = GOOD
+if test "$ASAN" = "On"
+  set timeLimit timeLimit*4
+end
+
+eval "set timeout (waitOrKill $timeLimit $suiteRunner)"
+createReport
+
+if test $result = GOOD -a $timeout = 0
   exit 0
 else
   exit 1
