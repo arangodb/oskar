@@ -239,9 +239,10 @@ if test "$ASAN" = "On"
 end
 
 eval "set timeout (waitOrKill $timeLimit $suiteRunner)"
+echo "TIMEOUT: $timeout"
 createReport
 
-if test $result = GOOD -a $timeout = 0
+if test "$result" -eq "GOOD" -a "$timeout" -eq 0
   exit 0
 else
   exit 1
