@@ -222,7 +222,7 @@ switch $TESTSUITE
   case "catchtest"
     resetLaunch 1
     set timeLimit 1800
-    set suiteRunner "launchCatchTests"
+    set suiteRunner "launchCatchTest"
   case "resilience"
     resetLaunch 4
     set timeLimit 3600
@@ -230,7 +230,7 @@ switch $TESTSUITE
   case "*"
     echo Unknown test suite $TESTSUITE
     set -g result BAD
-    exit 0
+    exit 1
 end
 
 if test "$ASAN" = "On"

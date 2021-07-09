@@ -408,7 +408,9 @@ function oskar
   and if test "$ASAN" = "On"
     parallelism 2
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    set s $status
     checkAsanStatus
+    set s (math $s + $status)
   else
     runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
   end
@@ -487,7 +489,7 @@ end
 ## #############################################################################
 
 function checkAsanStatus
-  return (count $WORKDIR/work/asan.log.*)
+  return (count $WORKDIR/work/asan.log.* $WORKDIR/work/tsan.log.*)
 end
 
 ## #############################################################################
