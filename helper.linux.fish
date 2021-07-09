@@ -865,10 +865,8 @@ function makeDockerRelease
     set CUSTOM_DOCKER_TAG $argv[1]
   end
 
-  community
-  and buildDockerRelease $CUSTOM_DOCKER_TAG
-  and enterprise
-  and buildDockerRelease $CUSTOM_DOCKER_TAG
+  makeDockerCommunityRelease
+  and makeDockerEnterpriseRelease
 end
 
 function makeDockerCommunityRelease
@@ -884,8 +882,7 @@ function makeDockerCommunityRelease
     minimalDebugInfoOff
   end
   echo ""
-  buildCommunityPackage
-  and community  
+  community  
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
@@ -911,8 +908,7 @@ function makeDockerEnterpriseRelease
     minimalDebugInfoOff
   end
   echo ""
-  buildEnterprisePackage
-  and enterprise
+  enterprise
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
@@ -1433,7 +1429,7 @@ function runInContainer
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
-	           -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
+	     -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
