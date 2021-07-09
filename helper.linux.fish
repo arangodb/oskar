@@ -983,6 +983,7 @@ function buildDockerRelease
   and asanOff
   and maintainerOff
   and releaseMode
+  and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
