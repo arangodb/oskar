@@ -862,11 +862,12 @@ function makeDockerRelease
   findArangoDBVersion ; or return 1
 
   if test (count $argv) -ge 1
-    set CUSTOM_DOCKER_TAG $argv[1]
-  end
-
-  makeDockerCommunityRelease
-  and makeDockerEnterpriseRelease
+    makeDockerCommunityRelease $argv[1]
+    makeDockerEnterpriseRelease $argv[1]
+  else
+    makeDockerCommunityRelease
+    makeDockerEnterpriseRelease
+  end  
 end
 
 function makeDockerCommunityRelease
