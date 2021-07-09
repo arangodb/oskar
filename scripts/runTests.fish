@@ -243,6 +243,9 @@ set timeout $status
 
 createReport
 
+echo "RESULT: $result"
+echo "TIMEOUT: $timeout"
+
 if test $result = GOOD -a $timeout = 0
   exit 0
 else
