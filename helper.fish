@@ -206,6 +206,9 @@ function showDetails ; set -gx SHOW_DETAILS On ; end
 function hideDetails ; set -gx SHOW_DETAILS Off ; end
 function pingDetails ; set -gx SHOW_DETAILS Ping ; end
 
+if test -z "$PROMTOOL_PATH" ; set -gx PROMTOOL_PATH "/usr/bin/"
+else ; set -gx PROMTOOL_PATH $PROMTOOL_PATH ; end
+
 if test -z "$SHOW_DETAILS"
   if isatty 1
     showDetails
