@@ -1628,7 +1628,7 @@ function checkLogId
   or begin popd; return 1; end
 
   set -l ids (find lib arangod arangosh enterprise -name "*.cpp" -o -name "*.h" \
-    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\)("[^\"]*"' \
+    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\)("[^\"]*"' \
     | grep -v 'LOG_DEVEL' \
     | sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
 
