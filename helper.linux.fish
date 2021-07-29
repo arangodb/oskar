@@ -420,6 +420,7 @@ function oskar
   and if test "$ASAN" = "On"
     parallelism 2
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    checkAsanStatus
   else
     runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
   end
@@ -493,6 +494,14 @@ function oskarOneTest
 
   parallelism $p
   return $s
+end
+
+## #############################################################################
+## asan
+## #############################################################################
+
+function checkAsanStatus
+  return (count $WORKDIR/work/asan.log.*)
 end
 
 ## #############################################################################
@@ -867,13 +876,12 @@ function makeDockerRelease
   findArangoDBVersion ; or return 1
 
   if test (count $argv) -ge 1
-    set CUSTOM_DOCKER_TAG $argv[1]
-  end
-
-  community
-  and buildDockerRelease $CUSTOM_DOCKER_TAG
-  and enterprise
-  and buildDockerRelease $CUSTOM_DOCKER_TAG
+    makeDockerCommunityRelease $argv[1]
+    makeDockerEnterpriseRelease $argv[1]
+  else
+    makeDockerCommunityRelease
+    makeDockerEnterpriseRelease
+  end  
 end
 
 function makeDockerCommunityRelease
@@ -889,8 +897,7 @@ function makeDockerCommunityRelease
     minimalDebugInfoOff
   end
   echo ""
-  buildCommunityPackage
-  and community  
+  community  
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
@@ -916,8 +923,7 @@ function makeDockerEnterpriseRelease
     minimalDebugInfoOff
   end
   echo ""
-  buildEnterprisePackage
-  and enterprise
+  enterprise
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
@@ -991,6 +997,7 @@ function buildDockerRelease
   and asanOff
   and maintainerOff
   and releaseMode
+  and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
@@ -1497,6 +1504,7 @@ function runInContainer
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e PROMTOOL_PATH="$PROMTOOL_PATH" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1569,6 +1577,7 @@ function interactiveContainer
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
+             -e PROMTOOL_PATH="$PROMTOOL_PATH" \
              $argv
 
   if test -n "$agentstarted"
