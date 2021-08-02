@@ -1,4 +1,4 @@
-FROM alpine:3.12
+FROM alpine:3.14
 MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 RUN apk add --no-cache pwgen nodejs binutils numactl numactl-tools
