@@ -7,6 +7,9 @@ if test -z "$ARANGODB_PACKAGES"
 end
 
 set -xg PACKAGES "$ARANGODB_PACKAGES"
+set -xg SRC "/mnt/buildfiles/stage2/nightly"
+set -xg DST "gs://download.arangodb.com/nightly"
+
 
 function createIndex
   pushd $WORKSPACE/file-browser
@@ -15,7 +18,7 @@ function createIndex
   and rm -rf file-browser.out root-dir program2.py
   and mkdir root-dir
   and echo "create new links..."
-  and cp -rs /mnt/buildfiles/stage2/nightly root-dir/
+  and cp -rs $SRC root-dir/
   and find root-dir -name "*3e*" -exec rm -f "{}" ";"
   and find root-dir -name "index.html" -exec rm -f "{}" ";"
   and echo "creating index.html..."
@@ -25,16 +28,16 @@ function createIndex
 
   pushd $WORKSPACE/file-browser/root-dir
   and echo "copy index.html..."
-  and find . -name "index.html" -ls -exec cp "{}" "/mnt/buildfiles/stage2/{}" ";"
+  and find . -name "index.html" -ls -exec cp "{}" (dirname $SRC)"/{}" ";"
   or begin popd; return 1; end
 
   popd
 end
 
 function upload
-  cd /mnt/buildfiles/stage2/nightly
+  cd $SRC
   and echo "Copying NIGHTLY"
-  and gsutil rsync -d -r $PACKAGES gs://download.arangodb.com/nightly/$PACKAGES
+  and gsutil rsync -d -r $PACKAGES $DST/$PACKAGES
 end
 
 cleanPrepareLockUpdateClear
@@ -48,6 +51,9 @@ and begin
   or upload
   or upload
 end
+and set PACKAGES_DEVEL (find $SRC -lname devel -printf "%f\n")
+and gsutil rsync -d -r $DST/devel $DST/$PACKAGES_DEVEL
+and gsutil rsync -r $SRC/index.html $DST/index.html
 
 set -l s $status
 unlockDirectory
