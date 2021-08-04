@@ -48,10 +48,10 @@ and rm -rf js/apps/system/_admin/aardvark/APP/api-docs.json
 and bash -c ./utils/generateSwagger.sh
 and bash -c "cd Documentation/Scripts && python ./codeBlockReader.py"
 and begin
-  if test -f ./utils/generateAllMetricsDocumentation2.py
+  if test -f ./utils/generateAllMetricsDocumentation.py
     echo "Generating metrics"
     and rm -f ./Documentation/Metrics/allMetrics.yaml
-    and bash -c "python ./utils/generateAllMetricsDocumentation2.py -d"
+    and bash -c "python ./utils/generateAllMetricsDocumentation.py -d"
   end
 end
 and rm -rf ../Documentation
