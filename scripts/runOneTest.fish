@@ -27,19 +27,19 @@ switch $TESTSUITE
     resetLaunch 1
     and echo "Running $TEST in $TESTUITE with args '$argv[3..-1]'"
     and runClusterTest1 $TEST - $argv[3..-1]
-    and wait
+    and waitOrKill 120 ""
     createReport
   case "single"
     resetLaunch 1
     and echo "Running $TEST in $TESTUITE with args '$argv[3..-1]'"
     and runSingleTest1 $TEST - $argv[3..-1]
-    and wait
+    and waitOrKill 120 ""
     createReport
   case "catchtest"
     resetLaunch 1
     and echo "Running $TEST in $TESTUITE with args '$argv[3..-1]'"
     and runCatchTest1 catch - $argv[3..-1]
-    and wait
+    and waitOrKill 120 ""
     createReport
   case "*"
     echo Unknown test suite $TESTSUITE
