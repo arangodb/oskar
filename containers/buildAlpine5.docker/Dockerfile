@@ -6,6 +6,8 @@ RUN apk update && \
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
+RUN apk add py3-pip && pip3 install PyYAML && apk del py3-pip
+
 COPY ./tools/install-poll.sh /tools/
 RUN /tools/install-poll.sh
 

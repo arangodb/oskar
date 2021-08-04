@@ -50,8 +50,10 @@ and bash -c "cd Documentation/Scripts && python ./codeBlockReader.py"
 and begin
   if test -f ./utils/generateAllMetricsDocumentation.py
     echo "Generating metrics"
+    and bash -c "./utils/generateAllMetricsDocumentation.py"
     and rm -f ./Documentation/Metrics/allMetrics.yaml
     and bash -c "./utils/generateAllMetricsDocumentation.py -d"
+    or echo "Error during validation of input YAML files for metrics!"
   end
 end
 and rm -rf ../Documentation
