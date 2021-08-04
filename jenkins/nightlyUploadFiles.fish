@@ -53,7 +53,7 @@ and begin
 end
 and set PACKAGES_DEVEL (find $SRC -lname devel -printf "%f\n")
 and gsutil rsync -d -r $DST/devel $DST/$PACKAGES_DEVEL
-and gsutil rsync -r $SRC/index.html $DST/index.html
+and gsutil cp $SRC/index.html $DST/index.html
 
 set -l s $status
 unlockDirectory
