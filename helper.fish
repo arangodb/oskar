@@ -7,13 +7,13 @@ function lockDirectory
     echo $pid > LOCK.$pid
     and while true
       # Remove a stale lock if it is found:
-      if set -l pidfound (cat LOCK ^/dev/null)
+      if set -l pidfound (cat LOCK > /dev/null)
         if not ps ax -o pid | grep '^ *'"$pidfound"'$' > /dev/null
           rm LOCK LOCK.$pidfound
           and echo Have removed stale lock.
         end
       end
-      and if ln LOCK.$pid LOCK ^/dev/null
+      and if ln LOCK.$pid LOCK > /dev/null
         break
       end
       and echo -n Directory is locked, waiting...
