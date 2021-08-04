@@ -1118,6 +1118,35 @@ Function checkoutIfNeeded
     checkoutUpgradeDataTests
 }
 
+Function convertSItoJSON
+{
+    If(Test-Path -PathType Leaf -Path $INNERWORKDIR\sourceInfo.log)
+    {
+        $fields = @()
+        ForEach($line in Get-Content $INNERWORKDIR\sourceInfo.log)
+        {
+            $var = $line.split(":")[0]
+            switch -Regex ($var)
+            {
+                'VERSION|Community|Enterprise'
+                {
+                    $val = $line.split(" ")[1]
+                    If (-Not [string]::IsNullOrEmpty($val))
+                    {
+                        $fields += "  `"$var`":`"$val`""
+                    }
+                }
+            }
+        }
+
+        If(-Not [string]::IsNullOrEmpty($fields))
+        {
+            Write-Host "Convert $INNERWORKDIR\sourceInfo.log to $INNERWORKDIR\sourceInfo.json"
+            Write-Output "{`n"($fields -join ',' + [Environment]::NewLine)"`n}" | Out-File "$global:INNERWORKDIR\sourceInfo.json" -NoNewLine
+        }
+    }
+}
+
 Function switchBranches($branch_c,$branch_e)
 {
     $branch_c = $branch_c.ToString()
@@ -1162,7 +1191,12 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($global:ok)
     {
-        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File "$global:INNERWORKDIR\sourceInfo.log"
+        Write-Output "VERSION: $(Get-Content $INNERWORKDIR/ArangoDB/ARANGO-VERSION)" | Out-File "$global:INNERWORKDIR\sourceInfo.log"
+        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File "$global:INNERWORKDIR\sourceInfo.log" -Append
+    }
+    Else
+    {
+        Write-Output "Failed to checkout Community branch!"
     }
     If($ENTERPRISEEDITION -eq "On")
     {
@@ -1205,6 +1239,11 @@ Function switchBranches($branch_c,$branch_e)
         If ($global:ok)
         {
             Write-Output "Enterprise: $(git rev-parse --verify HEAD)" | Out-File "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
+            convertSItoJSON
+        }
+        Else
+        {
+            Write-Output "Failed to checkout Enterprise branch!"
         }
         Pop-Location
     }
@@ -1669,10 +1708,11 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    If(Test-Path -PathType Leaf "$INNERWORKDIR\sourceInfo.log")
+    Write-Host "sourceInfo* ..."
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "sourceInfo*" -File))
     {
-        Write-Host "Move $INNERWORKDIR\sourceInfo.log"
-        Move-Item -Force -Path "$INNERWORKDIR\sourceInfo.log" -Destination $ENV:WORKSPACE; comm
+        Write-Host "Move $INNERWORKDIR\$file"
+        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "package* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "package*"))
