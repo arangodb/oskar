@@ -51,7 +51,7 @@ and begin
   if test -f ./utils/generateAllMetricsDocumentation.py
     echo "Generating metrics"
     and rm -f ./Documentation/Metrics/allMetrics.yaml
-    and bash -c "python ./utils/generateAllMetricsDocumentation.py -d"
+    and bash -c "./utils/generateAllMetricsDocumentation.py -d"
   end
 end
 and rm -rf ../Documentation
