@@ -43,10 +43,15 @@ set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck
 set -gx CPPCHECKIMAGE_TAG 4
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
 
-set -xg IONICE "ionice -c 3"
+set -gx LDAPIMAGE_NAME arangodb/ldap-test
+set -gx LDAPIMAGE_TAG 1
+set -gx LDAPIMAGE $LDAPIMAGE_NAME:$LDAPIMAGE_TAG
 
-set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
+set -gx LDAPDOCKERCONTAINERNAME ldapserver1
+set -gx LDAP2DOCKERCONTAINERNAME ldapserver2
 set -gx LDAPNETWORK ldaptestnet
+
+set -xg IONICE "ionice -c 3"
 
 set -gx SYSTEM_IS_LINUX true
 
@@ -302,18 +307,24 @@ if test -n "$NODE_NAME"
 end
 
 set -gx LDAPHOST "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+set -gx LDAPHOST2 "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
 
 function stopLdapServer
   docker stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
-  docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+  and docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+  docker stop "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
+  and docker rm "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
   docker network rm "$LDAPNETWORK$LDAPEXT"
+  echo "LDAP servers stopped"
   true
 end
 
 function launchLdapServer
   stopLdapServer
   and docker network create "$LDAPNETWORK$LDAPEXT"
-  and docker run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" neunhoef/ldap-alpine
+  and docker run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
+  and docker run -d --name "$LDAPHOST2" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
+  and echo "LDAP servers launched"
 end
 
 ## #############################################################################
@@ -405,6 +416,7 @@ function oskar
   set -l p $PARALLELISM
 
   checkoutIfNeeded
+  and findRequiredCompiler
   and if test "$ASAN" = "On"
     parallelism 2
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
@@ -423,6 +435,7 @@ function oskarFull
   set -l p $PARALLELISM
 
   checkoutIfNeeded
+  and findRequiredCompiler
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
     and if test "$ASAN" = "On"
@@ -455,6 +468,7 @@ function oskarOneTest
   set -l p $PARALLELISM
 
   checkoutIfNeeded
+  and findRequiredCompiler
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
     and if test "$ASAN" = "On"
@@ -1332,6 +1346,19 @@ function pushCppcheckImage
 end
 function pullCppcheckImage ; docker pull $CPPCHECKIMAGE ; end
 
+function buildLdapImage
+  pushd $WORKDIR/containers/ldap.docker
+  and docker build --pull -t $LDAPIMAGE .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+function pushLdapImage
+  docker tag $LDAPIMAGE $LDAPIMAGE_NAME:latest
+  and docker push $LDAPIMAGE
+  and docker push $LDAPIMAGE_NAME:latest
+end
+function pullLdapImage ; docker pull $LDAPIMAGE ; end
+
 function remakeImages
   set -l s 0
 
@@ -1358,6 +1385,7 @@ function remakeImages
   buildCentosPackagingImage ; or set -l s 1
   pushCentosPackagingImage ; or set -l s 1
   buildCppcheckImage ; or set -l s 1
+  buildLdapImage ; or set -l s 1
 
   return $s
 end
@@ -1431,7 +1459,7 @@ function runInContainer
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
-	     -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
+             -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
@@ -1443,6 +1471,7 @@ function runInContainer
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
+             -e LDAPHOST2="$LDAPHOST2" \
              -e MAINTAINER="$MAINTAINER" \
              -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
              -e NODE_NAME="$NODE_NAME" \
@@ -1530,6 +1559,7 @@ function interactiveContainer
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
+             -e LDAPHOST2="$LDAPHOST2" \
              -e MAINTAINER="$MAINTAINER" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
@@ -1667,6 +1697,9 @@ function pushOskar
   and buildCppcheckImage
   and pushCppcheckImage
 
+  and buildLdapImage
+  and pushLdapImage
+
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1692,6 +1725,7 @@ function updateOskar
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
   and pullCppcheckImage
+  and pullLdapImage
 end
 
 function updateDockerBuildImage
