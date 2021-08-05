@@ -47,9 +47,26 @@ and echo "Generating swagger"
 and rm -rf js/apps/system/_admin/aardvark/APP/api-docs.json
 and bash -c ./utils/generateSwagger.sh
 and bash -c "cd Documentation/Scripts && python ./codeBlockReader.py"
+and begin
+  if test -f ./utils/generateAllMetricsDocumentation.py
+    echo "Generating metrics"
+    and bash -c "./utils/generateAllMetricsDocumentation.py"
+    or begin
+      echo "Error during validation of input YAML files for metrics!"
+      exit 1
+    end
+    and rm -f ./Documentation/Metrics/allMetrics.yaml
+    and bash -c "./utils/generateAllMetricsDocumentation.py -d"
+  end
+end
 and rm -rf ../Documentation
 and mkdir ../Documentation
 and cp -a Documentation/Examples js/apps/system/_admin/aardvark/APP/api-docs.json Documentation/Scripts/allComments.txt ../Documentation
+and begin
+  if test -f ./Documentation/Metrics/allMetrics.yaml
+    cp ./Documentation/Metrics/allMetrics.yaml ../Documentation
+  end
+end
 and for i in ../Documentation/Examples/arango*.json; mv $i ../Documentation/(basename $i .json)-options.json; end
 or begin echo "FAILED!"; popd; exit 1; end
 popd
