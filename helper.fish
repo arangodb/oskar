@@ -1717,7 +1717,7 @@ function clearResults
   pushd $WORKDIR/work
   and for f in testreport* ; rm -f $f ; end
   and rm -f test.log buildArangoDB.log cmakeArangoDB.log
-  and find . -maxdepth 1 -name '*.rpm' -o -name '*.deb' -o -name '*.dmg' -o -name '*.tar.gz' -o -name '*.zip' -exec rm -f {} \;
+  and find . -maxdepth 1 -name '*.rpm' -o -name '*.deb' -o -name '*.dmg' -o -name '*.tar.gz' -o -name '*.zip' | xargs rm -f
   or begin ; popd ; return 1 ; end
   popd
 end
