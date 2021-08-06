@@ -1717,6 +1717,7 @@ function clearResults
   pushd $WORKDIR/work
   and for f in testreport* ; rm -f $f ; end
   and rm -f test.log buildArangoDB.log cmakeArangoDB.log
+  and rm -f *.rpm *.deb *.dmg *.tar.gz *.zip
   or begin ; popd ; return 1 ; end
   popd
 end

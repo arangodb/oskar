@@ -1287,6 +1287,14 @@ Function clearResults
     {
         Remove-Item -Force $INNERWORKDIR\testfailures.txt
     }
+    ForEach($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.exe"))
+    {
+        Remove-Item -Force $INNERWORKDIR\$file
+    }
+    ForEach($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.zip"))
+    {
+        Remove-Item -Force $INNERWORKDIR\$file
+    }
     comm
 }
 
