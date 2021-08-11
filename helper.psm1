@@ -116,13 +116,13 @@ Function proc($process,$argument,$logfile,$priority)
         $p.PriorityClass = $priority
         $h = $p.Handle
         $p.WaitForExit()
-        If($p.ExitCode -eq 0)
+        If($p.ExitCode -ne 0)
         {
-            Set-Variable -Name "ok" -Value $true -Scope global
+            Set-Variable -Name "ok" -Value $false -Scope global
         }
         Else
         {
-            Set-Variable -Name "ok" -Value $false -Scope global
+            Set-Variable -Name "ok" -Value $true -Scope global
         }
     }
     Else
@@ -131,13 +131,13 @@ Function proc($process,$argument,$logfile,$priority)
         $p.PriorityClass = $priority
         $h = $p.Handle
         $p.WaitForExit()
-        If($p.ExitCode -eq 0)
+        If($p.ExitCode -ne 0)
         {
-            Set-Variable -Name "ok" -Value $true -Scope global
+            Set-Variable -Name "ok" -Value $false -Scope global
         }
         Else
         {
-            Set-Variable -Name "ok" -Value $false -Scope global
+            Set-Variable -Name "ok" -Value $true -Scope global
         }
     }
 }
@@ -1118,6 +1118,35 @@ Function checkoutIfNeeded
     checkoutUpgradeDataTests
 }
 
+Function convertSItoJSON
+{
+    If(Test-Path -PathType Leaf -Path $INNERWORKDIR\sourceInfo.log)
+    {
+        $fields = @()
+        ForEach($line in Get-Content $INNERWORKDIR\sourceInfo.log)
+        {
+            $var = $line.split(":")[0]
+            switch -Regex ($var)
+            {
+                'VERSION|Community|Enterprise'
+                {
+                    $val = $line.split(" ")[1]
+                    If (-Not [string]::IsNullOrEmpty($val))
+                    {
+                        $fields += "  `"$var`":`"$val`""
+                    }
+                }
+            }
+        }
+
+        If(-Not [string]::IsNullOrEmpty($fields))
+        {
+            Write-Host "Convert $INNERWORKDIR\sourceInfo.log to $INNERWORKDIR\sourceInfo.json"
+            Write-Output "{`n"($fields -join ',' + [Environment]::NewLine)"`n}" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.json" -NoNewLine
+        }
+    }
+}
+
 Function switchBranches($branch_c,$branch_e)
 {
     $branch_c = $branch_c.ToString()
@@ -1162,7 +1191,12 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($global:ok)
     {
-        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File "$global:INNERWORKDIR\sourceInfo.log"
+        Write-Output "VERSION: $(Get-Content $INNERWORKDIR/ArangoDB/ARANGO-VERSION)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log"
+        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
+    }
+    Else
+    {
+        Write-Output "Failed to checkout Community branch!"
     }
     If($ENTERPRISEEDITION -eq "On")
     {
@@ -1204,7 +1238,12 @@ Function switchBranches($branch_c,$branch_e)
         }
         If ($global:ok)
         {
-            Write-Output "Enterprise: $(git rev-parse --verify HEAD)" | Out-File "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
+            Write-Output "Enterprise: $(git rev-parse --verify HEAD)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
+            convertSItoJSON
+        }
+        Else
+        {
+            Write-Output "Failed to checkout Enterprise branch!"
         }
         Pop-Location
     }
@@ -1247,6 +1286,14 @@ Function clearResults
     If(Test-Path -PathType Leaf -Path $INNERWORKDIR\testfailures.txt)
     {
         Remove-Item -Force $INNERWORKDIR\testfailures.txt
+    }
+    ForEach($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.exe"))
+    {
+        Remove-Item -Force $INNERWORKDIR\$file
+    }
+    ForEach($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.zip"))
+    {
+        Remove-Item -Force $INNERWORKDIR\$file
     }
     comm
 }
@@ -1393,8 +1440,8 @@ Function configureWindows
     if ($global:ok)
     {
       configureCache
-      $cacheZipFN = getCacheID
-      $haveCache = $(Test-Path -Path $cacheZipFN)
+      #$cacheZipFN = getCacheID
+      $haveCache = $False #$(Test-Path -Path $cacheZipFN)
       Push-Location $pwd
       Set-Location "$global:ARANGODIR\build"
       if($haveCache)
@@ -1428,11 +1475,11 @@ Function configureWindows
           Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`""
           proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID,host=x64`" -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
       }
-      if(!$haveCache)
-      {
-          Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
-          7zip -Path $global:ARANGODIR\build\* -DestinationPath $cacheZipFN "-xr!*.exe"; comm
-      }
+      #if(!$haveCache)
+      #{
+      #    Write-Host "Archiving cmake configure zip: ${cacheZipFN}"
+      #    7zip -Path $global:ARANGODIR\build\* -DestinationPath $cacheZipFN "-xr!*.exe"; comm
+      #}
       Write-Host "Clcache Statistics"
       showCacheStats
       Pop-Location
@@ -1445,6 +1492,7 @@ Function buildWindows
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
+    Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.zip" -ErrorAction SilentlyContinue
     proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
     If($global:ok)
     {
@@ -1469,6 +1517,11 @@ Function packageWindows
     {
         Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$TARGET`""
         proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --target `"$TARGET`"" -logfile "$INNERWORKDIR\$TARGET-package" -priority "Normal"
+        if (-not $global:ok)
+        {
+            Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$TARGET`" failed!"
+            break
+        }
     }
     Write-Host "Clcache Statistics"
     showCacheStats
@@ -1570,6 +1623,7 @@ Function buildArangoDB
         if($global:ok)
         {
             Write-Host "Build OK."
+            preserveSymbolsToWorkdir
             if($SKIPPACKAGING -eq "Off")
             {
                 packageWindows
@@ -1586,6 +1640,8 @@ Function buildArangoDB
                         Else
                         {
                             Write-Host "Sign error, see $INNERWORKDIR\sign.* for details."
+                            movePackagesToWorkdir
+                            $global:ok = $false
                         }
                     }
                     movePackagesToWorkdir
@@ -1593,8 +1649,7 @@ Function buildArangoDB
                 Else
                 {
                     Write-Host "Package error, see $INNERWORKDIR\package.* for details."
-                }
-                preserveSymbolsToWorkdir
+                }                
             }
         }
         Else
@@ -1661,10 +1716,11 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    If(Test-Path -PathType Leaf "$INNERWORKDIR\sourceInfo.log")
+    Write-Host "sourceInfo* ..."
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "sourceInfo*" -File))
     {
-        Write-Host "Move $INNERWORKDIR\sourceInfo.log"
-        Move-Item -Force -Path "$INNERWORKDIR\sourceInfo.log" -Destination $ENV:WORKSPACE; comm
+        Write-Host "Move $INNERWORKDIR\$file"
+        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "package* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "package*"))
@@ -1855,7 +1911,10 @@ Function makeEnterpriseRelease
 Function makeRelease
 {
     makeEnterpriseRelease
-    makeCommunityRelease
+    If ($global:ok) 
+    {
+        makeCommunityRelease
+    }
 }
 
 parallelism ([int]$env:NUMBER_OF_PROCESSORS)

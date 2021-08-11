@@ -129,6 +129,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "ssl_server"
     registerTest -cluster $true -testname "audit_client"
     registerTest -cluster $true -testname "audit_server"
+    registerTest -cluster $true -testname "chaos"
     registerTest -cluster $true -testname "replication2_client"
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that

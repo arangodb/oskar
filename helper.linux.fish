@@ -24,11 +24,11 @@ set -gx ALPINEBUILDIMAGE3_TAG 12
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 11
+set -gx ALPINEBUILDIMAGE4_TAG 12
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
-set -gx ALPINEBUILDIMAGE5_TAG 3
+set -gx ALPINEBUILDIMAGE5_TAG 4
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -43,10 +43,15 @@ set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck
 set -gx CPPCHECKIMAGE_TAG 4
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
 
-set -xg IONICE "ionice -c 3"
+set -gx LDAPIMAGE_NAME arangodb/ldap-test
+set -gx LDAPIMAGE_TAG 1
+set -gx LDAPIMAGE $LDAPIMAGE_NAME:$LDAPIMAGE_TAG
 
-set -gx LDAPDOCKERCONTAINERNAME arangodbtestldapserver
+set -gx LDAPDOCKERCONTAINERNAME ldapserver1
+set -gx LDAP2DOCKERCONTAINERNAME ldapserver2
 set -gx LDAPNETWORK ldaptestnet
+
+set -xg IONICE "ionice -c 3"
 
 set -gx SYSTEM_IS_LINUX true
 
@@ -302,18 +307,24 @@ if test -n "$NODE_NAME"
 end
 
 set -gx LDAPHOST "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+set -gx LDAPHOST2 "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
 
 function stopLdapServer
   docker stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
-  docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+  and docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+  docker stop "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
+  and docker rm "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
   docker network rm "$LDAPNETWORK$LDAPEXT"
+  echo "LDAP servers stopped"
   true
 end
 
 function launchLdapServer
   stopLdapServer
   and docker network create "$LDAPNETWORK$LDAPEXT"
-  and docker run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" neunhoef/ldap-alpine
+  and docker run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
+  and docker run -d --name "$LDAPHOST2" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
+  and echo "LDAP servers launched"
 end
 
 ## #############################################################################
@@ -405,9 +416,11 @@ function oskar
   set -l p $PARALLELISM
 
   checkoutIfNeeded
+  and findRequiredCompiler
   and if test "$ASAN" = "On"
     parallelism 2
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    checkAsanStatus
   else
     runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
   end
@@ -422,6 +435,7 @@ function oskarFull
   set -l p $PARALLELISM
 
   checkoutIfNeeded
+  and findRequiredCompiler
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
     and if test "$ASAN" = "On"
@@ -454,6 +468,7 @@ function oskarOneTest
   set -l p $PARALLELISM
 
   checkoutIfNeeded
+  and findRequiredCompiler
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
     and if test "$ASAN" = "On"
@@ -479,6 +494,14 @@ function oskarOneTest
 
   parallelism $p
   return $s
+end
+
+## #############################################################################
+## asan
+## #############################################################################
+
+function checkAsanStatus
+  return (count $WORKDIR/work/asan.log.*)
 end
 
 ## #############################################################################
@@ -757,7 +780,6 @@ function makeTestPackageLinux
 
   findArangoDBVersion
   and asanOff
-  and maintainerOff
   and releaseMode
   and set -xg NOSTRIP 1
   and buildStaticArangoDB
@@ -854,13 +876,12 @@ function makeDockerRelease
   findArangoDBVersion ; or return 1
 
   if test (count $argv) -ge 1
-    set CUSTOM_DOCKER_TAG $argv[1]
-  end
-
-  community
-  and buildDockerRelease $CUSTOM_DOCKER_TAG
-  and enterprise
-  and buildDockerRelease $CUSTOM_DOCKER_TAG
+    makeDockerCommunityRelease $argv[1]
+    makeDockerEnterpriseRelease $argv[1]
+  else
+    makeDockerCommunityRelease
+    makeDockerEnterpriseRelease
+  end  
 end
 
 function makeDockerCommunityRelease
@@ -876,8 +897,7 @@ function makeDockerCommunityRelease
     minimalDebugInfoOff
   end
   echo ""
-  buildCommunityPackage
-  and community  
+  community  
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
@@ -903,8 +923,7 @@ function makeDockerEnterpriseRelease
     minimalDebugInfoOff
   end
   echo ""
-  buildEnterprisePackage
-  and enterprise
+  enterprise
   and if test (count $argv) -ge 1
     buildDockerRelease $argv[1]
   else
@@ -978,6 +997,7 @@ function buildDockerRelease
   and asanOff
   and maintainerOff
   and releaseMode
+  and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
@@ -987,8 +1007,13 @@ function buildDockerRelease
   and buildDockerImage $IMAGE_NAME1
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
     docker tag $IMAGE_NAME1 $IMAGE_NAME2
+  else
+    if test "$GCR_REG" = "On"
+      docker tag $IMAGE_NAME1 $GCR_REG_PREFIX$IMAGE_NAME1
+      and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME1
+    end
   end
-  and docker push $IMAGE_NAME2
+  and pushDockerImage $IMAGE_NAME2
   and if test "$ENTERPRISEEDITION" = "On"
     echo $IMAGE_NAME1 > $WORKDIR/work/arangodb3e.docker
   else
@@ -996,7 +1021,11 @@ function buildDockerRelease
   end
   and if test "$IMAGE_NAME3" != ""
     docker tag $IMAGE_NAME1 $IMAGE_NAME3
-    and docker push $IMAGE_NAME3
+    and pushDockerImage $IMAGE_NAME3
+    and  if test "$GCR_REG" = "On"
+      docker tag $IMAGE_NAME3 $GCR_REG_PREFIX$IMAGE_NAME3
+      and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME3
+    end
   end
 end
 
@@ -1095,6 +1124,22 @@ function buildDockerImage
   and eval "docker build $BUILD_ARGS --pull --no-cache -t $imagename ."
   or begin ; popd ; return 1 ; end
   popd
+end
+
+function pushDockerImage
+  if test (count $argv) -eq 0
+    echo Must give image name as argument
+    return 1
+  end
+
+  set -l imagename $argv[1]
+
+  if test (docker images -q $imagename 2> /dev/null) = ""
+    echo Given image is not present locally
+    return 1
+  end
+
+  docker push $imagename
 end
 
 function buildDockerLocal
@@ -1301,6 +1346,19 @@ function pushCppcheckImage
 end
 function pullCppcheckImage ; docker pull $CPPCHECKIMAGE ; end
 
+function buildLdapImage
+  pushd $WORKDIR/containers/ldap.docker
+  and docker build --pull -t $LDAPIMAGE .
+  or begin ; popd ; return 1 ; end
+  popd
+end
+function pushLdapImage
+  docker tag $LDAPIMAGE $LDAPIMAGE_NAME:latest
+  and docker push $LDAPIMAGE
+  and docker push $LDAPIMAGE_NAME:latest
+end
+function pullLdapImage ; docker pull $LDAPIMAGE ; end
+
 function remakeImages
   set -l s 0
 
@@ -1327,6 +1385,7 @@ function remakeImages
   buildCentosPackagingImage ; or set -l s 1
   pushCentosPackagingImage ; or set -l s 1
   buildCppcheckImage ; or set -l s 1
+  buildLdapImage ; or set -l s 1
 
   return $s
 end
@@ -1400,7 +1459,7 @@ function runInContainer
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
-	           -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
+             -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
@@ -1412,6 +1471,7 @@ function runInContainer
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
+             -e LDAPHOST2="$LDAPHOST2" \
              -e MAINTAINER="$MAINTAINER" \
              -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
              -e NODE_NAME="$NODE_NAME" \
@@ -1444,6 +1504,7 @@ function runInContainer
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e PROMTOOL_PATH="$PROMTOOL_PATH" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1498,6 +1559,7 @@ function interactiveContainer
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e KEYNAME="$KEYNAME" \
              -e LDAPHOST="$LDAPHOST" \
+             -e LDAPHOST2="$LDAPHOST2" \
              -e MAINTAINER="$MAINTAINER" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
@@ -1515,6 +1577,7 @@ function interactiveContainer
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
+             -e PROMTOOL_PATH="$PROMTOOL_PATH" \
              $argv
 
   if test -n "$agentstarted"
@@ -1634,6 +1697,9 @@ function pushOskar
   and buildCppcheckImage
   and pushCppcheckImage
 
+  and buildLdapImage
+  and pushLdapImage
+
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1659,6 +1725,7 @@ function updateOskar
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
   and pullCppcheckImage
+  and pullLdapImage
 end
 
 function updateDockerBuildImage
@@ -1675,6 +1742,10 @@ function downloadStarter
 end
 
 function downloadSyncer
+  if test "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
+  end
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
   and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
   and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv

@@ -20,7 +20,10 @@ and buildStaticArangoDB
 and downloadStarter
 and buildDockerImage $HUB_COMMUNITY
 and docker push $HUB_COMMUNITY
+and docker tag $HUB_COMMUNITY $GCR_REG_PREFIX$HUB_COMMUNITY
+and docker push $GCR_REG_PREFIX$HUB_COMMUNITY
 and echo $HUB_COMMUNITY >> $WORKSPACE/imagenames.log
+and echo $GCR_REG_PREFIX$HUB_COMMUNITY >> $WORKSPACE/imagenames.log
 
 if test $status -ne 0
   echo Production of community image failed, giving up...
@@ -36,7 +39,10 @@ and downloadStarter
 and downloadSyncer
 and buildDockerImage $HUB_ENTERPRISE
 and docker push $HUB_ENTERPRISE
+and docker tag $HUB_ENTERPRISE $GCR_REG_PREFIX$HUB_ENTERPRISE
+and docker push $GCR_REG_PREFIX$HUB_ENTERPRISE
 and echo $HUB_ENTERPRISE >> $WORKSPACE/imagenames.log
+and echo $GCR_REG_PREFIX$HUB_ENTERPRISE >> $WORKSPACE/imagenames.log
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory

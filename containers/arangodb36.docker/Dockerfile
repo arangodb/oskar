@@ -1,7 +1,7 @@
-FROM alpine:3.10
+FROM alpine:3.14
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
-RUN apk add --no-cache pwgen binutils numactl numactl-tools
+RUN apk add --no-cache pwgen numactl numactl-tools
 RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.11/main/ nodejs
 RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.11/main/ npm && npm install -g foxx-cli && apk del npm
 

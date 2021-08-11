@@ -1,6 +1,9 @@
 #!/usr/bin/env fish
 ssh -o StrictHostKeyChecking=no -T git@github.com
 
+set -xg GCOV_PREFIX /work/gcov
+set -xg GCOV_PREFIX_STRIP 3
+
 pushd $INNERWORKDIR/ArangoDB
 and if test -d docs
   rm -rf docs
@@ -36,17 +39,34 @@ and begin
     echo "No Drivers book present!"
   end
 end
-and rm -rf js/apps/system/_admin/aardvark/APP/api-docs.json
 and rm -rf Documentation/Examples
 and mkdir Documentation/Examples
 and echo "Generating examples"
 and bash -c ./utils/generateExamples.sh
 and echo "Generating swagger"
+and rm -rf js/apps/system/_admin/aardvark/APP/api-docs.json
 and bash -c ./utils/generateSwagger.sh
 and bash -c "cd Documentation/Scripts && python ./codeBlockReader.py"
+and begin
+  if test -f ./utils/generateAllMetricsDocumentation.py
+    echo "Generating metrics"
+    and bash -c "./utils/generateAllMetricsDocumentation.py"
+    or begin
+      echo "Error during validation of input YAML files for metrics!"
+      exit 1
+    end
+    and rm -f ./Documentation/Metrics/allMetrics.yaml
+    and bash -c "./utils/generateAllMetricsDocumentation.py -d"
+  end
+end
 and rm -rf ../Documentation
 and mkdir ../Documentation
 and cp -a Documentation/Examples js/apps/system/_admin/aardvark/APP/api-docs.json Documentation/Scripts/allComments.txt ../Documentation
+and begin
+  if test -f ./Documentation/Metrics/allMetrics.yaml
+    cp ./Documentation/Metrics/allMetrics.yaml ../Documentation
+  end
+end
 and for i in ../Documentation/Examples/arango*.json; mv $i ../Documentation/(basename $i .json)-options.json; end
 or begin echo "FAILED!"; popd; exit 1; end
 popd

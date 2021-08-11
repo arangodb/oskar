@@ -64,9 +64,9 @@ Function copyPackagesToStage2
         Copy-Item -Force -Path "$file" -Destination $DST\Windows;comm
     }
 
-    If(Test-Path -PathType Leaf "$SRC\sourceInfo.log")
+    ForEach ($file in $(Get-ChildItem $SRC -Filter "sourceInfo*" -File))
     {
-        Copy-Item -Force -Path "$SRC\sourceInfo.log" -Destination $DST\Windows;comm
+        Copy-Item -Force -Path "$SRC\$file" -Destination $DST\Windows;comm
     }
 
   return $global:ok

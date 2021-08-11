@@ -7,13 +7,13 @@ function lockDirectory
     echo $pid > LOCK.$pid
     and while true
       # Remove a stale lock if it is found:
-      if set -l pidfound (cat LOCK ^/dev/null)
+      if set -l pidfound (cat LOCK > /dev/null)
         if not ps ax -o pid | grep '^ *'"$pidfound"'$' > /dev/null
           rm LOCK LOCK.$pidfound
           and echo Have removed stale lock.
         end
       end
-      and if ln LOCK.$pid LOCK ^/dev/null
+      and if ln LOCK.$pid LOCK > /dev/null
         break
       end
       and echo -n Directory is locked, waiting...
@@ -68,6 +68,11 @@ else ; set -gx BUILDMODE $BUILDMODE ; end
 function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
+
+set -xg GCR_REG_PREFIX "gcr.io/gcr-for-testing/"
+function gcrRegOff ; set -gx GCR_REG "Off"  ; end
+function gcrRegOn  ; set -gx GCR_REG "On"   ; end
+gcrRegOn
 
 function packageStripNone          ; set -gx PACKAGE_STRIP None    ; end
 function packageStripExceptArangod ; set -gx PACKAGE_STRIP ExceptArangod ; end
@@ -200,6 +205,9 @@ else ; set -gx VERBOSEBUILD $VERBOSEBUILD ; end
 function showDetails ; set -gx SHOW_DETAILS On ; end
 function hideDetails ; set -gx SHOW_DETAILS Off ; end
 function pingDetails ; set -gx SHOW_DETAILS Ping ; end
+
+if test -z "$PROMTOOL_PATH" ; set -gx PROMTOOL_PATH "/usr/bin/"
+else ; set -gx PROMTOOL_PATH $PROMTOOL_PATH ; end
 
 if test -z "$SHOW_DETAILS"
   if isatty 1
@@ -435,7 +443,7 @@ function setNightlyRelease
   and set -l ARANGODB_FULL_VERSION "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH"
   and if test -n "$ARANGODB_VERSION_RELEASE_TYPE"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION-$ARANGODB_VERSION_RELEASE_TYPE"; end
   and if test -n "$ARANGODB_VERSION_RELEASE_NUMBER"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION.$ARANGODB_VERSION_RELEASE_NUMBER"; end
-  and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/VERSION
+  and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/ARANGO-VERSION
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
   and ls -1 $WORKDIR/work/sourceInfo.* | xargs sed -i$suffix -E "s/(\"?VERSION\"?: ?\"?)([0-9a-z.-]+)/\1$ARANGODB_FULL_VERSION/g"
   and if test -n "$suffix"; rm -f $WORKDIR/work/sourceInfo*$suffix; end
@@ -1300,9 +1308,10 @@ function showConfig
   printf $fmt2 'Log Levels'     (echo $LOG_LEVELS)
   echo
   echo 'Package Configuration'
-  printf $fmt3 'Stable/preview' $RELEASE_TYPE  '(stable/preview)'
-  printf $fmt3 'Docker Distro'  $DOCKER_DISTRO '(alpineDockerImage/ubiDockerImage)'
-  printf $fmt3 'Strip Packages' $PACKAGE_STRIP '(packageStripAll/ExceptArangod/None)'
+  printf $fmt3 'Stable/preview'     $RELEASE_TYPE       '(stable/preview)'
+  printf $fmt3 'Docker Distro'      $DOCKER_DISTRO      '(alpineDockerImage/ubiDockerImage)'
+  printf $fmt3 'Use GCR Registry'   $GCR_REG            '(gcrRegOn/gcrRegOff)'
+  printf $fmt3 'Strip Packages'     $PACKAGE_STRIP      '(packageStripAll/ExceptArangod/None)'
   printf $fmt3 'Minimal Debug Info' $MINIMAL_DEBUG_INFO '(minimalDebugInfoOn/Off)'
   echo
   echo 'Internal Configuration'
@@ -1610,7 +1619,7 @@ function checkMacros
 end
 
 ## #############################################################################
-## LOG ID
+## CHECK DUPLICATE LOG ID
 ## #############################################################################
 
 function checkLogId
@@ -1619,7 +1628,7 @@ function checkLogId
   or begin popd; return 1; end
 
   set -l ids (find lib arangod arangosh enterprise -name "*.cpp" -o -name "*.h" \
-    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|CTX\|CTX_IF\)("[^\"]*"' \
+    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\|CTX\|CTX_IF\)("[^\"]*"' \
     | grep -v 'LOG_DEVEL' \
     | sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
 
@@ -1647,6 +1656,30 @@ function checkLogId
   return $s
 end
 
+## #############################################################################
+## CHECK METRICS
+## #############################################################################
+
+function checkMetrics
+  checkoutIfNeeded
+  and pushd $WORKDIR/work/ArangoDB
+  or begin popd; return 1; end
+
+  set -l s 0
+
+  if test -f ./utils/generateAllMetricsDocumentation.py
+    rm -rf ./Documentation/Metrics/allMetrics.yaml
+    and ./utils/generateAllMetricsDocumentation.py
+    or set s 1
+  end
+
+  if test $s = 0
+    echo "Wrong metrics: NONE"
+  end
+
+  popd
+  return $s
+end
 ## #############################################################################
 ## helper functions
 ## #############################################################################
@@ -1684,6 +1717,7 @@ function clearResults
   pushd $WORKDIR/work
   and for f in testreport* ; rm -f $f ; end
   and rm -f test.log buildArangoDB.log cmakeArangoDB.log
+  and find . -maxdepth 1 -name '*.rpm' -o -name '*.deb' -o -name '*.dmg' -o -name '*.tar.gz' -o -name '*.zip' | xargs rm -f
   or begin ; popd ; return 1 ; end
   popd
 end
