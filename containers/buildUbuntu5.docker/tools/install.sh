@@ -51,3 +51,7 @@ rm -rf openldap-$OPENLDAPVERSION.tgz openldap-$OPENLDAPVERSION
 
 # Clean up any strange cores
 rm -rf /core.*
+
+# Make golang 1.16 available:
+ln -s /usr/lib/go-1.16/bin/go /usr/local/bin
+ln -s /usr/lib/go-1.16/bin/gofmt /usr/local/bin
