@@ -40,7 +40,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_client_aql" -index "http"
     registerTest -testname "shell_client_aql" -vst -index "vst"
     registerTest -testname "shell_client_aql" -http2 -index "http2"
-    registerTest -testname "shell_client_aql" -encrypt -index "encrypt"
+    if ($ENTERPRISEEDITION -eq "On") { registerTest -testname "shell_client_aql" -encrypt -index "encrypt" }
     registerTest -testname "server_secrets"
     registerTest -testname "server_permissions"
     registerTest -testname "server_parameters"

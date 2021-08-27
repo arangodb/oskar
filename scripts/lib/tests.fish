@@ -283,6 +283,11 @@ function hasLDAPHOST
   return $status
 end
 
+function isENTERPRISE
+  test "$ENTERPRISEEDITION" = "On"
+  return $status
+end
+
 set -g repoState ""
 set -g repoStateEnterprise ""
 
