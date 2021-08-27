@@ -50,6 +50,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_client_aql" -index "http"
     registerTest -testname "shell_client_aql" -vst -index "vst"
     registerTest -testname "shell_client_aql" -http2 -index "http2"
+    registerTest -testname "shell_client_aql" -encrypt -index "encrypt"
     registerTest -testname "shell_replication" -weight 2
     registerTest -testname "BackupAuthNoSysTests"
     registerTest -testname "BackupAuthSysTests"
@@ -112,7 +113,7 @@ Function global:registerClusterTests()
     noteStartAndRepoState
     Write-Host "Registering tests..."
 
-    $global:TESTSUITE_TIMEOUT = 16200
+    $global:TESTSUITE_TIMEOUT = 18000
 
     registerTest -cluster $true -testname "load_balancing"
     registerTest -cluster $true -testname "load_balancing_auth"

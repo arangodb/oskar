@@ -50,6 +50,7 @@ set ST "$ST""750,runSingleTest1 shell_client http2 --http2 true -\n"
 set ST "$ST""500,runSingleTest1 shell_client_aql http -\n"
 set ST "$ST""500,runSingleTest1 shell_client_aql vst --vst true -\n"
 set ST "$ST""500,runSingleTest1 shell_client_aql http2 --http2 true -\n"
+set ST "$ST""500,runSingleTest1 shell_client_aql encrypt --encryptionAtRest true -\n"
 set ST "$ST""250,runSingleTest1 shell_replication -\n"
 set ST "$ST""1000,runSingleTest1 shell_server -\n"
 set ST "$ST""250,runSingleTest1 BackupAuthNoSysTests -\n"
@@ -252,9 +253,9 @@ switch $TESTSUITE
   case "cluster"
     resetLaunch 4
     and if test "$ASAN" = "On"
-      waitOrKill 64800 launchClusterTests
+      waitOrKill 72000 launchClusterTests
     else
-      waitOrKill 16200 launchClusterTests
+      waitOrKill 18000 launchClusterTests
     end
     createReport
   case "single"
