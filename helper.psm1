@@ -159,6 +159,11 @@ Function 7unzip($zip)
     proc -process "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
 }
 
+Function isGCE
+{
+    return "$env:COMPUTERNAME" -eq "JENKINS-WIN-GCE"
+}
+
 Function hostKey
 {
     If(Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
@@ -166,12 +171,10 @@ Function hostKey
         Remove-Item -Force "$HOME\.ssh\known_hosts"
     }
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
-    proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false -priority "Normal"
-}
-
-Function isGCE
-{
-    return "$env:COMPUTERNAME" -eq "JENKINS-WIN-GCE"
+    $(If (-not (isGCE))
+    {
+        proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false -priority "Normal"
+    }
 }
 
 Function clearWER
