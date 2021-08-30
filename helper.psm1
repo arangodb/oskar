@@ -169,6 +169,11 @@ Function hostKey
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false -priority "Normal"
 }
 
+Function isGCE
+{
+    return "$env:COMPUTERNAME" -eq "JENKINS-WIN-GCE"
+}
+
 Function clearWER
 {
     Remove-Item "$global:REG_WER" -Recurse -Force -ErrorAction SilentlyContinue | Out-Null
@@ -198,7 +203,7 @@ Function oskarOpenSSL
     $global:USE_OSKAR_OPENSSL = "On"
     findCompilerVersion
     findRequiredOpenSSL
-    $global:OPENSSL_PATH = "${global:INNERWORKDIR}\OpenSSL\${OPENSSL_VERSION}"
+    $global:OPENSSL_PATH = $(If (isGCE) {"C:"} Else {"${global:INNERWORKDIR}"}) + "\OpenSSL\${OPENSSL_VERSION}"
     Write-Host "Use OpenSSL within oskar: build ${OPENSSL_VERSION} if not present in ${OPENSSL_PATH}"
     $global:ok = (checkOpenSSL $global:INNERWORKDIR $OPENSSL_VERSION $MSVS ${OPENSSL_MODES} ${OPENSSL_TYPES} $true)
     If ($global:ok)
