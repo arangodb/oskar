@@ -171,7 +171,7 @@ Function hostKey
         Remove-Item -Force "$HOME\.ssh\known_hosts"
     }
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
-    $(If (-not (isGCE))
+    If (-not (isGCE))
     {
         proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false -priority "Normal"
     }
