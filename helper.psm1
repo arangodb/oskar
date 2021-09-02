@@ -1150,7 +1150,7 @@ Function convertSItoJSON
         If(-Not [string]::IsNullOrEmpty($fields))
         {
             Write-Host "Convert $INNERWORKDIR\sourceInfo.log to $INNERWORKDIR\sourceInfo.json"
-            Write-Output "{`n"($fields -join ',' + [Environment]::NewLine)"`n}" | Out-File -Encoding "UTF8NoBOM" "$global:INNERWORKDIR\sourceInfo.json" -NoNewLine
+            Write-Output "{`n"($fields -join ',' + [Environment]::NewLine)"`n}" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.json" -NoNewLine
         }
     }
 }
@@ -1199,8 +1199,8 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($global:ok)
     {
-        Write-Output "VERSION: $(Get-Content $INNERWORKDIR/ArangoDB/ARANGO-VERSION)" | Out-File -Encoding "UTF8NoBOM" "$global:INNERWORKDIR\sourceInfo.log"
-        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File -Encoding "UTF8NoBOM" "$global:INNERWORKDIR\sourceInfo.log" -Append
+        Write-Output "VERSION: $(Get-Content $INNERWORKDIR/ArangoDB/ARANGO-VERSION)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log"
+        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
     }
     Else
     {
@@ -1246,7 +1246,7 @@ Function switchBranches($branch_c,$branch_e)
         }
         If ($global:ok)
         {
-            Write-Output "Enterprise: $(git rev-parse --verify HEAD)" | Out-File -Encoding "UTF8NoBOM" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
+            Write-Output "Enterprise: $(git rev-parse --verify HEAD)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
             convertSItoJSON
         }
         Else
