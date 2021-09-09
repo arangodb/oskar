@@ -90,7 +90,7 @@ Function global:registerClusterTests()
     noteStartAndRepoState
     Write-Host "Registering tests..."
 
-    $global:TESTSUITE_TIMEOUT = 4200
+    $global:TESTSUITE_TIMEOUT = 6000
 
     registerTest -cluster $true -testname "load_balancing"
     registerTest -cluster $true -testname "load_balancing_auth"
