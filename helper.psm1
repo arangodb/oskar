@@ -1,6 +1,11 @@
 $global:WORKDIR = $pwd
 $global:SCRIPTSDIR = Join-Path -Path $global:WORKDIR -ChildPath scripts
 
+Function isGCE
+{
+    return "$env:COMPUTERNAME" -eq "JENKINS-WIN-GCE"
+}
+
 If(-Not($ENV:WORKSPACE))
 {
     $ENV:WORKSPACE = Join-Path -Path $global:WORKDIR -ChildPath work
@@ -76,6 +81,11 @@ $env:CMAKE_CONFIGURE_DIR = "$INNERWORKDIR\.cmake.windows"
 $env:CLCACHE_LOG = 0
 $env:CLCACHE_HARDLINK = 1
 $env:CLCACHE_OBJECT_CACHE_TIMEOUT_MS = 120000
+
+If (isGCE)
+{
+    $env:CLCACHE_MEMCACHED = "$MEMCAHCED_SERVER"
+}
 
 $global:launcheableTests = @()
 $global:maxTestCount = 0
@@ -157,11 +167,6 @@ Function 7unzip($zip)
 {
     Write-Host "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
     proc -process "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
-}
-
-Function isGCE
-{
-    return "$env:COMPUTERNAME" -eq "JENKINS-WIN-GCE"
 }
 
 Function hostKey
