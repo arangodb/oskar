@@ -82,9 +82,9 @@ $env:CLCACHE_LOG = 0
 $env:CLCACHE_HARDLINK = 1
 $env:CLCACHE_OBJECT_CACHE_TIMEOUT_MS = 120000
 
-If (isGCE)
+If (isGCE -And (-Not ([string]::IsNullOrWhiteSpace($env:MEMCACHED_SERVER))))
 {
-    $env:CLCACHE_MEMCACHED = "$MEMCAHCED_SERVER"
+    $env:CLCACHE_MEMCACHED = "$env:MEMCACHED_SERVER"
 }
 
 $global:launcheableTests = @()
