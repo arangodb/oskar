@@ -7,7 +7,7 @@ function setupCcacheBinPath
     switch $CCACHETYPE
       case macos
           set -xg CCACHEBINPATH $SCRIPTSDIR/tools
-          set -xg SCCACHEBINPATH $SCRIPTSDIR/tools/
+          set -xg SCCACHEBINPATH $SCRIPTSDIR/tools
       case alpine
           set -xg CCACHEBINPATH /tools
       case ubuntu
@@ -90,8 +90,8 @@ function setupCcache
     end
 
     pushd $INNERWORKDIR
-    and begin eval $SCCACHEBINPATH"sccache --stop-server 2>> $INNERWORKDIR/sccache.err.log"; or true; end
-    and eval $SCCACHEBINPATH"sccache --start-server"
+    and begin eval $SCCACHEBINPATH"/sccache --stop-server 2>> $INNERWORKDIR/sccache.err.log"; or true; end
+    and eval $SCCACHEBINPATH"/sccache --start-server"
     and popd
     or begin
       echo "warning: cannot start sccache"
@@ -127,8 +127,13 @@ end
 
 function cmakeCcache
   if test "$USE_CCACHE" = "Off"
-    set -g FULLARGS $FULLARGS \
-      -DUSE_CCACHE=Off
+    set -g FULLARGS $FULLARGS -DUSE_CCACHE=Off
+    if test "$CXX" != ""
+      set -g FULLARGS $FULLARGS -DCMAKE_CXX_COMPILER=$CXX
+    end
+    if test "$CC" != ""
+      set -g FULLARGS $FULLARGS -DCMAKE_C_COMPILER=$CC
+    end
   else
     # USE_CACHE is not used because the compiler is already ccache
     set -g FULLARGS $FULLARGS \
@@ -143,7 +148,7 @@ function shutdownCcache
   if test "$USE_CCACHE" = "On"
     ccache --show-stats
   else if test "$USE_CCACHE" = "sccache"
-    eval $SCCACHEBINPATH"sccache --stop-server 2>> $INNERWORKDIR/sccache.err.log"; or echo "warning: cannot stop sccache. See $INNERWORKDIR/sccache.err.log"
+    eval $SCCACHEBINPATH"/sccache --stop-server 2>> $INNERWORKDIR/sccache.err.log"; or echo "warning: cannot stop sccache. See $INNERWORKDIR/sccache.err.log"
   end
   return 0
 end
