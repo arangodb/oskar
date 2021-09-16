@@ -67,6 +67,9 @@ end
 
 cleanPrepareLockUpdateClear
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and if test "$ENABLE_CCACHE" = "false"
+  ccacheOff
+end
 and setNightlyRelease
 and makeRelease
 and if test "$COPY_TO_STAGE2" = "true"
