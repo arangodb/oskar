@@ -114,12 +114,12 @@ end
 
 function findDefaultArchitecture
   set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
-  set -l v ""
+  set -l v "aarch64"
 
-  test -f $f
-  and begin
-    set v (fgrep DEFAULT_ARCHITECTURE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
-  end
+  #test -f $f
+  #and begin
+  #  set v (fgrep DEFAULT_ARCHITECTURE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  #end
 
   defaultArchecture $v
 end
