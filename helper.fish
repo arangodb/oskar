@@ -124,6 +124,8 @@ function findDefaultArchitecture
   defaultArchecture $v
 end
 
+set -xg DEFAULT_ARCHITECTURE aarch64
+
 test -z "$DEFAULT_ARCHITECTURE"; and findDefaultArchitecture
 
 function isGCE
