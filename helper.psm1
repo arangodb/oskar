@@ -1601,7 +1601,9 @@ Function preserveSymbolsToWorkdir
         Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
         If (Test-Path -Path "$global:ARANGODIR\build\bin\$BUILDMODE\*.pdb")
         {
+            Write-Host "Remove existing ${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
             Remove-Item -Force "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip" -ErrorAction SilentlyContinue
+            Write-Host "Save *.pdb to ${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
             7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"; comm
         }
         Else
