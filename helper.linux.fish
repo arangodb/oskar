@@ -14,7 +14,7 @@ set -gx UBUNTUBUILDIMAGE4_TAG 10
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 4
+set -gx UBUNTUBUILDIMAGE5_TAG ARM
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
@@ -28,11 +28,11 @@ set -gx ALPINEBUILDIMAGE4_TAG 13
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
-set -gx ALPINEBUILDIMAGE5_TAG 5
+set -gx ALPINEBUILDIMAGE5_TAG ARM
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
-set -gx ALPINEUTILSIMAGE_TAG 4
+set -gx ALPINEUTILSIMAGE_TAG ARM
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
@@ -44,7 +44,7 @@ set -gx CPPCHECKIMAGE_TAG 5
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
 
 set -gx LDAPIMAGE_NAME arangodb/ldap-test
-set -gx LDAPIMAGE_TAG 1
+set -gx LDAPIMAGE_TAG ARM
 set -gx LDAPIMAGE $LDAPIMAGE_NAME:$LDAPIMAGE_TAG
 
 set -gx LDAPDOCKERCONTAINERNAME ldapserver1
@@ -1715,16 +1715,16 @@ end
 
 function updateOskar
   updateOskarOnly
-  and pullUbuntuBuildImage3
-  and pullUbuntuBuildImage4
+#  and pullUbuntuBuildImage3
+#  and pullUbuntuBuildImage4
   and pullUbuntuBuildImage5
-  and pullAlpineBuildImage3
-  and pullAlpineBuildImage4
+#  and pullAlpineBuildImage3
+#  and pullAlpineBuildImage4
   and pullAlpineBuildImage5
   and pullAlpineUtilsImage
-  and pullUbuntuPackagingImage
-  and pullCentosPackagingImage
-  and pullCppcheckImage
+#  and pullUbuntuPackagingImage
+#  and pullCentosPackagingImage
+#  and pullCppcheckImage
   and pullLdapImage
 end
 
