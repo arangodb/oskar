@@ -177,6 +177,8 @@ else
   set -gx USE_CCACHE $USE_CCACHE
 end
 
+ccacheOn
+
 function coverageOn ; set -gx COVERAGE On ; debugMode ; end
 function coverageOff ; set -gx COVERAGE Off ; end
 if test -z "$COVERAGE" ; coverageOff
