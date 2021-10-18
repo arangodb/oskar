@@ -1575,6 +1575,7 @@ Function setNightlyRelease
 {
     checkoutIfNeeded
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_TYPE .*', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly")' | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
+    (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_NUMBER.*', ('set(ARANGODB_VERSION_RELEASE_NUMBER "' + (Get-Date).ToString("yyyyMMdd") + '")') | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
 }
 
 Function movePackagesToWorkdir
