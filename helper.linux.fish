@@ -1549,36 +1549,67 @@ function interactiveContainer
   end
 
   docker run -it --rm \
-             -v $WORKDIR/work:$INNERWORKDIR \
-             -v $SSH_AUTH_SOCK:/ssh-agent \
-             -v "$WORKDIR/scripts":"/scripts" \
-             -e ASAN="$ASAN" \
-             -e GID=(id -g) \
-             -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
-             -e INNERWORKDIR="$INNERWORKDIR" \
-             -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
-             -e KEYNAME="$KEYNAME" \
-             -e LDAPHOST="$LDAPHOST" \
-             -e LDAPHOST2="$LDAPHOST2" \
-             -e MAINTAINER="$MAINTAINER" \
-             -e NOSTRIP="$NOSTRIP" \
-             -e NO_RM_BUILD="$NO_RM_BUILD" \
-             -e PARALLELISM="$PARALLELISM" \
-             -e PLATFORM="$PLATFORM" \
-             -e SCRIPTSDIR="$SCRIPTSDIR" \
-             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
-             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
-             -e SKIPGREY="$SKIPGREY" \
-             -e ONLYGREY="$ONLYGREY" \
-             -e SSH_AUTH_SOCK=/ssh-agent \
-             -e STORAGEENGINE="$STORAGEENGINE" \
-             -e TESTSUITE="$TESTSUITE" \
-             -e UID=(id -u) \
-             -e VERBOSEBUILD="$VERBOSEBUILD" \
-             -e VERBOSEOSKAR="$VERBOSEOSKAR" \
-             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
-             -e PROMTOOL_PATH="$PROMTOOL_PATH" \
-             $argv
+    -v $WORKDIR/work:$INNERWORKDIR \
+    -v $SSH_AUTH_SOCK:/ssh-agent \
+    -v "$WORKDIR/scripts":"/scripts" \
+    -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
+    -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
+    -e ARANGODB_REPO="$ARANGODB_REPO" \
+    -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+    -e ASAN="$ASAN" \
+    -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+    -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+    -e BUILDMODE="$BUILDMODE" \
+    -e CCACHEBINPATH="$CCACHEBINPATH" \
+    -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
+    -e COVERAGE="$COVERAGE" \
+    -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
+    -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
+    -e GID=(id -g) \
+    -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
+    -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
+    -e GIT_TRACE="$GIT_TRACE" \
+    -e GIT_TRACE_PACKET="$GIT_TRACE_PACKET" \
+    -e INNERWORKDIR="$INNERWORKDIR" \
+    -e IONICE="$IONICE" \
+    -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
+    -e KEYNAME="$KEYNAME" \
+    -e LDAPHOST="$LDAPHOST" \
+    -e LDAPHOST2="$LDAPHOST2" \
+    -e MAINTAINER="$MAINTAINER" \
+    -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
+    -e NODE_NAME="$NODE_NAME" \
+    -e NOSTRIP="$NOSTRIP" \
+    -e NO_RM_BUILD="$NO_RM_BUILD" \
+    -e ONLYGREY="$ONLYGREY" \
+    -e OPENSSL_VERSION="$OPENSSL_VERSION" \
+    -e PACKAGE_STRIP="$PACKAGE_STRIP" \
+    -e PARALLELISM="$PARALLELISM" \
+    -e PLATFORM="$PLATFORM" \
+    -e SCCACHE_BUCKET="$SCCACHE_BUCKET" \
+    -e SCCACHE_ENDPOINT="$SCCACHE_ENDPOINT" \
+    -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
+    -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
+    -e SCCACHE_IDLE_TIMEOUT="$SCCACHE_IDLE_TIMEOUT" \
+    -e SCCACHE_MEMCACHED="$SCCACHE_MEMCACHED" \
+    -e SCCACHE_REDIS="$SCCACHE_REDIS" \
+    -e SCRIPTSDIR="$SCRIPTSDIR" \
+    -e SHOW_DETAILS="$SHOW_DETAILS" \
+    -e SKIPGREY="$SKIPGREY" \
+    -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
+    -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
+    -e SKIP_MAKE="$SKIP_MAKE" \
+    -e SSH_AUTH_SOCK=/ssh-agent \
+    -e STORAGEENGINE="$STORAGEENGINE" \
+    -e TEST="$TEST" \
+    -e TESTSUITE="$TESTSUITE" \
+    -e UID=(id -u) \
+    -e USE_CCACHE="$USE_CCACHE" \
+    -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
+    -e VERBOSEBUILD="$VERBOSEBUILD" \
+    -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+    -e PROMTOOL_PATH="$PROMTOOL_PATH" \
+    $argv
 
   if test -n "$agentstarted"
     ssh-agent -k > /dev/null
