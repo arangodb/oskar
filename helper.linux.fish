@@ -951,7 +951,7 @@ end
 function makeDockerCommunityDebug
   findArangoDBVersion ; or return 1
 
-  packageStripOff
+  packageStripNone
   and minimalDebugInfoOff
   and community
   and if test (count $argv) -ge 1
@@ -969,7 +969,7 @@ function makeDockerEnterpriseDebug
 
   findArangoDBVersion ; or return 1
 
-  packageStripOff
+  packageStripNone
   and minimalDebugInfoOff
   and enterprise
   and if test (count $argv) -ge 1
