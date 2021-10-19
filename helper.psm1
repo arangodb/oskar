@@ -1604,7 +1604,7 @@ Function preserveSymbolsToWorkdir
         {
             $ARANGODB_PDB_PACKAGE = $ARANGODB_PDB_PACKAGE -replace "nightly.*pdb.zip", "nightly.pdb.zip"
         }
-        Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE
+        Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
         If (Test-Path -Path "$global:ARANGODIR\build\bin\$BUILDMODE\*.pdb")
         {
             Write-Host "Remove existing ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
