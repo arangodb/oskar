@@ -955,9 +955,9 @@ function makeDockerCommunityDebug
   and minimalDebugInfoOff
   and community
   and if test (count $argv) -ge 1
-    buildDockerDebug $argv[1]
+    buildDockerDebug $argv[1]-debug
   else
-    buildDockerDebug $DOCKER_TAG
+    buildDockerDebug $DOCKER_TAG-debug
   end
 end
 
