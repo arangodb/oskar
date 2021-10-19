@@ -931,6 +931,36 @@ function makeDockerEnterpriseRelease
   end
 end
 
+function makeDockerDebug
+  if test "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
+  end
+
+  findArangoDBVersion ; or return 1
+
+  if test (count $argv) -ge 1
+    makeDockerCommunityDebug $argv[1]
+    makeDockerEnterpriseDebug $argv[1]
+  else
+    makeDockerCommunityDebug
+    makeDockerEnterpriseDebug
+  end  
+end
+
+function makeDockerCommunityDebug
+  findArangoDBVersion ; or return 1
+
+  packageStripOff
+  and minimalDebugInfoOff
+  and community
+  and if test (count $argv) -ge 1
+    buildDockerDebug $argv[1]-debug
+  else
+    buildDockerDebug $DOCKER_TAG-debug
+  end
+end
+
 function makeDockerEnterpriseDebug
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
@@ -941,16 +971,31 @@ function makeDockerEnterpriseDebug
 
   packageStripOff
   and minimalDebugInfoOff
-  and buildEnterprisePackage
   and enterprise
   and if test (count $argv) -ge 1
-    buildDockerRelease $argv[1]-debug
+    buildDockerDebug $argv[1]-debug
   else
-    buildDockerRelease $DOCKER_TAG-debug
+    buildDockerDebug $DOCKER_TAG-debug
   end
 end
 
+function buildDockerDebug
+  asanOff
+  and maintainerOn
+  and releaseMode
+  and set -xg NOSTRIP 1
+  and buildDockerAny $argv[1]
+end
+
 function buildDockerRelease
+  asanOff
+  and maintainerOff
+  and releaseMode
+  and set -xg NOSTRIP 1
+  and buildDockerAny $argv[1]
+end
+
+function buildDockerAny
   set -l DOCKER_TAG $argv[1]
 
   # build tag
@@ -994,10 +1039,6 @@ function buildDockerRelease
   end
 
   echo "building docker image"
-  and asanOff
-  and maintainerOff
-  and releaseMode
-  and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
