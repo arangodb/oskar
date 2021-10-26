@@ -988,6 +988,7 @@ function buildDockerDebug
 end
 
 function buildDockerRelease
+  echo "building docker release"
   asanOff
   and maintainerOff
   and releaseMode
