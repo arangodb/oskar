@@ -221,7 +221,7 @@ Function launchTest($which) {
     Pop-Location
 }
 
-Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst, [switch]$http2)
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst, [switch]$http2,[switch]$encrypt)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlockList"
     $checkname = If ($vst) { $testname + "_$vst" } ElseIf ($http2) { $testname + "_$http2" } Else { $testname }
@@ -267,6 +267,10 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
 
         If ($http2) {
           $testparams = $testparams + " --http2 true"
+        }
+
+        If ($encrypt) {
+          $testparams = $testparams + " --encryptionAtRest true"
         }
 
         If ($sniff) {

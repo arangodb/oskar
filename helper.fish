@@ -7,13 +7,13 @@ function lockDirectory
     echo $pid > LOCK.$pid
     and while true
       # Remove a stale lock if it is found:
-      if set -l pidfound (cat LOCK ^/dev/null)
+      if set -l pidfound (cat LOCK > /dev/null)
         if not ps ax -o pid | grep '^ *'"$pidfound"'$' > /dev/null
           rm LOCK LOCK.$pidfound
           and echo Have removed stale lock.
         end
       end
-      and if ln LOCK.$pid LOCK ^/dev/null
+      and if ln LOCK.$pid LOCK > /dev/null
         break
       end
       and echo -n Directory is locked, waiting...
@@ -445,7 +445,7 @@ function setNightlyRelease
   and if test -n "$ARANGODB_VERSION_RELEASE_NUMBER"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION.$ARANGODB_VERSION_RELEASE_NUMBER"; end
   and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/ARANGO-VERSION
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
-  and ls -1 $WORKDIR/work/sourceInfo.* | xargs sed -i$suffix -E "s/(\"?VERSION\"?: ?\"?)([0-9a-z.-]+)/\1$ARANGODB_FULL_VERSION/g"
+  and sed -i$suffix -E "s/(\"?VERSION\"?: ?\"?)([0-9a-z.-]+)/\1$ARANGODB_FULL_VERSION/g" $WORKDIR/work/sourceInfo.*
   and if test -n "$suffix"; rm -f $WORKDIR/work/sourceInfo*$suffix; end
 end
 
@@ -1619,7 +1619,7 @@ function checkMacros
 end
 
 ## #############################################################################
-## LOG ID
+## CHECK DUPLICATE LOG ID
 ## #############################################################################
 
 function checkLogId
@@ -1628,7 +1628,7 @@ function checkLogId
   or begin popd; return 1; end
 
   set -l ids (find lib arangod arangosh enterprise -name "*.cpp" -o -name "*.h" \
-    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\)("[^\"]*"' \
+    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\|CTX\|CTX_IF\)("[^\"]*"' \
     | grep -v 'LOG_DEVEL' \
     | sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
 
@@ -1717,6 +1717,7 @@ function clearResults
   pushd $WORKDIR/work
   and for f in testreport* ; rm -f $f ; end
   and rm -f test.log buildArangoDB.log cmakeArangoDB.log
+  and find . -maxdepth 1 -name '*.rpm' -o -name '*.deb' -o -name '*.dmg' -o -name '*.tar.gz' -o -name '*.zip' | xargs rm -f
   or begin ; popd ; return 1 ; end
   popd
 end

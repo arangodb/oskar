@@ -50,6 +50,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_client_aql" -index "http"
     registerTest -testname "shell_client_aql" -vst -index "vst"
     registerTest -testname "shell_client_aql" -http2 -index "http2"
+    if ($ENTERPRISEEDITION -eq "On") { registerTest -testname "shell_client_aql" -encrypt -index "encrypt" }
     registerTest -testname "shell_replication" -weight 2
     registerTest -testname "BackupAuthNoSysTests"
     registerTest -testname "BackupAuthSysTests"
@@ -96,6 +97,7 @@ Function global:registerSingleTests()
     registerTest -testname "server_permissions"
     registerTest -testname "server_parameters"
     registerTest -testname "paths_server"
+#    registerTest -testname "replication2_client"
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that
     # the testing framework does not support automatic restarts of instances
@@ -111,7 +113,7 @@ Function global:registerClusterTests()
     noteStartAndRepoState
     Write-Host "Registering tests..."
 
-    $global:TESTSUITE_TIMEOUT = 16200
+    $global:TESTSUITE_TIMEOUT = 18000
 
     registerTest -cluster $true -testname "load_balancing"
     registerTest -cluster $true -testname "load_balancing_auth"
@@ -157,6 +159,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "audit_server"
     registerTest -cluster $true -testname "arangobench"
     registerTest -cluster $true -testname "chaos" -moreParams "--skipNightly false"
+    registerTest -cluster $true -testname "replication2_client"
     # registerTest -cluster $true -testname "agency" -weight 2
     # Note that we intentionally do not register the hot_backup test here,
     # since it is currently not supported on Windows. The reason is that

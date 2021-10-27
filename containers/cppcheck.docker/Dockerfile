@@ -1,4 +1,4 @@
-FROM alpine:3.10
+FROM alpine:3.14
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 COPY ./tools/* /tools/
