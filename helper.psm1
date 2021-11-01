@@ -1500,7 +1500,7 @@ Function buildWindows
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
-    Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.zip" -ErrorAction SilentlyContinue
+    #Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.zip" -ErrorAction SilentlyContinue
     proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
     If($global:ok)
     {
@@ -1575,6 +1575,7 @@ Function setNightlyRelease
 {
     checkoutIfNeeded
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_TYPE .*', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly")' | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
+    (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_NUMBER.*', ('set(ARANGODB_VERSION_RELEASE_NUMBER "' + (Get-Date).ToString("yyyyMMdd") + '")') | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
 }
 
 Function movePackagesToWorkdir
@@ -1598,11 +1599,18 @@ Function preserveSymbolsToWorkdir
     {
         Set-Location "$global:ARANGODIR\build\bin\$BUILDMODE"
         $suffix = If ($ENTERPRISEEDITION -eq "On") {"e"} Else {""}
-        Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
+        $ARANGODB_PDB_PACKAGE = "ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
+        If ("$global:ARANGODB_VERSION_RELEASE_TYPE" -eq "nightly")
+        {
+            $ARANGODB_PDB_PACKAGE = $ARANGODB_PDB_PACKAGE -replace "nightly.*pdb.zip", "nightly.pdb.zip"
+        }
+        Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
         If (Test-Path -Path "$global:ARANGODIR\build\bin\$BUILDMODE\*.pdb")
         {
-            Remove-Item -Force "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip" -ErrorAction SilentlyContinue
-            7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"; comm
+            Write-Host "Remove existing ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
+            Remove-Item -Force "${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE" -ErrorAction SilentlyContinue
+            Write-Host "Save *.pdb to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
+            7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"; comm
         }
         Else
         {
@@ -1739,8 +1747,8 @@ Function moveResultsToWorkspace
     
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes -eq "true"))
     {
-        Write-Host "ArangoDB3*pdb.zip ..."
-        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*pdb.zip"))
+        Write-Host "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.zip ..."
+        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.zip"))
         {
             Write-Host "Move $INNERWORKDIR\$file"
             Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 

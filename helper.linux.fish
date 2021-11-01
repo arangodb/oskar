@@ -20,15 +20,15 @@ set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 13
+set -gx ALPINEBUILDIMAGE3_TAG 15
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 13
+set -gx ALPINEBUILDIMAGE4_TAG 15
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
-set -gx ALPINEBUILDIMAGE5_TAG ARM
+set -gx ALPINEBUILDIMAGE5_TAG 6
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -931,6 +931,36 @@ function makeDockerEnterpriseRelease
   end
 end
 
+function makeDockerDebug
+  if test "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
+  end
+
+  findArangoDBVersion ; or return 1
+
+  if test (count $argv) -ge 1
+    makeDockerCommunityDebug $argv[1]
+    makeDockerEnterpriseDebug $argv[1]
+  else
+    makeDockerCommunityDebug
+    makeDockerEnterpriseDebug
+  end  
+end
+
+function makeDockerCommunityDebug
+  findArangoDBVersion ; or return 1
+
+  packageStripNone
+  and minimalDebugInfoOff
+  and community
+  and if test (count $argv) -ge 1
+    buildDockerDebug $argv[1]-debug
+  else
+    buildDockerDebug $DOCKER_TAG-debug
+  end
+end
+
 function makeDockerEnterpriseDebug
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
@@ -939,18 +969,34 @@ function makeDockerEnterpriseDebug
 
   findArangoDBVersion ; or return 1
 
-  packageStripOff
+  packageStripNone
   and minimalDebugInfoOff
-  and buildEnterprisePackage
   and enterprise
   and if test (count $argv) -ge 1
-    buildDockerRelease $argv[1]-debug
+    buildDockerDebug $argv[1]-debug
   else
-    buildDockerRelease $DOCKER_TAG-debug
+    buildDockerDebug $DOCKER_TAG-debug
   end
 end
 
+function buildDockerDebug
+  asanOff
+  and maintainerOn
+  and releaseMode
+  and set -xg NOSTRIP 1
+  and buildDockerAny $argv[1]
+end
+
 function buildDockerRelease
+  echo "building docker release"
+  asanOff
+  and maintainerOff
+  and releaseMode
+  and set -xg NOSTRIP 1
+  and buildDockerAny $argv[1]
+end
+
+function buildDockerAny
   set -l DOCKER_TAG $argv[1]
 
   # build tag
@@ -994,10 +1040,6 @@ function buildDockerRelease
   end
 
   echo "building docker image"
-  and asanOff
-  and maintainerOff
-  and releaseMode
-  and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
@@ -1549,36 +1591,67 @@ function interactiveContainer
   end
 
   docker run -it --rm \
-             -v $WORKDIR/work:$INNERWORKDIR \
-             -v $SSH_AUTH_SOCK:/ssh-agent \
-             -v "$WORKDIR/scripts":"/scripts" \
-             -e ASAN="$ASAN" \
-             -e GID=(id -g) \
-             -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
-             -e INNERWORKDIR="$INNERWORKDIR" \
-             -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
-             -e KEYNAME="$KEYNAME" \
-             -e LDAPHOST="$LDAPHOST" \
-             -e LDAPHOST2="$LDAPHOST2" \
-             -e MAINTAINER="$MAINTAINER" \
-             -e NOSTRIP="$NOSTRIP" \
-             -e NO_RM_BUILD="$NO_RM_BUILD" \
-             -e PARALLELISM="$PARALLELISM" \
-             -e PLATFORM="$PLATFORM" \
-             -e SCRIPTSDIR="$SCRIPTSDIR" \
-             -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
-             -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
-             -e SKIPGREY="$SKIPGREY" \
-             -e ONLYGREY="$ONLYGREY" \
-             -e SSH_AUTH_SOCK=/ssh-agent \
-             -e STORAGEENGINE="$STORAGEENGINE" \
-             -e TESTSUITE="$TESTSUITE" \
-             -e UID=(id -u) \
-             -e VERBOSEBUILD="$VERBOSEBUILD" \
-             -e VERBOSEOSKAR="$VERBOSEOSKAR" \
-             -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
-             -e PROMTOOL_PATH="$PROMTOOL_PATH" \
-             $argv
+    -v $WORKDIR/work:$INNERWORKDIR \
+    -v $SSH_AUTH_SOCK:/ssh-agent \
+    -v "$WORKDIR/scripts":"/scripts" \
+    -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
+    -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
+    -e ARANGODB_REPO="$ARANGODB_REPO" \
+    -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+    -e ASAN="$ASAN" \
+    -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+    -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+    -e BUILDMODE="$BUILDMODE" \
+    -e CCACHEBINPATH="$CCACHEBINPATH" \
+    -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
+    -e COVERAGE="$COVERAGE" \
+    -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
+    -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
+    -e GID=(id -g) \
+    -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
+    -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
+    -e GIT_TRACE="$GIT_TRACE" \
+    -e GIT_TRACE_PACKET="$GIT_TRACE_PACKET" \
+    -e INNERWORKDIR="$INNERWORKDIR" \
+    -e IONICE="$IONICE" \
+    -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
+    -e KEYNAME="$KEYNAME" \
+    -e LDAPHOST="$LDAPHOST" \
+    -e LDAPHOST2="$LDAPHOST2" \
+    -e MAINTAINER="$MAINTAINER" \
+    -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
+    -e NODE_NAME="$NODE_NAME" \
+    -e NOSTRIP="$NOSTRIP" \
+    -e NO_RM_BUILD="$NO_RM_BUILD" \
+    -e ONLYGREY="$ONLYGREY" \
+    -e OPENSSL_VERSION="$OPENSSL_VERSION" \
+    -e PACKAGE_STRIP="$PACKAGE_STRIP" \
+    -e PARALLELISM="$PARALLELISM" \
+    -e PLATFORM="$PLATFORM" \
+    -e SCCACHE_BUCKET="$SCCACHE_BUCKET" \
+    -e SCCACHE_ENDPOINT="$SCCACHE_ENDPOINT" \
+    -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
+    -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
+    -e SCCACHE_IDLE_TIMEOUT="$SCCACHE_IDLE_TIMEOUT" \
+    -e SCCACHE_MEMCACHED="$SCCACHE_MEMCACHED" \
+    -e SCCACHE_REDIS="$SCCACHE_REDIS" \
+    -e SCRIPTSDIR="$SCRIPTSDIR" \
+    -e SHOW_DETAILS="$SHOW_DETAILS" \
+    -e SKIPGREY="$SKIPGREY" \
+    -e SKIPNONDETERMINISTIC="$SKIPNONDETERMINISTIC" \
+    -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
+    -e SKIP_MAKE="$SKIP_MAKE" \
+    -e SSH_AUTH_SOCK=/ssh-agent \
+    -e STORAGEENGINE="$STORAGEENGINE" \
+    -e TEST="$TEST" \
+    -e TESTSUITE="$TESTSUITE" \
+    -e UID=(id -u) \
+    -e USE_CCACHE="$USE_CCACHE" \
+    -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
+    -e VERBOSEBUILD="$VERBOSEBUILD" \
+    -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+    -e PROMTOOL_PATH="$PROMTOOL_PATH" \
+    $argv
 
   if test -n "$agentstarted"
     ssh-agent -k > /dev/null
