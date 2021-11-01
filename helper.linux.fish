@@ -1788,16 +1788,16 @@ end
 
 function updateOskar
   updateOskarOnly
-#  and pullUbuntuBuildImage3
-#  and pullUbuntuBuildImage4
+  and pullUbuntuBuildImage3
+  and pullUbuntuBuildImage4
   and pullUbuntuBuildImage5
-#  and pullAlpineBuildImage3
-#  and pullAlpineBuildImage4
+  and pullAlpineBuildImage3
+  and pullAlpineBuildImage4
   and pullAlpineBuildImage5
   and pullAlpineUtilsImage
-#  and pullUbuntuPackagingImage
-#  and pullCentosPackagingImage
-#  and pullCppcheckImage
+  and pullUbuntuPackagingImage
+  and pullCentosPackagingImage
+  and pullCppcheckImage
   and pullLdapImage
 end
 
