@@ -42,7 +42,7 @@ if not test -z $ASAN; and test $ASAN = "On"
   end
 
   if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
-    set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
+    set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0"
   end
 
   echo "ASAN: $ASAN_OPTIONS"
