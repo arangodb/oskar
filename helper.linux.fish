@@ -294,6 +294,7 @@ function switchBranches
   and findRequiredCompiler
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
+  and findUseARM
 end
 
 ## #############################################################################
@@ -339,6 +340,7 @@ function buildArangoDB
   and findRequiredCompiler
   and findRequiredOpenSSL
   and findDefaultArchitecture
+  and findUseARM
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -352,6 +354,7 @@ function makeArangoDB
     findRequiredCompiler
     and findRequiredOpenSSL
     and findDefaultArchitecture
+    and findUseARM
   end
   and runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
@@ -366,6 +369,7 @@ function buildStaticArangoDB
   and findRequiredCompiler
   and findRequiredOpenSSL
   and findDefaultArchitecture
+  and findUseARM
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -379,6 +383,7 @@ function makeStaticArangoDB
     findRequiredCompiler
     and findRequiredOpenSSL
     and findDefaultArchitecture
+    and findUseARM
   end
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   set -l s $status
