@@ -1542,6 +1542,7 @@ function runInContainer
              -e TEST="$TEST" \
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
+             -e USE_ARM="$USE_ARM" \
              -e USE_CCACHE="$USE_CCACHE" \
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
@@ -1646,6 +1647,7 @@ function interactiveContainer
     -e TEST="$TEST" \
     -e TESTSUITE="$TESTSUITE" \
     -e UID=(id -u) \
+    -e USE_ARM="$USE_ARM" \
     -e USE_CCACHE="$USE_CCACHE" \
     -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
     -e VERBOSEBUILD="$VERBOSEBUILD" \

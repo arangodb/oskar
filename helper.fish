@@ -114,7 +114,7 @@ end
 
 function findDefaultArchitecture
   set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
-  set -l v "aarch64"
+  set -l v ""
 
   #test -f $f
   #and begin
@@ -124,9 +124,30 @@ function findDefaultArchitecture
   defaultArchecture $v
 end
 
-set -xg DEFAULT_ARCHITECTURE aarch64
-
 test -z "$DEFAULT_ARCHITECTURE"; and findDefaultArchitecture
+
+function findUseARM
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+
+  test -f $f
+  or begin
+    #echo "Cannot find $f; make sure source is checked out"
+    set -gx USE_ARM "false"
+    return 1
+  end
+
+  set -l v (fgrep USE_ARM $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" != "true"
+    #echo "$f: no USE_ARM specified, using false"
+    set -gx USE_ARM "false"
+  else
+    #echo "Using ARM '$v' from '$f'"
+    set -gx USE_ARM "$v"
+  end
+end
+
+if test -z "$USE_ARM" ; findUseARM ; end
 
 function isGCE
   switch (hostname)
@@ -1287,9 +1308,10 @@ function showConfig
   printf $fmt3 'ASAN'       $ASAN                   '(asanOn/Off)'
   printf $fmt3 'Coverage'   $COVERAGE               '(coverageOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE              '(debugMode/releaseMode)'
-  printf $fmt3 'Compiler'   "$compiler_version"     '(compiler x.y.z)'
-  printf $fmt3 'OpenSSL'    "$openssl_version"      '(opensslVersion x.y.z)'
-  printf $fmt3 'CPU'        "$DEFAULT_ARCHITECTURE" '(defaultArchitecture cpuname)'
+  printf $fmt3 'Compiler'   $compiler_version       '(compiler x.y.z)'
+  printf $fmt3 'OpenSSL'    $openssl_version        '(opensslVersion x.y.z)'
+  printf $fmt3 'CPU'        $DEFAULT_ARCHITECTURE   '(defaultArchitecture cpuname)'
+  printf $fmt3 'Use ARM'    $USE_ARM                '(ARM true or false)'
   printf $fmt3 'Use rclone' $USE_RCLONE             '(rclone true or false)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION      '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
