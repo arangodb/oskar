@@ -1241,7 +1241,7 @@ end
 function buildUbuntuBuildImage3
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntu3.docker
-  and docker build --pull ${IMAGE_ARGS} -t $UBUNTUBUILDIMAGE3 .
+  and docker build --pull $IMAGE_ARGS -t $UBUNTUBUILDIMAGE3 .
   popd
 end
 
@@ -1256,7 +1256,7 @@ function pullUbuntuBuildImage3 ; docker pull $UBUNTUBUILDIMAGE3 ; end
 function buildUbuntuBuildImage4
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntu4.docker
-  and docker build --pull ${IMAGE_ARGS} -t $UBUNTUBUILDIMAGE4 .
+  and docker build --pull $IMAGE_ARGS -t $UBUNTUBUILDIMAGE4 .
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1272,7 +1272,7 @@ function pullUbuntuBuildImage4 ; docker pull $UBUNTUBUILDIMAGE4 ; end
 function buildUbuntuBuildImage5
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntu5.docker
-  and docker build --pull ${IMAGE_ARGS} -t $UBUNTUBUILDIMAGE5 .
+  and docker build --pull $IMAGE_ARGS -t $UBUNTUBUILDIMAGE5 .
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1289,7 +1289,7 @@ function buildUbuntuPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
   and cd $WORKDIR/containers/buildUbuntuPackaging.docker
-  and docker build --pull ${IMAGE_ARGS} -t $UBUNTUPACKAGINGIMAGE .
+  and docker build --pull $IMAGE_ARGS -t $UBUNTUPACKAGINGIMAGE .
   and rm -f $WORKDIR/containers/buildUbuntuPackaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
@@ -1302,7 +1302,7 @@ function pullUbuntuPackagingImage ; docker pull $UBUNTUPACKAGINGIMAGE ; end
 function buildAlpineBuildImage3
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildAlpine3.docker
-  and docker build --pull ${IMAGE_ARGS} -t $ALPINEBUILDIMAGE3 .
+  and docker build --pull $IMAGE_ARGS -t $ALPINEBUILDIMAGE3 .
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1318,7 +1318,7 @@ function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
 function buildAlpineBuildImage4
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildAlpine4.docker
-  and docker build --pull ${IMAGE_ARGS} -t $ALPINEBUILDIMAGE4 .
+  and docker build --pull $IMAGE_ARGS -t $ALPINEBUILDIMAGE4 .
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1334,7 +1334,7 @@ function pullAlpineBuildImage4 ; docker pull $ALPINEBUILDIMAGE4 ; end
 function buildAlpineBuildImage5
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildAlpine5.docker
-  and docker build --pull ${IMAGE_ARGS} -t $ALPINEBUILDIMAGE5 .
+  and docker build --pull $IMAGE_ARGS -t $ALPINEBUILDIMAGE5 .
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1351,7 +1351,7 @@ function buildAlpineUtilsImage
   pushd $WORKDIR
   and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
   and cd $WORKDIR/containers/buildUtils.docker
-  and docker build --pull ${IMAGE_ARGS} -t $ALPINEUTILSIMAGE .
+  and docker build --pull $IMAGE_ARGS -t $ALPINEUTILSIMAGE .
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1368,7 +1368,7 @@ function buildCentosPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildRPMPackage.fish containers/buildCentos7Packaging.docker/scripts
   and cd $WORKDIR/containers/buildCentos7Packaging.docker
-  and docker build --pull ${IMAGE_ARGS} -t $CENTOSPACKAGINGIMAGE .
+  and docker build --pull $IMAGE_ARGS -t $CENTOSPACKAGINGIMAGE .
   and rm -f $WORKDIR/containers/buildCentos7Packaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
@@ -1384,7 +1384,7 @@ function pullCentosPackagingImage ; docker pull $CENTOSPACKAGINGIMAGE ; end
 
 function buildCppcheckImage
   pushd $WORKDIR/containers/cppcheck.docker
-  and docker build --pull ${IMAGE_ARGS} -t $CPPCHECKIMAGE .
+  and docker build --pull $IMAGE_ARGS -t $CPPCHECKIMAGE .
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1397,7 +1397,7 @@ function pullCppcheckImage ; docker pull $CPPCHECKIMAGE ; end
 
 function buildLdapImage
   pushd $WORKDIR/containers/ldap.docker
-  and docker build --pull ${IMAGE_ARGS} -t $LDAPIMAGE .
+  and docker build --pull $IMAGE_ARGS -t $LDAPIMAGE .
   or begin ; popd ; return 1 ; end
   popd
 end
