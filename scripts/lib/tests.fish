@@ -34,7 +34,7 @@ if not test -z $ASAN; and test $ASAN = "On"
   end
 
   if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
-    set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt"
+    set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt:print_suppressions=0"
   end
 
   if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
