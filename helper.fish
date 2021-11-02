@@ -138,7 +138,7 @@ function findUseARM
 
   set -l v (fgrep USE_ARM $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
-  if test "$v" != "true"
+  if test "$v" != "On"
     #echo "$f: no USE_ARM specified, using false"
     set -gx USE_ARM "false"
   else
