@@ -150,7 +150,7 @@ end
 
 function selectArchitecture
   if test "$USE_ARM" = "true" -a test (string match -ir '^arm64$|^aarch64$' "$ARCH")
-    echo "using architecture ARM""
+    echo "using architecture ARM"
     set -g FULLARGS $FULLARGS \
       -DUSE_IPO=Off
   else
