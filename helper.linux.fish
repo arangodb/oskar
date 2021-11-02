@@ -5,7 +5,7 @@ set -gx SCRIPTSDIR /scripts
 set -gx PLATFORM linux
 set -gx ARCH (uname -m)
 
-set IMAGE_ARGS "--build-arg ARCH=$ARCH"
+set IMAGE_ARGS "--build-arg ARCH="$ARCH
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
 set -gx UBUNTUBUILDIMAGE3_TAG 9
