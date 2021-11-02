@@ -1,6 +1,8 @@
 FROM golang:1.10.3-alpine
 MAINTAINER ArangoDB <info@arangodb.com>
 
+ARG ARCH "x86_64"
+
 RUN \
     apk update && \
     apk add openssl-dev python zlib-dev lz4-dev g++ bash musl-dev make gcc git docker fish sudo openssh-client
