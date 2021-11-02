@@ -132,7 +132,7 @@ function findUseARM
   test -f $f
   or begin
     #echo "Cannot find $f; make sure source is checked out"
-    set -gx USE_ARM "false"
+    set -gx USE_ARM "Off"
     return 1
   end
 
@@ -140,7 +140,7 @@ function findUseARM
 
   if test "$v" != "On"
     #echo "$f: no USE_ARM specified, using false"
-    set -gx USE_ARM "false"
+    set -gx USE_ARM "Off"
   else
     #echo "Using ARM '$v' from '$f'"
     set -gx USE_ARM "$v"
