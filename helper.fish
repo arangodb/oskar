@@ -133,7 +133,7 @@ function findUseARM
   or begin
     #echo "Cannot find $f; make sure source is checked out"
     set -gx USE_ARM "Off"
-    return 1
+    return 0
   end
 
   set -l v (fgrep USE_ARM $f | awk '{print $2}' | tr -d '"' | tr -d "'")
@@ -145,6 +145,8 @@ function findUseARM
     #echo "Using ARM '$v' from '$f'"
     set -gx USE_ARM "$v"
   end
+
+  return 0
 end
 
 if test -z "$USE_ARM" ; findUseARM ; end
