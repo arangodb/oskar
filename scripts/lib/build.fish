@@ -149,7 +149,7 @@ function shutdownCcache
 end
 
 function selectArchitecture
-  if test "$USE_ARM" = "true" -a test (string match -ir '^arm64$|^aarch64$' "$ARCH")
+  if begin test "$USE_ARM" = "true";and test (string match -ir '^arm64$|^aarch64$' "$ARCH"); end
     echo "using architecture ARM"
     set -g FULLARGS $FULLARGS \
       -DUSE_IPO=Off
