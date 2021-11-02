@@ -149,6 +149,8 @@ function shutdownCcache
 end
 
 function selectArchitecture
+  echo "USE_ARM: $USE_ARM"
+  echo "ARCH: $ARCH"
   if begin test "$USE_ARM" = "true";and test (string match -ir '^arm64$|^aarch64$' "$ARCH"); end
     echo "using architecture ARM"
     set -g FULLARGS $FULLARGS \
