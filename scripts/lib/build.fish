@@ -149,23 +149,19 @@ function shutdownCcache
 end
 
 function selectArchitecture
-  if test "$DEFAULT_ARCHITECTURE" != ""
-    echo "using architecture '$DEFAULT_ARCHITECTURE'"
-    if test "$DEFAULT_ARCHITECTURE" = "aarch64"
-      set -g FULLARGS $FULLARGS \
-        -DCMAKE_SYSTEM_PROCESSOR=aarch64 -DASM_OPTIMIZATIONS=Off -DUSE_FAIL_ON_WARNINGS=Off -DUSE_IPO=Off
-    else
+  if test "$USE_ARM" = "true" -a test (string match -ir '^arm64$|^aarch64$' "$ARCH")
+    echo "using architecture ARM""
+    set -g FULLARGS $FULLARGS \
+      -DUSE_IPO=Off
+  else
+    if test "$DEFAULT_ARCHITECTURE" != ""
+      echo "using architecture '$DEFAULT_ARCHITECTURE'"
       set -g FULLARGS $FULLARGS \
         -DTARGET_ARCHITECTURE=$DEFAULT_ARCHITECTURE
-    end
-  else
-    echo "using provided architecture '"$argv"'"
-    if test "$DEFAULT_ARCHITECTURE" = "aarch64"
-      set -g FULLARGS $FULLARGS \
-        -DCMAKE_SYSTEM_PROCESSOR=aarch64 -DASM_OPTIMIZATIONS=Off -DUSE_FAIL_ON_WARNINGS=Off -DUSE_IPO=Off
     else
+      echo "using provided architecture '"$argv"'"
       set -g FULLARGS $FULLARGS \
-      -DTARGET_ARCHITECTURE=$argv
+        -DTARGET_ARCHITECTURE=$argv
     end
   end
   return 0
