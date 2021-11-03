@@ -1,3 +1,10 @@
+# ######################################
+# `eval "docker build $ARGS ..."` is   #
+# used instead of `docker build $ARGS` #
+# due to fish problem running such     #
+# command without evaluation           #
+# ######################################
+
 set -gx INNERWORKDIR /work
 set -gx THIRDPARTY_BIN ArangoDB/build/install/usr/bin
 set -gx THIRDPARTY_SBIN ArangoDB/build/install/usr/sbin
