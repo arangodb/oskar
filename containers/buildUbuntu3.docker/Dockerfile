@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
-ARG ARCH "${ARCH}"
+ARG ARCH "x86_64"
 
 ENV COMPILER_VERSION 9
 
