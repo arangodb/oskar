@@ -1,9 +1,18 @@
+# ######################################
+# `eval "docker build $ARGS ..."` is   #
+# used instead of `docker build $ARGS` #
+# due to fish problem running such     #
+# command without evaluation           #
+# ######################################
+
 set -gx INNERWORKDIR /work
 set -gx THIRDPARTY_BIN ArangoDB/build/install/usr/bin
 set -gx THIRDPARTY_SBIN ArangoDB/build/install/usr/sbin
 set -gx SCRIPTSDIR /scripts
 set -gx PLATFORM linux
 set -gx ARCH (uname -m)
+
+set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
 set -gx UBUNTUBUILDIMAGE3_TAG 9
@@ -39,11 +48,11 @@ set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
 set -gx CENTOSPACKAGINGIMAGE_TAG 2
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
 
-set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck
+set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck-$ARCH
 set -gx CPPCHECKIMAGE_TAG 5
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
 
-set -gx LDAPIMAGE_NAME arangodb/ldap-test
+set -gx LDAPIMAGE_NAME arangodb/ldap-test-$ARCH
 set -gx LDAPIMAGE_TAG 1
 set -gx LDAPIMAGE $LDAPIMAGE_NAME:$LDAPIMAGE_TAG
 
@@ -294,6 +303,7 @@ function switchBranches
   and findRequiredCompiler
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
+  and findUseARM
 end
 
 ## #############################################################################
@@ -339,6 +349,7 @@ function buildArangoDB
   and findRequiredCompiler
   and findRequiredOpenSSL
   and findDefaultArchitecture
+  and findUseARM
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -352,6 +363,7 @@ function makeArangoDB
     findRequiredCompiler
     and findRequiredOpenSSL
     and findDefaultArchitecture
+    and findUseARM
   end
   and runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
@@ -366,6 +378,7 @@ function buildStaticArangoDB
   and findRequiredCompiler
   and findRequiredOpenSSL
   and findDefaultArchitecture
+  and findUseARM
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -379,6 +392,7 @@ function makeStaticArangoDB
     findRequiredCompiler
     and findRequiredOpenSSL
     and findDefaultArchitecture
+    and findUseARM
   end
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   set -l s $status
@@ -1234,7 +1248,7 @@ end
 function buildUbuntuBuildImage3
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntu3.docker
-  and docker build --pull -t $UBUNTUBUILDIMAGE3 .
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE3 ."
   popd
 end
 
@@ -1249,7 +1263,7 @@ function pullUbuntuBuildImage3 ; docker pull $UBUNTUBUILDIMAGE3 ; end
 function buildUbuntuBuildImage4
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntu4.docker
-  and docker build --pull -t $UBUNTUBUILDIMAGE4 .
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE4 ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1265,7 +1279,7 @@ function pullUbuntuBuildImage4 ; docker pull $UBUNTUBUILDIMAGE4 ; end
 function buildUbuntuBuildImage5
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntu5.docker
-  and docker build --pull -t $UBUNTUBUILDIMAGE5 .
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE5 ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1282,7 +1296,7 @@ function buildUbuntuPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
   and cd $WORKDIR/containers/buildUbuntuPackaging.docker
-  and docker build --pull -t $UBUNTUPACKAGINGIMAGE .
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUPACKAGINGIMAGE ."
   and rm -f $WORKDIR/containers/buildUbuntuPackaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
@@ -1295,7 +1309,7 @@ function pullUbuntuPackagingImage ; docker pull $UBUNTUPACKAGINGIMAGE ; end
 function buildAlpineBuildImage3
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildAlpine3.docker
-  and docker build --pull -t $ALPINEBUILDIMAGE3 .
+  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE3 ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1311,7 +1325,7 @@ function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
 function buildAlpineBuildImage4
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildAlpine4.docker
-  and docker build --pull -t $ALPINEBUILDIMAGE4 .
+  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE4 ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1327,7 +1341,7 @@ function pullAlpineBuildImage4 ; docker pull $ALPINEBUILDIMAGE4 ; end
 function buildAlpineBuildImage5
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildAlpine5.docker
-  and docker build --pull -t $ALPINEBUILDIMAGE5 .
+  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE5 ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1344,7 +1358,7 @@ function buildAlpineUtilsImage
   pushd $WORKDIR
   and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
   and cd $WORKDIR/containers/buildUtils.docker
-  and docker build --pull -t $ALPINEUTILSIMAGE .
+  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEUTILSIMAGE ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1361,7 +1375,7 @@ function buildCentosPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildRPMPackage.fish containers/buildCentos7Packaging.docker/scripts
   and cd $WORKDIR/containers/buildCentos7Packaging.docker
-  and docker build --pull -t $CENTOSPACKAGINGIMAGE .
+  and eval "docker build $IMAGE_ARGS --pull -t $CENTOSPACKAGINGIMAGE ."
   and rm -f $WORKDIR/containers/buildCentos7Packaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
@@ -1377,7 +1391,7 @@ function pullCentosPackagingImage ; docker pull $CENTOSPACKAGINGIMAGE ; end
 
 function buildCppcheckImage
   pushd $WORKDIR/containers/cppcheck.docker
-  and docker build --pull -t $CPPCHECKIMAGE .
+  and eval "docker build $IMAGE_ARGS --pull -t $CPPCHECKIMAGE ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1390,7 +1404,7 @@ function pullCppcheckImage ; docker pull $CPPCHECKIMAGE ; end
 
 function buildLdapImage
   pushd $WORKDIR/containers/ldap.docker
-  and docker build --pull -t $LDAPIMAGE .
+  and eval "docker build $IMAGE_ARGS --pull -t $LDAPIMAGE ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1494,6 +1508,7 @@ function runInContainer
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+             -e ARCH="$ARCH" \
              -e ASAN="$ASAN" \
              -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
              -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
@@ -1542,6 +1557,7 @@ function runInContainer
              -e TEST="$TEST" \
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
+             -e USE_ARM="$USE_ARM" \
              -e USE_CCACHE="$USE_CCACHE" \
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
@@ -1598,6 +1614,7 @@ function interactiveContainer
     -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
     -e ARANGODB_REPO="$ARANGODB_REPO" \
     -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+    -e ARCH="ARCH" \
     -e ASAN="$ASAN" \
     -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
     -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
@@ -1646,6 +1663,7 @@ function interactiveContainer
     -e TEST="$TEST" \
     -e TESTSUITE="$TESTSUITE" \
     -e UID=(id -u) \
+    -e USE_ARM="$USE_ARM" \
     -e USE_CCACHE="$USE_CCACHE" \
     -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
     -e VERBOSEBUILD="$VERBOSEBUILD" \
