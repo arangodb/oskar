@@ -1256,6 +1256,8 @@ Function switchBranches($branch_c,$branch_e)
         Pop-Location
     }
     Pop-Location
+    
+    findCompilerVersion
 }
 
 Function updateOskar
