@@ -71,6 +71,49 @@ $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
+
+Function VS2017
+{
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2017"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $global:GENERATOR = "Visual Studio 15 2017 Win64"
+    $global:GENERATORID = "v141"
+    $global:MSVS = "2017"
+}
+Function VS2019
+{
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $global:GENERATOR = "Visual Studio 16 2019"
+    $global:GENERATORID = "v142"
+    $global:MSVS = "2019"
+}
+If(-Not($global:GENERATOR))
+{
+    VS2017
+}
+
+Function findCompilerVersion
+{
+    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
+    {
+        $MSVC_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "MSVC_WINDOWS" | Select Line
+        If ($MSVC_WINDOWS)
+        {
+            $MSVC_WINDOWS -match "`"(?<version>[0-9]*)`"" | Out-Null
+
+                switch ($Matches['version'])
+                {
+                    2017 { VS2017 }
+                    2019 { VS2019 }
+                    default { VS2017 }
+                }
+            return
+        }
+    }
+
+    VS2017
+}
+
+findCompilerVersion
 $env:CLCACHE_DIR = "$INNERWORKDIR\.clcache.windows"
 $env:CMAKE_CONFIGURE_DIR = "$INNERWORKDIR\.cmake.windows"
 $env:CLCACHE_LOG = 0
@@ -612,47 +655,6 @@ Function signPackageOff
 If(-Not($SIGN))
 {
     signPackageOn
-}
-
-Function VS2017
-{
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2017"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
-    $global:GENERATOR = "Visual Studio 15 2017 Win64"
-    $global:GENERATORID = "v141"
-    $global:MSVS = "2017"
-}
-Function VS2019
-{
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
-    $global:GENERATOR = "Visual Studio 16 2019"
-    $global:GENERATORID = "v142"
-    $global:MSVS = "2019"
-}
-If(-Not($global:GENERATOR))
-{
-    VS2017
-}
-
-Function findCompilerVersion
-{
-    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
-    {
-        $MSVC_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "MSVC_WINDOWS" | Select Line
-        If ($MSVC_WINDOWS)
-        {
-            $MSVC_WINDOWS -match "`"(?<version>[0-9]*)`"" | Out-Null
-
-                switch ($Matches['version'])
-                {
-                    2017 { VS2017 }
-                    2019 { VS2019 }
-                    default { VS2017 }
-                }
-            return
-        }
-    }
-
-    VS2017
 }
 
 Function maintainerOn
