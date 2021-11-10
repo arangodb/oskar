@@ -175,6 +175,7 @@ function switchBranches
   runLocal $SCRIPTSDIR/switchBranches.fish $argv
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
+  and findUseARM
 end
 
 function clearWorkdir
@@ -185,6 +186,7 @@ function buildArangoDB
   checkoutIfNeeded
   and findRequiredOpenSSL
   and findDefaultArchitecture
+  and findUseARM
   and findRequiredMinMacOS
   and runLocal $SCRIPTSDIR/buildMacOs.fish $argv
   set -l s $status
@@ -197,6 +199,7 @@ end
 function makeArangoDB
   findRequiredOpenSSL
   and findDefaultArchitecture
+  and findUseARM
   and findRequiredMinMacOS
   and runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status

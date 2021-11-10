@@ -18,6 +18,7 @@ and if test -z "$DOCKER_IMAGE"
   and releaseMode
   and pingDetails
   and showConfig
+  and set -xg NOSTRIP 1
   and buildStaticArangoDB
 end
 

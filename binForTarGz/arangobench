@@ -1,5 +1,5 @@
 #!/bin/sh
-if which realpath > /dev/null; then
+if command -v realpath > /dev/null; then
   true
 else 
   realpath() {
@@ -23,7 +23,6 @@ executable=$installation/usr/bin/$program
 if [ -x "$executable" ] ; then
   exec "$executable" \
        --configuration none \
-       --server.endpoint tcp://127.0.0.1:8529 \
        --server.authentication true \
        "$@"
 fi

@@ -1,5 +1,7 @@
-FROM alpine:3.10
+FROM alpine:3.14
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
+
+ARG ARCH "x86_64"
 
 COPY ./tools/* /tools/
 

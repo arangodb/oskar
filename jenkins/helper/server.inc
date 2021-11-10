@@ -57,6 +57,11 @@ DOCKER_CMD="docker run --rm --hostname localhost --cap-add SYS_NICE --name $ARAN
 STARTER_CMD="arangodb --starter.address localhost --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun ${MMFILES_DEPRECATED_OPTION}"
 STARTER_MODE=""
 
+if [ "$USE_TEST_DOCKER" == "true" ]
+then 
+    STARTER_CMD="$STARTER_CMD --all.javascript.allow-admin-execute=true"
+fi
+    
 if [ "$ARANGO_AUTH" == "auth" ]; then
   JWTDIR="`pwd`/jwtsecret"
   rm -rf $JWTDIR

@@ -7,13 +7,13 @@ function lockDirectory
     echo $pid > LOCK.$pid
     and while true
       # Remove a stale lock if it is found:
-      if set -l pidfound (cat LOCK ^/dev/null)
+      if set -l pidfound (cat LOCK > /dev/null)
         if not ps ax -o pid | grep '^ *'"$pidfound"'$' > /dev/null
           rm LOCK LOCK.$pidfound
           and echo Have removed stale lock.
         end
       end
-      and if ln LOCK.$pid LOCK ^/dev/null
+      and if ln LOCK.$pid LOCK > /dev/null
         break
       end
       and echo -n Directory is locked, waiting...
@@ -130,6 +130,31 @@ function findDefaultArchitecture
 end
 
 test -z "$DEFAULT_ARCHITECTURE"; and findDefaultArchitecture
+
+function findUseARM
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+
+  test -f $f
+  or begin
+    #echo "Cannot find $f; make sure source is checked out"
+    set -gx USE_ARM "Off"
+    return 0
+  end
+
+  set -l v (fgrep USE_ARM $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" != "On"
+    #echo "$f: no USE_ARM specified, using false"
+    set -gx USE_ARM "Off"
+  else
+    #echo "Using ARM '$v' from '$f'"
+    set -gx USE_ARM "$v"
+  end
+
+  return 0
+end
+
+if test -z "$USE_ARM" ; findUseARM ; end
 
 function isGCE
   switch (hostname)
@@ -450,7 +475,7 @@ function setNightlyRelease
   and if test -n "$ARANGODB_VERSION_RELEASE_NUMBER"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION.$ARANGODB_VERSION_RELEASE_NUMBER"; end
   and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/ARANGO-VERSION
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
-  and ls -1 $WORKDIR/work/sourceInfo.* | xargs sed -i$suffix -E "s/(\"?VERSION\"?: ?\"?)([0-9a-z.-]+)/\1$ARANGODB_FULL_VERSION/g"
+  and sed -i$suffix -E "s/(\"?VERSION\"?: ?\"?)([0-9a-z.-]+)/\1$ARANGODB_FULL_VERSION/g" $WORKDIR/work/sourceInfo.*
   and if test -n "$suffix"; rm -f $WORKDIR/work/sourceInfo*$suffix; end
 end
 
@@ -1289,9 +1314,10 @@ function showConfig
   printf $fmt3 'ASan mode'  $ASAN_MODE              '(asanModeAULSan/TSan)'
   printf $fmt3 'Coverage'   $COVERAGE               '(coverageOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE              '(debugMode/releaseMode)'
-  printf $fmt3 'Compiler'   "$compiler_version"     '(compiler x.y.z)'
-  printf $fmt3 'OpenSSL'    "$openssl_version"      '(opensslVersion x.y.z)'
-  printf $fmt3 'CPU'        "$DEFAULT_ARCHITECTURE" '(defaultArchitecture cpuname)'
+  printf $fmt3 'Compiler'   $compiler_version       '(compiler x.y.z)'
+  printf $fmt3 'OpenSSL'    $openssl_version        '(opensslVersion x.y.z)'
+  printf $fmt3 'CPU'        $DEFAULT_ARCHITECTURE   '(defaultArchitecture cpuname)'
+  printf $fmt3 'Use ARM'    $USE_ARM                '(ARM true or false)'
   printf $fmt3 'Use rclone' $USE_RCLONE             '(rclone true or false)'
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION      '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
@@ -1625,7 +1651,7 @@ function checkMacros
 end
 
 ## #############################################################################
-## LOG ID
+## CHECK DUPLICATE LOG ID
 ## #############################################################################
 
 function checkLogId
@@ -1634,7 +1660,7 @@ function checkLogId
   or begin popd; return 1; end
 
   set -l ids (find lib arangod arangosh enterprise -name "*.cpp" -o -name "*.h" \
-    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\)("[^\"]*"' \
+    | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\|CTX\|CTX_IF\)("[^\"]*"' \
     | grep -v 'LOG_DEVEL' \
     | sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
 
@@ -1723,6 +1749,7 @@ function clearResults
   pushd $WORKDIR/work
   and for f in testreport* ; rm -f $f ; end
   and rm -f test.log buildArangoDB.log cmakeArangoDB.log
+  and find . -maxdepth 1 -name '*.rpm' -o -name '*.deb' -o -name '*.dmg' -o -name '*.tar.gz' -o -name '*.zip' | xargs rm -f
   or begin ; popd ; return 1 ; end
   popd
 end

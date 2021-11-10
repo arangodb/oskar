@@ -71,6 +71,49 @@ $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
+
+Function VS2017
+{
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2017"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $global:GENERATOR = "Visual Studio 15 2017 Win64"
+    $global:GENERATORID = "v141"
+    $global:MSVS = "2017"
+}
+Function VS2019
+{
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $global:GENERATOR = "Visual Studio 16 2019"
+    $global:GENERATORID = "v142"
+    $global:MSVS = "2019"
+}
+If(-Not($global:GENERATOR))
+{
+    VS2017
+}
+
+Function findCompilerVersion
+{
+    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
+    {
+        $MSVC_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "MSVC_WINDOWS" | Select Line
+        If ($MSVC_WINDOWS)
+        {
+            $MSVC_WINDOWS -match "`"(?<version>[0-9]*)`"" | Out-Null
+
+                switch ($Matches['version'])
+                {
+                    2017 { VS2017 }
+                    2019 { VS2019 }
+                    default { VS2017 }
+                }
+            return
+        }
+    }
+
+    VS2017
+}
+
+findCompilerVersion
 $env:CLCACHE_DIR = "$INNERWORKDIR\.clcache.windows"
 $env:CMAKE_CONFIGURE_DIR = "$INNERWORKDIR\.cmake.windows"
 $env:CLCACHE_LOG = 0
@@ -159,6 +202,11 @@ Function 7unzip($zip)
     proc -process "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
 }
 
+Function isGCE
+{
+    return "$env:COMPUTERNAME" -eq "JENKINS-WIN-GCE"
+}
+
 Function hostKey
 {
     If(Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
@@ -166,7 +214,10 @@ Function hostKey
         Remove-Item -Force "$HOME\.ssh\known_hosts"
     }
     proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
-    proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false -priority "Normal"
+    If (-not (isGCE))
+    {
+        proc -process "ssh" -argument "-o StrictHostKeyChecking=no root@symbol.arangodb.biz exit" -logfile $false -priority "Normal"
+    }
 }
 
 Function clearWER
@@ -198,9 +249,9 @@ Function oskarOpenSSL
     $global:USE_OSKAR_OPENSSL = "On"
     findCompilerVersion
     findRequiredOpenSSL
-    $global:OPENSSL_PATH = "${global:INNERWORKDIR}\OpenSSL\${OPENSSL_VERSION}"
+    $global:OPENSSL_PATH = $(If (isGCE) {"C:"} Else {"${global:INNERWORKDIR}"}) + "\OpenSSL\${OPENSSL_VERSION}"
     Write-Host "Use OpenSSL within oskar: build ${OPENSSL_VERSION} if not present in ${OPENSSL_PATH}"
-    $global:ok = (checkOpenSSL $global:INNERWORKDIR $OPENSSL_VERSION $MSVS ${OPENSSL_MODES} ${OPENSSL_TYPES} $true)
+    $global:ok = (checkOpenSSL $(If (isGCE) {"C:"} Else {"${global:INNERWORKDIR}"}) $OPENSSL_VERSION $MSVS ${OPENSSL_MODES} ${OPENSSL_TYPES} $true)
     If ($global:ok)
     {
       Write-Host "Set OPENSSL_ROOT_DIR via environment variable to $OPENSSL_PATH"
@@ -606,47 +657,6 @@ If(-Not($SIGN))
     signPackageOn
 }
 
-Function VS2017
-{
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2017"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
-    $global:GENERATOR = "Visual Studio 15 2017 Win64"
-    $global:GENERATORID = "v141"
-    $global:MSVS = "2017"
-}
-Function VS2019
-{
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
-    $global:GENERATOR = "Visual Studio 16 2019"
-    $global:GENERATORID = "v142"
-    $global:MSVS = "2019"
-}
-If(-Not($global:GENERATOR))
-{
-    VS2017
-}
-
-Function findCompilerVersion
-{
-    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
-    {
-        $MSVC_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "MSVC_WINDOWS" | Select Line
-        If ($MSVC_WINDOWS)
-        {
-            $MSVC_WINDOWS -match "`"(?<version>[0-9]*)`"" | Out-Null
-
-                switch ($Matches['version'])
-                {
-                    2017 { VS2017 }
-                    2019 { VS2019 }
-                    default { VS2017 }
-                }
-            return
-        }
-    }
-
-    VS2017
-}
-
 Function maintainerOn
 {
     $global:MAINTAINER = "On"
@@ -973,7 +983,7 @@ Function downloadStarter
 {
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "STARTER_REV")[0] -match '([0-9]+.[0-9]+.[0-9]+[\-]?[0-9a-z]*[\-]?[0-9]?)|latest' | Out-Null
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "STARTER_REV").Line -match '([0-9]+.[0-9]+.[0-9]+[\-]?[0-9a-z]*[\-]?[0-9]?)|latest' | Out-Null
     $STARTER_REV = $Matches[0]
     If($STARTER_REV -eq "latest")
     {
@@ -992,7 +1002,7 @@ Function downloadSyncer
     {
         Write-Host "Need  environment variable set!"
     }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV")[0] -match '([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match '([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
     $SYNCER_REV = $Matches[0]
     If($SYNCER_REV -eq "latest")
     {
@@ -1118,6 +1128,35 @@ Function checkoutIfNeeded
     checkoutUpgradeDataTests
 }
 
+Function convertSItoJSON
+{
+    If(Test-Path -PathType Leaf -Path $INNERWORKDIR\sourceInfo.log)
+    {
+        $fields = @()
+        ForEach($line in Get-Content $INNERWORKDIR\sourceInfo.log)
+        {
+            $var = $line.split(":")[0]
+            switch -Regex ($var)
+            {
+                'VERSION|Community|Enterprise'
+                {
+                    $val = $line.split(" ")[1]
+                    If (-Not [string]::IsNullOrEmpty($val))
+                    {
+                        $fields += "  `"$var`":`"$val`""
+                    }
+                }
+            }
+        }
+
+        If(-Not [string]::IsNullOrEmpty($fields))
+        {
+            Write-Host "Convert $INNERWORKDIR\sourceInfo.log to $INNERWORKDIR\sourceInfo.json"
+            Write-Output "{`n"($fields -join ',' + [Environment]::NewLine)"`n}" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.json" -NoNewLine
+        }
+    }
+}
+
 Function switchBranches($branch_c,$branch_e)
 {
     $branch_c = $branch_c.ToString()
@@ -1162,7 +1201,12 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($global:ok)
     {
-        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File "$global:INNERWORKDIR\sourceInfo.log"
+        Write-Output "VERSION: $(Get-Content $INNERWORKDIR/ArangoDB/ARANGO-VERSION)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log"
+        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
+    }
+    Else
+    {
+        Write-Output "Failed to checkout Community branch!"
     }
     If($ENTERPRISEEDITION -eq "On")
     {
@@ -1204,11 +1248,18 @@ Function switchBranches($branch_c,$branch_e)
         }
         If ($global:ok)
         {
-            Write-Output "Enterprise: $(git rev-parse --verify HEAD)" | Out-File "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
+            Write-Output "Enterprise: $(git rev-parse --verify HEAD)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
+            convertSItoJSON
+        }
+        Else
+        {
+            Write-Output "Failed to checkout Enterprise branch!"
         }
         Pop-Location
     }
     Pop-Location
+    
+    findCompilerVersion
 }
 
 Function updateOskar
@@ -1247,6 +1298,14 @@ Function clearResults
     If(Test-Path -PathType Leaf -Path $INNERWORKDIR\testfailures.txt)
     {
         Remove-Item -Force $INNERWORKDIR\testfailures.txt
+    }
+    ForEach($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.exe"))
+    {
+        Remove-Item -Force $INNERWORKDIR\$file
+    }
+    ForEach($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.zip"))
+    {
+        Remove-Item -Force $INNERWORKDIR\$file
     }
     comm
 }
@@ -1445,7 +1504,7 @@ Function buildWindows
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
-    Remove-Item -Force "${global:INNERWORKDIR}\*.pdb" -ErrorAction SilentlyContinue
+    #Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.zip" -ErrorAction SilentlyContinue
     proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
     If($global:ok)
     {
@@ -1520,6 +1579,7 @@ Function setNightlyRelease
 {
     checkoutIfNeeded
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_TYPE .*', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly")' | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
+    (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_NUMBER.*', ('set(ARANGODB_VERSION_RELEASE_NUMBER "' + (Get-Date).ToString("yyyyMMdd") + '")') | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
 }
 
 Function movePackagesToWorkdir
@@ -1543,11 +1603,18 @@ Function preserveSymbolsToWorkdir
     {
         Set-Location "$global:ARANGODIR\build\bin\$BUILDMODE"
         $suffix = If ($ENTERPRISEEDITION -eq "On") {"e"} Else {""}
-        Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
+        $ARANGODB_PDB_PACKAGE = "ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
+        If ("$global:ARANGODB_VERSION_RELEASE_TYPE" -eq "nightly")
+        {
+            $ARANGODB_PDB_PACKAGE = $ARANGODB_PDB_PACKAGE -replace "nightly.*pdb.zip", "nightly.pdb.zip"
+        }
+        Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
         If (Test-Path -Path "$global:ARANGODIR\build\bin\$BUILDMODE\*.pdb")
         {
-            Remove-Item -Force "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip" -ErrorAction SilentlyContinue
-            7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"; comm
+            Write-Host "Remove existing ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
+            Remove-Item -Force "${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE" -ErrorAction SilentlyContinue
+            Write-Host "Save *.pdb to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
+            7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"; comm
         }
         Else
         {
@@ -1669,10 +1736,11 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    If(Test-Path -PathType Leaf "$INNERWORKDIR\sourceInfo.log")
+    Write-Host "sourceInfo* ..."
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "sourceInfo*" -File))
     {
-        Write-Host "Move $INNERWORKDIR\sourceInfo.log"
-        Move-Item -Force -Path "$INNERWORKDIR\sourceInfo.log" -Destination $ENV:WORKSPACE; comm
+        Write-Host "Move $INNERWORKDIR\$file"
+        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "package* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "package*"))
@@ -1683,8 +1751,8 @@ Function moveResultsToWorkspace
     
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes -eq "true"))
     {
-        Write-Host "ArangoDB3*pdb.zip ..."
-        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*pdb.zip"))
+        Write-Host "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.zip ..."
+        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.zip"))
         {
             Write-Host "Move $INNERWORKDIR\$file"
             Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 

@@ -49,6 +49,7 @@ and gcovr --exclude-throw-branches --root /work/ArangoDB \
         -e /work/ArangoDB/tests \
         -e include/jemalloc/internal \
         -o coverage/coverage.xml \
+        --exclude-lines-by-pattern "TRI_ASSERT" \
         --print-summary \
         /work/combined/result > /work/coverage/summary.txt
 and cat coverage/coverage.xml \
