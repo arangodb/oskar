@@ -152,7 +152,7 @@ function selectArchitecture
   if begin test "$USE_ARM" = "On";and test (string match -ir '^arm64$|^aarch64$' "$ARCH"); end
     echo "using architecture ARM"
     set -g FULLARGS $FULLARGS \
-      -DUSE_IPO=Off -DCMAKE_SYSTEM_PROCESSOR="aarch64" -DASM_OPTIMIZATIONS=Off
+      -DCMAKE_SYSTEM_PROCESSOR="aarch64" -DASM_OPTIMIZATIONS=Off
   else
     if test "$DEFAULT_ARCHITECTURE" != ""
       echo "using architecture '$DEFAULT_ARCHITECTURE'"
