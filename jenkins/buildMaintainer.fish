@@ -5,7 +5,7 @@ cleanPrepareLockUpdateClear
 and eval $EDITION
 and rocksdb
 and cluster
-and maintainerOff
+and maintainerOn
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and showConfig
 and buildStaticArangoDB
