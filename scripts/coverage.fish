@@ -57,7 +57,7 @@ and cat coverage/coverage.xml \
       > coverage/coverage.xml.tmp
 and mv coverage/coverage.xml.tmp coverage/coverage.xml
 and for d in lib arangosh client-tools arangod enterprise/Enterprise
-  if test -d d
+  if test -d $d
   	cp -a /work/ArangoDB/$d coverage/$d
   end
 end
