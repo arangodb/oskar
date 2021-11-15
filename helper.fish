@@ -1628,14 +1628,16 @@ function checkMacros
   and pushd $WORKDIR/work/ArangoDB
   or begin popd; return 1; end
 
-  if test -d client-tools
-  	set -l wrong (find lib arangod client-tools enterprise tests -name "*.cpp" -o -name "*.h" \
-    	| xargs grep -P -n '# *ifdef +(WIN32|(TRI_ENABLE_|ARANGODB_USE_|USE_)MAINTAINER_MODE)') 
 
-  else 
-  	set -l wrong (find lib arangod arangosh enterprise tests -name "*.cpp" -o -name "*.h" \
-    	| xargs grep -P -n '# *ifdef +(WIN32|(TRI_ENABLE_|ARANGODB_USE_|USE_)MAINTAINER_MODE)') 
+  set dirName ""
+  if test -d client-tools
+    set dirName "client-tools"
+  else
+    set dirName "arangosh"
   end
+  set -l wrong (find lib arangod $dirName enterprise tests -name "*.cpp" -o -name "*.h" \
+  | xargs grep -P -n '# *ifdef +(WIN32|(TRI_ENABLE_|ARANGODB_USE_|USE_)MAINTAINER_MODE)') 
+
   set -l s 0
 
   if test "$wrong" != ""
@@ -1658,18 +1660,16 @@ function checkLogId
   and pushd $WORKDIR/work/ArangoDB
   or begin popd; return 1; end
 
-  if test -d client-tools
-  	set -l ids (find lib arangod client-tools enterprise -name "*.cpp" -o -name "*.h" \
-    	| xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\|CTX\|CTX_IF\)("[^\"]*"' \
-    	| grep -v 'LOG_DEVEL' \
-    	| sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
-  else
-	set -l ids (find lib arangod arangosh enterprise -name "*.cpp" -o -name "*.h" \
-    	| xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\|CTX\|CTX_IF\)("[^\"]*"' \
-    	| grep -v 'LOG_DEVEL' \
-    	| sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
-
+  set dirName ""
+  if test -d client-tools 
+    set dirName "client-tools"
+  else 
+    set dirName "arangosh"
   end
+  set -l ids (find lib arangod $dirName enterprise -name "*.cpp" -o -name "*.h" \
+  | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\|CTX\|CTX_IF\)("[^\"]*"' \
+  | grep -v 'LOG_DEVEL' \
+  | sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
   set -l duplicate (echo $ids | tr " " "\n" | sort | uniq -d)
 
   set -l s 0
