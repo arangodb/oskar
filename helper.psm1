@@ -556,6 +556,7 @@ Function showConfig
     Write-Host "Failure tests  : "$USEFAILURETESTS
     Write-Host "Keep build     : "$KEEPBUILD
     Write-Host "PDBs workspace : "$PDBS_TO_WORKSPACE
+    Write-Host "PDBs archive:  " "$PDBS_ARCHIVE_TYPE
     Write-Host "DMP workspace  : "$ENABLE_REPORT_DUMPS
     Write-Host "Use rclone     : "$USE_RCLONE
     Write-Host " "
@@ -852,6 +853,21 @@ Function setPDBsToWorkspaceAlways
 If(-Not($WORKSPACE_PDB_CRASH_ONLY))
 {
     $global:PDBS_TO_WORKSPACE = "always"
+}
+
+Function setPDBsArchiveZip
+{
+    $global:PDBS_ARCHIVE_TYPE = "zip"
+}
+
+Function setPDBsArchive7z
+{
+    $global:PDBS_ARCHIVE_TYPE = "7z"
+}
+
+If(-Not($PDBS_ARCHIVE_TYPE))
+{
+    $global:PDBS_ARCHIVE_TYPE = "zip"
 }
 
 Function disableDumpsToReport
@@ -1504,7 +1520,7 @@ Function buildWindows
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
-    #Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.zip" -ErrorAction SilentlyContinue
+    #Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.${global:PDBS_ARCHIVE_TYPE}" -ErrorAction SilentlyContinue
     proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
     If($global:ok)
     {
@@ -1603,10 +1619,10 @@ Function preserveSymbolsToWorkdir
     {
         Set-Location "$global:ARANGODIR\build\bin\$BUILDMODE"
         $suffix = If ($ENTERPRISEEDITION -eq "On") {"e"} Else {""}
-        $ARANGODB_PDB_PACKAGE = "ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.zip"
+        $ARANGODB_PDB_PACKAGE = "ArangoDB3${suffix}-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE}"
         If ("$global:ARANGODB_VERSION_RELEASE_TYPE" -eq "nightly")
         {
-            $ARANGODB_PDB_PACKAGE = $ARANGODB_PDB_PACKAGE -replace "nightly.*pdb.zip", "nightly.pdb.zip"
+            $ARANGODB_PDB_PACKAGE = $ARANGODB_PDB_PACKAGE -replace "nightly.*pdb.${global:PDBS_ARCHIVE_TYPE}", "nightly.pdb.${global:PDBS_ARCHIVE_TYPE}"
         }
         Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
         If (Test-Path -Path "$global:ARANGODIR\build\bin\$BUILDMODE\*.pdb")
@@ -1643,7 +1659,7 @@ Function buildArangoDB
         if($global:ok)
         {
             Write-Host "Build OK."
-#           preserveSymbolsToWorkdir
+            preserveSymbolsToWorkdir
             if($SKIPPACKAGING -eq "Off")
             {
                 packageWindows
@@ -1751,9 +1767,8 @@ Function moveResultsToWorkspace
     
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes -eq "true"))
     {
-        preserveSymbolsToWorkdir
-        Write-Host "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.zip ..."
-        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.zip"))
+        Write-Host "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE} ..."
+        ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE}"))
         {
             Write-Host "Move $INNERWORKDIR\$file"
             Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 
@@ -1903,6 +1918,7 @@ Function oskar8
 
 Function makeCommunityRelease
 {
+    setPDBsArchiveZip
     maintainerOff
     staticExecutablesOn
     skipPackagingOff
@@ -1917,6 +1933,7 @@ Function makeCommunityRelease
 
 Function makeEnterpriseRelease
 {
+    setPDBsArchiveZip
     maintainerOff
     staticExecutablesOn
     skipPackagingOff
