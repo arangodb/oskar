@@ -1643,7 +1643,7 @@ Function buildArangoDB
         if($global:ok)
         {
             Write-Host "Build OK."
-            preserveSymbolsToWorkdir
+#           preserveSymbolsToWorkdir
             if($SKIPPACKAGING -eq "Off")
             {
                 packageWindows
@@ -1751,6 +1751,7 @@ Function moveResultsToWorkspace
     
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes -eq "true"))
     {
+        preserveSymbolsToWorkdir
         Write-Host "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.zip ..."
         ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.zip"))
         {
@@ -1774,11 +1775,11 @@ Function moveResultsToWorkspace
             Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm 
         }
     }
-    Write-Host "testfailures.log"
-    If(Test-Path -PathType Leaf "$INNERWORKDIR\testfailures.log")
+    Write-Host "testfailures.txt"
+    If(Test-Path -PathType Leaf "$INNERWORKDIR\testfailures.txt")
     {
-        Write-Host "Move $INNERWORKDIR\testfailures.log"
-        Move-Item -Force -Path "$INNERWORKDIR\testfailures.log" -Destination $ENV:WORKSPACE; comm 
+        Write-Host "Move $INNERWORKDIR\testfailures.txt"
+        Move-Item -Force -Path "$INNERWORKDIR\testfailures.txt" -Destination $ENV:WORKSPACE; comm 
     }
 }
 

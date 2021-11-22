@@ -65,50 +65,50 @@ Function createReport
     $global:result | Add-Content "$env:TMP\testProtocol.txt"
     If($global:ENABLE_REPORT_DUMPS -eq "on" -and (Get-ChildItem -Path "$global:COREDIR" -Filter "arango*.dmp" -Recurse -ErrorAction Continue -Force))
     {
-        Write-Host "7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe "-DestinationPath "$INNERWORKDIR\crashreport-$date.zip
-        7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe" -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
+        Write-Host "7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe "-DestinationPath "$INNERWORKDIR\crashreport-$date.7z
+        7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe" -DestinationPath "$INNERWORKDIR\crashreport-$date.7z"
         ForEach($core in (Get-ChildItem -Path "$global:COREDIR" -Filter "arango*.dmp" -Recurse -ErrorAction SilentlyContinue))
         {
-            Write-Host "7zip -Path $($core.FullName) -DestinationPath `"$INNERWORKDIR\crashreport-$date.zip`""   
-            7zip -Path $($core.FullName) -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
+            Write-Host "7zip -Path $($core.FullName) -DestinationPath `"$INNERWORKDIR\crashreport-$date.7z`""   
+            7zip -Path $($core.FullName) -DestinationPath "$INNERWORKDIR\crashreport-$date.7z"
             Write-Host "Remove-Item $($core.FullName)"
             Remove-Item $($core.FullName)
         }
         ForEach($pdb in (Get-ChildItem -Path "$global:ARANGODIR\build\bin\$BUILDMODE\" -Filter "arango*.pdb" -Recurse -ErrorAction SilentlyContinue))
         {
-            Write-Host "7zip -Path $($pdb.FullName) -DestinationPath `"$INNERWORKDIR\crashreport-$date.zip`""
-            7zip -Path $($pdb.FullName) -DestinationPath "$INNERWORKDIR\crashreport-$date.zip"
+            Write-Host "7zip -Path $($pdb.FullName) -DestinationPath `"$INNERWORKDIR\crashreport-$date.7z`""
+            7zip -Path $($pdb.FullName) -DestinationPath "$INNERWORKDIR\crashreport-$date.7z"
         }
     }
-    If(Test-Path -PathType Leaf -Path "$global:ARANGODIR\innerlogs.zip")
+    If(Test-Path -PathType Leaf -Path "$global:ARANGODIR\innerlogs.7z")
     {
-        Remove-Item -Force "$global:ARANGODIR\innerlogs.zip"
+        Remove-Item -Force "$global:ARANGODIR\innerlogs.7z"
     }
-    Write-Host "7zip -Path `"$env:TMP\`" -DestinationPath `"$global:ARANGODIR\innerlogs.zip`""
-    7zip -Path "$env:TMP\" -DestinationPath "$global:ARANGODIR\innerlogs.zip"
+    Write-Host "7zip -Path `"$env:TMP\`" -DestinationPath `"$global:ARANGODIR\innerlogs.7z`""
+    7zip -Path "$env:TMP\" -DestinationPath "$global:ARANGODIR\innerlogs.7z"
     ForEach($log in $(Get-ChildItem -Path $global:ARANGODIR -Filter "*.log"))
     {
-        Write-Host "7zip -Path $($log.FullName)  -DestinationPath `"$INNERWORKDIR\testreport-$date.zip`""
-        7zip -Path $($log.FullName)  -DestinationPath "$INNERWORKDIR\testreport-$date.zip"
+        Write-Host "7zip -Path $($log.FullName)  -DestinationPath `"$INNERWORKDIR\testreport-$date.7z`""
+        7zip -Path $($log.FullName) -DestinationPath "$INNERWORKDIR\testreport-$date.7z"
     }
-    ForEach($archive in $(Get-ChildItem -Path $global:ARANGODIR -Filter "*.zip"))
+    ForEach($archive in $(Get-ChildItem -Path $global:ARANGODIR -Filter "*.7z"))
     {
-        Write-Host "7zip -Path $($archive.FullName) -DestinationPath `"$INNERWORKDIR\testreport-$date.zip`""
-        7zip -Path $($archive.FullName) -DestinationPath "$INNERWORKDIR\testreport-$date.zip"
+        Write-Host "7zip -Path $($archive.FullName) -DestinationPath `"$INNERWORKDIR\testreport-$date.7z`""
+        7zip -Path $($archive.FullName) -DestinationPath "$INNERWORKDIR\testreport-$date.7z"
     }
-    Write-Host "7zip -Path $env:TMP\testProtocol.txt -DestinationPath `"$INNERWORKDIR\testreport-$date.zip`""
-    7zip -Path "$env:TMP\testProtocol.txt" -DestinationPath "$INNERWORKDIR\testreport-$date.zip"
+    Write-Host "7zip -Path $env:TMP\testProtocol.txt -DestinationPath `"$INNERWORKDIR\testreport-$date.7z`""
+    7zip -Path "$env:TMP\testProtocol.txt" -DestinationPath "$INNERWORKDIR\testreport-$date.7z"
 
     log "$date $TESTSUITE $global:result M:$MAINTAINER $BUILDMODE E:$ENTERPRISEEDITION $STORAGEENGINE",$global:repoState,$global:repoStateEnterprise,$badtests
-    If(Test-Path -PathType Leaf -Path "$INNERWORKDIR\testfailures.log")
+    If(Test-Path -PathType Leaf -Path "$INNERWORKDIR\testfailures.txt")
     {
-        Remove-Item -Force "$INNERWORKDIR\testfailures.log"
+        Remove-Item -Force "$INNERWORKDIR\testfailures.txt"
     }
 
-    $global:oskarErrorMessage | Add-Content "$INNERWORKDIR\testfailures.log"
+    $global:oskarErrorMessage | Add-Content "$INNERWORKDIR\testfailures.txt"
     ForEach($file in (Get-ChildItem -Path $env:TMP -Filter "testfailures.txt" -Recurse).FullName)
     {
-        Get-Content $file | Add-Content "$INNERWORKDIR\testfailures.log"; comm
+        Get-Content $file | Add-Content "$INNERWORKDIR\testfailures.txt"; comm
     }
 }
 
