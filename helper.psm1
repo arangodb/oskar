@@ -556,7 +556,7 @@ Function showConfig
     Write-Host "Failure tests  : "$USEFAILURETESTS
     Write-Host "Keep build     : "$KEEPBUILD
     Write-Host "PDBs workspace : "$PDBS_TO_WORKSPACE
-    Write-Host "PDBs archive:  " "$PDBS_ARCHIVE_TYPE
+    Write-Host "PDBs archive:  : "$PDBS_ARCHIVE_TYPE
     Write-Host "DMP workspace  : "$ENABLE_REPORT_DUMPS
     Write-Host "Use rclone     : "$USE_RCLONE
     Write-Host " "
