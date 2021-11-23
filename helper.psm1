@@ -1330,14 +1330,14 @@ Function clearResults
 Function clearWorkdir
 {
     $Excludes = [System.Collections.ArrayList]@(
-        "$global:ARANGODIR*" | split-path -leaf,
-        "$env:TMP*" | split-path -leaf,
-        "$env:CLCACHE_DIR*" | split-path -leaf,
-        "$env:CMAKE_CONFIGURE_DIR*" | split-path -leaf        
+        ("$global:ARANGODIR*" | split-path -leaf),
+        ("$env:TMP*" | split-path -leaf),
+        ("$env:CLCACHE_DIR*" | split-path -leaf),
+        ("$env:CMAKE_CONFIGURE_DIR*" | split-path -leaf)        
     )
     If ((isGCE) -eq $False)
     {
-        $Excludes += "${global:INNERWORKDIR}\OpenSSL*" | split-path -leaf
+        $Excludes += ("${global:INNERWORKDIR}\OpenSSL*" | split-path -leaf)
     }
     ForEach ($item in $(Get-ChildItem -Path $INNERWORKDIR -Exclude $Excludes))
     {
