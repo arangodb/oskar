@@ -559,6 +559,7 @@ Function showConfig
     Write-Host "PDBs archive:  : "$PDBS_ARCHIVE_TYPE
     Write-Host "DMP workspace  : "$ENABLE_REPORT_DUMPS
     Write-Host "Use rclone     : "$USE_RCLONE
+    Write-Host "Sign package   : "$SIGN
     Write-Host " "
     Write-Host "Test Configuration"
     Write-Host "Storage engine : "$STORAGEENGINE
@@ -1584,7 +1585,7 @@ Function signWindows
     ForEach ($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
         Write-Host "Sign: signtool.exe sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
-        proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign" -priority "Normal"
+        proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
     }
     Pop-Location
 }
@@ -1695,7 +1696,7 @@ Function buildArangoDB
                         }
                         Else
                         {
-                            Write-Host "Sign error, see $INNERWORKDIR\sign.* for details."
+                            Write-Host "Sign error, see $INNERWORKDIR\*-sign.* for details."
                             movePackagesToWorkdir
                             $global:ok = $false
                         }
@@ -1784,8 +1785,8 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    Write-Host "sign* ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "sign*"))
+    Write-Host "*-sign* ..."
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*-sign*"))
     {
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
@@ -1961,10 +1962,6 @@ Function makeCommunityRelease
     signPackageOn
     community
     buildArangoDB
-    If ($global:ok) 
-    {
-        storeSymbols
-    }
 }
 
 Function makeEnterpriseRelease
@@ -1976,10 +1973,6 @@ Function makeEnterpriseRelease
     signPackageOn
     enterprise
     buildArangoDB
-    If ($global:ok) 
-    {
-        storeSymbols
-    }
 }
 
 Function makeRelease

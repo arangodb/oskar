@@ -78,14 +78,12 @@ Function copyPackagesToStage2
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok ) 
 {
-    clearWorkdir
     setNightlyRelease
     makeRelease
 }
 $s = $global:ok
 If ($global:ok -And $env:COPY_TO_STAGE2 -eq $true) 
 {
-    storeSymbols
     copyPackagesToStage2
     $s = $global:ok
 }
