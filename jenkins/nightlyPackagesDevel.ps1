@@ -4,8 +4,10 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 . "$pwd\prepareOskar.ps1"
 
 switchBranches "devel" "devel"
+
 If ($global:ok) 
 {
+    clearWorkdir
     makeRelease
 }
 $s = $global:ok

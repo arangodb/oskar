@@ -8,7 +8,7 @@ Function showLog
 
 Function log([array]$log)
 {
-    ForEach($l in $log)
+    ForEach ($l in $log)
     {
         Write-Host $l
         $l | Add-Content "$INNERWORKDIR\test.log"
@@ -22,7 +22,7 @@ Function createReport
     $date | Add-Content "$env:TMP\testProtocol.txt"
     $global:badtests = $null
     new-item $env:TMP\oskar-junit-report -itemtype directory
-    ForEach($dir in (Get-ChildItem -Path $env:TMP  -Directory -Filter "*.out"))
+    ForEach ($dir in (Get-ChildItem -Path $env:TMP  -Directory -Filter "*.out"))
     {
         $reportFound = $false
         If ($(Get-ChildItem -filter "*.xml" -path $dir.FullName | Measure-Object | Select -ExpandProperty Count) -gt 0) {
@@ -67,14 +67,14 @@ Function createReport
     {
         Write-Host "7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe "-DestinationPath "$INNERWORKDIR\crashreport-$date.7z
         7zip -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.exe" -DestinationPath "$INNERWORKDIR\crashreport-$date.7z"
-        ForEach($core in (Get-ChildItem -Path "$global:COREDIR" -Filter "arango*.dmp" -Recurse -ErrorAction SilentlyContinue))
+        ForEach ($core in (Get-ChildItem -Path "$global:COREDIR" -Filter "arango*.dmp" -Recurse -ErrorAction SilentlyContinue))
         {
             Write-Host "7zip -Path $($core.FullName) -DestinationPath `"$INNERWORKDIR\crashreport-$date.7z`""   
             7zip -Path $($core.FullName) -DestinationPath "$INNERWORKDIR\crashreport-$date.7z"
             Write-Host "Remove-Item $($core.FullName)"
             Remove-Item $($core.FullName)
         }
-        ForEach($pdb in (Get-ChildItem -Path "$global:ARANGODIR\build\bin\$BUILDMODE\" -Filter "arango*.pdb" -Recurse -ErrorAction SilentlyContinue))
+        ForEach ($pdb in (Get-ChildItem -Path "$global:ARANGODIR\build\bin\$BUILDMODE\" -Filter "arango*.pdb" -Recurse -ErrorAction SilentlyContinue))
         {
             Write-Host "7zip -Path $($pdb.FullName) -DestinationPath `"$INNERWORKDIR\crashreport-$date.7z`""
             7zip -Path $($pdb.FullName) -DestinationPath "$INNERWORKDIR\crashreport-$date.7z"
@@ -86,12 +86,12 @@ Function createReport
     }
     Write-Host "7zip -Path `"$env:TMP\`" -DestinationPath `"$global:ARANGODIR\innerlogs.7z`""
     7zip -Path "$env:TMP\" -DestinationPath "$global:ARANGODIR\innerlogs.7z"
-    ForEach($log in $(Get-ChildItem -Path $global:ARANGODIR -Filter "*.log"))
+    ForEach ($log in $(Get-ChildItem -Path $global:ARANGODIR -Filter "*.log"))
     {
         Write-Host "7zip -Path $($log.FullName)  -DestinationPath `"$INNERWORKDIR\testreport-$date.7z`""
         7zip -Path $($log.FullName) -DestinationPath "$INNERWORKDIR\testreport-$date.7z"
     }
-    ForEach($archive in $(Get-ChildItem -Path $global:ARANGODIR -Filter "*.7z"))
+    ForEach ($archive in $(Get-ChildItem -Path $global:ARANGODIR -Filter "*.7z"))
     {
         Write-Host "7zip -Path $($archive.FullName) -DestinationPath `"$INNERWORKDIR\testreport-$date.7z`""
         7zip -Path $($archive.FullName) -DestinationPath "$INNERWORKDIR\testreport-$date.7z"
@@ -108,7 +108,7 @@ Function createReport
     If($global:hasTestCrashes -eq "true")
     {
         $global:oskarErrorMessage | Add-Content "$INNERWORKDIR\testfailures.txt"
-        ForEach($file in (Get-ChildItem -Path $env:TMP -Filter "testfailures.txt" -Recurse).FullName)
+        ForEach ($file in (Get-ChildItem -Path $env:TMP -Filter "testfailures.txt" -Recurse).FullName)
         {
             Get-Content $file | Add-Content "$INNERWORKDIR\testfailures.txt"; comm
         }

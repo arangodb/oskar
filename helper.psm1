@@ -359,9 +359,9 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
         If ($global:ok)
         {
           proc -process "git" -argument "clean -q -fdx"
-          ForEach($mode In $modes)
+          ForEach ($mode In $modes)
           {
-            ForEach($type In $types)
+            ForEach ($type In $types)
             {
               $OPENSSL_BUILD="${type}-${mode}"
               $env:installdir = "${path}\OpenSSL\${version}\VS_${msvs}\${OPENSSL_BUILD}"
@@ -1149,7 +1149,7 @@ Function convertSItoJSON
     If (Test-Path -PathType Leaf -Path $INNERWORKDIR\sourceInfo.log)
     {
         $fields = @()
-        ForEach($line in Get-Content $INNERWORKDIR\sourceInfo.log)
+        ForEach ($line in Get-Content $INNERWORKDIR\sourceInfo.log)
         {
             $var = $line.split(":")[0]
             switch -Regex ($var)
@@ -1295,11 +1295,11 @@ Function updateOskar
 
 Function clearResults
 {
-    ForEach($report in $(Get-ChildItem -Path $INNERWORKDIR -Filter "testreport*"))
+    ForEach ($report in $(Get-ChildItem -Path $INNERWORKDIR -Filter "testreport*"))
     {
         Remove-Item -Force $report.FullName
     }
-    ForEach($log in $(Get-ChildItem -Path $INNERWORKDIR -Filter "*.log"))
+    ForEach ($log in $(Get-ChildItem -Path $INNERWORKDIR -Filter "*.log"))
     {
         Remove-Item -Force $log.FullName
     }
@@ -1315,13 +1315,23 @@ Function clearResults
     {
         Remove-Item -Force $INNERWORKDIR\testfailures.txt
     }
-    ForEach($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.exe"))
+    ForEach ($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.exe"))
     {
         Remove-Item -Force $INNERWORKDIR\$file
     }
-    ForEach($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.zip"))
+    ForEach ($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.zip"))
     {
         Remove-Item -Force $INNERWORKDIR\$file
+    }
+    comm
+}
+
+Function clearWorkdir
+{
+    [string[]]$Excludes = @("$global:ARANGODIR*", "$env:TMP*")
+    ForEach ($item in $(Get-ChildItem -Path $INNERWORKDIR -Exclude $Excludes))
+    {
+        Remove-Item $item -Force -Recurse -ErrorAction SilentlyContinue
     }
     comm
 }
@@ -1360,7 +1370,7 @@ Function noteStartAndRepoState
     $(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH.mm.ssZ") | Add-Content $env:TMP\testProtocol.txt
     Write-Output "========== Status of main repository:" | Add-Content $env:TMP\testProtocol.txt
     Write-Host "========== Status of main repository:"
-    ForEach($line in $global:repoState)
+    ForEach ($line in $global:repoState)
     {
         Write-Output " $line" | Add-Content $env:TMP\testProtocol.txt
         Write-Host " $line"
@@ -1369,7 +1379,7 @@ Function noteStartAndRepoState
     {
         Write-Output "Status of enterprise repository:" | Add-Content $env:TMP\testProtocol.txt
         Write-Host "Status of enterprise repository:"
-        ForEach($line in $global:repoStateEnterprise)
+        ForEach ($line in $global:repoStateEnterprise)
         {
             Write-Output " $line" | Add-Content $env:TMP\testProtocol.txt
             Write-Host " $line"
@@ -1541,7 +1551,7 @@ Function packageWindows
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    ForEach($TARGET in @("package-arangodb-server-nsis","package-arangodb-server-zip","package-arangodb-client-nsis"))
+    ForEach ($TARGET in @("package-arangodb-server-nsis","package-arangodb-server-zip","package-arangodb-client-nsis"))
     {
         Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --target `"$TARGET`""
         proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --target `"$TARGET`"" -logfile "$INNERWORKDIR\$TARGET-package" -priority "Normal"
@@ -1561,7 +1571,7 @@ Function signWindows
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build\"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    ForEach($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
+    ForEach ($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
         Write-Host "Sign: signtool.exe sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
         proc -process "signtool.exe" -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign" -priority "Normal"
@@ -1580,7 +1590,7 @@ Function storeSymbols
             New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true
         }
         findArangoDBVersion | Out-Null
-        ForEach($SYMBOL in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
+        ForEach ($SYMBOL in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
         {
             Write-Host "Symbol: symstore.exe add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress"
             proc -process "symstore.exe" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
@@ -1812,7 +1822,7 @@ Function configureDumpsArangoDB
 {
     Write-Host "Configure crashdumps for arango* processes to reside in ${global:COREDIR}..."
     clearWER
-    ForEach($executable in (Get-ChildItem -File -Filter "arango*.exe" -Path "$global:ARANGODIR\build\bin\$BUILDMODE"))
+    ForEach ($executable in (Get-ChildItem -File -Filter "arango*.exe" -Path "$global:ARANGODIR\build\bin\$BUILDMODE"))
     {
         configureWER -executable $executable -path $global:COREDIR
     }

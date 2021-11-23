@@ -9,6 +9,7 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok) 
 {
+    clearWorkdir
     buildArangoDB
 }
 $s = $global:ok

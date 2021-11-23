@@ -80,6 +80,7 @@ Function copyPackagesToStage2
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok ) 
 {
+    clearWorkdir
     makeRelease
 }
 $s = $global:ok
