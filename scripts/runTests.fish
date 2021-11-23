@@ -129,7 +129,7 @@ end
 set -l CT
 
 if test -d $INNERWORKDIR/ArangoDB/UnitTests/definition
-  source $INNERWORKDIR/ArangoDB/UnitTests/definition/full-cluster.inc
+  source $INNERWORKDIR/ArangoDB/UnitTests/definition/pr-cluster.inc
 else
   echo "Using inline oskar test definition for PR run & cluster server"
 
