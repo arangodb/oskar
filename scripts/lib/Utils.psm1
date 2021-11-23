@@ -54,7 +54,7 @@ Function createReport
                             $global:badtests = $global:badtests + "Crash occured in $file`r`n"
                         }   
             }
-        if ($reportFound -ne $true)
+        If ($reportFound -ne $true)
             {
                 Write-Host "No Testresult found at directory $($dir.BaseName)"
                 $global:result = "BAD"
@@ -105,10 +105,13 @@ Function createReport
         Remove-Item -Force "$INNERWORKDIR\testfailures.txt"
     }
 
-    $global:oskarErrorMessage | Add-Content "$INNERWORKDIR\testfailures.txt"
-    ForEach($file in (Get-ChildItem -Path $env:TMP -Filter "testfailures.txt" -Recurse).FullName)
+    If($global:hasTestCrashes -eq "true")
     {
-        Get-Content $file | Add-Content "$INNERWORKDIR\testfailures.txt"; comm
+        $global:oskarErrorMessage | Add-Content "$INNERWORKDIR\testfailures.txt"
+        ForEach($file in (Get-ChildItem -Path $env:TMP -Filter "testfailures.txt" -Recurse).FullName)
+        {
+            Get-Content $file | Add-Content "$INNERWORKDIR\testfailures.txt"; comm
+        }
     }
 }
 
@@ -185,7 +188,7 @@ Function waitForTimeWaitSockets() {
     $TimeWait = 0
     do {
       $TimeWait = (Get-NetTCPConnection -State TimeWait -ErrorAction SilentlyContinue | Measure-Object).Count
-      if ($TimeWait -gt 2500) {
+      If ($TimeWait -gt 2500) {
         Write-Host "waiting for connections to go away ${TimeWait}"
         Start-Sleep 20
       }
@@ -248,7 +251,7 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
             $cluster = "true"
             $dumpAgencyOnError = "true"
         }
-        else
+        Else
         {
             $cluster = "false"
             $dumpAgencyOnError = "false"
