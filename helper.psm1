@@ -1328,7 +1328,11 @@ Function clearResults
 
 Function clearWorkdir
 {
-    [string[]]$Excludes = @("$global:ARANGODIR*", "$env:TMP*")
+    $Excludes = [System.Collections.ArrayList]@("$global:ARANGODIR*", "$env:TMP*")
+    If ((isGCE) -eq $False)
+    {
+        $Excludes += "${global:INNERWORKDIR}\OpenSSL*"
+    }
     ForEach ($item in $(Get-ChildItem -Path $INNERWORKDIR -Exclude $Excludes))
     {
         Remove-Item $item -Force -Recurse -ErrorAction SilentlyContinue
