@@ -8,6 +8,7 @@ set -gx THIRDPARTY_SBIN third_party/sbin
 set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
+set -gx ARCH (uname -m)
 
 function defaultMacOSXDeploymentTarget
   set -xg MACOSX_DEPLOYMENT_TARGET 10.12
@@ -77,22 +78,98 @@ function findRequiredMinMacOS
 end
 
 function opensslVersion
-  set -l oversion $argv[1]
+  set -gx OPENSSL_VERSION $argv[1]
+end
 
-  if test "$oversion" = ""
-    set -e OPENSSL_VERSION
-    return 0
+function downLoadOpenSslSource
+  set -l directory $WORKDIR/work/openssl
+  set -l url https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz  
+  mkdir -p $directory
+  cd $directory
+  echo "Downloading sources to $directory from URL: $url"
+  curl -LO $url
+  tar -xzvf openssl-$OPENSSL_VERSION.tar.gz
+end
+
+function buildOpenSsl
+  if test "$OPENSSL_SOURCE_DIR" = ""
+    echo "OPENSSL_SOURCE_DIR is not defined. Please download source codes before building OpenSSL."
+    return 1
+  else if ! test -d $OPENSSL_SOURCE_DIR
+      echo "Directory $OPENSSL_SOURCE_DIR does not exist!"
+      return 1
+  end
+  cd $OPENSSL_SOURCE_DIR
+  mkdir build
+  
+  if test -z "$ARCH"
+    echo "ARCH is not set! Can't decide wether to build OpenSSL for arm64 or x86_64."
+    return 1
   end
 
-  switch $oversion
-    case '1.0.2'
-      set -gx OPENSSL_VERSION $oversion
+  if test "$ARCH" = "x86_64"
+    set OPENSSL_PLATFORM darwin64-x86_64-cc
+  else if test "$ARCH" = "arm64"
+    set OPENSSL_PLATFORM darwin64-arm64-cc
+  else
+    echo "Unsupported architecture: $ARCH. I can build OpenSSL only for x86_64 or arm64."
+    return 1
+  end
 
-    case '1.1.1'
-      set -gx OPENSSL_VERSION $oversion
+  for type in shared no-shared
+    for mode in debug release
+      set -l cmd "perl ./Configure --prefix=$OPENSSL_SOURCE_DIR/build/$mode/$type --openssldir=$OPENSSL_SOURCE_DIR/build/$mode/$type/openssl --$mode $type $OPENSSL_PLATFORM"
+      echo "Executing: $cmd"
+      eval $cmd
+      make
+      make test
+      make install_dev
+    end
+  end
+end
 
-    case '*'
-      echo "unknown openssl version $oversion"
+function findOpenSslPath
+  set -gx OPENSSL_SOURCE_DIR $WORKDIR/work/openssl/openssl-$OPENSSL_VERSION
+  set -xg OPENSSL_ROOT $OPENSSL_SOURCE_DIR/build  
+  #possible values of BUILDMODE: Debug Release RelWithDebInfo MinSizeRel
+  if test "$BUILDMODE"="Debug"
+    set mode debug
+  else if test "$BUILDMODE"="Release"
+    set mode release
+  else if test "$BUILDMODE"="RelWithDebInfo"
+    set mode release
+  else if test "$BUILDMODE"="MinSizeRel"
+    set mode release
+  else if test -z "$BUILDMODE"
+    echo "BUILDMODE is not set!"
+    return 1
+  else
+    echo "Unknown BUILDMODE value: $BUILDMODE. Can't choose OpenSSL build type."
+    return 1
+  end
+  
+  set -gx OPENSSL_USE_STATIC_LIBS "On"
+  set -gx OPENSSL_PATH "$OPENSSL_ROOT/$mode/no-shared"
+end
+
+function checkIfOpenSslIsBuilt
+  findOpenSslPath
+  set -l executable "$OPENSSL_SOURCE_DIR/apps/openssl"
+  if ! test -f "$executable"
+    echo "Couldn't find prebuilt OpenSSL v. $OPENSSL_VERSION."
+    false
+    return
+  end
+  set -l cmd "$executable version | grep -o \"[0-9]\.[0-9]\.[0-9][a-z]\""
+  set -l output (eval "$cmd")
+  if test "$output"="$OPENSSL_VERSION"
+    echo "Found prebuilt OpenSSL v. $OPENSSL_VERSION."
+    true
+    return
+  else
+    echo "Couldn't find prebuilt OpenSSL v. $OPENSSL_VERSION."
+    false
+    return
   end
 end
 
@@ -110,7 +187,7 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9]")
+  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9][a-z]")
 
   if test "$v" = ""
     echo "$f: no OPENSSL_MACOS specified, using 1.0.2"
@@ -118,6 +195,16 @@ function findRequiredOpenSSL
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
+  end
+end
+
+function oskarOpenSsl
+  findRequiredOpenSSL
+  if checkIfOpenSslIsBuilt
+    return
+  else
+    downLoadOpenSslSource
+    and buildOpenSsl    
   end
 end
 
@@ -184,10 +271,10 @@ end
 
 function buildArangoDB
   checkoutIfNeeded
-  and findRequiredOpenSSL
   and findDefaultArchitecture
   and findUseARM
   and findRequiredMinMacOS
+  and oskarOpenSsl
   and runLocal $SCRIPTSDIR/buildMacOs.fish $argv
   set -l s $status
   if test $s -ne 0
@@ -197,10 +284,10 @@ function buildArangoDB
 end
 
 function makeArangoDB
-  findRequiredOpenSSL
-  and findDefaultArchitecture
+  findDefaultArchitecture
   and findUseARM
   and findRequiredMinMacOS
+  and oskarOpenSsl
   and runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
