@@ -131,23 +131,17 @@ end
 function findOpenSslPath
   set -gx OPENSSL_SOURCE_DIR $WORKDIR/work/openssl/openssl-$OPENSSL_VERSION
   set -xg OPENSSL_ROOT $OPENSSL_SOURCE_DIR/build  
-  #possible values of BUILDMODE: Debug Release RelWithDebInfo MinSizeRel
-  if test "$BUILDMODE"="Debug"
-    set mode debug
-  else if test "$BUILDMODE"="Release"
-    set mode release
-  else if test "$BUILDMODE"="RelWithDebInfo"
-    set mode release
-  else if test "$BUILDMODE"="MinSizeRel"
-    set mode release
-  else if test -z "$BUILDMODE"
-    echo "BUILDMODE is not set!"
-    return 1
-  else
-    echo "Unknown BUILDMODE value: $BUILDMODE. Can't choose OpenSSL build type."
-    return 1
+
+  switch $BUILDMODE
+    case "Debug"
+      set mode debug
+    case "Release" "RelWithDebInfo" "MinSizeRel"
+      set mode release
+    case '*'
+      echo "Unknown BUILDMODE value: $BUILDMODE. Can't choose OpenSSL build type."
+      return 1
   end
-  
+    
   set -gx OPENSSL_USE_STATIC_LIBS "On"
   set -gx OPENSSL_PATH "$OPENSSL_ROOT/$mode/no-shared"
 end
