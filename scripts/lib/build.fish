@@ -7,7 +7,7 @@ function setupCcacheBinPath
     switch $CCACHETYPE
       case macos
           set -xg CCACHEBINPATH $SCRIPTSDIR/tools
-          set -xg SCCACHEBINPATH $SCRIPTSDIR/tools/
+          set -xg SCCACHEBINPATH $SCRIPTSDIR/tools
       case alpine
           set -xg CCACHEBINPATH /tools
       case ubuntu
