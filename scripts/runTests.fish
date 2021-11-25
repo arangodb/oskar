@@ -8,8 +8,8 @@ source $SCRIPTS/lib/tests.fish
 
 set -l ST
 
-if test -d $INNERWORKDIR/ArangoDB/UnitTests/definition
-  source $INNERWORKDIR/ArangoDB/UnitTests/definition/pr-single.inc
+if test -d $INNERWORKDIR/ArangoDB/tests/definition
+  source $INNERWORKDIR/ArangoDB/tests/definition/pr-single.inc
 else
   echo "Using inline oskar test definition for PR run & single server"
 
@@ -128,8 +128,8 @@ end
 
 set -l CT
 
-if test -d $INNERWORKDIR/ArangoDB/UnitTests/definition
-  source $INNERWORKDIR/ArangoDB/UnitTests/definition/pr-cluster.inc
+if test -d $INNERWORKDIR/ArangoDB/tests/definition
+  source $INNERWORKDIR/ArangoDB/tests/definition/pr-cluster.inc
 else
   echo "Using inline oskar test definition for PR run & cluster server"
 

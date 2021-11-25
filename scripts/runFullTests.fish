@@ -10,8 +10,8 @@ set -xg ADDITIONAL_OPTIONS $argv
 
 set -l ST
 
-if test -d $INNERWORKDIR/ArangoDB/UnitTests/definition
-  source $INNERWORKDIR/ArangoDB/UnitTests/definition/full-single.inc
+if test -d $INNERWORKDIR/ArangoDB/tests/definition
+  source $INNERWORKDIR/ArangoDB/tests/definition/full-single.inc
 else
   echo "Using inline oskar test definition for full run & single server"
 
@@ -155,8 +155,8 @@ end
 
 set -l CT
 
-if test -d $INNERWORKDIR/ArangoDB/UnitTests/definition
-  source $INNERWORKDIR/ArangoDB/UnitTests/definition/full-cluster.inc
+if test -d $INNERWORKDIR/ArangoDB/tests/definition
+  source $INNERWORKDIR/ArangoDB/tests/definition/full-cluster.inc
 else
   echo "Using inline oskar test definition for full run & cluster server"
 
