@@ -1,8 +1,7 @@
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
 
-mkdir -p $dest
-and cleanPrepareLockUpdateClear
+cleanPrepareLockUpdateClear
 and enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and if echo "$ARANGODB_BRANCH" | grep -q "^v"
