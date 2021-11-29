@@ -1,10 +1,5 @@
 set -xg date (date +%Y%m%d)
 set -xg datetime (date +%Y%m%d%H%M)
-if test $OS = "MAC"
-  set -xg dest /Users/$USER/buildfiles/performance/$OS/Compiler/RAW
-else
-  set -xg dest /mnt/buildfiles/performance/$OS/Compiler/RAW
-end
 
 mkdir -p $dest
 and cleanPrepareLockUpdateClear
@@ -23,10 +18,9 @@ and showConfig
 and buildStaticArangoDB
 
 set -l s $status
-set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
-set -l filename $dest/results-$resultname-$datetime.csv
+set -l filename work/compiler.csv
 
-echo "storing results in $resultname"
-awk -F, "{print \"$ARANGODB_BRANCH,$date,\" \$2 \",\" \$3}" \
+echo "branch,os,date,step,runtime" > $filename
+awk -F, "{print \"$ARANGODB_BRANCH,$OS,$date,\" \$2 \",\" \$3}" \
   < work/buildTimes.csv \
-  > $filename
+  >> $filename
