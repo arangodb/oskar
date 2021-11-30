@@ -10,7 +10,7 @@ end
 
 # Turn off internal crash handler for tests that don''t specify it explicitly
 # Meaningful for ArangoDB 3.7+ versions only
-set -xg ARANGODB_OVERRIDE_CRASH_HANDLER "Off"
+# set -xg ARANGODB_OVERRIDE_CRASH_HANDLER "Off"
 
 # Enable full ASAN mode
 if not test -z $ASAN; and test $ASAN = "On"
