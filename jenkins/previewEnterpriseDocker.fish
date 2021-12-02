@@ -18,6 +18,7 @@ and cleanWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and showRepository
 and pingDetails
+and ccacheOn
 and if test $IS_NIGHTLY_BUILD = true; setNightlyRelease; end
 and set -xg RELEASE_TYPE "preview"
 and makeDockerEnterpriseRelease "$DOCKER_TAG"
