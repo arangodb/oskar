@@ -71,8 +71,6 @@ Function global:registerSingleTests()
     registerTest -testname "dump"
     registerTest -testname "dump_authentication"
     registerTest -testname "dump_encrypted"
-    registerTest -testname "dump_mixed_cluster_single"
-    registerTest -testname "dump_mixed_single_cluster"
     registerTest -testname "dump_jwt"
     registerTest -testname "dump_maskings"
     registerTest -testname "dump_multiple"
