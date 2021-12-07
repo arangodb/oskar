@@ -1359,6 +1359,12 @@ function pushLdapImage
 end
 function pullLdapImage ; docker pull $LDAPIMAGE ; end
 
+function pullRtaImages
+  docker pull arangodb/release-test-automation-deb
+  docker pull arangodb/release-test-automation-rpm
+  docker pull arangodb/release-test-automation-tar
+end
+
 function remakeImages
   set -l s 0
 
@@ -1726,6 +1732,7 @@ function updateOskar
   and pullCentosPackagingImage
   and pullCppcheckImage
   and pullLdapImage
+  and pullRtaImages
 end
 
 function updateDockerBuildImage
