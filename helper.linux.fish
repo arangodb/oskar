@@ -1195,7 +1195,7 @@ function pushDockerImage
     return 1
   end
 
-  docker push $imagename || (sleep 300 && docker push $imagename) || (sleep 300 && docker push $imagename)
+  docker push $imagename
 end
 
 function buildDockerLocal
