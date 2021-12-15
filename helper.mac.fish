@@ -141,7 +141,7 @@ function findOpenSSLPath
     case "Release" "RelWithDebInfo" "MinSizeRel"
       set mode release
     case '*'
-      echo "Unknown BUILDMODE value: $BUILDMODE. Can't choose OpenSSL build type."
+      echo "Unknown BUILDMODE value: $BUILDMODE! Please, use `releaseMode` or `debugMode` oskar functions to set it."
       return 1
   end
     
