@@ -666,6 +666,7 @@ function buildDebianPackage
   set -l TARGET $WORKDIR/work/debian
   set -l EDITION arangodb3
   set -l EDITIONFOLDER $SOURCE/community
+  set -l ARCH (dpkg --print-architecture)
 
   if test "$ENTERPRISEEDITION" = "On"
     echo Building enterprise edition debian package...
@@ -702,6 +703,7 @@ function buildDebianPackage
   and echo >> $ch
   and echo -n " -- ArangoDB <hackers@arangodb.com>  " >> $ch
   and date -R >> $ch
+  and sed -i "s/ARCH_PLACEHOLDER/$ARCH/g" $TARGET/control
   and runInContainer $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/buildDebianPackage.fish
   set -l s $status
   if test $s -ne 0
