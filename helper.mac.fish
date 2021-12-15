@@ -270,7 +270,8 @@ function prepareOpenSSL
       echo "Use local OpenSSL: expect OPENSSL_ROOT_DIR environment variable"
       if test -z $OPENSSL_ROOT_DIR
         echo "Need OPENSSL_ROOT_DIR global variable!"
-      return 1
+        return 1
+      end
     end 
   end
 end
