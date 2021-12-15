@@ -85,11 +85,7 @@ function opensslVersion
 end
 
 function downloadOpenSSL
-  if test -z $OPENSSL_VERSION
-    echo "Need OPENSSL_VERSION global variable!"
-    return 1
-  end
-
+  findRequiredOpenSSL
   set -l directory $WORKDIR/work/openssl
   set -l url https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz  
   mkdir -p $directory
@@ -98,15 +94,13 @@ function downloadOpenSSL
   curl -LO $url
   rm -rf openssl-$OPENSSL_VERSION
   tar -xzvf openssl-$OPENSSL_VERSION.tar.gz
+  set -xg OPENSSL_SOURCE_DIR "$directory/openssl-$OPENSSL_VERSION"
 end
 
 function buildOpenSSL
-  if test "$OPENSSL_SOURCE_DIR" = ""
-    echo "OPENSSL_SOURCE_DIR is not defined. Please download source codes before building OpenSSL!"
+  if test "$OPENSSL_SOURCE_DIR" = ""; or ! test -d $OPENSSL_SOURCE_DIR; or not checkOpenSSL
+    echo "Please download OpenSSL source with `downloadOpenSSL` function before building it!"
     return 1
-  else if ! test -d $OPENSSL_SOURCE_DIR
-      echo "Directory $OPENSSL_SOURCE_DIR does not exist!"
-      return 1
   end
   cd $OPENSSL_SOURCE_DIR
   mkdir build
