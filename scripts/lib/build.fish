@@ -90,8 +90,8 @@ function setupCcache
     end
 
     pushd $INNERWORKDIR
-    and begin eval $SCCACHEBINPATH"sccache --stop-server 2>> $INNERWORKDIR/sccache.err.log"; or true; end
-    and eval $SCCACHEBINPATH"sccache --start-server"
+    and begin eval $SCCACHEBINPATH"/sccache --stop-server 2>> $INNERWORKDIR/sccache.err.log"; or true; end
+    and eval $SCCACHEBINPATH"/sccache --start-server"
     and popd
     or begin
       echo "warning: cannot start sccache"
