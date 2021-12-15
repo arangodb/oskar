@@ -149,11 +149,47 @@ function findOpenSSLPath
   set -gx OPENSSL_PATH "$OPENSSL_ROOT/$mode/no-shared"
 end
 
-function checkOpenSSL
+set -xg OPENSSL_ROOT_HOMEBREW ""
+
+function checkBrewOpenSSL
+  set -xg OPENSSL_ROOT_HOMEBREW ""
+  if which -s brew
+    set -l prefix (brew --prefix)
+    if count $prefix/Cellar/openssl*/* > /dev/null
+      set -l matcher "[0-9]\.[0-9]\.[0-9]"
+      set -l sslVersion ""
+      set -l sslPath ""
+      findRequiredOpenSSL
+      if test "$USE_STRICT_OPENSSL" = "On"
+        set matcher $matcher"[a-z]"
+        set sslVersion (echo "$OPENSSL_VERSION" | grep -o $matcher)
+        set sslPath (realpath $prefix/Cellar/openssl*/* | grep -m 1 $sslVersion)
+      else
+        set sslVersion (echo "$OPENSSL_VERSION" | grep -o $matcher)'*'
+        set sslPath (realpath $prefix/Cellar/openssl*/* | grep -m 1 $sslVersion)
+    end
+
+      if test "$sslPath" != ""; and test -e $sslPath/bin/openssl > /dev/null; and count $sslPath/lib/* > /dev/null
+        set -l executable "$sslPath/bin/openssl"
+        set -l cmd "$executable version | grep -o $matcher"
+        set -l output (eval "arch -$ARCH $cmd")
+        if test "$output" = (echo "$OPENSSL_VERSION" | grep -o $matcher)
+          echo "Found matching OpenSSL $sslPath installed by Homebrew."
+          set -xg OPENSSL_ROOT_HOMEBREW $sslPath
+          return  
+        end
+      end
+    end
+  end
+  echo "Couldn't find matching OpenSSL version installed by Homebrew! Please, try `brew install openssl` prior to check."
+  return 1
+end
+
+function checkOskarOpenSSL
   findOpenSSLPath
   set -l executable "$OPENSSL_SOURCE_DIR/apps/openssl"
   if ! test -f "$executable"
-    echo "Couldn't find OpenSSL $OPENSSL_VERSION!"
+    echo "Couldn't find OpenSSL $OPENSSL_VERSION at $OPENSSL_SOURCE_DIR!"
     false
     return 1
   end
@@ -218,7 +254,7 @@ function prepareOpenSSL
     findRequiredOpenSSL
     echo "Use OpenSSL within oskar: build $OPENSSL_VERSION if not present"
 
-    if not checkOpenSSL
+    if not checkOskarOpenSSL
       downloadOpenSSL
       and buildOpenSSL
       or return 1
@@ -227,11 +263,15 @@ function prepareOpenSSL
     echo "Set OPENSSL_ROOT_DIR via environment variable to $OPENSSL_PATH"
     set -xg OPENSSL_ROOT_DIR $OPENSSL_PATH
   else
-    echo "Use local OpenSSL: expect OPENSSL_ROOT_DIR environment variable"
-    if test -z $OPENSSL_ROOT_DIR
-      echo "Need OPENSSL_ROOT_DIR global variable!"
+    if checkBrewOpenSSL
+      echo "Use local OpenSSL installed by Homebrew and set OPENSSL_ROOT_DIR environment variable to "
+      set -xg OPENSSL_ROOT_DIR $OPENSSL_ROOT_HOMEBREW
+    else
+      echo "Use local OpenSSL: expect OPENSSL_ROOT_DIR environment variable"
+      if test -z $OPENSSL_ROOT_DIR
+        echo "Need OPENSSL_ROOT_DIR global variable!"
       return 1
-    end
+    end 
   end
 end
 
