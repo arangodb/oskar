@@ -98,7 +98,7 @@ function downloadOpenSSL
 end
 
 function buildOpenSSL
-  if test "$OPENSSL_SOURCE_DIR" = ""; or ! test -d $OPENSSL_SOURCE_DIR; or not checkOpenSSL
+  if test "$OPENSSL_SOURCE_DIR" = ""; or ! test -d $OPENSSL_SOURCE_DIR; or not checkOskarOpenSSL
     echo "Please download OpenSSL source with `downloadOpenSSL` function before building it!"
     return 1
   end
