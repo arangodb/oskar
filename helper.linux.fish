@@ -703,7 +703,7 @@ function buildDebianPackage
   and echo >> $ch
   and echo -n " -- ArangoDB <hackers@arangodb.com>  " >> $ch
   and date -R >> $ch
-  and sed -i "s/ARCH_PLACEHOLDER/$ARCH/g" $TARGET/control
+  and sed -i "s/@ARCHITECTURE@/$ARCH/g" $TARGET/control
   and runInContainer $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/buildDebianPackage.fish
   set -l s $status
   if test $s -ne 0
