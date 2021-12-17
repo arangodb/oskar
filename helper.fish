@@ -50,15 +50,15 @@ function maintainerOff ; set -gx MAINTAINER Off ; end
 if test -z "$MAINTAINER" ; maintainerOn
 else ; set -gx MAINTAINER $MAINTAINER ; end
 
-function asanOn ; set -gx ASAN On ; end
-function asanOff ; set -gx ASAN Off ; end
-if test -z "$ASAN" ; asanOff
-else ; set -gx ASAN $ASAN ; end
+function sanOn ; set -gx SAN On ; end
+function sanOff ; set -gx SAN Off ; end
+if test -z "$SAN" ; sanOff
+else ; set -gx SAN $SAN ; end
 
-function asanModeAULsan ; set -gx ASAN_MODE AULsan ; end
-function asanModeTSan ; set -gx ASAN_MODE TSan ; end
-if test -z "$ASAN_MODE" ; asanModeAULsan
-else ; set -gx ASAN_MODE $ASAN_MODE ; end
+function sanModeAULsan ; set -gx SAN_MODE AULsan ; end
+function sanModeTSan ; set -gx SAN_MODE TSan ; end
+if test -z "$SAN_MODE" ; sanModeAULsan
+else ; set -gx SAN_MODE $SAN_MODE ; end
 
 function jemallocOn; set -gx JEMALLOC_OSKAR On ; end
 function jemallocOff; set -gx JEMALLOC_OSKAR Off ; end
@@ -379,7 +379,7 @@ function oskarCompile
   set -x NOSTRIP 1
   
   # note: DEBUG_SYNC_REPLICATION is removed from 3.8 onwards an can be removed here too soon 
-  if test "$ASAN" = "On"
+  if test "$SAN" = "On"
     buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
   else
     buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
@@ -1310,8 +1310,8 @@ function showConfig
 
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
-  printf $fmt3 'ASan'       $ASAN                   '(asanOn/Off)'
-  printf $fmt3 'ASan mode'  $ASAN_MODE              '(asanModeAULSan/TSan)'
+  printf $fmt3 'Sanitizer'  $SAN                    '(sanOn/Off)'
+  printf $fmt3 'San mode'   $SAN_MODE               '(sanModeAULSan/TSan)'
   printf $fmt3 'Coverage'   $COVERAGE               '(coverageOn/Off)'
   printf $fmt3 'Buildmode'  $BUILDMODE              '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'   $compiler_version       '(compiler x.y.z)'
@@ -1797,7 +1797,7 @@ function moveResultsToWorkspace
     if test -d $WORKDIR/work/coverage
       if test -d $WORKSPACE/coverage
         rm -rf $WORKSPACE/coverage.old
-	mv $WORKSPACE/coverage $WORKSPACE/coverage.old
+        mv $WORKSPACE/coverage $WORKSPACE/coverage.old
       end
 
       echo "mv coverage"
@@ -1809,7 +1809,7 @@ function moveResultsToWorkspace
       echo $f | grep -qv testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"
     end
 
-    for f in $WORKDIR/work/asan.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end
+    for f in $WORKDIR/work/*san.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end
 
     if test -f $WORKDIR/work/testfailures.txt
       if grep -q -v '^[ \t]*$' $WORKDIR/work/testfailures.txt

@@ -12,18 +12,18 @@ end
 # Meaningful for ArangoDB 3.7+ versions only
 set -xg ARANGODB_OVERRIDE_CRASH_HANDLER "Off"
 
-# Enable full ASAN mode
-if not test -z $ASAN; and test $ASAN = "On"
-  echo "Use ASAN mode"
+# Enable full SAN mode
+if not test -z $SAN; and test $SAN = "On"
+  echo "Use SAN mode: $SAN_MODE"
 
   # address sanitizer
   set -xg ASAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
 
   # leak sanitizer
-  set -xg LSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+  set -xg LSAN_OPTIONS "log_path=/work/lsan.log:log_exe_name=true"
 
   # undefined behavior sanitizer
-  set -xg UBSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+  set -xg UBSAN_OPTIONS "log_path=/work/ubsan.log:log_exe_name=true"
 
   # thread sanitizer
   set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
@@ -50,7 +50,7 @@ if not test -z $ASAN; and test $ASAN = "On"
   echo "UBSAN: $UBSAN_OPTIONS"
   echo "TSAN: $TSAN_OPTIONS"
 else
-  echo "Don't use ASAN mode"
+  echo "Don't use SAN mode"
 
   set -e ASAN_OPTIONS
   set -e LSAN_OPTIONS
@@ -83,7 +83,7 @@ function runAnyTest
     echo Test suite $l0 skipped by UnitTests/OskarTestSuitesBlockList
   else
     set -l arguments \'"$t"\' \
-      (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
+      (not test -z $SAN; and test $SAN = "On"; and echo "--isAsan true") \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic "$SKIPNONDETERMINISTIC" \

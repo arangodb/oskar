@@ -24,8 +24,8 @@ switch $OPENSSL_VERSION
 end
 echo "Using openssl version $OPENSSL_VERSION and path $OPENSSL_PATH"
 
-if test "$ASAN" = "On"
-  echo "ASAN is not support in this environment"
+if test "$SAN" = "On"
+  echo "SAN is not support in this environment"
 end
 
 set -g FULLARGS $argv \

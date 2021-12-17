@@ -15,7 +15,7 @@ set -gx ARCH (uname -m)
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 9
+set -gx UBUNTUBUILDIMAGE3_TAG 10
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
@@ -431,11 +431,11 @@ function oskar
 
   checkoutIfNeeded
   and findRequiredCompiler
-  and if test "$ASAN" = "On"
+  and if test "$SAN" = "On"
     parallelism 2
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
-    checkAsanStatus
+    checkSanStatus
     set s (math $s + $status)
   else
     runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
@@ -454,7 +454,7 @@ function oskarFull
   and findRequiredCompiler
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
-    and if test "$ASAN" = "On"
+    and if test "$SAN" = "On"
       parallelism 2
       runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     else
@@ -462,7 +462,7 @@ function oskarFull
     end
     set s $status
   else
-    if test "$ASAN" = "On"
+    if test "$SAN" = "On"
       parallelism 2
       runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     else
@@ -487,7 +487,7 @@ function oskarOneTest
   and findRequiredCompiler
   and if test "$ENTERPRISEEDITION" = "On"
     launchLdapServer
-    and if test "$ASAN" = "On"
+    and if test "$SAN" = "On"
       parallelism 2
       runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
     else
@@ -495,7 +495,7 @@ function oskarOneTest
     end
     set s $status
   else
-    if test "$ASAN" = "On"
+    if test "$SAN" = "On"
       parallelism 2
       runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
     else
@@ -513,11 +513,11 @@ function oskarOneTest
 end
 
 ## #############################################################################
-## asan
+## san
 ## #############################################################################
 
-function checkAsanStatus
-  return (count $WORKDIR/work/asan.log.* $WORKDIR/work/tsan.log.*)
+function checkSanStatus
+  return (count $WORKDIR/work/asan.log.* $WORKDIR/work/lsan.log.* $WORKDIR/work/tsan.log.* $WORKDIR/work/ubsan.log.*)
 end
 
 ## #############################################################################
@@ -608,7 +608,7 @@ function buildEnterprisePackage
  
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
-  asanOff
+  sanOff
   and maintainerOff
   and releaseMode
   and enterprise
@@ -628,7 +628,7 @@ end
 function buildCommunityPackage
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
-  asanOff
+  sanOff
   and maintainerOff
   and releaseMode
   and community
@@ -795,7 +795,7 @@ function makeTestPackageLinux
   echo ""
 
   findArangoDBVersion
-  and asanOff
+  and sanOff
   and releaseMode
   and set -xg NOSTRIP 1
   and buildStaticArangoDB
@@ -996,7 +996,7 @@ function makeDockerEnterpriseDebug
 end
 
 function buildDockerDebug
-  asanOff
+  sanOff
   and maintainerOn
   and releaseMode
   and set -xg NOSTRIP 1
@@ -1005,7 +1005,7 @@ end
 
 function buildDockerRelease
   echo "building docker release"
-  asanOff
+  sanOff
   and maintainerOff
   and releaseMode
   and set -xg NOSTRIP 1
@@ -1511,8 +1511,8 @@ function runInContainer
              -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
              -e ARCH="$ARCH" \
-             -e ASAN="$ASAN" \
-             -e ASAN_MODE="$ASAN_MODE" \
+             -e SAN="$SAN" \
+             -e SAN_MODE="$SAN_MODE" \
              -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
              -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
              -e BUILDMODE="$BUILDMODE" \
@@ -1618,7 +1618,8 @@ function interactiveContainer
     -e ARANGODB_REPO="$ARANGODB_REPO" \
     -e ARANGODB_VERSION="$ARANGODB_VERSION" \
     -e ARCH="ARCH" \
-    -e ASAN="$ASAN" \
+    -e SAN="$SAN" \
+    -e SAN_MODE="$SAN_MODE" \
     -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
     -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
     -e BUILDMODE="$BUILDMODE" \

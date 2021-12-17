@@ -47,8 +47,8 @@ else
     -DUSE_GOOGLE_TESTS=Off
 end
 
-if test "$ASAN" = "On"
-  echo "ASAN is not support in this environment"
+if test "$SAN" = "On"
+  echo "SAN is not support in this environment"
   exit 1
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"

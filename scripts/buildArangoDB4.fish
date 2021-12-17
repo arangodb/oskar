@@ -53,11 +53,11 @@ end
 #   -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold
 #end
 
-if test "$ASAN" = "On"
+if test "$SAN" = "On"
   # Suppress leaks detection only during building
-  set -gx ASAN_OPTIONS "detect_leaks=0"
+  set -gx SAN_OPTIONS "detect_leaks=0"
   set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak"
-  if test "$ASAN_MODE" = "TSan"
+  if test "$SAN_MODE" = "TSan"
     set SANITIZERS "-fsanitize=thread"
   end
   set -g FULLARGS $FULLARGS \

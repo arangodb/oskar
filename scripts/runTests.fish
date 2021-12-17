@@ -205,7 +205,7 @@ set -x MALLOC_CONF background_thread:false
 setupTmp
 cd $INNERWORKDIR/ArangoDB
 
-if test "$ASAN" = "On"
+if test "$SAN" = "On"
   ulimit -c 0
   ulimit -s 16384
 else
@@ -239,7 +239,7 @@ switch $TESTSUITE
     exit 1
 end
 
-if test "$ASAN" = "On"
+if test "$SAN" = "On"
   set timeLimit (math $timeLimit \* 4)
 end
 
