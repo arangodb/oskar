@@ -8,7 +8,7 @@
   </p>
   <p>
     In order to install the stand-alone version use
-    <pre>docker run -p 8529:8529 -e ARANGO_ROOT_PASSWORD=openSesame -e ARANGO_LICENSE_KEY=@ARANGODB_LICENSE_KEY@ @DOCKER_IMAGE@</pre>
+    <pre>docker run -p 8529:8529 -e ARANGO_ROOT_PASSWORD=openSesame @DOCKER_IMAGE@</pre>
   </p>
   <p>
     See the
