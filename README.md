@@ -32,6 +32,25 @@ and clone the ArangoDB source (optionally including the enterprise
 code) into a subdirectory `work` in the current directory. It will
 also show its current configuration.
 
+### OpenSSL dependency build (macOS)
+
+Oskar can build the OpenSSL version required for further building of ArangoDB
+(based on particular branch requirement).
+
+In order to use it `oskarOpenSSL` function has to be called prior to do
+*Building ArangoDB*.
+
+Otherwise `ownOpenSSL` is executed (by default) during oskar initialization.
+
+In case of non-oskar OpenSSL preferred usage there is a need to set
+OPENSSL_ROOT_DIR globally (in oskar session or through *Environment* capability).
+It should be set to the installed (or manually built) OpenSSL binaries and
+libraries.
+
+There is no need to set OPENSSL_ROOT_DIR globally if a Homebrew package was
+installed and it's version matches ArangoDB particular branch requirement. This
+is automatically done by oskar in case of `ownOpenSSL` usage.
+
 ### Configurations and Secrets
 
 Oskar uses some environments variable, see the chapter *Environment*.

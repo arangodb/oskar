@@ -16,9 +16,11 @@ end
 cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and showRepository
 and if test $IS_NIGHTLY_BUILD = true; setNightlyRelease; end
 and set -xg RELEASE_TYPE "preview"
+and showRepository
+and showConfig
+and pingDetails
 and makeDockerCommunityDebug "$DOCKER_TAG"
 
 set -l s $status

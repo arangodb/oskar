@@ -56,6 +56,8 @@ and cat coverage/coverage.xml \
       | sed -e "s:filename=\":filename=\"./coverage/:g" \
       > coverage/coverage.xml.tmp
 and mv coverage/coverage.xml.tmp coverage/coverage.xml
-and for d in lib arangosh arangod enterprise/Enterprise
-  cp -a /work/ArangoDB/$d coverage/$d
+and for d in lib arangosh client-tools arangod enterprise/Enterprise
+  if test -d $d
+  	cp -a /work/ArangoDB/$d coverage/$d
+  end
 end

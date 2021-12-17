@@ -8,9 +8,13 @@ set -gx THIRDPARTY_SBIN third_party/sbin
 set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -xg IONICE ""
+set -gx ARCH (uname -m)
+
+rm -f $SCRIPTSDIR/tools/sccache
+ln -s $SCRIPTSDIR/tools/sccache-apple-darwin-$ARCH $SCRIPTSDIR/tools/sccache
 
 function defaultMacOSXDeploymentTarget
-  set -xg MACOSX_DEPLOYMENT_TARGET 10.12
+  set -xg MACOSX_DEPLOYMENT_TARGET 10.14
 end
 
 if test -z "$MACOSX_DEPLOYMENT_TARGET"
@@ -77,22 +81,131 @@ function findRequiredMinMacOS
 end
 
 function opensslVersion
-  set -l oversion $argv[1]
+  set -gx OPENSSL_VERSION $argv[1]
+end
 
-  if test "$oversion" = ""
-    set -e OPENSSL_VERSION
-    return 0
+function downloadOpenSSL
+  findRequiredOpenSSL
+  set -l directory $WORKDIR/work/openssl
+  set -l url https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz  
+  mkdir -p $directory
+  cd $directory
+  echo "Downloading sources to $directory from URL: $url"
+  curl -LO $url
+  rm -rf openssl-$OPENSSL_VERSION
+  tar -xzvf openssl-$OPENSSL_VERSION.tar.gz
+  set -xg OPENSSL_SOURCE_DIR "$directory/openssl-$OPENSSL_VERSION"
+end
+
+function buildOpenSSL
+  if test "$OPENSSL_SOURCE_DIR" = ""; or ! test -d $OPENSSL_SOURCE_DIR
+    echo "Please download OpenSSL source with `downloadOpenSSL` function before building it!"
+    return 1
+  else if checkOskarOpenSSL
+    echo "OpenSSL was already built! No need to rebuild it."
+    return
+  end
+  cd $OPENSSL_SOURCE_DIR
+  mkdir build
+  
+  if test -z "$ARCH"
+    echo "ARCH is not set! Can't decide wether to build OpenSSL for arm64 or x86_64."
+    return 1
   end
 
-  switch $oversion
-    case '1.0.2'
-      set -gx OPENSSL_VERSION $oversion
+  if test "$ARCH" = "x86_64"
+    set -xg OPENSSL_PLATFORM darwin64-x86_64-cc
+  else if test "$ARCH" = "arm64"
+    set -xg OPENSSL_PLATFORM darwin64-arm64-cc
+  else
+    echo "Unsupported architecture: $ARCH. OpenSSL oskar build is supported for x86_64 or arm64!"
+    return 1
+  end
 
-    case '1.1.1'
-      set -gx OPENSSL_VERSION $oversion
+  for type in shared no-shared
+    for mode in debug release
+      set -l cmd "perl ./Configure --prefix=$OPENSSL_SOURCE_DIR/build/$mode/$type --openssldir=$OPENSSL_SOURCE_DIR/build/$mode/$type/openssl --$mode $type $OPENSSL_PLATFORM"
+      echo "Executing: $cmd"
+      eval $cmd
+      make
+      make test
+      make install_dev
+    end
+  end
+end
 
+function findOpenSSLPath
+  set -gx OPENSSL_SOURCE_DIR $WORKDIR/work/openssl/openssl-$OPENSSL_VERSION
+  set -xg OPENSSL_ROOT $OPENSSL_SOURCE_DIR/build  
+
+  switch $BUILDMODE
+    case "Debug"
+      set mode debug
+    case "Release" "RelWithDebInfo" "MinSizeRel"
+      set mode release
     case '*'
-      echo "unknown openssl version $oversion"
+      echo "Unknown BUILDMODE value: $BUILDMODE! Please, use `releaseMode` or `debugMode` oskar functions to set it."
+      return 1
+  end
+    
+  set -gx OPENSSL_USE_STATIC_LIBS "On"
+  set -gx OPENSSL_PATH "$OPENSSL_ROOT/$mode/no-shared"
+end
+
+set -xg OPENSSL_ROOT_HOMEBREW ""
+
+function checkBrewOpenSSL
+  set -xg OPENSSL_ROOT_HOMEBREW ""
+  if which -s brew
+    set -l prefix (brew --prefix)
+    if count $prefix/Cellar/openssl*/* > /dev/null
+      set -l matcher "[0-9]\.[0-9]\.[0-9]"
+      set -l sslVersion ""
+      set -l sslPath ""
+      findRequiredOpenSSL
+      if test "$USE_STRICT_OPENSSL" = "On"
+        set matcher $matcher"[a-z]"
+        set sslVersion (echo "$OPENSSL_VERSION" | grep -o $matcher)
+        set sslPath (realpath $prefix/Cellar/openssl*/* | grep -m 1 $sslVersion)
+      else
+        set sslVersion (echo "$OPENSSL_VERSION" | grep -o $matcher)'*'
+        set sslPath (realpath $prefix/Cellar/openssl*/* | grep -m 1 $sslVersion)
+    end
+
+      if test "$sslPath" != ""; and test -e $sslPath/bin/openssl > /dev/null; and count $sslPath/lib/* > /dev/null
+        set -l executable "$sslPath/bin/openssl"
+        set -l cmd "$executable version | grep -o $matcher"
+        set -l output (eval "arch -$ARCH $cmd")
+        if test "$output" = (echo "$OPENSSL_VERSION" | grep -o $matcher)
+          echo "Found matching OpenSSL $sslPath installed by Homebrew."
+          set -xg OPENSSL_ROOT_HOMEBREW $sslPath
+          return  
+        end
+      end
+    end
+  end
+  echo "Couldn't find matching OpenSSL version installed by Homebrew! Please, try `brew install openssl` prior to check."
+  return 1
+end
+
+function checkOskarOpenSSL
+  findOpenSSLPath
+  set -l executable "$OPENSSL_SOURCE_DIR/apps/openssl"
+  if ! test -f "$executable"
+    echo "Couldn't find OpenSSL $OPENSSL_VERSION at $OPENSSL_SOURCE_DIR!"
+    false
+    return 1
+  end
+  set -l cmd "$executable version | grep -o \"[0-9]\.[0-9]\.[0-9][a-z]\""
+  set -l output (eval "arch -$ARCH $cmd")
+  if test "$output" = "$OPENSSL_VERSION"
+    echo "Found OpenSSL $OPENSSL_VERSION"
+    true
+    return
+  else
+    echo "Couldn't find OpenSSL $OPENSSL_VERSION!"
+    false
+    return 1
   end
 end
 
@@ -110,14 +223,59 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9]")
+  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9][a-z]")
 
   if test "$v" = ""
-    echo "$f: no OPENSSL_MACOS specified, using 1.0.2"
-    opensslVersion 1.0.2
+    echo "$f: no OPENSSL_MACOS specified, using 1.1.1g"
+    opensslVersion 1.1.1g
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
+  end
+end
+
+function oskarOpenSSL
+  set -xg USE_OSKAR_OPENSSL "On"
+end
+
+function ownOpenSSL
+  set -xg USE_OSKAR_OPENSSL "Off"
+end
+
+if test -z "$USE_OSKAR_OPENSSL"
+  if test "$IS_JENKINS" = "true"
+    oskarOpenSSL
+  else
+    ownOpenSSL
+  end
+else
+  set -gx USE_OSKAR_OPENSSL $USE_OSKAR_OPENSSL
+end
+
+function prepareOpenSSL
+  if test "$USE_OSKAR_OPENSSL" = "On"
+    findRequiredOpenSSL
+    echo "Use OpenSSL within oskar: build $OPENSSL_VERSION if not present"
+
+    if not checkOskarOpenSSL
+      downloadOpenSSL
+      and buildOpenSSL
+      or return 1
+    end
+
+    echo "Set OPENSSL_ROOT_DIR via environment variable to $OPENSSL_PATH"
+    set -xg OPENSSL_ROOT_DIR $OPENSSL_PATH
+  else
+    if checkBrewOpenSSL
+      echo "Use local OpenSSL installed by Homebrew and set OPENSSL_ROOT_DIR environment variable to "
+      set -xg OPENSSL_ROOT_DIR $OPENSSL_ROOT_HOMEBREW
+    else
+      echo "Use local OpenSSL: expect OPENSSL_ROOT_DIR environment variable"
+      if test -z $OPENSSL_ROOT_DIR
+        echo "Need OPENSSL_ROOT_DIR global variable!"
+        return 1
+      end
+    end 
   end
 end
 
@@ -184,10 +342,10 @@ end
 
 function buildArangoDB
   checkoutIfNeeded
-  and findRequiredOpenSSL
   and findDefaultArchitecture
   and findUseARM
   and findRequiredMinMacOS
+  and prepareOpenSSL
   and runLocal $SCRIPTSDIR/buildMacOs.fish $argv
   set -l s $status
   if test $s -ne 0
@@ -197,10 +355,10 @@ function buildArangoDB
 end
 
 function makeArangoDB
-  findRequiredOpenSSL
-  and findDefaultArchitecture
+  findDefaultArchitecture
   and findUseARM
   and findRequiredMinMacOS
+  and prepareOpenSSL
   and runLocal $SCRIPTSDIR/makeArangoDB.fish $argv
   set -l s $status
   if test $s -ne 0
@@ -301,7 +459,6 @@ function buildEnterprisePackage
     set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
   end
   and buildArangoDB \
-      -DTARGET_ARCHITECTURE=westmere \
       -DPACKAGING=Bundle \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
       -DTHIRDPARTY_SBIN=$THIRDPARTY_SBIN_LIST \
@@ -326,7 +483,6 @@ function buildCommunityPackage
   and cleanupThirdParty
   and downloadStarter
   and buildArangoDB \
-      -DTARGET_ARCHITECTURE=westmere \
       -DPACKAGING=Bundle \
       -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
       -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
