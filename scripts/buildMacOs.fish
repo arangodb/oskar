@@ -6,29 +6,14 @@ if test "$PARALLELISM" = ""
 end
 echo "Using parallelism $PARALLELISM"
 
-set -xg CC_NAME gcc
-set -xg CXX_NAME g++
-
-if test "$OPENSSL_VERSION" = ""
-  set -xg OPENSSL_VERSION 1.0.2
-end
-switch $OPENSSL_VERSION
-  case '1.0.2'
-      set -xg OPENSSL_PATH (set last (brew --prefix)/Cellar/openssl/{$OPENSSL_VERSION}*;and echo $last[-1])
-
-  case '1.1.1'
-      set -xg OPENSSL_PATH (set last (brew --prefix)/Cellar/openssl@1.1/{$OPENSSL_VERSION}*;and echo $last[-1])
-
-  case '*'
-      echo "unknown openssl version $OPENSSL_VERSION"
-end
-echo "Using openssl version $OPENSSL_VERSION and path $OPENSSL_PATH"
+set -xg CC_NAME clang
+set -xg CXX_NAME clang++
 
 if test "$ASAN" = "On"
   echo "ASAN is not support in this environment"
 end
 
-set -g FULLARGS $argv \
+set -xg FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
@@ -36,9 +21,8 @@ set -g FULLARGS $argv \
  -DCMAKE_SKIP_RPATH=On \
  -DPACKAGING=Bundle \
  -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
- -DOPENSSL_USE_STATIC_LIBS=On \
- -DCMAKE_LIBRARY_PATH=$OPENSSL_PATH/lib \
- -DOPENSSL_ROOT_DIR=$OPENSSL_PATH \
+ -DOPENSSL_USE_STATIC_LIBS=$OPENSSL_USE_STATIC_LIBS \
+ -DOPENSSL_ROOT_DIR=$OPENSSL_ROOT_DIR \
  -DCMAKE_OSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
