@@ -60,6 +60,8 @@ if test "$SAN" = "On"
   set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak"
   if test "$SAN_MODE" = "TSan"
     set SANITIZERS "-fsanitize=thread"
+    set -xg CC_NAME clang
+    set -xg CXX_NAME clang++
   end
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=Off \
