@@ -30,7 +30,7 @@ if not test -z $SAN; and test $SAN = "On"
 
   # suppressions
   if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
-    set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
+    set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt:print_suppressions=0"
   end
 
   if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
@@ -38,11 +38,11 @@ if not test -z $SAN; and test $SAN = "On"
   end
 
   if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
-    set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt"
+    set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt:print_suppressions=0"
   end
 
   if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
-    set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
+    set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0"
   end
 
   echo "ASAN: $ASAN_OPTIONS"
