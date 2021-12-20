@@ -435,8 +435,7 @@ function oskar
     parallelism 2
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
-    checkSanStatus
-    set s (math $s + $status)
+    set s (math $s + (getSanStatus))
   else
     runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
   end
@@ -516,8 +515,8 @@ end
 ## san
 ## #############################################################################
 
-function checkSanStatus
-  return (count $WORKDIR/work/asan.log.* $WORKDIR/work/lsan.log.* $WORKDIR/work/tsan.log.* $WORKDIR/work/ubsan.log.*)
+function getSanStatus
+  echo (count $WORKDIR/work/asan.log.* $WORKDIR/work/lsan.log.* $WORKDIR/work/tsan.log.* $WORKDIR/work/ubsan.log.*)
 end
 
 ## #############################################################################
