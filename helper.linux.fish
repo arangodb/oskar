@@ -516,7 +516,7 @@ end
 ## #############################################################################
 
 function getSanStatus
-  echo (count $WORKDIR/work/asan.log.* $WORKDIR/work/lsan.log.* $WORKDIR/work/tsan.log.* $WORKDIR/work/ubsan.log.*)
+  echo (count $WORKDIR/work/aulsan.log.* $WORKDIR/work/tsan.log.*)
 end
 
 ## #############################################################################
