@@ -438,8 +438,8 @@ function oskar
     set s (math $s + (getSanStatus))
   else
     runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    set s $status
   end
-  set s $status
 
   parallelism $p
   return $s
