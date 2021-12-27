@@ -9,7 +9,7 @@ and skipGrey
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and compiler "$COMPILER_VERSION"
-and asanOn
+and sanOn
 and showConfig
 and oskar1
 

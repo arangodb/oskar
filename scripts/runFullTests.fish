@@ -243,51 +243,51 @@ set -x MALLOC_CONF background_thread:false
 setupTmp
 cd $INNERWORKDIR/ArangoDB
 
-if test "$ASAN" = "On"
+if test "$SAN" = "On"
   ulimit -c 0
+  ulimit -s 16384
 else
   ulimit -c unlimited
 end
 
+set -g timeout 0
+set -g timeLimit -1
+set -g suiteRunner ""
+
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
-    and if test "$ASAN" = "On"
-      waitOrKill 72000 launchClusterTests
-    else
-      waitOrKill 18000 launchClusterTests
-    end
-    createReport
+    set timeLimit 16200
+    set suiteRunner "launchClusterTests"
   case "single"
     resetLaunch 1
-    and if test "$ASAN" = "On"
-      waitOrKill 36000 launchSingleTests
-    else
-      waitOrKill 9000 launchSingleTests
-    end
-    createReport
+    set timeLimit 9000
+    set suiteRunner "launchSingleTests"
   case "catchtest"
     resetLaunch 1
-    and if test "$ASAN" = "On"
-      waitOrKill 7200 launchCatchTest
-    else
-      waitOrKill 1800 launchCatchTest
-    end
-    createReport
+    set timeLimit 1800
+    set suiteRunner "launchCatchTest"
   case "resilience"
     resetLaunch 4
-    and if test "$ASAN" = "On"
-      waitOrKill 43200 launchResilienceTests
-    else
-      waitOrKill 10800 launchResilienceTests
-    end
-    createReport
+    set timeLimit 10800
+    set suiteRunner "launchResilienceTests"
   case "*"
     echo Unknown test suite $TESTSUITE
     set -g result BAD
+    exit 1
 end
 
-if test $result = GOOD
+if test "$SAN" = "On"
+  set timeLimit (math $timeLimit \* 4)
+end
+
+set evalCmd "waitOrKill $timeLimit $suiteRunner"
+eval $evalCmd
+set timeout $status
+
+createReport
+
+if test $result = GOOD -a $timeout = 0
   exit 0
 else
   exit 1

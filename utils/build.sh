@@ -106,7 +106,7 @@ function createPackage
   source helper.fish
 
   findArangoDBVersion
-  and asanOff
+  and sanOff
   and maintainerOff
   and releaseMode
   and enterprise
