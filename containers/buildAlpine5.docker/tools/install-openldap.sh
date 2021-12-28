@@ -6,7 +6,7 @@ test -n "$OPENSSLVERSION"
 export OPENSSLPATH=`echo $OPENSSLVERSION | tr -d "a-zA-Z"`
 
 # Compile openldap library:
-export OPENLDAPVERSION=2.4.59
+export OPENLDAPVERSION=2.6.0
 cd /tmp
 curl -O ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-$OPENLDAPVERSION.tgz
 tar xzf openldap-$OPENLDAPVERSION.tgz
