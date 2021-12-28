@@ -445,7 +445,7 @@ function buildEnterprisePackage
  
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
-  asanOff
+  sanOff
   and maintainerOff
   and releaseMode
   and enterprise
@@ -475,7 +475,7 @@ end
 function buildCommunityPackage
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
-  asanOff
+  sanOff
   and maintainerOff
   and releaseMode
   and community

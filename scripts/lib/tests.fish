@@ -12,50 +12,57 @@ end
 # Meaningful for ArangoDB 3.7+ versions only
 # set -xg ARANGODB_OVERRIDE_CRASH_HANDLER "Off"
 
-# Enable full ASAN mode
-if not test -z $ASAN; and test $ASAN = "On"
-  echo "Use ASAN mode"
+# Clear sanitizers options
+set -e ASAN_OPTIONS
+set -e LSAN_OPTIONS
+set -e UBSAN_OPTIONS
+set -e TSAN_OPTIONS  
 
-  # address sanitizer
-  set -xg ASAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
+# Enable full SAN mode
+if not test -z $SAN; and test $SAN = "On"
+  echo "Use SAN mode: $SAN_MODE"
 
-  # leak sanitizer
-  set -xg LSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+  switch "$SAN_MODE"
+    case "AULSan"
+      # address sanitizer
+      set -xg ASAN_OPTIONS "log_path=/work/aulsan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
 
-  # undefined behavior sanitizer
-  set -xg UBSAN_OPTIONS "log_path=/work/asan.log:log_exe_name=true"
+      # leak sanitizer
+      set -xg LSAN_OPTIONS "log_path=/work/aulsan.log:log_exe_name=true"
 
-  # thread sanitizer
-  set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
+      # undefined behavior sanitizer
+      set -xg UBSAN_OPTIONS "log_path=/work/aulsan.log:log_exe_name=true"
 
-  # suppressions
-  if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
-    set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
+      # suppressions
+      if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
+        set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt:print_suppressions=0"
+      end
+
+      if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
+        set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt:print_suppressions=0"
+      end
+
+      if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
+        set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt:print_suppressions=0"
+      end
+
+      echo "ASAN: $ASAN_OPTIONS"
+      echo "LSAN: $LSAN_OPTIONS"
+      echo "UBSAN: $UBSAN_OPTIONS"
+    case "TSan"
+      # thread sanitizer
+      set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
+
+      # suppressions
+      if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
+        set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0"
+      end
+      echo "TSAN: $TSAN_OPTIONS"
+    case '*'
+      echo "Unknown sanitizer mode: $SAN_MODE"
   end
-
-  if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
-    set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt:print_suppressions=0"
-  end
-
-  if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
-    set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt"
-  end
-
-  if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
-    set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
-  end
-
-  echo "ASAN: $ASAN_OPTIONS"
-  echo "LSAN: $LSAN_OPTIONS"
-  echo "UBSAN: $UBSAN_OPTIONS"
-  echo "TSAN: $TSAN_OPTIONS"
 else
-  echo "Don't use ASAN mode"
-
-  set -e ASAN_OPTIONS
-  set -e LSAN_OPTIONS
-  set -e UBSAN_OPTIONS
-  set -e TSAN_OPTIONS  
+  echo "Don't use SAN mode"
 end
 
 set -xg GCOV_PREFIX /work/gcov
@@ -83,7 +90,7 @@ function runAnyTest
     echo Test suite $l0 skipped by UnitTests/OskarTestSuitesBlockList
   else
     set -l arguments \'"$t"\' \
-      (not test -z $ASAN; and test $ASAN = "On"; and echo "--isAsan true") \
+      (not test -z $SAN; and test $SAN = "On"; and echo "--isAsan true") \
       --storageEngine $STORAGEENGINE \
       --minPort $portBase --maxPort (math $portBase + 99) \
       --skipNondeterministic "$SKIPNONDETERMINISTIC" \
@@ -379,15 +386,16 @@ function waitOrKill
     echo (date) timeout after $timeout
     set -l ids (jobs -p)
     if test (count $ids) -gt 0
-      kill -6 $ids
+      kill -9 $ids
       if waitForProcesses 30 ""
         set -l ids (jobs -p)
         if test (count $ids) -gt 0
-          kill -6 $ids
+          kill -9 $ids
           waitForProcesses 60 ""   # give jobs some time to finish
         end
       end
     end
+    return 1
   end
   return 0
 end

@@ -9,8 +9,8 @@ echo "Using parallelism $PARALLELISM"
 set -xg CC_NAME clang
 set -xg CXX_NAME clang++
 
-if test "$ASAN" = "On"
-  echo "ASAN is not support in this environment"
+if test "$SAN" = "On"
+  echo "SAN is not support in this environment"
 end
 
 set -xg FULLARGS $argv \

@@ -6,7 +6,7 @@ set s 0
 cleanPrepareLockUpdateClear
 and enterprise
 and maintainerOn
-and asanOff
+and sanOff
 and coverageOn
 and skipGrey
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true

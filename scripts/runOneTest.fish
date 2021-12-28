@@ -13,7 +13,7 @@ set -x MALLOC_CONF background_thread:false
 setupTmp
 cd $INNERWORKDIR/ArangoDB
 
-if test "$ASAN" = "On"
+if test "$SAN" = "On"
   ulimit -c 0
 else
   ulimit -c unlimited

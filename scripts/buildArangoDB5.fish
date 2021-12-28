@@ -54,13 +54,19 @@ end
 #   -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold
 #end
 
-if test "$ASAN" = "On"
+if test "$SAN" = "On"
   # Suppress leaks detection only during building
-  set -gx ASAN_OPTIONS "detect_leaks=0"
+  set -gx SAN_OPTIONS "detect_leaks=0"
+  set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak"
+  if test "$SAN_MODE" = "TSan"
+    set SANITIZERS "-fsanitize=thread"
+    set -xg CC_NAME clang
+    set -xg CXX_NAME clang++
+  end
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=Off \
-   -DCMAKE_C_FLAGS="-pthread -fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=alignment" \
-   -DCMAKE_CXX_FLAGS="-pthread -fsanitize=address -fsanitize=undefined -fsanitize=leak -fno-sanitize=vptr -fno-sanitize=alignment" \
+   -DCMAKE_C_FLAGS="-pthread $SANITIZERS -fno-sanitize=alignment" \
+   -DCMAKE_CXX_FLAGS="-pthread $SANITIZERS -fno-sanitize=vptr -fno-sanitize=alignment" \
    -DBASE_LIBS="-pthread"
 else if test "$COVERAGE" = "On"
   echo "COVERAGE is not support in this environment!"
