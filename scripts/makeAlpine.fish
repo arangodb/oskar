@@ -9,10 +9,10 @@ set -x CCACHE_DIR $INNERWORKDIR/.ccache.alpine
 if test "$CCACHEBINPATH" = ""
   set -xg CCACHEBINPATH /usr/lib/ccache/bin
 end
-if test "$CCACHESIZE" = ""
-  set -xg CCACHESIZE 30G
+if test "$CCACHE_MAXSIZE" = ""
+  set -xg CCACHE_MAXSIZE 30G
 end
-ccache -M $CCACHESIZE
+ccache -M $CCACHE_MAXSIZE
 
 cd $INNERWORKDIR/ArangoDB/build
 or exit $status
