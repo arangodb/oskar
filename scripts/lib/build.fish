@@ -21,7 +21,15 @@ function setupCcacheBinPath
   else if test "$USE_CCACHE" = "On"
     switch $CCACHETYPE
       case macos
-          set -xg CCACHEBINPATH /usr/local/opt/ccache/libexec
+          switch "$ARCH"
+              case "arm64"
+                  set -xg CCACHEBINPATH /opt/homebrew/opt/ccache/libexec
+              case "x86_64"
+                  set -xg CCACHEBINPATH /usr/local/opt/ccache/libexec
+              case '*'
+                  echo "fatal, unknown CCACHEBINPATH for $ARCH of $CCACHETYPE"
+                  exit
+          end
       case alpine
           set -xg CCACHEBINPATH /usr/lib/ccache/bin
       case ubuntu
@@ -47,10 +55,10 @@ function setupCcache
       exit 1
     end
 
-    if test "$CCACHESIZE" = ""
+    if test "$CCACHE_MAXSIZE" = ""
       set -xg SCCACHE_CACHE_SIZE 200G
     else
-      set -xg SCCACHE_CACHE_SIZE $CCACHESIZE
+      set -xg SCCACHE_CACHE_SIZE $CCACHE_MAXSIZE
     end
 
     if test "$SCCACHE_BUCKET" != "" -a "$AWS_ACCESS_KEY_ID" != ""
@@ -108,16 +116,16 @@ function setupCcache
       echo "fatal, CCACHEBINPATH not set" 
       exit 1
     end
-    if test "$CCACHESIZE" = ""
-      set -xg CCACHESIZE 50G
+    if test "$CCACHE_MAXSIZE" = ""
+      set -xg CCACHE_MAXSIZE 50G
     end
 
-    echo "using ccache at $CCACHE_DIR ($CCACHESIZE)"
+    echo "using ccache at $CCACHE_DIR ($CCACHE_MAXSIZE)"
 
     pushd $INNERWORKDIR
     and mkdir -p .ccache.$CCACHETYPE
     and rm -f .ccache.log
-    and ccache -M $CCACHESIZE
+    and ccache -M $CCACHE_MAXSIZE
     and ccache --zero-stats
     and popd
     or begin echo "fatal, cannot start ccache"; exit 1; end

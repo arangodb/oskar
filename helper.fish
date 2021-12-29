@@ -1351,8 +1351,8 @@ function showConfig
   printf $fmt3 'Skip MAKE'     $SKIP_MAKE     '(makeOn/Off)'
   printf $fmt3 'Github Mirror' "$GITHUB_MIRROR" '(githubMirror)'
   printf $fmt3 'CCACHE'        $USE_CCACHE    '(ccacheOn/Off/sccacheOn)'
-  if test "$CCACHESIZE" != ""
-  printf $fmt3 'CCACHE size'   $CCACHESIZE          '(CCACHESIZE)'
+  if test "$CCACHE_MAXSIZE" != ""
+  printf $fmt3 'CCACHE size'   $CCACHE_MAXSIZE          '(CCACHE_MAXSIZE)'
   end
   if test "$USE_CCACHE" = "sccache"
     if test "$SCCACHE_BUCKET" != ""
