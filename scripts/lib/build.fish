@@ -21,7 +21,15 @@ function setupCcacheBinPath
   else if test "$USE_CCACHE" = "On"
     switch $CCACHETYPE
       case macos
-          set -xg CCACHEBINPATH /usr/local/opt/ccache/libexec
+          switch "$ARCH"
+              case "arm64"
+                  set -xg CCACHEBINPATH /opt/homebrew/bin
+              case "x86_64"
+                  set -xg CCACHEBINPATH /usr/local/opt/ccache/libexec
+              case '*'
+                  echo "fatal, unknown CCACHEBINPATH for $ARCH of $CCACHETYPE"
+                  exit
+          end
       case alpine
           set -xg CCACHEBINPATH /usr/lib/ccache/bin
       case ubuntu
