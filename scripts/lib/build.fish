@@ -23,7 +23,7 @@ function setupCcacheBinPath
       case macos
           switch "$ARCH"
               case "arm64"
-                  set -xg CCACHEBINPATH /opt/homebrew/bin
+                  set -xg CCACHEBINPATH /opt/homebrew/opt/ccache/libexec
               case "x86_64"
                   set -xg CCACHEBINPATH /usr/local/opt/ccache/libexec
               case '*'

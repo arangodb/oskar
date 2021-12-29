@@ -11,7 +11,7 @@ set -xg IONICE ""
 set -gx ARCH (uname -m)
 
 if test "$ARCH" = "arm64"
-  set CCACHEBINPATH /opt/homebrew/bin
+  set CCACHEBINPATH /opt/homebrew/opt/ccache/libexec
 end
 
 rm -f $SCRIPTSDIR/tools/sccache
