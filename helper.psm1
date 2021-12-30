@@ -821,7 +821,7 @@ Function clearBuild
     $global:KEEPBUILD = "Off"
 }
 
-If (-Not($KEEPBUILD))
+If (-Not ($KEEPBUILD))
 {
     $global:KEEPBUILD = "Off"
 }
@@ -836,9 +836,9 @@ Function setOnlyFailLogsToWorkspace
     $global:WORKSPACE_LOGS = "fail"
 }
 
-If (-Not($WORKSPACE_LOGS))
+If (-Not ($global:WORKSPACE_LOGS))
 {
-    $global:WORKSPACE_LOGS = "fail"
+    setOnlyFailLogsToWorkspace
 }
 
 Function setPDBsToWorkspaceOnCrashOnly
@@ -1854,7 +1854,7 @@ Function oskar
     If ($global:ok)
     {
         configureDumpsArangoDB
-        & "$global:SCRIPTSDIR\runTests.ps1"
+        . "$global:SCRIPTSDIR\runTests.ps1"
     }
     oskarCheck
 }
@@ -1865,7 +1865,7 @@ Function oskarFull
     If ($global:ok)
     {
         configureDumpsArangoDB
-        & "$global:SCRIPTSDIR\runFullTests.ps1"
+        . "$global:SCRIPTSDIR\runFullTests.ps1"
     }
     oskarCheck
 }
