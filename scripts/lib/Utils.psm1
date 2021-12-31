@@ -105,7 +105,7 @@ Function createReport
         Remove-Item -Force "$INNERWORKDIR\testfailures.txt"
     }
 
-    If($global:hasTestCrashes -eq "true")
+    If($global:result -eq "BAD" -Or $global:hasTestCrashes -eq "true")
     {
         $global:oskarErrorMessage | Add-Content "$INNERWORKDIR\testfailures.txt"
         ForEach ($file in (Get-ChildItem -Path $env:TMP -Filter "testfailures.txt" -Recurse).FullName)
