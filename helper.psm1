@@ -1729,11 +1729,12 @@ Function buildStaticArangoDB
 Function moveResultsToWorkspace
 {
     findArangoDBVersion
+    $hasFailures=(Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive)
     Write-Host "Moving reports and logs to $ENV:WORKSPACE ..."
     Write-Host "test.log ..."
     If (Test-Path -PathType Leaf "$INNERWORKDIR\test.log")
     {
-        If ((Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive) -Or $global:WORKSPACE_LOGS -eq "all")
+        If (-not [string]::IsNullOrEmpty($hasFailures) -Or $global:WORKSPACE_LOGS -eq "all")
         {
             ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter testreport*))
             {
@@ -1792,7 +1793,7 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     
-    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crashOrFail" -and ($global:hasTestCrashes -eq "true" -or (Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive))))
+    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crashOrFail" -and ($global:hasTestCrashes -eq "true" -or -not [string]::IsNullOrEmpty($hasFailures))))
     {
         Write-Host "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE} ..."
         ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE}"))
