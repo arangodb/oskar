@@ -656,7 +656,7 @@ Function signPackageOff
 }
 If (-Not($SIGN))
 {
-    signPackageOn
+    signPackageOff
 }
 
 Function maintainerOn
@@ -841,9 +841,9 @@ If (-Not ($global:WORKSPACE_LOGS))
     setOnlyFailLogsToWorkspace
 }
 
-Function setPDBsToWorkspaceOnCrashOnly
+Function setPDBsToWorkspaceOnCrashOrFailOnly
 {
-    $global:PDBS_TO_WORKSPACE = "crash"
+    $global:PDBS_TO_WORKSPACE = "crashOrFail"
 }
 
 Function setPDBsToWorkspaceAlways
@@ -1792,7 +1792,7 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     
-    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes -eq "true"))
+    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crashOrFail" -and ($global:hasTestCrashes -eq "true" -or (Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive))))
     {
         Write-Host "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE} ..."
         ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE}"))

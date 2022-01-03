@@ -4,6 +4,7 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 switchBranches $env:RELEASE_TAG $env:RELEASE_TAG
 If ($global:ok) 
 {
+    signPackageOn
     clcacheOff
     makeCommunityRelease
 }

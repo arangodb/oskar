@@ -11,7 +11,7 @@ skipPackagingOn
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok) 
 {
-    setPDBsToWorkspaceOnCrashOnly
+    setPDBsToWorkspaceOnCrashOrFailOnly
     setPDBsArchive7z
     clcacheOn
     oskar1Full
