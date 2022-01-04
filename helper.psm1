@@ -1654,8 +1654,8 @@ Function preserveSymbolsToWorkdir
         {
             Write-Host "Remove existing ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
             Remove-Item -Force "${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE" -ErrorAction SilentlyContinue
-            Write-Host "Save *.pdb to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
-            7zip -Path *.pdb -DestinationPath "${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"; comm
+            Write-Host "Save arango*.pdb to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
+            7zip -Path arango*.pdb -DestinationPath "${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"; comm
         }
         Else
         {
