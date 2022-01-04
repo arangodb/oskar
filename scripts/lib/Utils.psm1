@@ -49,7 +49,7 @@ Function createReport
                             $global:result = "BAD"
                             $file = $($dir.BaseName).Substring(0,$($dir.BaseName).Length-4)+".stdout.log"
                             Write-Host "Crash occured in $file"
-                            $global:hasTestCrashes = "true"
+                            $global:hasTestCrashes = $True
                             "Crash occured in $file" | Add-Content "$env:TMP\testProtocol.txt"
                             $global:badtests = $global:badtests + "Crash occured in $file`r`n"
                         }   
@@ -105,7 +105,7 @@ Function createReport
         Remove-Item -Force "$INNERWORKDIR\testfailures.txt"
     }
 
-    If($global:result -eq "BAD" -Or $global:hasTestCrashes -eq "true")
+    If($global:result -eq "BAD" -Or $global:hasTestCrashes)
     {
         $global:oskarErrorMessage | Add-Content "$INNERWORKDIR\testfailures.txt"
         ForEach ($file in (Get-ChildItem -Path $env:TMP -Filter "testfailures.txt" -Recurse).FullName)

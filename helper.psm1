@@ -125,8 +125,7 @@ $global:maxTestCount = 0
 $global:testCount = 0
 $global:portBase = 10000
 $global:result = "GOOD"
-$global:hasTestCrashes = "false"
-$global:hasTestFailures = ""
+$global:hasTestCrashes = $False
 
 $global:ok = $true
 
@@ -842,9 +841,9 @@ If (-Not ($global:WORKSPACE_LOGS))
     setOnlyFailLogsToWorkspace
 }
 
-Function setPDBsToWorkspaceOnCrashOrFailOnly
+Function setPDBsToWorkspaceOnCrashOnly
 {
-    $global:PDBS_TO_WORKSPACE = "crashOrFail"
+    $global:PDBS_TO_WORKSPACE = "crash"
 }
 
 Function setPDBsToWorkspaceAlways
@@ -1318,11 +1317,15 @@ Function clearResults
     {
         Remove-Item -Force $INNERWORKDIR\testfailures.txt
     }
-    ForEach ($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.exe"))
+    ForEach ($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3*-*.exe"))
     {
         Remove-Item -Force $INNERWORKDIR\$file
     }
-    ForEach ($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3e-*.zip"))
+    ForEach ($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3*-*.zip"))
+    {
+        Remove-Item -Force $INNERWORKDIR\$file
+    }
+    ForEach ($file in $(Get-ChildItem -Path $INNERWORKDIR -Filter "ArangoDB3*-*.7z"))
     {
         Remove-Item -Force $INNERWORKDIR\$file
     }
@@ -1647,7 +1650,7 @@ Function preserveSymbolsToWorkdir
             $ARANGODB_PDB_PACKAGE = $ARANGODB_PDB_PACKAGE -replace "nightly.*pdb.${global:PDBS_ARCHIVE_TYPE}", "nightly.pdb.${global:PDBS_ARCHIVE_TYPE}"
         }
         Write-Host "Preserve symbols (PDBs) to ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
-        If (Test-Path -Path "$global:ARANGODIR\build\bin\$BUILDMODE\*.pdb")
+        If (Test-Path -Path "$global:ARANGODIR\build\bin\$BUILDMODE\arango*.pdb")
         {
             Write-Host "Remove existing ${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE"
             Remove-Item -Force "${global:INNERWORKDIR}\$ARANGODB_PDB_PACKAGE" -ErrorAction SilentlyContinue
@@ -1730,12 +1733,11 @@ Function buildStaticArangoDB
 Function moveResultsToWorkspace
 {
     findArangoDBVersion
-    $global:hasTestFailures = (Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive)
     Write-Host "Moving reports and logs to $ENV:WORKSPACE ..."
     Write-Host "test.log ..."
     If (Test-Path -PathType Leaf "$INNERWORKDIR\test.log")
     {
-        If (-not [string]::IsNullOrEmpty($global:hasTestFailures) -Or $global:WORKSPACE_LOGS -eq "all")
+        If ($global:result -eq "BAD" -Or $global:WORKSPACE_LOGS -eq "all")
         {
             ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter testreport*))
             {
@@ -1800,7 +1802,7 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     
-    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crashOrFail" -and ($global:hasTestCrashes -eq "true" -or -not [string]::IsNullOrEmpty($global:hasTestFailures))))
+    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes))
     {
         Write-Host "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE} ..."
         ForEach ($file in $(Get-ChildItem "$INNERWORKDIR" -Filter "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE}"))
@@ -1850,12 +1852,12 @@ Function configureDumpsArangoDB
 
 Function oskarCheck
 {
-    $global:hasTestFailures = (Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive)
-    $global:ok = ([string]::IsNullOrEmpty($global:hasTestFailures) -and $global:hasTestCrashes -eq "false")
-    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crashOrFail" -and -not $global:ok))
+    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes))
     {
         preserveSymbolsToWorkdir
     }
+
+    $global:ok = ($global:ok -and $global:result -eq "GOOD")
 }
 
 Function oskar

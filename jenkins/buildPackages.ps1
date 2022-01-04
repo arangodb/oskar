@@ -89,6 +89,7 @@ Else
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok ) 
 {
+    clearResults
     makeRelease
 }
 $s = $global:ok

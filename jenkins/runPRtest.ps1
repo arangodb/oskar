@@ -13,7 +13,7 @@ switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 
 If ($global:ok) 
 {
-    setPDBsToWorkspaceOnCrashOrFailOnly
+    setPDBsToWorkspaceOnCrashOnly
     setPDBsArchive7z
     clcacheOn
     oskar1
