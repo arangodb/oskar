@@ -1730,7 +1730,7 @@ Function buildStaticArangoDB
 Function moveResultsToWorkspace
 {
     findArangoDBVersion
-    $global:hasTestFailures=(Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive)
+    $global:hasTestFailures = (Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive)
     Write-Host "Moving reports and logs to $ENV:WORKSPACE ..."
     Write-Host "test.log ..."
     If (Test-Path -PathType Leaf "$INNERWORKDIR\test.log")
@@ -1850,8 +1850,9 @@ Function configureDumpsArangoDB
 
 Function oskarCheck
 {
-    $global:hasTestFailures=(Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive)
-    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crashOrFail" -and ($global:hasTestCrashes -eq "true" -or -not [string]::IsNullOrEmpty($global:hasTestFailures))))
+    $global:hasTestFailures = (Get-Content -Path "$INNERWORKDIR\test.log" -Head 1 | Select-String -Pattern "BAD" -CaseSensitive)
+    $global:ok = ([string]::IsNullOrEmpty($global:hasTestFailures) -and $global:hasTestCrashes -eq "false")
+    If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crashOrFail" -and -not $global:ok))
     {
         preserveSymbolsToWorkdir
     }
