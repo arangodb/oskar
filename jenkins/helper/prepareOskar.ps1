@@ -67,3 +67,4 @@ If($(Get-Module).Name -contains "oskar")
 }
 Import-Module "$OSKARDIR\oskar\helper.psm1"
 clearResults
+clearWorkdir

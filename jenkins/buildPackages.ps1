@@ -77,15 +77,24 @@ Function copyPackagesToStage2
   return $global:ok
 }
 
+If ($env:SIGN_PACKAGE -eq $true)
+{
+    signPackageOn
+}
+Else
+{
+    signPackageOff
+}
+
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok ) 
 {
+    clearResults
     makeRelease
 }
 $s = $global:ok
 If ($global:ok -And $env:COPY_TO_STAGE2 -eq $true) 
 {
-    storeSymbols
     copyPackagesToStage2
     $s = $global:ok
 }
