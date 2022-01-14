@@ -37,6 +37,7 @@ and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter
 and downloadSyncer
+and copyRclone "linux"
 and buildDockerImage $HUB_ENTERPRISE
 and docker push $HUB_ENTERPRISE
 and docker tag $HUB_ENTERPRISE $GCR_REG_PREFIX$HUB_ENTERPRISE
