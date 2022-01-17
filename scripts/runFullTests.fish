@@ -280,7 +280,16 @@ switch $TESTSUITE
 end
 
 if test "$SAN" = "On"
-  set timeLimit (math $timeLimit \* 4)
+  switch $SAN_MODE
+    case "TSan"
+      set timeLimit (math $timeLimit \* 8)
+    case "AULSan"
+      set timeLimit (math $timeLimit \* 4)
+    case "*"
+      echo Unknown SAN mode $SAN_MODE
+      set -g result BAD
+      exit 1
+  end
 end
 
 set evalCmd "waitOrKill $timeLimit $suiteRunner"

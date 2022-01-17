@@ -55,9 +55,9 @@ function sanOff ; set -gx SAN Off ; end
 if test -z "$SAN" ; sanOff
 else ; set -gx SAN $SAN ; end
 
-function sanModeAULsan ; set -gx SAN_MODE AULsan ; end
+function sanModeAULSan ; set -gx SAN_MODE AULSan ; end
 function sanModeTSan ; set -gx SAN_MODE TSan ; end
-if test -z "$SAN_MODE" ; sanModeAULsan
+if test -z "$SAN_MODE" ; sanModeAULSan
 else ; set -gx SAN_MODE $SAN_MODE ; end
 
 function jemallocOn; set -gx JEMALLOC_OSKAR On ; end
