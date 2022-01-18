@@ -928,7 +928,7 @@ Function findRequiredOpenSSL
     $global:OPENSSL_VERSION = $global:OPENSSL_DEFAULT_VERSION
 }
 
-$global:_DEFAULT_ARCHITECTURE_DEFAULT_VERSION = "westmere"
+$global:DEFAULT_ARCHITECTURE_DEFAULT_VERSION = "westmere"
 
 Function findDefaultArchitecture
 {
@@ -937,7 +937,8 @@ Function findDefaultArchitecture
         $DEFAULT_ARCHITECTURE = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "DEFAULT_ARCHITECTURE" | Select Line
         If ($DEFAULT_ARCHITECTURE -ne "")
         {
-            $global:DEFAULT_ARCHITECTURE = $Matches[0]
+            $DEFAULT_ARCHITECTURE -match "`"(?<architecture>[a-z-]*)`"" | Out-Null
+            $global:DEFAULT_ARCHITECTURE = $Matches['architecture']
             return
         }
     }
