@@ -935,7 +935,7 @@ Function findDefaultArchitecture
     If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
     {
         $DEFAULT_ARCHITECTURE = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "DEFAULT_ARCHITECTURE" | Select Line
-        If ($DEFAULT_ARCHITECTURE -ne "")
+        If ($DEFAULT_ARCHITECTURE)
         {
             $DEFAULT_ARCHITECTURE -match "`"(?<architecture>[a-z-]*)`"" | Out-Null
             $global:DEFAULT_ARCHITECTURE = $Matches['architecture']
