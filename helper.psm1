@@ -155,7 +155,7 @@ Function proc($process,$argument,$logfile,$priority)
     }
     If ($logfile -eq $false)
     {
-        $p = Start-Process "$process" -ArgumentList $argument -NoNewWindow -PassThru
+        $p = Start-Process $process -ArgumentList $argument -NoNewWindow -PassThru
         $p.PriorityClass = $priority
         $h = $p.Handle
         $p.WaitForExit()
@@ -170,7 +170,7 @@ Function proc($process,$argument,$logfile,$priority)
     }
     Else
     {
-        $p = Start-Process "$process" -ArgumentList $argument -RedirectStandardOutput "$logfile.stdout.log" -RedirectStandardError "$logfile.stderr.log" -PassThru
+        $p = Start-Process $process -ArgumentList $argument -RedirectStandardOutput "$logfile.stdout.log" -RedirectStandardError "$logfile.stderr.log" -PassThru
         $p.PriorityClass = $priority
         $h = $p.Handle
         $p.WaitForExit()
@@ -1588,8 +1588,8 @@ Function signWindows
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     ForEach ($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
-        Write-Host "Sign: signtool.exe sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
-        proc -process (Get-Command signtool.exe).Source -argument "sign /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
+        Write-Host "Sign: signtool.exe sign /fd sha1 /td sha1 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
+        proc -process signtool.exe -argument "sign /fd sha1 /td sha1 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
     }
     Pop-Location
 }
