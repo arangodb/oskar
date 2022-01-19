@@ -72,23 +72,23 @@ $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
 
-Function VS2017
-{
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2017"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
-    $global:GENERATOR = "Visual Studio 15 2017 Win64"
-    $global:GENERATORID = "v141"
-    $global:MSVS = "2017"
-}
 Function VS2019
 {
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname | Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
     $global:GENERATOR = "Visual Studio 16 2019"
     $global:GENERATORID = "v142"
     $global:MSVS = "2019"
 }
+Function VS2022
+{
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2022"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname | Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $global:GENERATOR = "Visual Studio 17 2022"
+    $global:GENERATORID = "v143"
+    $global:MSVS = "2022"
+}
 If (-Not($global:GENERATOR))
 {
-    VS2017
+    VS2019
 }
 
 Function findCompilerVersion
@@ -102,15 +102,15 @@ Function findCompilerVersion
 
                 switch ($Matches['version'])
                 {
-                    2017 { VS2017 }
                     2019 { VS2019 }
-                    default { VS2017 }
+                    2022 { VS2022 }
+                    default { VS2019 }
                 }
             return
         }
     }
 
-    VS2017
+    VS2019
 }
 
 findCompilerVersion
@@ -531,49 +531,47 @@ Function showCacheStats
 Function showConfig
 {
     Write-Host "------------------------------------------------------------------------------"
-    Write-Host "Global Configuration"
-    Write-Host "User           : "$env:USERDOMAIN\$env:USERNAME
-    Write-Host "Use cache      : "$CLCACHE
-    Write-Host "Cache          : "$env:CLCACHE_CL
-    Write-Host "Cachedir       : "$env:CLCACHE_DIR
-    Write-Host "CMakeConfigureCache      : "$env:CMAKE_CONFIGURE_DIR
+    Write-Host "Global Configuration:"
+    Write-Host "User                : "$env:USERDOMAIN\$env:USERNAME
+    Write-Host "Use cache           : "$CLCACHE
+    Write-Host "Cache               : "$env:CLCACHE_CL
+    Write-Host "Cachedir            : "$env:CLCACHE_DIR
+    Write-Host "CMakeConfigureCache : "$env:CMAKE_CONFIGURE_DIR
     Write-Host " "
-    Write-Host "Build Configuration"
-    Write-Host "Buildmode      : "$BUILDMODE
-    Write-Host "Enterprise     : "$ENTERPRISEEDITION
-    Write-Host "Maintainer     : "$MAINTAINER
-    Write-host "SkipNondeterministic       : "$SKIPNONDETERMINISTIC
-    Write-host "SkipTimeCritical       : "$SKIPTIMECRITICAL
-    Write-host "SkipGrey       : "$SKIPGREY
-    Write-host "OnlyGrey       : "$ONLYGREY
+    Write-Host "Build Configuration:"
+    Write-Host "Buildmode            : "$BUILDMODE
+    Write-Host "Enterprise           : "$ENTERPRISEEDITION
+    Write-Host "Maintainer           : "$MAINTAINER
+    Write-Host "Target architecture  : "$DEFAULT_ARCHITECTURE
+    Write-Host "Generator            : "$GENERATOR
+    Write-Host "OpenSSL              : "$OPENSSL_VERSION
+    Write-Host "Use oskar SSL        : "$USE_OSKAR_OPENSSL
+    Write-Host "Packaging            : "$PACKAGING
+    Write-Host "Static exec          : "$STATICEXECUTABLES
+    Write-Host "Static libs          : "$STATICLIBS
+    Write-Host "Failure tests        : "$USEFAILURETESTS
+    Write-Host "Keep build           : "$KEEPBUILD
+    Write-Host "PDBs workspace       : "$PDBS_TO_WORKSPACE
+    Write-Host "PDBs archive:        : "$PDBS_ARCHIVE_TYPE
+    Write-Host "DMP workspace        : "$ENABLE_REPORT_DUMPS
+    Write-Host "Use rclone           : "$USE_RCLONE
+    Write-Host "Sign package         : "$SIGN
     Write-Host " "
-    Write-Host "Generator      : "$GENERATOR
-    Write-Host "OpenSSL        :  ${OPENSSL_VERSION} (A.B.Cd)"
-    Write-Host "Use oskar SSL  : "$USE_OSKAR_OPENSSL
-    Write-Host "Packaging      : "$PACKAGING
-    Write-Host "Static exec    : "$STATICEXECUTABLES
-    Write-Host "Static libs    : "$STATICLIBS
-    Write-Host "Failure tests  : "$USEFAILURETESTS
-    Write-Host "Keep build     : "$KEEPBUILD
-    Write-Host "PDBs workspace : "$PDBS_TO_WORKSPACE
-    Write-Host "PDBs archive:  : "$PDBS_ARCHIVE_TYPE
-    Write-Host "DMP workspace  : "$ENABLE_REPORT_DUMPS
-    Write-Host "Use rclone     : "$USE_RCLONE
-    Write-Host "Sign package   : "$SIGN
+    Write-Host "Test Configuration:"
+    Write-Host "Storage engine       : "$STORAGEENGINE
+    Write-Host "Test suite           : "$TESTSUITE
+    Write-host "SkipNondeterministic : "$SKIPNONDETERMINISTIC
+    Write-host "SkipTimeCritical     : "$SKIPTIMECRITICAL
     Write-Host " "
-    Write-Host "Test Configuration"
-    Write-Host "Storage engine : "$STORAGEENGINE
-    Write-Host "Test suite     : "$TESTSUITE
+    Write-Host "Internal Configuration:"
+    Write-Host "Parallelism   : "$numberSlots
+    Write-Host "Verbose       : "$VERBOSEOSKAR
+    Write-Host "Logs preserve : "$WORKSPACE_LOGS
     Write-Host " "
-    Write-Host "Internal Configuration"
-    Write-Host "Parallelism    : "$numberSlots
-    Write-Host "Verbose        : "$VERBOSEOSKAR
-    Write-Host "Logs preserve  : "$WORKSPACE_LOGS
-    Write-Host " "
-    Write-Host "Directories"
-    Write-Host "Inner workdir  : "$INNERWORKDIR
-    Write-Host "Workdir        : "$WORKDIR
-    Write-Host "Workspace      : "$env:WORKSPACE
+    Write-Host "Directories:"
+    Write-Host "Inner workdir : "$INNERWORKDIR
+    Write-Host "Workdir       : "$WORKDIR
+    Write-Host "Workspace     : "$env:WORKSPACE
     Write-Host "------------------------------------------------------------------------------"
     Write-Host "Cache Statistics"
     showCacheStats
