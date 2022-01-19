@@ -52,6 +52,9 @@ if not test -z $SAN; and test $SAN = "On"
     case "TSan"
       # thread sanitizer
       set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
+      
+      # additional settings
+      set TSAN_OPTIONS "$TSAN_OPTIONS:second_deadlock_stack=1"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
