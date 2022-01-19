@@ -139,7 +139,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "server_parameters"
     registerTest -cluster $true -testname "ssl_server" -sniff true
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
-    registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
+    registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1" --extraArgs:log.level v8=trace
     registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"
     registerTest -cluster $true -testname "shell_server_aql" -index "3" -bucket "5/3"
     registerTest -cluster $true -testname "shell_server_aql" -index "4" -bucket "5/4"
