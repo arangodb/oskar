@@ -433,6 +433,7 @@ function oskar
   and findRequiredCompiler
   and if test "$SAN" = "On"
     parallelism 2
+    clearSanStatus
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
     set s (math $s + (getSanStatus))
@@ -514,6 +515,11 @@ end
 ## #############################################################################
 ## san
 ## #############################################################################
+
+function clearSanStatus
+  set files $WORKDIR/work/aulsan.log.* $WORKDIR/work/tsan.log.*
+  rm -f $files
+end
 
 function getSanStatus
   echo (count $WORKDIR/work/aulsan.log.* $WORKDIR/work/tsan.log.*)
