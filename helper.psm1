@@ -1040,8 +1040,8 @@ Function copyRclone
         Write-Host "Not copying rclone since it's not used!"
         return
     }
-    Write-Host "Copying rclone from rclone\rclone-arangodb-windows.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."
-    Copy-Item ("$global:WORKDIR\rclone\" + $(Get-Content "$global:WORKDIR\rclone\rclone-arangodb-windows.exe")) -Destination "$global:ARANGODIR\build\rclone-arangodb.exe"
+    Write-Host "Copying rclone from rclone\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."
+    Copy-Item ("$global:WORKDIR\rclone\" + $(Get-Content "$global:WORKDIR\rclone\rclone-arangodb-windows-amd64.exe")) -Destination "$global:ARANGODIR\build\rclone-arangodb.exe"
 }
 
 ################################################################################
