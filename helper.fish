@@ -352,8 +352,6 @@ function copyRclone
     return 1
   end
 
-  set -l os "$argv[2]"
-
   set -l arch ""
 
   switch "$ARCH"
