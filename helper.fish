@@ -357,13 +357,15 @@ function copyRclone
   set -l arch ""
 
   switch "$ARCH"
-    case "^arm64$|^aarch64$"
-        set arch "arm64"
     case "x86_64"
-        set arch "amd64"
+      set arch "amd64"
     case '*'
+      if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+        set arch "arm64"
+      else
         echo "fatal, unknown architecture $ARCH for rclone"
         exit 1
+      end
   end
 
   echo Copying rclone from rclone/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
