@@ -352,9 +352,23 @@ function copyRclone
     return 1
   end
 
-  echo Copying rclone from rclone/rclone-arangodb-$os to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  set -l arch ""
+
+  switch "$ARCH"
+    case "x86_64"
+      set arch "amd64"
+    case '*'
+      if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+        set arch "arm64"
+      else
+        echo "fatal, unknown architecture $ARCH for rclone"
+        exit 1
+      end
+  end
+
+  echo Copying rclone from rclone/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp -L $WORKDIR/rclone/rclone-arangodb-$os $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+  cp -L $WORKDIR/rclone/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 ## #############################################################################
