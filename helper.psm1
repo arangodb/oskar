@@ -1,3 +1,7 @@
+env
+reg export HKLM hklm.reg.log
+reg export HKCU hkcu.reg.log
+
 $global:WORKDIR = $pwd
 $global:SCRIPTSDIR = Join-Path -Path $global:WORKDIR -ChildPath scripts
 
@@ -1797,6 +1801,12 @@ Function moveResultsToWorkspace
     }
     Write-Host "*-sign* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*-sign*"))
+    {
+        Write-Host "Move $INNERWORKDIR\$file"
+        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
+    }
+    Write-Host "*.reg.log ..."
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*.reg.log"))
     {
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
