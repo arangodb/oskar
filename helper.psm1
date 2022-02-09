@@ -1,4 +1,4 @@
-env
+Get-Variable
 reg export HKLM hklm.reg.log
 reg export HKCU hkcu.reg.log
 
