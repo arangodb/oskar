@@ -1,6 +1,3 @@
-reg export HKLM hklm.reg.log
-reg export HKCU hkcu.reg.log
-
 $global:WORKDIR = $pwd
 $global:SCRIPTSDIR = Join-Path -Path $global:WORKDIR -ChildPath scripts
 
@@ -1806,11 +1803,14 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "*.reg.log ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*.reg.log"))
+    Push-Location $ENV:WORKSPACE
+    reg export HKLM hklm.reg.log
+    reg export HKCU hkcu.reg.log
+    ForEach ($file in $(Get-ChildItem . -Filter "*.reg.log"))
     {
-        Write-Host "Move $INNERWORKDIR\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
+        Write-Host "Regfile $file"
     }
+    Pop-Location
     
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes))
     {
