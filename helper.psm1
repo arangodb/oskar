@@ -1,4 +1,3 @@
-Get-Variable
 reg export HKLM hklm.reg.log
 reg export HKCU hkcu.reg.log
 
@@ -537,6 +536,7 @@ Function showConfig
     Write-Host "------------------------------------------------------------------------------"
     Write-Host "Global Configuration"
     Write-Host "User           : "$env:USERDOMAIN\$env:USERNAME
+    Write-Host "Path           : "$env:PATH
     Write-Host "Use cache      : "$CLCACHE
     Write-Host "Cache          : "$env:CLCACHE_CL
     Write-Host "Cachedir       : "$env:CLCACHE_DIR
