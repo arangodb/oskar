@@ -1812,8 +1812,7 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    Write-Host "*.reg.log ..."
-    
+
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes))
     {
         Write-Host "ArangoDB3*-${global:ARANGODB_FULL_VERSION}.pdb.${global:PDBS_ARCHIVE_TYPE} ..."
