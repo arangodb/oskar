@@ -1722,6 +1722,16 @@ Function buildArangoDB
     Else
     {
         Write-Host "cmake error, see $INNERWORKDIR\cmake.* for details."
+        if (isGCE) {
+            Push-Location $ENV:WORKSPACE
+            Invoke-Command  {reg export HKLM hklm.reg.log}
+            Invoke-Command  {reg export HKCU hkcu.reg.log}
+            ForEach ($file in $(Get-ChildItem . -Filter "*.reg.log"))
+            {
+                Write-Host "Regfile $file"
+            }
+            Pop-Location
+        }
     }
 }
 
@@ -1803,14 +1813,6 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
     Write-Host "*.reg.log ..."
-    Push-Location $ENV:WORKSPACE
-    reg export HKLM hklm.reg.log
-    reg export HKCU hkcu.reg.log
-    ForEach ($file in $(Get-ChildItem . -Filter "*.reg.log"))
-    {
-        Write-Host "Regfile $file"
-    }
-    Pop-Location
     
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes))
     {
