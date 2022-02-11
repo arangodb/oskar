@@ -1819,6 +1819,12 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
+    Write-Host "CMakeOutput ..."
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR\ArangoDB\build\CMakeFiles -Filter "*.log"))
+    {
+        Write-Host "Move $INNERWORKDIR\ArangoDB\build\CMakeFiles\$file"
+        Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\CMakeFiles\$file" -Destination $ENV:WORKSPACE; comm
+    }
 
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes))
     {
