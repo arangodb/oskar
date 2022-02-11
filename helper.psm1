@@ -1680,6 +1680,11 @@ Function buildArangoDB
     configureWindows
     If ($global:ok)
     {
+        Push-Location $ENV:WORKSPACE
+        Get-VSSetupInstance | Out-File -FilePath .\vssetup.reg.log
+        Get-ChildItem Env: | Out-File -FilePath .\env.reg.log
+        Pop-Location
+
         Write-Host "Configure OK."
         buildWindows
         If ($global:ok)
@@ -1726,6 +1731,8 @@ Function buildArangoDB
             Push-Location $ENV:WORKSPACE
             Invoke-Command  {reg export HKLM hklm.reg.log}
             Invoke-Command  {reg export HKCU hkcu.reg.log}
+            Get-VSSetupInstance | Out-File -FilePath .\vssetup.reg.log
+            Get-ChildItem Env: | Out-File -FilePath .\env.reg.log
             ForEach ($file in $(Get-ChildItem . -Filter "*.reg.log"))
             {
                 Write-Host "Regfile $file"
