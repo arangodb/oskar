@@ -1669,7 +1669,7 @@ Function preserveSymbolsToWorkdir
 Function buildArangoDB
 {
     checkoutIfNeeded
-    If ($KEEPBUILD -eq "Off")
+    If ($global:KEEPBUILD -eq "Off")
     {
        If (Test-Path -PathType Container -Path "$global:ARANGODIR\build")
        {
