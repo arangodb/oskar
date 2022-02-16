@@ -1748,6 +1748,7 @@ Function buildArangoDB
             Push-Location $ENV:WORKSPACE
             Invoke-Command  {reg export HKLM hklm.reg.log}
             Invoke-Command  {reg export HKCU hkcu.reg.log}
+            Invoke-Command  {reg export HKCR hkcr.reg.log}
             Get-VSSetupInstance | Out-File -FilePath .\vssetup.reg.log
             Get-ChildItem Env: | Out-File -FilePath .\env.reg.log
             ForEach ($file in $(Get-ChildItem . -Filter "*.reg.log"))
