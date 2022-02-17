@@ -1219,6 +1219,14 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($global:ok)
     {
+        proc -process "git" -argument "submodule init" -logfile $false -priority "Normal"
+    }
+    If ($global:ok)
+    {
+        proc -process "git" -argument "submodule update" -logfile $false -priority "Normal"
+    }
+    If ($global:ok)
+    {
         Write-Output "VERSION: $(Get-Content $INNERWORKDIR/ArangoDB/ARANGO-VERSION)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log"
         Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
         findArangoDBVersion
