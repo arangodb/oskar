@@ -27,7 +27,7 @@ function checkoutRepo
       git pull
     end
   end
-  and git submodule update --init
+  git submodule update --init
   return $status
 end
 
