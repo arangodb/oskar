@@ -1201,6 +1201,10 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($global:ok)
     {
+        proc -process "git" -argument "submodule deinit --all -f" -logfile $false -priority "Normal"
+    }
+    If ($global:ok)
+    {
         proc -process "git" -argument "checkout $branch_c" -logfile $false -priority "Normal"
     }
     If ($branch_c.StartsWith("v"))
