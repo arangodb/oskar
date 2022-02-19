@@ -1189,7 +1189,7 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($global:ok)
     {
-        proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
+        proc -process "git" -argument "checkout -f -- ." -logfile $false -priority "Normal"
     }
     If ($global:ok)
     {
