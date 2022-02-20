@@ -1237,7 +1237,7 @@ Function switchBranches($branch_c,$branch_e)
         }
         If ($global:ok)
         {
-            proc -process "git" -argument "checkout -- ." -logfile $false -priority "Normal"
+            proc -process "git" -argument "checkout -f -- ." -logfile $false -priority "Normal"
         }
         If ($global:ok)
         {
@@ -1249,7 +1249,7 @@ Function switchBranches($branch_c,$branch_e)
         }
         If ($global:ok)
         {
-            proc -process "git" -argument "checkout $branch_e" -logfile $false -priority "Normal"
+            proc -process "git" -argument "checkout -f $branch_e" -logfile $false -priority "Normal"
         }
         If ($branch_e.StartsWith("v"))
         {
