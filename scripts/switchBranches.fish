@@ -11,6 +11,7 @@ function checkoutRepo
   git checkout -- .
   and git fetch --tags -f
   and git fetch
+  and git submodule deinit --all -f
   and git checkout -f "$branch"
   and if test "$clean" = "true"
     if echo "$branch" | grep -q "^v"
@@ -26,6 +27,7 @@ function checkoutRepo
       git pull
     end
   end
+  git submodule update --init --force
   return $status
 end
 
