@@ -677,6 +677,9 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
+  set -l suffix ""
+  test $PLATFORM = "darwin"; and set suffix ".bak"
+
   pushd $WORKDIR/work
   and rm -rf targz
   and mkdir targz
@@ -687,7 +690,7 @@ function buildTarGzPackageHelper
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and mv bin/README .
-  and sed -i -e '' -e "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v/g" README
+  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v/g" README
   and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v"
   and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
