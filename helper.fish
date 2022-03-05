@@ -691,7 +691,7 @@ function buildTarGzPackageHelper
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and cp bin/README ./README
   and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v/g" README
-  and rm -rf ./README$suffix
+  and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v"
   and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
@@ -709,7 +709,7 @@ function buildTarGzPackageHelper
     and ln -s "$name-$v" "$name-client-$os-$v"
     and mv bin/README ./README
     and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v/g" README
-    and rm -rf ./README$suffix
+    and rm -rf ./README.bak
     and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" -h \
       --exclude "etc" \
       --exclude "var" \
