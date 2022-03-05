@@ -707,7 +707,7 @@ function buildTarGzPackageHelper
   if test "$s" -eq 0
     rm -rf "$name-client-$os-$v"
     and ln -s "$name-$v" "$name-client-$os-$v"
-    and mv bin/README ./README
+    and mv "$name-client-$os-$v/bin/README" ./README
     and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v/g" README
     and rm -rf ./README.bak
     and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" -h \
