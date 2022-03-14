@@ -51,6 +51,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_client_aql" -vst -index "vst"
     registerTest -testname "shell_client_aql" -http2 -index "http2"
     If ($ENTERPRISEEDITION -eq "On") { registerTest -testname "shell_client_aql" -encrypt -index "encrypt" }
+    registerTest -testname "shell_fuzzer"
     registerTest -testname "shell_replication" -weight 2
     registerTest -testname "BackupAuthNoSysTests"
     registerTest -testname "BackupAuthSysTests"
@@ -145,6 +146,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "shell_server_aql" -index "3" -bucket "5/3"
     registerTest -cluster $true -testname "shell_server_aql" -index "4" -bucket "5/4"
     registerTest -cluster $true -testname "shell_client_aql"
+    registerTest -cluster $true -testname "shell_fuzzer"
     registerTest -cluster $true -testname "communication"
     registerTest -cluster $true -testname "communication_ssl"
     registerTest -cluster $true -testname "dump"
