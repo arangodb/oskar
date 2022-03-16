@@ -86,7 +86,7 @@ packageStripAll
 
 function forceDisableAVXOn ; set -gx FORCE_DISABLE_AVX On  ; end
 function forceDisableAVXOff ; set -gx FORCE_DISABLE_AVX Off ; end
-if test -z "$"FORCE_DISABLE_AVX ; forceDisableAVXOff
+if test -z "$FORCE_DISABLE_AVX ; forceDisableAVXOff
 else ; set -gx FORCE_DISABLE_AVX $FORCE_DISABLE_AVX ; end
 
 function findMinimalDebugInfo
