@@ -207,6 +207,14 @@ function runCmake
     echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
     cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1
   end
+
+  if test "$FORCE_DISABLE_AVX" = "On"
+    if test -e $INNERWORKDIR/ArangoDB/build/CMakeCache.txt
+      set -l suffix ""
+      test $PLATFORM = "darwin"; and set suffix ".bak"
+      sed -i$suffix -E 's/^\(CMAKE_C.*_FLAGS\)\([^-].*INTERNAL\)=\(.*\)$/\1\2=\3 -m-noavx/g' $INNERWORKDIR/ArangoDB/build/CMakeCache.txt
+    end
+  end
 end
 
 function runMake
