@@ -23,7 +23,7 @@ and set -xg RELEASE_TYPE "preview"
 and showRepository
 and showConfig
 and pingDetails
-and makeDockerRelease "$DOCKER_TAG"
+and makeDockerRelease "$DOCKER_TAG-noavx"
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory

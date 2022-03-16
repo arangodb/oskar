@@ -8,8 +8,8 @@ end
 
 set -xg TAG "$DOCKER_TAG"
 
-set -xg HUB_COMMUNITY "arangodb/arangodb-test:$TAG"
-set -xg HUB_ENTERPRISE "arangodb/enterprise-test:$TAG"
+set -xg HUB_COMMUNITY "arangodb/arangodb-test-noavx:$TAG"
+set -xg HUB_ENTERPRISE "arangodb/enterprise-test-noavx:$TAG"
 
 forceDisableAVXOn
 
