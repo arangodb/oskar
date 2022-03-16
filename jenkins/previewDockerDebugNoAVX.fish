@@ -13,9 +13,8 @@ if test -z "$IS_NIGHTLY_BUILD"
   exit 1
 end
 
-forceDisableAVXOn
-
 cleanPrepareLockUpdateClear
+and forceDisableAVXOn
 and cleanWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and if test $IS_NIGHTLY_BUILD = true; setNightlyRelease; end
