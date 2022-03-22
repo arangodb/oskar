@@ -15,7 +15,6 @@ end
 
 cleanPrepareLockUpdateClear
 and forceDisableAVXOn
-and verbose
 and cleanWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and if test $IS_NIGHTLY_BUILD = true; setNightlyRelease; end
