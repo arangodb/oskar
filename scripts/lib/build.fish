@@ -204,7 +204,7 @@ function runCmake
   if test "$FORCE_DISABLE_AVX" = "On"
     set -l suffix ""
     test $PLATFORM = "darwin"; and set suffix ".bak"
-    sed -i$suffix -E 's/^\(.*\)\(set(CMAKE_C.*_FLAGS\)\(.*\"\${EXTRA_C_FLAGS}\)\"\(.*\)$/\1\2\3 -mno-avx"\3/g' $INNERWORKDIR/ArangoDB/CMakeLists.txt
+    sed -i$suffix -E 's/^(.*)(set\(CMAKE_C.*_FLAGS)(.*\"\$\{EXTRA_C.*_FLAGS\})\"(.*)$/\1\2\3 -mno-avx"\4/g' $INNERWORKDIR/ArangoDB/CMakeLists.txt
     #set -xg FULLARGS "$FULLARGS -DEXTRA_C_FLAGS=\"-mno-avx\" -DEXTRA_CXX_FLAGS=\"-mno-avx\""
   end
 
