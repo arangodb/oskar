@@ -13,6 +13,7 @@ and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and showRepository
 and makeDockerRelease "$DOCKER_TAG-noavx"
 and ubiDockerImage
+and findArangoDBVersion
 and makeDockerEnterpriseRelease "$DOCKER_TAG-noavx"
 
 set -l s $status
