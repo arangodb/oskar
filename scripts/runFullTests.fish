@@ -1,4 +1,4 @@
-#!/usr/bin/env fish
+=#!/usr/bin/env fish
 set -g SCRIPTS (dirname (status -f))
 source $SCRIPTS/lib/tests.fish
 
@@ -44,7 +44,7 @@ set ST "$ST""250,runSingleTest1 shell_server_aql 5 --testBuckets 6/5\n"
 set ST "$ST""250,runSingleTest1 server_http -\n"
 set ST "$ST""250,runSingleTest1 ssl_server 0 --testBuckets 2/0\n"
 set ST "$ST""250,runSingleTest1 ssl_server 1 --testBuckets 2/1\n"
-set ST "$ST""750,runSingleTest1 shell_client https --ssl true $EncryptionAtRest -\n"
+set ST "$ST""750,runSingleTest1 shell_api https --ssl true $EncryptionAtRest -\n"
 set ST "$ST""750,runSingleTest1 shell_client http $EncryptionAtRest -\n"
 set ST "$ST""750,runSingleTest1 shell_client vst --vst true -\n"
 set ST "$ST""750,runSingleTest1 shell_client http2 --http2 true -\n"
@@ -168,6 +168,7 @@ set CT "$CT""1000,runClusterTest1 shell_server 1 --testBuckets 5/1 --dumpAgencyO
 set CT "$CT""500,runClusterTest1 shell_server 2 --testBuckets 5/2 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_server 3 --testBuckets 5/3 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_server 4 --testBuckets 5/4 --dumpAgencyOnError true\n"
+set ST "$ST""500,runClusterTest1 shell_api https --ssl true $EncryptionAtRest -\n"
 set CT "$CT""500,runClusterTest1 shell_client 0 --testBuckets 5/0 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_client 1 --testBuckets 5/1 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_client 2 --testBuckets 5/2 --dumpAgencyOnError true\n"
