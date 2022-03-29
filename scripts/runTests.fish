@@ -133,7 +133,7 @@ set CT "$CT""500,runClusterTest1 shell_client 1 --testBuckets 5/1 --dumpAgencyOn
 set CT "$CT""500,runClusterTest1 shell_client 2 --testBuckets 5/2 --dumpAgencyOnError true\n"
 set CT "$CT""500,runClusterTest1 shell_client 3 --testBuckets 5/3 --dumpAgencyOnError true\n"
 set CT "$CT""250,runClusterTest1 shell_client 4 --testBuckets 5/4 --dumpAgencyOnError true\n"
-set CT "$CT""250,runClusterTest1 shell_fuzzer --dumpAgencyOnError true\n"
+set CT "$CT""250,runClusterTest1 shell_fuzzer - --dumpAgencyOnError true\n"
 set CT "$CT""2000,runClusterTest1 shell_server_aql 0 --testBuckets 16/0 --dumpAgencyOnError true\n"
 set CT "$CT""1500,runClusterTest1 shell_server_aql 1 --testBuckets 16/1 --dumpAgencyOnError true\n"
 set CT "$CT""1500,runClusterTest1 shell_server_aql 2 --testBuckets 16/2 --dumpAgencyOnError true\n"
