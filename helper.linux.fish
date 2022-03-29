@@ -300,6 +300,7 @@ function switchBranches
 
   checkoutIfNeeded
   and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
+  and convertSItoJSON
   and findArangoDBVersion
   and findRequiredCompiler
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
@@ -1841,6 +1842,7 @@ end
 function downloadStarter
   mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
   and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
+  and convertSItoJSON
 end
 
 function downloadSyncer
@@ -1852,6 +1854,7 @@ function downloadSyncer
   and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
   and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
   and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+  and convertSItoJSON
 end
 
 ## #############################################################################

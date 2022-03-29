@@ -34,6 +34,59 @@ if test -f config/environment.fish
   source config/environment.fish
 end
 
+function convertSItoJSON
+  if test -f $WORKDIR/work/sourceInfo.log
+    set -l fields ""
+    and begin
+      cat $WORKDIR/work/sourceInfo.log | while read -l line
+      set -l var (echo $line | cut -f1 -d ':')
+      switch "$var"
+        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Syncer"
+          set -l val (echo $line | cut -f2 -d ' ')
+          if test -n $val
+            set fields "$fields  \"$var\":\""(echo $line | cut -f2 -d ' ')\"\n""
+          end
+        end
+      end
+      if test -n "$fields"
+        echo "convert $WORKDIR/work/sourceInfo.log to $WORKDIR/work/sourceInfo.json"
+        printf "{\n"(printf $fields | string join ",\n")"\n}" > $WORKDIR/work/sourceInfo.json
+      end
+    end
+  end
+end
+
+function initSourceInfo
+  set -l oskarCommit (git rev-parse HEAD)
+
+  pushd $WORKDIR
+  if test -f work/sourceInfo.log
+    rm -rf work/sourceInfo.log
+  end
+ 
+  not test -z "$oskarCommit"
+  and echo "oskar: $oskarCommit" > work/sourceInfo.log
+  or echo "oskar: N/A" > work/sourceInfo.log
+  echo "VERSION: N/A" >> work/sourceInfo.log
+  echo "Community: N/A" >> work/sourceInfo.log
+  echo "Starter: N/A" >> work/sourceInfo.log
+  echo "Enterprise: N/A" >> work/sourceInfo.log
+  echo "Syncer: N/A" >> work/sourceInfo.log
+  
+  popd
+  convertSItoJSON
+end
+
+function setupSourceInfo
+  set -l field $argv[1]
+  set -l value $argv[2]
+  set -l suffix ""
+  test $PLATFORM = "darwin"; and set suffix ".bak"
+  sed -i$suffix -E 's/^'"$field"':.*$/'"$field"': '"$value"'/g' $WORKDIR/work/sourceInfo.log
+
+  convertSItoJSON
+end
+
 ## #############################################################################
 ## config
 ## #############################################################################
@@ -494,8 +547,7 @@ function setNightlyRelease
   and if test -n "$ARANGODB_VERSION_RELEASE_NUMBER"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION.$ARANGODB_VERSION_RELEASE_NUMBER"; end
   and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/ARANGO-VERSION
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
-  and sed -i$suffix -E "s/(\"?VERSION\"?: ?\"?)([0-9a-z.-]+)/\1$ARANGODB_FULL_VERSION/g" $WORKDIR/work/sourceInfo.*
-  and if test -n "$suffix"; rm -f $WORKDIR/work/sourceInfo*$suffix; end
+  and setupSourceInfo "VERSION" "$ARANGODB_FULL_VERSION"
 end
 
 ## #############################################################################
@@ -1864,6 +1916,8 @@ switch (uname)
   case Windows ; source helper.windows.fish
   case '*' ; source helper.linux.fish
 end
+
+initSourceInfo
 
 if isatty 1
   showHelp
