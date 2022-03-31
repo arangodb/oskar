@@ -5,7 +5,7 @@ if test -z "$DOCKER_TAG"
   echo "DOCKER_TAG required"
   exit 1
 else
-  set -xg DOCKER_TAG_JENKINS"$DOCKER_TAG"
+  set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG"
 end
 
 if test -z "$IS_NIGHTLY_BUILD"
