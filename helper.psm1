@@ -1384,7 +1384,8 @@ Function clearWorkdir
         ("$global:ARANGODIR*" | split-path -leaf),
         ("$env:TMP*" | split-path -leaf),
         ("$env:CLCACHE_DIR*" | split-path -leaf),
-        ("$env:CMAKE_CONFIGURE_DIR*" | split-path -leaf)        
+        ("$env:CMAKE_CONFIGURE_DIR*" | split-path -leaf),
+        ("${global:INNERWORKDIR}\sourceInfo*" | split-path -leaf)
     )
     If ((isGCE) -eq $False)
     {
