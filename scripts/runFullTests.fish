@@ -9,9 +9,9 @@ set -xg ADDITIONAL_OPTIONS $argv
 ################################################################################
 
 set -l ST
-if test -d $INNERWORKDIR/ArangoDB/tests/test-definitions.txt
+if test -f $INNERWORKDIR/ArangoDB/tests/test-definitions.txt
   echo "Using test definitions from arangodb repo"
-  $INNERWORKDIR/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish --full | source
+  $INNERWORKDIR/ArangoDB/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish --full | source
 else
   set ST "$ST""1000,runSingleTest1 'upgrade_data_3.2.*' -\n"
   set ST "$ST""1000,runSingleTest1 'upgrade_data_3.3.*' -\n"
@@ -153,9 +153,9 @@ end
 ################################################################################
 
 set -l CT
-if test -d $INNERWORKDIR/ArangoDB/tests/test-definitions.txt
+if test -f $INNERWORKDIR/ArangoDB/tests/test-definitions.txt
   echo "Using test definitions from arangodb repo"
-  $INNERWORKDIR/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish --cluster --full | source
+  $INNERWORKDIR/ArangoDB/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish --full --cluster | source
 else
   set CT "$CT""500,runClusterTest1 load_balancing - --dumpAgencyOnError true\n"
   set CT "$CT""500,runClusterTest1 load_balancing_auth - --dumpAgencyOnError true\n"
