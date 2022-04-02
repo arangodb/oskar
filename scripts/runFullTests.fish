@@ -10,6 +10,7 @@ set -xg ADDITIONAL_OPTIONS $argv
 
 set -l ST
 if test -d $INNERWORKDIR/ArangoDB/tests/test-definitions.txt
+  echo "Using test definitions from arangodb repo"
   $INNERWORKDIR/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish --full | source
 else
   set ST "$ST""1000,runSingleTest1 'upgrade_data_3.2.*' -\n"
@@ -153,6 +154,7 @@ end
 
 set -l CT
 if test -d $INNERWORKDIR/ArangoDB/tests/test-definitions.txt
+  echo "Using test definitions from arangodb repo"
   $INNERWORKDIR/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish --cluster --full | source
 else
   set CT "$CT""500,runClusterTest1 load_balancing - --dumpAgencyOnError true\n"
