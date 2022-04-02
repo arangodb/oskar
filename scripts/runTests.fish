@@ -10,6 +10,7 @@ set -l ST
 if test -f $INNERWORKDIR/ArangoDB/tests/test-definitions.txt
   echo "Using test definitions from arangodb repo"
   $INNERWORKDIR/ArangoDB/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish | source
+  $INNERWORKDIR/ArangoDB/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish
 else
   set ST "$ST""1000,runSingleTest1 'upgrade_data_3.2.*' -\n"
   set ST "$ST""1000,runSingleTest1 'upgrade_data_3.3.*' -\n"
@@ -86,6 +87,7 @@ end
 
 set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g STL (count $STS)
+echo $STS
 
 function launchSingleTests
   set -g launchCount (math $launchCount + 1)
@@ -130,6 +132,7 @@ set -l CT
 if test -f $INNERWORKDIR/ArangoDB/tests/test-definitions.txt
   echo "Using test definitions from arangodb repo"
   $INNERWORKDIR/ArangoDB/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish --cluster | source
+  $INNERWORKDIR/ArangoDB/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f fish --cluster
 else
   set CT "$CT""500,runClusterTest1 load_balancing - --dumpAgencyOnError true\n"
   set CT "$CT""500,runClusterTest1 load_balancing_auth - --dumpAgencyOnError true\n"
@@ -196,6 +199,7 @@ else
 end
 set -g CTS (echo -e $CT | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g CTL (count $CTS)
+echo $CTS
 
 function launchClusterTests
   set -g launchCount (math $launchCount + 1)
