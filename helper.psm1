@@ -1180,13 +1180,8 @@ Function convertSItoJSON
 Function initSourceInfo
 {
     Push-Location $global:INNERWORKDIR
-    If (Test-Path -PathType Leaf -Path $global:INNERWORKDIR\sourceInfo.log)
-    {
-        Remove-Item -Force $global:INNERWORKDIR\sourceInfo.log
-    }
     
     $oskarCommit = $(git rev-parse --verify HEAD)
-
     If ($oskarCommit -eq $null -or $oskarCommit -eq "")
     {
         Write-Output "oskar: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log"
@@ -1347,7 +1342,7 @@ Function clearResults
     {
         Remove-Item -Force $report.FullName
     }
-    ForEach ($log in $(Get-ChildItem -Path $INNERWORKDIR -Filter "*.log"))
+    ForEach ($log in $(Get-ChildItem -Path $INNERWORKDIR -Filter "*.log" -Exclude "sourceInfo*"))
     {
         Remove-Item -Force $log.FullName
     }
