@@ -26,10 +26,6 @@ function updateDockerHub
   docker pull arangodb/$from:$version
   and docker tag arangodb/$from:$version arangodb/$to:$version
   and docker push arangodb/$to:$version
-  and if test "$RELEASE_IS_HEAD" = "true"
-    docker tag arangodb/$from:$version arangodb/$to:latest
-    docker push arangodb/$to:latest
-  end
 end
 
 cleanPrepareLockUpdateClear
@@ -42,7 +38,6 @@ end
 and if test -z "$UPDATE_ENTERPRISE"; or test "$UPDATE_ENTERPRISE" = "true"
   updateDockerHub enterprise "$DOCKER_TAG-noavx"
 end
-and set -xg RELEASE_IS_HEAD false
 and if test -z "$UPDATE_UBI"; or test "$UPDATE_UBI" = "true"
   updateDockerHub enterprise "$DOCKER_TAG-ubi-noavx"
 end
