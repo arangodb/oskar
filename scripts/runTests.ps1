@@ -126,7 +126,10 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "recovery_cluster" -index "3" -bucket "4/3" "arangosearch"
     registerTest -cluster $true -testname "shell_api" -index "http" -ssl false -sniff true
     registerTest -cluster $true -testname "shell_api" -index "https" -ssl true -sniff true
-    registerTest -cluster $true -testname "shell_client"
+    registerTest -cluster $true -testname "shell_client" -index "0" -bucket "4/0"
+    registerTest -cluster $true -testname "shell_client" -index "1" -bucket "4/1"
+    registerTest -cluster $true -testname "shell_client" -index "2" -bucket "4/2"
+    registerTest -cluster $true -testname "shell_client" -index "3" -bucket "4/3"
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0" -moreParams "--extraArgs:log.level v8=trace"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
     registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"
