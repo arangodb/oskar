@@ -1010,6 +1010,7 @@ Function downloadStarter
     }
     Write-Host "Download: Starter"
     (New-Object System.Net.WebClient).DownloadFile("https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
+    setupSourceInfo "Starter" $STARTER_REV
 }
 
 Function downloadSyncer
@@ -1020,7 +1021,7 @@ Function downloadSyncer
     {
         Write-Host "Need  environment variable set!"
     }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match '([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
     $SYNCER_REV = $Matches[0]
     If ($SYNCER_REV -eq "latest")
     {
@@ -1031,6 +1032,7 @@ Function downloadSyncer
     $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
     Write-Host "Download: Syncer"
     curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
+    setupSourceInfo "Syncer" $SYNCER_REV
 }
 
 Function copyRclone
@@ -1156,7 +1158,7 @@ Function convertSItoJSON
             $var = $line.split(":")[0]
             switch -Regex ($var)
             {
-                'VERSION|Community|Enterprise'
+                'oskar|VERSION|Community|Starter|Enterprise|Syncer'
                 {
                     $val = $line.split(" ")[1]
                     If (-Not [string]::IsNullOrEmpty($val))
@@ -1173,6 +1175,37 @@ Function convertSItoJSON
             Write-Output "{`n"($fields -join ',' + [Environment]::NewLine)"`n}" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.json" -NoNewLine
         }
     }
+}
+
+Function initSourceInfo
+{
+    Push-Location $global:INNERWORKDIR
+    
+    $oskarCommit = $(git rev-parse --verify HEAD)
+    If ($oskarCommit -eq $null -or $oskarCommit -eq "")
+    {
+        Write-Output "oskar: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log"
+    }
+    Else
+    {
+        Write-Output "oskar: $oskarCommit" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log"
+    }
+      
+    Write-Output "VERSION: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
+    Write-Output "Community: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
+    Write-Output "Starter: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
+    Write-Output "Enterprise: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
+    Write-Output "Syncer: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
+  
+    Pop-Location
+    convertSItoJSON
+}
+
+function setupSourceInfo($field,$value)
+{
+    (Get-Content $global:INNERWORKDIR\sourceInfo.log) -replace "${field}:.*", "${field}: $value" | Out-File -Encoding UTF8 "$global:INNERWORKDIR\sourceInfo.log"
+
+    convertSItoJSON
 }
 
 Function switchBranches($branch_c,$branch_e)
@@ -1223,13 +1256,15 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($global:ok)
     {
-        Write-Output "VERSION: $(Get-Content $INNERWORKDIR/ArangoDB/ARANGO-VERSION)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log"
-        Write-Output "Community: $(git rev-parse --verify HEAD)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
+        setupSourceInfo "VERSION" $(Get-Content $INNERWORKDIR/ArangoDB/ARANGO-VERSION)
+        setupSourceInfo "Community" $(git rev-parse --verify HEAD)
         findArangoDBVersion
     }
     Else
     {
         Write-Output "Failed to checkout Community branch!"
+        setupSourceInfo "VERSION" "N/A"
+        setupSourceInfo "Community" "N/A"
     }
     If ($ENTERPRISEEDITION -eq "On")
     {
@@ -1271,13 +1306,14 @@ Function switchBranches($branch_c,$branch_e)
         }
         If ($global:ok)
         {
-            Write-Output "Enterprise: $(git rev-parse --verify HEAD)" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
-            convertSItoJSON
+            setupSourceInfo "Enterprise" $(git rev-parse --verify HEAD)
         }
         Else
         {
             Write-Output "Failed to checkout Enterprise branch!"
+            setupSourceInfo "Enterprise" "N/A"
         }
+        
         Pop-Location
     }
     Pop-Location
@@ -1306,7 +1342,7 @@ Function clearResults
     {
         Remove-Item -Force $report.FullName
     }
-    ForEach ($log in $(Get-ChildItem -Path $INNERWORKDIR -Filter "*.log"))
+    ForEach ($log in $(Get-ChildItem -Path $INNERWORKDIR -Filter "*.log" -Exclude "sourceInfo*"))
     {
         Remove-Item -Force $log.FullName
     }
@@ -1343,7 +1379,8 @@ Function clearWorkdir
         ("$global:ARANGODIR*" | split-path -leaf),
         ("$env:TMP*" | split-path -leaf),
         ("$env:CLCACHE_DIR*" | split-path -leaf),
-        ("$env:CMAKE_CONFIGURE_DIR*" | split-path -leaf)        
+        ("$env:CMAKE_CONFIGURE_DIR*" | split-path -leaf),
+        ("${global:INNERWORKDIR}\sourceInfo*" | split-path -leaf)
     )
     If ((isGCE) -eq $False)
     {
@@ -1626,6 +1663,8 @@ Function setNightlyRelease
     checkoutIfNeeded
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_TYPE .*', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly")' | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_NUMBER.*', ('set(ARANGODB_VERSION_RELEASE_NUMBER "' + (Get-Date).ToString("yyyyMMdd") + '")') | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
+    findArangoDBVersion
+    setupSourceInfo "VERSION" $global:ARANGODB_FULL_VERSION
 }
 
 Function movePackagesToWorkdir
@@ -2026,5 +2065,6 @@ Function makeRelease
 }
 
 parallelism ([int]$env:NUMBER_OF_PROCESSORS)
+initSourceInfo
 
 $global:SYSTEM_IS_WINDOWS=$true

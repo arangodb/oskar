@@ -5,7 +5,7 @@ if test -z "$DOCKER_TAG"
   echo "DOCKER_TAG required"
   exit 1
 else
-  set -xg DOCKER_TAG "$DOCKER_TAG"
+  set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG"
 end
 
 if test -z "$IS_NIGHTLY_BUILD"
@@ -21,7 +21,7 @@ and set -xg RELEASE_TYPE "preview"
 and showRepository
 and showConfig
 and pingDetails
-and makeDockerDebug "$DOCKER_TAG"-noavx
+and makeDockerDebug "$DOCKER_TAG_JENKINS"
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
