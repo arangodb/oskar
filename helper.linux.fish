@@ -15,29 +15,29 @@ set -gx ARCH (uname -m)
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 12
+set -gx UBUNTUBUILDIMAGE3_TAG 13
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 13
+set -gx UBUNTUBUILDIMAGE4_TAG 14
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 6
+set -gx UBUNTUBUILDIMAGE5_TAG 7
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 16
+set -gx ALPINEBUILDIMAGE3_TAG 17
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 17
+set -gx ALPINEBUILDIMAGE4_TAG 18
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
-set -gx ALPINEBUILDIMAGE5_TAG 7
+set -gx ALPINEBUILDIMAGE5_TAG 8
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -300,6 +300,8 @@ function switchBranches
 
   checkoutIfNeeded
   and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
+  and convertSItoJSON
+  and findArangoDBVersion
   and findRequiredCompiler
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
@@ -411,7 +413,7 @@ end
 function buildExamples
   checkoutIfNeeded
   and if test "$NO_RM_BUILD" != 1
-    buildStaticArangoDB "-DUSE_IPO=Off"
+    buildStaticArangoDB
   end
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
   set -l s $status
@@ -433,6 +435,7 @@ function oskar
   and findRequiredCompiler
   and if test "$SAN" = "On"
     parallelism 2
+    clearSanStatus
     runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
     set s (math $s + (getSanStatus))
@@ -514,6 +517,11 @@ end
 ## #############################################################################
 ## san
 ## #############################################################################
+
+function clearSanStatus
+  set files $WORKDIR/work/aulsan.log.* $WORKDIR/work/tsan.log.*
+  rm -f $files
+end
 
 function getSanStatus
   echo (count $WORKDIR/work/aulsan.log.* $WORKDIR/work/tsan.log.*)
@@ -1520,6 +1528,7 @@ function runInContainer
              -e COVERAGE="$COVERAGE" \
              -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
+             -e FORCE_DISABLE_AVX="$FORCE_DISABLE_AVX" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
@@ -1833,6 +1842,7 @@ end
 function downloadStarter
   mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
   and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
+  and convertSItoJSON
 end
 
 function downloadSyncer
@@ -1844,6 +1854,7 @@ function downloadSyncer
   and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
   and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
   and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+  and convertSItoJSON
 end
 
 ## #############################################################################

@@ -40,6 +40,7 @@ Function global:registerSingleTests()
     registerTest -testname "shell_client_aql" -index "http"
     registerTest -testname "shell_client_aql" -vst -index "vst"
     registerTest -testname "shell_client_aql" -http2 -index "http2"
+    registerTest -testname "shell_fuzzer"
     If ($ENTERPRISEEDITION -eq "On") { registerTest -testname "shell_client_aql" -encrypt -index "encrypt" }
     registerTest -testname "server_secrets"
     registerTest -testname "server_permissions"
@@ -108,7 +109,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_encrypted"
     registerTest -cluster $true -testname "dump_with_crashes"
     registerTest -cluster $true -testname "export"
-    registerTest -cluster $true -testname "http_server"  -sniff true
+    registerTest -cluster $true -testname "http_server" -sniff true -moreParams "--extraArgs:log.level v8=trace"
     registerTest -cluster $true -testname "importing"
     registerTest -cluster $true -testname "server_secrets"
     registerTest -cluster $true -testname "server_permissions"
@@ -123,7 +124,8 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "recovery_cluster" -index "2" -bucket "4/2" "arangosearch"
     registerTest -cluster $true -testname "recovery_cluster" -index "3" -bucket "4/3" "arangosearch"
     registerTest -cluster $true -testname "shell_client"
-    registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0"
+    registerTest -cluster $true -testname "shell_fuzzer"
+    registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0" -moreParams "--extraArgs:log.level v8=trace"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
     registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"
     registerTest -cluster $true -testname "shell_server_aql" -index "3" -bucket "5/3"

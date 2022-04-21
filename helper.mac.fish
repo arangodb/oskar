@@ -335,6 +335,7 @@ end
 function switchBranches
   checkoutIfNeeded
   runLocal $SCRIPTSDIR/switchBranches.fish $argv
+  and convertSItoJSON
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
   and findUseARM
@@ -416,11 +417,13 @@ end
 function downloadStarter
   mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
   and runLocal $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
+  and convertSItoJSON
 end
 
 function downloadSyncer
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
   and runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+  and convertSItoJSON
 end
 
 function buildPackage
