@@ -34,8 +34,8 @@ Function global:registerSingleTests()
     registerTest -testname "shell_server_aql" -index "3" -bucket "5/3"
     registerTest -testname "shell_server_aql" -index "4" -bucket "5/4"
     registerTest -testname "server_http"
-    registerTest -testname "shell_api" -index "http" -ssl false -sniff true
-    registerTest -testname "shell_api" -index "https" -ssl true -sniff true
+    registerTest -testname "shell_api" -index "http" -sniff true
+    registerTest -testname "shell_api" -index "https" -ssl -sniff true
     registerTest -testname "shell_client" -index "http"
     registerTest -testname "shell_client" -vst -index "vst"
     registerTest -testname "shell_client" -http2 -index "http2"
