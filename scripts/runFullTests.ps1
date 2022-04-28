@@ -42,8 +42,6 @@ Function global:registerSingleTests()
     registerTest -testname "shell_server_aql" -index "2" -bucket "5/2"
     registerTest -testname "shell_server_aql" -index "3" -bucket "5/3"
     registerTest -testname "shell_server_aql" -index "4" -bucket "5/4"
-    registerTest -testname "server_http"
-    registerTest -testname "ssl_server"  -sniff true
     registerTest -testname "shell_api" -index "http" -sniff true
     registerTest -testname "shell_api" -index "https" -ssl -sniff true
     registerTest -testname "shell_client" -index "http"
@@ -86,8 +84,6 @@ Function global:registerSingleTests()
     registerTest -testname "fuerte"
     registerTest -testname "communication"
     registerTest -testname "communication_ssl"
-    registerTest -testname "http_replication" -weight 2
-    registerTest -testname "http_server" -sniff true
     registerTest -testname "importing"
     registerTest -testname "queryCacheAuthorization"
     registerTest -testname "readOnly"
@@ -141,12 +137,10 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "shell_client" -index "2" -bucket "4/2"    
     registerTest -cluster $true -testname "shell_client" -index "3" -bucket "4/3"
     registerTest -cluster $true -testname "shell_server"
-    registerTest -cluster $true -testname "http_server" -sniff true -moreParams "--extraArgs:log.level v8=trace"
     registerTest -cluster $true -testname "restart"
     registerTest -cluster $true -testname "server_secrets"
     registerTest -cluster $true -testname "server_permissions"
     registerTest -cluster $true -testname "server_parameters"
-    registerTest -cluster $true -testname "ssl_server" -sniff true
     registerTest -cluster $true -testname "shell_server_aql" -index "0" -bucket "5/0" -moreParams "--extraArgs:log.level v8=trace"
     registerTest -cluster $true -testname "shell_server_aql" -index "1" -bucket "5/1"
     registerTest -cluster $true -testname "shell_server_aql" -index "2" -bucket "5/2"
@@ -164,7 +158,6 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "dump_encrypted"
     registerTest -cluster $true -testname "dump_with_crashes"
     registerTest -cluster $true -testname "export"
-    registerTest -cluster $true -testname "server_http"
     registerTest -cluster $true -testname "audit_client"
     registerTest -cluster $true -testname "audit_server"
     registerTest -cluster $true -testname "arangobench"
