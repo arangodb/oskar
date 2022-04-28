@@ -84,6 +84,7 @@ Function global:registerSingleTests()
     registerTest -testname "fuerte"
     registerTest -testname "communication"
     registerTest -testname "communication_ssl"
+    registerTest -testname "http_replication" -weight 2
     registerTest -testname "importing"
     registerTest -testname "queryCacheAuthorization"
     registerTest -testname "readOnly"

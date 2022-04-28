@@ -68,6 +68,7 @@ Function global:registerSingleTests()
     registerTest -testname "endpoints"
     registerTest -testname "export"
     registerTest -testname "fuerte"
+    registerTest -testname "http_replication" -weight 2
     registerTest -testname "importing"
     registerTest -testname "version"
     registerTest -testname "audit_client"
