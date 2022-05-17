@@ -458,6 +458,18 @@ function oskarCompile
   end
 end
 
+function rlogCompile
+  showConfig
+  showRepository
+  set -x NOSTRIP 1
+
+  buildStaticArangoDB \
+    -DDEBUG_SYNC_REPLICATION=On \
+    -DUSE_FAILURE_TESTS=On \
+    -DUSE_SEPARATE_REPLICATION2_TESTS_BINARY=On \
+    ; or return $status
+end
+
 function oskar1
   oskarCompile
   and oskar
