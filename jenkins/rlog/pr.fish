@@ -4,9 +4,8 @@ source jenkins/helper/jenkins.fish
 cleanPrepareLockUpdateClear2
 and TT_init
 
-and eval $EDITION
-and eval $STORAGE_ENGINE
-and eval $TEST_SUITE
+and community
+and rocksdb
 and skipGrey
 
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true

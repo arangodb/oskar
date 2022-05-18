@@ -7,20 +7,27 @@ source $SCRIPTS/lib/tests.fish
 ################################################################################
 
 echo "Using test definitions from arangodb repo"
-source $INNERWORKDIR/ArangoDB/tests/rlog/pr.fish
+
+ls -l
+echo $SCRIPTS
+set -l TESTS
+source $INNERWORKDIR/ArangoDB/tests/Definition/rlog/pr.fish
 
 ################################################################################
 ## launch a test
 ################################################################################
 
+set -g STS (echo -e $TESTS | fgrep , | sort -rn | awk -F, '{print $2}')
+set -g STL (count $STS)
+
 function launchTests
   set -g launchCount (math $launchCount + 1)
 
-  if test $launchCount -gt $TESTS
+  if test $launchCount -gt $STL
     return 0
   end
 
-  eval $CTS[$launchCount]
+  eval $STS[$launchCount]
   return 1
 end
 
@@ -48,7 +55,7 @@ set -g suiteRunner ""
 
 resetLaunch 4
 set timeLimit 4200
-set suiteRunner "launchClusterTests"
+set suiteRunner "launchTests"
 
 if test "$SAN" = "On"
   switch $SAN_MODE
