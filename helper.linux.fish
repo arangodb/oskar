@@ -556,15 +556,25 @@ function cppcheckArangoDB
 end
 
 function cppcheckPR
-  checkoutIfNeeded
+  if test (count $argv) -ne 1
+    echo "usage: cppcheckPR <BASE BRANCH>"
+    return 1
+  end
 
+  checkoutIfNeeded
   pushd $WORKDIR/work/ArangoDB
-  set -l base_commit (git reflog show --no-abbrev (git rev-parse --abbrev-ref HEAD) | tail -1 | cut -d' ' -f1)
-  set -l files (git diff --diff-filter=ACMRT --name-only {$base_commit}^1 -- arangod/ lib/ client-tools/ arangosh/)
+  git fetch --all
+  set -l files (git --no-pager diff --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1]) -- arangod/ lib/ client-tools/ arangosh/ | grep -E '\.cp{2}?|\.hp{2}?')
   popd
 
-  echo $files
-  #cppcheckArangoDB "$files"
+  if test "$ENTERPRISEEDITION" = "On"
+    pushd $WORKDIR/work/ArangoDB/enterprise
+      set files $files (git --no-pager diff --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1])| grep -E '\.cp{2}?|\.hp{2}?' | sed -e 's/^/enterprise\//')
+    popd
+  end
+
+  echo "The following files are subject to CPPcheck: $files"
+  cppcheckArangoDB "$files"
   return $status
 end
 
