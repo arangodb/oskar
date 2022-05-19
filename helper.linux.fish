@@ -548,8 +548,21 @@ end
 
 function cppcheckArangoDB
   checkoutIfNeeded
+ 
+  runInContainer $CPPCHECKIMAGE /scripts/cppcheck.sh $argv
+  return $status
+end
 
-  runInContainer $CPPCHECKIMAGE /scripts/cppcheck.sh
+function cppcheckPR
+  checkoutIfNeeded
+
+  pushd $WORKDIR/work/ArangoDB
+  set -l base_commit (git reflog show --no-abbrev (git rev-parse --abbrev-ref HEAD) | tail -1 | cut -d' ' -f1)
+  set -l files (git diff --diff-filter=ACMRT --name-only {$base_commit}^1 -- arangod/ lib/ client-tools/ arangosh/)
+  popd
+
+  echo $files
+  #cppcheckArangoDB "$files"
   return $status
 end
 
