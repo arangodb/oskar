@@ -8,7 +8,6 @@ end
 
 cleanPrepareLockUpdateClear
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and buildStaticArangoDB
 and cppcheckPR "$BASE_BRANCH"
 
 set -l s $status
