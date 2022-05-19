@@ -14,6 +14,7 @@ if test -z "$IS_NIGHTLY_BUILD"
 end
 
 cleanPrepareLockUpdateClear
+and forceDisableAVXOn
 and cleanWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and if test $IS_NIGHTLY_BUILD = true; setNightlyRelease; end
@@ -21,7 +22,7 @@ and set -xg RELEASE_TYPE "preview"
 and showRepository
 and showConfig
 and pingDetails
-and makeDockerDebug "$DOCKER_TAG_JENKINS"
+and makeDockerRelease "$DOCKER_TAG_JENKINS-noavx"
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory

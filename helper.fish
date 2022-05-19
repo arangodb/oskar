@@ -34,6 +34,59 @@ if test -f config/environment.fish
   source config/environment.fish
 end
 
+function convertSItoJSON
+  if test -f $WORKDIR/work/sourceInfo.log
+    set -l fields ""
+    and begin
+      cat $WORKDIR/work/sourceInfo.log | while read -l line
+      set -l var (echo $line | cut -f1 -d ':')
+      switch "$var"
+        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Syncer"
+          set -l val (echo $line | cut -f2 -d ' ')
+          if test -n $val
+            set fields "$fields  \"$var\":\""(echo $line | cut -f2 -d ' ')\"\n""
+          end
+        end
+      end
+      if test -n "$fields"
+        echo "convert $WORKDIR/work/sourceInfo.log to $WORKDIR/work/sourceInfo.json"
+        printf "{\n"(printf $fields | string join ",\n")"\n}" > $WORKDIR/work/sourceInfo.json
+      end
+    end
+  end
+end
+
+function initSourceInfo
+  set -l oskarCommit (git rev-parse HEAD)
+
+  pushd $WORKDIR
+  if test -f work/sourceInfo.log
+    rm -rf work/sourceInfo.log
+  end
+ 
+  not test -z "$oskarCommit"
+  and echo "oskar: $oskarCommit" > work/sourceInfo.log
+  or echo "oskar: N/A" > work/sourceInfo.log
+  echo "VERSION: N/A" >> work/sourceInfo.log
+  echo "Community: N/A" >> work/sourceInfo.log
+  echo "Starter: N/A" >> work/sourceInfo.log
+  echo "Enterprise: N/A" >> work/sourceInfo.log
+  echo "Syncer: N/A" >> work/sourceInfo.log
+  
+  popd
+  convertSItoJSON
+end
+
+function setupSourceInfo
+  set -l field $argv[1]
+  set -l value $argv[2]
+  set -l suffix ""
+  test $PLATFORM = "darwin"; and set suffix ".bak"
+  sed -i$suffix -E 's/^'"$field"':.*$/'"$field"': '"$value"'/g' $WORKDIR/work/sourceInfo.log
+
+  convertSItoJSON
+end
+
 ## #############################################################################
 ## config
 ## #############################################################################
@@ -83,6 +136,11 @@ function packageStripNone          ; set -gx PACKAGE_STRIP None    ; end
 function packageStripExceptArangod ; set -gx PACKAGE_STRIP ExceptArangod ; end
 function packageStripAll           ; set -gx PACKAGE_STRIP All     ; end
 packageStripAll
+
+function forceDisableAVXOn ; set -gx FORCE_DISABLE_AVX On  ; end
+function forceDisableAVXOff ; set -gx FORCE_DISABLE_AVX Off ; end
+if test -z "$FORCE_DISABLE_AVX" ; forceDisableAVXOff
+else ; set -gx FORCE_DISABLE_AVX $FORCE_DISABLE_AVX ; end
 
 function findMinimalDebugInfo
   set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
@@ -489,8 +547,7 @@ function setNightlyRelease
   and if test -n "$ARANGODB_VERSION_RELEASE_NUMBER"; set ARANGODB_FULL_VERSION "$ARANGODB_FULL_VERSION.$ARANGODB_VERSION_RELEASE_NUMBER"; end
   and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/ARANGO-VERSION
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
-  and sed -i$suffix -E "s/(\"?VERSION\"?: ?\"?)([0-9a-z.-]+)/\1$ARANGODB_FULL_VERSION/g" $WORKDIR/work/sourceInfo.*
-  and if test -n "$suffix"; rm -f $WORKDIR/work/sourceInfo*$suffix; end
+  and setupSourceInfo "VERSION" "$ARANGODB_FULL_VERSION"
 end
 
 ## #############################################################################
@@ -677,6 +734,9 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
+  set -l suffix ""
+  test $PLATFORM = "darwin"; and set suffix ".bak"
+
   pushd $WORKDIR/work
   and rm -rf targz
   and mkdir targz
@@ -686,7 +746,9 @@ function buildTarGzPackageHelper
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
-  and mv bin/README .
+  and cp bin/README ./README
+  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v/g" README
+  and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v"
   and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
@@ -695,13 +757,16 @@ function buildTarGzPackageHelper
 
   rm -rf "$name-$os-$v"
   and ln -s "$name-$v" "$name-$os-$v"
-  and tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" -h --exclude "etc" --exclude "var" "$name-$os-$v"
+  and tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v"
   and rm -rf "$name-$os-$v"
   set s $status
 
   if test "$s" -eq 0
     rm -rf "$name-client-$os-$v"
     and ln -s "$name-$v" "$name-client-$os-$v"
+    and mv "$name-client-$os-$v/bin/README" "$name-client-$os-$v/README"
+    and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v/g" "$name-client-$os-$v/README"
+    and rm -rf "$name-client-$os-$v/README.bak"
     and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" -h \
       --exclude "etc" \
       --exclude "var" \
@@ -1770,7 +1835,7 @@ end
 function cleanWorkspace
   if test -d $WORKDIR/work
     pushd $WORKDIR/work
-    and find . -maxdepth 1 '!' "(" -name ArangoDB -o -name . -o -name .. -o -name ".cc*" ")" -exec rm -rf "{}" ";"
+    and find . -maxdepth 1 '!' "(" -name ArangoDB -o -name . -o -name .. -o -name ".cc*" -o -name "sourceInfo.*" ")" -exec rm -rf "{}" ";"
     and popd
   end
 end
@@ -1851,6 +1916,8 @@ switch (uname)
   case Windows ; source helper.windows.fish
   case '*' ; source helper.linux.fish
 end
+
+initSourceInfo
 
 if isatty 1
   showHelp
