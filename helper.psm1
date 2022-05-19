@@ -2033,6 +2033,23 @@ Function oskar8
     comm
 }
 
+Function rlogCompile
+{
+    showConfig
+    buildStaticArangoDB
+}
+
+Function rlogTests
+{
+    checkoutIfNeeded
+    If ($global:ok)
+    {
+        configureDumpsArangoDB
+        . "$global:SCRIPTSDIR\rlog\pr.ps1"
+    }
+    oskarCheck
+}
+
 Function makeCommunityRelease
 {
     setPDBsArchiveZip
