@@ -1211,7 +1211,6 @@ function setupSourceInfo($field,$value)
 Function switchBranches($branch_c,$branch_e)
 {
     $branch_c = $branch_c.ToString()
-    $branch_e = $branch_e.ToString()
 
     checkoutIfNeeded
     Push-Location $pwd
@@ -1268,6 +1267,8 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($ENTERPRISEEDITION -eq "On")
     {
+        $branch_e = $branch_e.ToString()
+
         Push-Location $pwd
         Set-Location $global:ENTERPRISEDIR;comm
         If ($global:ok)
