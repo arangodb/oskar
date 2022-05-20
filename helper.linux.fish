@@ -550,7 +550,7 @@ end
 
 function cppcheckArangoDB
   checkoutIfNeeded
- 
+
   runInContainer $CPPCHECKIMAGE /scripts/cppcheck.sh $argv
   return $status
 end
@@ -574,6 +574,7 @@ function cppcheckPR
   end
 
   if test -z "$files"
+    echo "No suitable (changed in PR to base C/C++ main) files were detected for CPPcheck."
     return 0
   else
     echo "The following files are subject to CPPcheck: $files"
