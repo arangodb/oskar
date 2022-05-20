@@ -569,13 +569,17 @@ function cppcheckPR
 
   if test "$ENTERPRISEEDITION" = "On"
     pushd $WORKDIR/work/ArangoDB/enterprise
-      set files $files (git --no-pager diff --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1])| grep -E '\.cp{2}?|\.hp{2}?' | sed -e 's/^/enterprise\//')
+      set files $files (git --no-pager diff --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1]) -- Enterprise/ | grep -E '\.cp{2}?|\.hp{2}?' | sed -e 's/^/enterprise\//')
     popd
   end
 
-  echo "The following files are subject to CPPcheck: $files"
-  cppcheckArangoDB "$files"
-  return $status
+  if test -z "$files"
+    return 0
+  else
+    echo "The following files are subject to CPPcheck: $files"
+    cppcheckArangoDB "$files"
+    return $status
+  end
 end
 
 ## #############################################################################
