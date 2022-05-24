@@ -166,6 +166,13 @@ Function runTests
             $global:result = "BAD"
             Break
         }
+        "tests"
+        {
+            registerTests
+            LaunchController $global:TESTSUITE_TIMEOUT
+            createReport
+            Break
+        }
         "*"
         {
             Write-Host "Unknown test suite $TESTSUITE"
