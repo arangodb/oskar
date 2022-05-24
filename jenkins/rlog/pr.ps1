@@ -2,13 +2,11 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 . "$pwd\prepareOskar.ps1"
 
 community
-rocksdb
-
 skipGrey
 skipPackagingOn
 setAllLogsToWorkspace
 
-switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
+switchBranches $env:ARANGODB_BRANCH
 
 If ($global:ok) 
 {
@@ -16,7 +14,11 @@ If ($global:ok)
     setPDBsArchive7z
     clcacheOn
     rlogCompile
-    rlogTests
+
+    If ($global:ok)
+    {
+        rlogTests
+    }
 }
 
 $s = $global:ok
