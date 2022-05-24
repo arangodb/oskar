@@ -382,12 +382,17 @@ end
 
 function oskar
   checkoutIfNeeded
-  runLocal $SCRIPTSDIR/runTests.fish
+  and runLocal $SCRIPTSDIR/runTests.fish
 end
 
 function oskarFull
   checkoutIfNeeded
-  runLocal $SCRIPTSDIR/runFullTests.fish
+  and runLocal $SCRIPTSDIR/runFullTests.fish
+end
+
+function rlogTests
+  checkoutIfNeeded
+  and runLocal $SCRIPTSDIR/rlog/pr.fish $argv
 end
 
 function pushOskar
