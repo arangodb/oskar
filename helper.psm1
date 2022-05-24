@@ -1587,9 +1587,9 @@ Function buildWindows
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    Write-Host "Build: cmake --build . --config `"$BUILDMODE`""
+    Write-Host "Build: cmake --build . --config `"$BUILDMODE`" $BUILDPARAMS"
     #Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.${global:PDBS_ARCHIVE_TYPE}" -ErrorAction SilentlyContinue
-    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build" -priority "Normal"
+    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -logfile "$INNERWORKDIR\build $BUILDPARAMS" -priority "Normal"
     If ($global:ok)
     {
         Copy-Item "$global:ARANGODIR\build\bin\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\bin\"; comm
@@ -2037,6 +2037,7 @@ Function oskar8
 Function rlogCompile
 {
     showConfig
+    $global:BUILDPARAMS = "-DDEBUG_SYNC_REPLICATION=On -DUSE_FAILURE_TESTS=On -DUSE_SEPARATE_REPLICATION2_TESTS_BINARY=On"
     buildStaticArangoDB
 }
 
