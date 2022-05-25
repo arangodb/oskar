@@ -5,7 +5,7 @@ Maintainer: ArangoDB GmbH <info@arangodb.com>
 Build-Depends: debhelper (>= 9), docker-ce
 
 Package: arangodb3
-Architecture: amd64
+Architecture: @ARCHITECTURE@
 Depends: ${misc:Depends}
 Conflicts: arangodb3-client, arangodb3e-client, arangodb3e
 Description: a multi-model NoSQL database
@@ -19,7 +19,7 @@ Description: a multi-model NoSQL database
  www.arangodb.com
 
 Package: arangodb3-client
-Architecture: amd64
+Architecture: @ARCHITECTURE@
 Depends: ${misc:Depends}
 Conflicts: arangodb3, arangodb3e, arangodb3e-client
 Description: stand-alone shell
@@ -33,7 +33,7 @@ Description: stand-alone shell
  www.arangodb.com
 
 Package: arangodb3-dbg
-Architecture: amd64
+Architecture: @ARCHITECTURE@
 Section: debug
 Priority: extra
 Conflicts:
