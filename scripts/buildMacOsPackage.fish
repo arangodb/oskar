@@ -178,6 +178,21 @@ function createDmg
     $DMGNAME $APPNAME
 end
 
+set -l arch ""
+if test "$USE_ARM" = "On"
+  switch "$ARCH"
+    case "x86_64"
+      set arch "$ARCH"
+    case '*'
+      if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+        set arch "arm64"
+      else
+        echo "fatal, unknown architecture $ARCH for rclone"
+        exit 1
+      end
+  end
+end
+
 # create app, notarize and create dmg
 rm -rf $INNERWORKDIR/dmg
 and mkdir -p $INNERWORKDIR/dmg
@@ -191,7 +206,7 @@ and if test $NOTARIZE_APP = On
   and stapleApp
 end
 and createDmg
-and mv $DMGNAME "$INNERWORKDIR/$PKGNAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
+and mv $DMGNAME "$INNERWORKDIR/$PKGNAME-$ARANGODB_DARWIN_UPSTREAM.$arch.dmg"
 or begin popd; exit 1; end
 
 popd
