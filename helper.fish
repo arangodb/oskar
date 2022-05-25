@@ -424,9 +424,9 @@ function copyRclone
       end
   end
 
-  echo Copying rclone from rclone/rclone-arangodb-$os$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  echo Copying rclone from rclone/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp -L $WORKDIR/rclone/rclone-arangodb-$os$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+  cp -L $WORKDIR/rclone/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 ## #############################################################################
