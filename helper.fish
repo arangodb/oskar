@@ -802,7 +802,7 @@ function buildTarGzPackageHelper
       --exclude "$name-client-$os-$v$arch/usr/bin/arangosync" \
       --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/arangodb-update-db" \
       --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/js/server" \
-      "$name-client-$os-$v"
+      "$name-client-$os-$v$arch"
     and rm -rf "$name-client-$os-$v$arch"
     set s $status
   end
