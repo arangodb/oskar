@@ -736,7 +736,7 @@ function buildTarGzPackageHelper
 
   set -l arch ""
 
-  if begin test "$USE_ARM" = "On"
+  if test "$USE_ARM" = "On"
     switch "$ARCH"
       case "x86_64"
         set arch "_$ARCH"
@@ -1181,7 +1181,24 @@ function buildBundleSnippet
     set DOWNLOAD_LINK ""
   end
 
-  set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
+  set -l dmgArch "x86_64"
+  set -l tgzArch ""
+  if test "$USE_ARM" = "On"
+    switch "$ARCH"
+      case "x86_64"
+        set arch "$ARCH"
+      case '*'
+        if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+          set arch "arm64"
+        else
+          echo "fatal, unknown architecture $ARCH for rclone"
+          exit 1
+        end
+      set tgzArch "_$arch"
+    end
+  end
+
+  set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.$arch.dmg"
 
   set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/MacOSX/
   set -l OUT $argv[2]/release/snippets
@@ -1191,14 +1208,14 @@ function buildBundleSnippet
   set -l BUNDLE_SIZE_SERVER (expr (wc -c < $IN/$BUNDLE_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l BUNDLE_SHA256_SERVER (shasum -a 256 -b < $IN/$BUNDLE_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macos-$ARANGODB_VERSION.tar.gz"
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macos-$ARANGODB_VERSION$tgzArch.tar.gz"
 
   if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-macos-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-macos-$ARANGODB_TGZ_UPSTREAM$tgzArch.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
   set -l TARGZ_SHA256_CLIENT ""
 
