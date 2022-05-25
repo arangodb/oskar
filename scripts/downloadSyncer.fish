@@ -18,6 +18,20 @@ if test -z "$DOWNLOAD_SYNC_USER"
   exit 1
 end
 
+set -l arch ""
+
+switch "$ARCH"
+  case "x86_64"
+    set arch "amd64"
+  case '*'
+    if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+      set arch "arm64"
+    else
+      echo "fatal, unknown architecture $ARCH for Syncer"
+      exit 1
+    end
+end
+
 # Extract PAT from "user:password" according to
 # https://developer.github.com/changes/2020-02-14-deprecating-password-auth/
 set -gx DOWNLOAD_SYNC_USER (echo "$DOWNLOAD_SYNC_USER" | cut -d ':' -f 2)
@@ -28,7 +42,7 @@ if test -f $INNERWORKDIR/ArangoDB/STARTER_REV
 end
 
 if test (count $argv) -lt 1
-  echo "You need to supply a path where to download the starter"
+  echo "You need to supply a path where to download the Syncer"
   exit 1
 end
 set -l SYNCER_FOLDER $argv[1]
@@ -54,7 +68,7 @@ or begin ; echo Finding download asset failed ; exit 1 ; end
 
 echo $meta > $INNERWORKDIR/assets.json
 
-set -l asset_id (echo $meta | jq ".assets | map(select(.name == \"arangosync-$PLATFORM-amd64\"))[0].id")
+set -l asset_id (echo $meta | jq ".assets | map(select(.name == \"arangosync-$PLATFORM-$arch\"))[0].id")
 if test $status -ne 0
   echo Downloaded JSON cannot be parsed
   exit 1

@@ -424,9 +424,9 @@ function copyRclone
       end
   end
 
-  echo Copying rclone from rclone/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  echo Copying rclone from rclone/rclone-arangodb-$os$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp -L $WORKDIR/rclone/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+  cp -L $WORKDIR/rclone/rclone-arangodb-$os$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 ## #############################################################################
@@ -734,6 +734,22 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
+  set -l arch ""
+
+  if begin test "$USE_ARM" = "On"
+    switch "$ARCH"
+      case "x86_64"
+        set arch "_$ARCH"
+      case '*'
+        if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+          set arch "_arm64"
+        else
+          echo "fatal, unknown architecture $ARCH for TGZ"
+          exit 1
+        end
+    end
+  end
+
   set -l suffix ""
   test $PLATFORM = "darwin"; and set suffix ".bak"
 
@@ -747,27 +763,27 @@ function buildTarGzPackageHelper
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and cp bin/README ./README
-  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v/g" README
+  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
   and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
-  and rm -rf "$WORKDIR/work/$name-$v"
-  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
+  and rm -rf "$WORKDIR/work/$name-$v$arch"
+  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v$arch"
   and cd $WORKDIR/work
   or begin ; popd ; return 1 ; end
 
-  rm -rf "$name-$os-$v"
-  and ln -s "$name-$v" "$name-$os-$v"
-  and tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v"
-  and rm -rf "$name-$os-$v"
+  rm -rf "$name-$os-$v$arch"
+  and ln -s "$name-$v$arch" "$name-$os-$v$arch"
+  and tar -c -z -f "$WORKDIR/work/$name-$os-$v$arch.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
+  and rm -rf "$name-$os-$v$arch"
   set s $status
 
   if test "$s" -eq 0
-    rm -rf "$name-client-$os-$v"
-    and ln -s "$name-$v" "$name-client-$os-$v"
-    and mv "$name-client-$os-$v/bin/README" "$name-client-$os-$v/README"
-    and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v/g" "$name-client-$os-$v/README"
-    and rm -rf "$name-client-$os-$v/README.bak"
-    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" -h \
+    rm -rf "$name-client-$os-$v$arch"
+    and ln -s "$name-$v$arch" "$name-client-$os-$v$arch"
+    and mv "$name-client-$os-$v$arch/bin/README" "$name-client-$os-$v$arch/README"
+    and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
+    and rm -rf "$name-client-$os-$v$arch/README.bak"
+    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" -h \
       --exclude "etc" \
       --exclude "var" \
       --exclude "*.initd" \
@@ -777,17 +793,17 @@ function buildTarGzPackageHelper
       --exclude "arangod.8" \
       --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
-      --exclude "$name-client-$os-$v/sbin" \
-      --exclude "$name-client-$os-$v/bin/arangod" \
-      --exclude "$name-client-$os-$v/bin/arangodb" \
-      --exclude "$name-client-$os-$v/bin/arangosync" \
-      --exclude "$name-client-$os-$v/usr/sbin" \
-      --exclude "$name-client-$os-$v/usr/bin/arangodb" \
-      --exclude "$name-client-$os-$v/usr/bin/arangosync" \
-      --exclude "$name-client-$os-$v/usr/share/arangodb3/arangodb-update-db" \
-      --exclude "$name-client-$os-$v/usr/share/arangodb3/js/server" \
+      --exclude "$name-client-$os-$v$arch/sbin" \
+      --exclude "$name-client-$os-$v$arch/bin/arangod" \
+      --exclude "$name-client-$os-$v$arch/bin/arangodb" \
+      --exclude "$name-client-$os-$v$arch/bin/arangosync" \
+      --exclude "$name-client-$os-$v$arch/usr/sbin" \
+      --exclude "$name-client-$os-$v$arch/usr/bin/arangodb" \
+      --exclude "$name-client-$os-$v$arch/usr/bin/arangosync" \
+      --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/arangodb-update-db" \
+      --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/js/server" \
       "$name-client-$os-$v"
-    and rm -rf "$name-client-$os-$v"
+    and rm -rf "$name-client-$os-$v$arch"
     set s $status
   end
 
