@@ -8,7 +8,7 @@ function setupSourceInfo
   set -l syncerRev $argv[1]
   set -l suffix ""
   test $PLATFORM = "darwin"; and set suffix ".bak"
-  sed -i$suffix -E 's/^Syncer:.*$/Syncer:'"$syncerRev"'/g' $INNERWORKDIR/sourceInfo.log
+  sed -i$suffix -E 's/^Syncer:.*$/Syncer: '"$syncerRev"'/g' $INNERWORKDIR/sourceInfo.log
 end
 
 echo Hello, syncer here, arguments are: $argv
