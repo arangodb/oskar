@@ -448,6 +448,27 @@ function oskar
   return $s
 end
 
+function rlogTests
+  set -l s 1
+  set -l p $PARALLELISM
+
+  checkoutIfNeeded
+  and findRequiredCompiler
+  and if test "$SAN" = "On"
+    parallelism 2
+    clearSanStatus
+    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/rlog/pr.fish $argv
+    set s $status
+    set s (math $s + (getSanStatus))
+  else
+    runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/rlog/pr.fish $argv
+    set s $status
+  end
+
+  parallelism $p
+  return $s
+end
+
 function oskarFull
   set -l s 1
   set -l p $PARALLELISM
