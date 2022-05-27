@@ -178,7 +178,7 @@ function createDmg
     $DMGNAME $APPNAME
 end
 
-set -l arch ""
+set -l arch "x86_64"
 if test "$USE_ARM" = "On"
   switch "$ARCH"
     case "x86_64"
