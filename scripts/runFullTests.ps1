@@ -163,6 +163,7 @@ Function global:registerClusterTests()
     registerTest -cluster $true -testname "audit_server"
     registerTest -cluster $true -testname "arangobench"
     registerTest -cluster $true -testname "chaos" -moreParams "--skipNightly false"
+    registerTest -cluster $true -testname "wal_cleanup"
     registerTest -cluster $true -testname "replication2_client"
     registerTest -cluster $true -testname "replication2_server"
     # registerTest -cluster $true -testname "agency" -weight 2
