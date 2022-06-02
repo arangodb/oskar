@@ -15,29 +15,29 @@ set -gx ARCH (uname -m)
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 13
+set -gx UBUNTUBUILDIMAGE3_TAG 14
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 14
+set -gx UBUNTUBUILDIMAGE4_TAG 15
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 7
+set -gx UBUNTUBUILDIMAGE5_TAG 8
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 17
+set -gx ALPINEBUILDIMAGE3_TAG 18
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 18
+set -gx ALPINEBUILDIMAGE4_TAG 19
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
-set -gx ALPINEBUILDIMAGE5_TAG 8
+set -gx ALPINEBUILDIMAGE5_TAG 9
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -448,6 +448,27 @@ function oskar
   return $s
 end
 
+function rlogTests
+  set -l s 1
+  set -l p $PARALLELISM
+
+  checkoutIfNeeded
+  and findRequiredCompiler
+  and if test "$SAN" = "On"
+    parallelism 2
+    clearSanStatus
+    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/rlog/pr.fish $argv
+    set s $status
+    set s (math $s + (getSanStatus))
+  else
+    runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/rlog/pr.fish $argv
+    set s $status
+  end
+
+  parallelism $p
+  return $s
+end
+
 function oskarFull
   set -l s 1
   set -l p $PARALLELISM
@@ -551,8 +572,36 @@ end
 function cppcheckArangoDB
   checkoutIfNeeded
 
-  runInContainer $CPPCHECKIMAGE /scripts/cppcheck.sh
+  runInContainer $CPPCHECKIMAGE /scripts/cppcheck.sh $argv
   return $status
+end
+
+function cppcheckPR
+  if test (count $argv) -ne 1
+    echo "usage: cppcheckPR <BASE BRANCH>"
+    return 1
+  end
+
+  checkoutIfNeeded
+  pushd $WORKDIR/work/ArangoDB
+  git fetch --all
+  set -l files (git --no-pager diff --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1]) -- arangod/ lib/ client-tools/ arangosh/ | grep -E '\.cp{2}?|\.hp{2}?')
+  popd
+
+  if test "$ENTERPRISEEDITION" = "On"
+    pushd $WORKDIR/work/ArangoDB/enterprise
+      set files $files (git --no-pager diff --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1]) -- Enterprise/ | grep -E '\.cp{2}?|\.hp{2}?' | sed -e 's/^/enterprise\//')
+    popd
+  end
+
+  if test -z "$files"
+    echo "No suitable (changed in PR to base C/C++ main) files were detected for CPPcheck."
+    return 0
+  else
+    echo "The following files are subject to CPPcheck: $files"
+    cppcheckArangoDB "$files"
+    return $status
+  end
 end
 
 ## #############################################################################

@@ -166,6 +166,13 @@ Function runTests
             $global:result = "BAD"
             Break
         }
+        "tests"
+        {
+            registerTests
+            LaunchController $global:TESTSUITE_TIMEOUT
+            createReport
+            Break
+        }
         "*"
         {
             Write-Host "Unknown test suite $TESTSUITE"
@@ -224,7 +231,7 @@ Function launchTest($which) {
     Pop-Location
 }
 
-Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst, [switch]$http2,[switch]$encrypt)
+Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst, [switch]$http2,[switch]$encrypt,[switch]$ssl)
 {
     Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlockList"
     $checkname = If ($vst) { $testname + "_$vst" } ElseIf ($http2) { $testname + "_$http2" } Else { $testname }
@@ -266,6 +273,10 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
 
         If ($vst) {
           $testparams = $testparams + " --vst true"
+        }
+
+        If ($ssl) {
+          $testparams = $testparams + " --protocol ssl"
         }
 
         If ($http2) {

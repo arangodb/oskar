@@ -4,7 +4,7 @@ If (!$env:RELEASE_TAG -or $env:RELEASE_TAG -eq "")
     Exit 1
 }
 
-# \\nas02.arangodb.biz\buildfiles
+# \\nas01.arangodb.biz\buildfiles
 If (!$env:NAS_SHARE_ROOT -or $env:NAS_SHARE_ROOT -eq "")
 {
     Write-Host "NAS_SHARE_ROOT required"

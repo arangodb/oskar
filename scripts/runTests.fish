@@ -40,7 +40,6 @@ else
   set ST "$ST""250,runSingleTest1 export -\n"
   set ST "$ST""500,runSingleTest1 fuerte -\n"
   set ST "$ST""500,runSingleTest1 http_replication -\n"
-  set ST "$ST""500,runSingleTest1 http_server -\n"
   set ST "$ST""500,runSingleTest1 importing -\n"
   set ST "$ST""500,runSingleTest1 server_secrets -\n"
   set ST "$ST""500,runSingleTest1 server_permissions -\n"
@@ -51,7 +50,8 @@ else
   set ST "$ST""2000,runSingleTest1 recovery 3 --testBuckets 4/3\n"
   set ST "$ST""500,runSingleTest2 replication_static -\n"
   set ST "$ST""500,runSingleTest2 replication_fuzz -\n"
-  set ST "$ST""250,runSingleTest1 server_http -\n"
+  set ST "$ST""750,runSingleTest1 shell_api http $EncryptionAtRest -\n"
+  set ST "$ST""750,runSingleTest1 shell_api https $EncryptionAtRest --protocol ssl -\n"
   set ST "$ST""750,runSingleTest1 shell_client http $EncryptionAtRest -\n"
   set ST "$ST""750,runSingleTest1 shell_client vst --vst true -\n"
   set ST "$ST""750,runSingleTest1 shell_client http2 --http2 true -\n"
@@ -67,7 +67,6 @@ else
   set ST "$ST""500,runSingleTest1 shell_server_aql 2 --testBuckets 5/2\n"
   set ST "$ST""250,runSingleTest1 shell_server_aql 3 --testBuckets 5/3\n"
   set ST "$ST""250,runSingleTest1 shell_server_aql 4 --testBuckets 5/4\n"
-  set ST "$ST""500,runSingleTest1 ssl_server -\n"
   set ST "$ST""250,runSingleTest1 version -\n"
   set ST "$ST""500,runSingleTest1 audit_client -\n"
   set ST "$ST""500,runSingleTest1 audit_server -\n"
@@ -82,7 +81,6 @@ else
   #set ST "$ST""250,runSingleTest1 replication2_client -\n"
   #set ST "$ST""250,runSingleTest1 replication2_server -\n"
 end
-
 
 set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g STL (count $STS)
@@ -139,12 +137,14 @@ else
   set CT "$CT""500,runClusterTest1 shell_server 2 --testBuckets 5/2 --dumpAgencyOnError true\n"
   set CT "$CT""500,runClusterTest1 shell_server 3 --testBuckets 5/3 --dumpAgencyOnError true\n"
   set CT "$CT""500,runClusterTest1 shell_server 4 --testBuckets 5/4 --dumpAgencyOnError true\n"
+  set CT "$CT""500,runClusterTest1 shell_api http $EncryptionAtRest -\n"
+  set CT "$CT""500,runClusterTest1 shell_api https --protocol ssl $EncryptionAtRest -\n"
   set CT "$CT""500,runClusterTest1 shell_client 0 --testBuckets 5/0 --dumpAgencyOnError true\n"
   set CT "$CT""500,runClusterTest1 shell_client 1 --testBuckets 5/1 --dumpAgencyOnError true\n"
   set CT "$CT""500,runClusterTest1 shell_client 2 --testBuckets 5/2 --dumpAgencyOnError true\n"
   set CT "$CT""500,runClusterTest1 shell_client 3 --testBuckets 5/3 --dumpAgencyOnError true\n"
   set CT "$CT""250,runClusterTest1 shell_client 4 --testBuckets 5/4 --dumpAgencyOnError true\n"
-  set CT "$CT""250,runClusterTest1 shell_fuzzer --dumpAgencyOnError true\n"
+  set CT "$CT""250,runClusterTest1 shell_fuzzer - --dumpAgencyOnError true\n"
   set CT "$CT""2000,runClusterTest1 shell_server_aql 0 --testBuckets 16/0 --dumpAgencyOnError true\n"
   set CT "$CT""1500,runClusterTest1 shell_server_aql 1 --testBuckets 16/1 --dumpAgencyOnError true\n"
   set CT "$CT""1500,runClusterTest1 shell_server_aql 2 --testBuckets 16/2 --dumpAgencyOnError true\n"
@@ -161,12 +161,10 @@ else
   set CT "$CT""1500,runClusterTest1 shell_server_aql 13 --testBuckets 16/13 --dumpAgencyOnError true\n"
   set CT "$CT""1500,runClusterTest1 shell_server_aql 14 --testBuckets 16/14 --dumpAgencyOnError true\n"
   set CT "$CT""1500,runClusterTest1 shell_server_aql 15 --testBuckets 16/15 --dumpAgencyOnError true\n"
-  set CT "$CT""500,runClusterTest1 server_http - --dumpAgencyOnError true\n"
   set CT "$CT""500,runClusterTest1 server_secrets - --dumpAgencyOnError true\n"
   set CT "$CT""1000,runClusterTest1 restart - --dumpAgencyOnError true\n"
   set CT "$CT""1000,runClusterTest1 server_permissions - --dumpAgencyOnError true\n"
   set CT "$CT""1000,runClusterTest1 server_parameters - --dumpAgencyOnError true\n"
-  set CT "$CT""1000,runClusterTest1 ssl_server - --dumpAgencyOnError true\n"
   set CT "$CT""250,runClusterTest1 audit_client - --dumpAgencyOnError true\n"
   set CT "$CT""250,runClusterTest1 audit_server - --dumpAgencyOnError true\n"
   set CT "$CT""600,runClusterTest1 resilience_move - --dumpAgencyOnError true\n"
@@ -188,13 +186,13 @@ else
   set CT "$CT""250,runClusterTest1 dump_encrypted - --dumpAgencyOnError true\n"
   set CT "$CT""250,runClusterTest1 dump_with_crashes - --dumpAgencyOnError true\n"
   set CT "$CT""250,runClusterTest1 export - --dumpAgencyOnError true\n"
-  set CT "$CT""750,runClusterTest1 http_server - --dumpAgencyOnError true\n"
   set CT "$CT""250,runClusterTest1 importing - --dumpAgencyOnError true\n"
   set CT "$CT""250,runClusterTest1 hot_backup - --dumpAgencyOnError true\n"
   set CT "$CT""250,runClusterTest1 chaos - --dumpAgencyOnError true\n"
   set CT "$CT""250,runClusterTest1 replication2_client -\n"
   set CT "$CT""250,runClusterTest1 replication2_server - --dumpAgencyOnError true\n"
 end
+  
 set -g CTS (echo -e $CT | fgrep , | sort -rn | awk -F, '{print $2}')
 set -g CTL (count $CTS)
 echo $CTS

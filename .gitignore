@@ -7,3 +7,6 @@ config/environment.fish
 containers/*/install.tar.gz
 release
 .DS_Store
+.bash_history
+.config
+.local
