@@ -8,11 +8,6 @@ end
 
 if test -z "$COPY_TO_STAGE2"
   set -xg COPY_TO_STAGE2 false
-else
-  if test -z "$ARCH"
-    echo "ARCH must be calculated by oskar to copy to stage2"
-    exit 1
-  end
 end
 
 set -xg PACKAGES "$ARANGODB_PACKAGES"
@@ -71,6 +66,12 @@ function copyPackagesToStage2
 end
 
 cleanPrepareLockUpdateClear
+and begin
+  if test -z "$ARCH"
+    echo "ARCH must be calculated by oskar to copy to stage2"
+    exit 1
+  end
+end
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyRelease
 and makeRelease
