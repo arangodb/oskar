@@ -18,25 +18,25 @@ fi
 docker run -v $HOME/.ssh:/root/.ssh arangodb/ssh-client ssh -o StrictHostKeyChecking=no -T git@github.com
 
 docker run \
-       -e PDOCKER=`getent group docker | cut -d: -f3` \
-       -e PGID=`id -g` \
-       -e PHOME=$HOME \
-       -e PPWD=`pwd` \
-       -e PUID=`id -u` \
-       -e SSH_AUTH_SOCK=$SSH_AUTH_SOCK \
+       -e "PDOCKER=`getent group docker | cut -d: -f3`" \
+       -e "PGID=`id -g`" \
+       -e "PHOME=$HOME" \
+       -e "PPWD=`pwd`" \
+       -e "PUID=`id -u`" \
+       -e "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" \
        \
-       -e ARANGODB_BRANCH=$ARANGODB_BRANCH \
-       -e BASE_VERSION=$BASE_VERSION \
-       -e EDITION=$EDITION \
-       -e ENTERPRISE_BRANCH=$ENTERPRISE_BRANCH \
-       -e NODE_NAME=$NODE_NAME \
-       -e OSKAR_BRANCH=$OSKAR_BRANCH \
-       -e STORAGE_ENGINE=$STORAGE_ENGINE \
-       -e TEST_SUITE=$TEST_SUITE \
+       -e "ARANGODB_BRANCH=$ARANGODB_BRANCH" \
+       -e "BASE_VERSION=$BASE_VERSION" \
+       -e "EDITION=$EDITION" \
+       -e "ENTERPRISE_BRANCH=$ENTERPRISE_BRANCH" \
+       -e "NODE_NAME=$NODE_NAME" \
+       -e "OSKAR_BRANCH=$OSKAR_BRANCH" \
+       -e "STORAGE_ENGINE=$STORAGE_ENGINE" \
+       -e "TEST_SUITE=$TEST_SUITE" \
        \
-       -v $HOME:$HOME \
-       -v $SSH_AUTH_SOCK:$SSH_AUTH_SOCK \
-       -v /var/run/docker.sock:/var/run/docker.sock \
+       -v "$HOME:$HOME" \
+       -v "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK" \
+       -v "/var/run/docker.sock:/var/run/docker.sock" \
        arangodb/oskar $*
 
 result=$?
