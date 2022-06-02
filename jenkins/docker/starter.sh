@@ -37,6 +37,7 @@ docker run \
        -v "$HOME:$HOME" \
        -v "$SSH_AUTH_SOCK:$SSH_AUTH_SOCK" \
        -v "/var/run/docker.sock:/var/run/docker.sock" \
+       -v "/mnt/buildfiles:/mnt/buildfiles" \
        arangodb/oskar $*
 
 result=$?
