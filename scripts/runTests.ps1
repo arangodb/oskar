@@ -14,7 +14,7 @@ Function global:registerSingleTests()
 
     if (Test-Path "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -PathType Leaf) {
         Write-Host "Using test definitions from repo..."
-        C:\Python310\python.exe $INNERWORKDIR/ArangoDB/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f ps1 | Invoke-Expression
+        python "$env:WORKSPACE\jenkins\helper\generateJenkinsScripts.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt -f ps1 | Invoke-Expression
     } else {
         registerTest -testname "upgrade_data_3.2.*"
         registerTest -testname "upgrade_data_3.3.*"
@@ -101,7 +101,7 @@ Function global:registerClusterTests()
 
     if (Test-Path "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -PathType Leaf) {
         Write-Host "Using test definitions from repo..."
-        C:\Python310\python.exe $INNERWORKDIR/ArangoDB/scripts/generateJenkinsScripts.py $INNERWORKDIR/ArangoDB/tests/test-definitions.txt -f ps1 --cluster | Invoke-Expression
+        python "$env:WORKSPACE\jenkins\helper\generateJenkinsScripts.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt -f ps1 --cluster | Invoke-Expression
     } else {
         registerTest -cluster $true -testname "load_balancing"
         registerTest -cluster $true -testname "load_balancing_auth"
