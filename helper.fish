@@ -290,6 +290,11 @@ function silentBuild ; set -gx VERBOSEBUILD Off ; end
 if test -z "$VERBOSEBUILD"; silentBuild
 else ; set -gx VERBOSEBUILD $VERBOSEBUILD ; end
 
+function buildSeppOn ; set -gx BUILD_SEPP On ; end
+function buildSeppOff ; set -gx BUILD_SEPP Off ; end
+if test -z "$BUILD_SEPP" ; buildSeppOff
+else ; set -gx BUILD_SEPP $BUILD_SEPP ; end
+
 function showDetails ; set -gx SHOW_DETAILS On ; end
 function hideDetails ; set -gx SHOW_DETAILS Off ; end
 function pingDetails ; set -gx SHOW_DETAILS Ping ; end
@@ -360,7 +365,6 @@ function nonStrictOpenSSL ; set -gx USE_STRICT_OPENSSL Off ; end
 if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
   strictOpenSSL
 else; set -gx USE_STRICT_OPENSSL $USE_STRICT_OPENSSL; end
-
 
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
@@ -1413,6 +1417,7 @@ function showConfig
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION      '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER             '(maintainerOn/Off)'
+  printf $fmt3 'Build sepp' $BUILD_SEPP             '(buildSeppOn/buildSeppOff)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
