@@ -1,6 +1,9 @@
 #!/bin/env python3
+""" read test definition, and generate the output for the specified target """
 import argparse
 import sys
+
+#pylint: disable=line-too-long disable=broad-except
 
 # check python 3
 if sys.version_info[0] != 3:
@@ -9,10 +12,13 @@ if sys.version_info[0] != 3:
 
 
 def generate_fish_output(args, outfile, tests):
-    def output(ln):
-        print(ln, file=outfile)
+    """ unix/fish conformant test definitions """
+    def output(line):
+        """ output one line """
+        print(line, file=outfile)
 
     def print_test_func(test, func, varname):
+        """ print one test function """
         args = " ".join(test["args"])
         params = test["params"]
         suffix = params.get("suffix", "-")
@@ -41,6 +47,7 @@ def generate_fish_output(args, outfile, tests):
                    f'{suffix} {args}\\n"')
 
     def print_all_tests(func, varname):
+        """ iterate over all definitions """
         for test in tests:
             print_test_func(test, func, varname)
 
@@ -51,8 +58,10 @@ def generate_fish_output(args, outfile, tests):
 
 
 def generate_ps1_output(args, outfile, tests):
-    def output(ln):
-        print(ln, file=outfile)
+    """ powershell conformant test definitions """
+    def output(line):
+        """ output one line """
+        print(line, file=outfile)
 
     for test in tests:
         params = test["params"]
@@ -85,6 +94,7 @@ def generate_ps1_output(args, outfile, tests):
 
 
 def filter_tests(args, tests):
+    """ filter testcase by operations target Single/Cluster/full """
     if args.all:
         return tests
 
@@ -102,14 +112,16 @@ def filter_tests(args, tests):
     if args.format == "ps1":
         filters.append(lambda test: "!windows" not in test["flags"])
 
-    for f in filters:
-        tests = filter(f, tests)
+    for one_filter in filters:
+        tests = filter(one_filter, tests)
     return list(tests)
 
 
-def generate_dump_output(args, outfile, tests):
-    def output(ln):
-        print(ln, file=outfile)
+def generate_dump_output(_, outfile, tests):
+    """ interactive version output to inspect comprehension """
+    def output(line):
+        """ output one line """
+        print(line, file=outfile)
 
     for test in tests:
         params = " ".join(f"{key}={value}" for key, value in test['params'].items())
@@ -144,6 +156,7 @@ known_parameter = {
 
 
 def print_help_flags():
+    """ print help for flags """
     print("Flags are specified as a single token.")
     for flag, exp in known_flags.items():
         print(f"{flag}: {exp}")
@@ -154,7 +167,7 @@ def print_help_flags():
 
 
 def parse_arguments():
-
+    """ argv """
     if "--help-flags" in sys.argv:
         print_help_flags()
         sys.exit()
@@ -175,13 +188,16 @@ def parse_arguments():
 
 
 def validate_params(params):
+    """ check for argument validity """
     def parse_number(value):
+        """ check value """
         try:
             return int(value)
-        except:
-            raise Exception(f"invalid numeric value: {value}")
+        except Exception as exc:
+            raise Exception(f"invalid numeric value: {value}") from exc
 
     def parse_number_or_default(key, default_value=None):
+        """ check number """
         if key in params:
             params[key] = parse_number(params[key])
         elif default_value is not None:
@@ -194,6 +210,7 @@ def validate_params(params):
 
 
 def validate_flags(flags):
+    """ check whether target flags are valid """
     if "cluster" in flags and "single" in flags:
         raise Exception("`cluster` and `single` specified for the same test")
     if "full" in flags and "!full" in flags:
@@ -201,6 +218,7 @@ def validate_flags(flags):
 
 
 def read_definition_line(line):
+    """ parse one test definition line """
     bits = line.split()
     if len(bits) < 1:
         raise Exception("expected at least one argument: <testname>")
@@ -214,7 +232,8 @@ def read_definition_line(line):
         if bit == "--":
             args = remainder[idx + 1:]
             break
-        elif "=" in bit:
+
+        if "=" in bit:
             key, value = bit.split("=", maxsplit=1)
             params[key] = value
         else:
@@ -237,18 +256,19 @@ def read_definition_line(line):
 
 
 def read_definitions(filename):
+    """ read test definitions txt """
     tests = []
     has_error = False
-    with open(filename, "r") as f:
-        for no, line in enumerate(f):
+    with open(filename, "r", encoding="utf-8") as filep:
+        for line_no, line in enumerate(filep):
             line = line.strip()
             if line.startswith("#") or len(line) == 0:
                 continue  # ignore comments
             try:
                 test = read_definition_line(line)
                 tests.append(test)
-            except Exception as e:
-                print(f"{filename}:{no + 1}: {e}", file=sys.stderr)
+            except Exception as exc:
+                print(f"{filename}:{line_no + 1}: {exc}", file=sys.stderr)
                 has_error = True
     if has_error:
         raise Exception("abort due to errors")
@@ -256,18 +276,21 @@ def read_definitions(filename):
 
 
 def generate_output(args, outfile, tests):
+    """ generate output """
     if args.format not in formats:
         raise Exception(f"Unknown format `{args.format}`")
     formats[args.format](args, outfile, tests)
 
 
 def get_output_file(args):
+    """ get output file """
     if args.output == '-':
         return sys.stdout
-    return open(args.output, "w")
+    return open(args.output, "w", encoding="utf-8")
 
 
 def main():
+    """ entrypoint """
     try:
         args = parse_arguments()
         tests = read_definitions(args.definitions)
@@ -275,8 +298,8 @@ def main():
             return  # nothing left to do
         tests = filter_tests(args, tests)
         generate_output(args, get_output_file(args), tests)
-    except Exception as e:
-        print(e, file=sys.stderr)
+    except Exception as exc:
+        print(exc, file=sys.stderr)
         sys.exit(1)
 
 
