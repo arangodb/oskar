@@ -13,7 +13,7 @@ Function global:registerSingleTests()
     $global:TESTSUITE_TIMEOUT = 9000
     if (Test-Path "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -PathType Leaf) {
         Write-Host "Using test definitions from repo..."
-        python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt -f ps1 --full | Invoke-Expression
+        python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f ps1 --full | Invoke-Expression
     } else {
         registerTest -testname "upgrade_data_3.2.*"
         registerTest -testname "upgrade_data_3.3.*"
@@ -121,7 +121,7 @@ Function global:registerClusterTests()
     $global:TESTSUITE_TIMEOUT = 18000
     if (Test-Path "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -PathType Leaf) {
         Write-Host "Using test definitions from repo..."
-        python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt -f ps1 --full --cluster | Invoke-Expression
+        python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f ps1 --full --cluster | Invoke-Expression
     } else {
         registerTest -cluster $true -testname "load_balancing"
         registerTest -cluster $true -testname "load_balancing_auth"
