@@ -27,4 +27,8 @@ COPY ./scripts /scripts
 COPY ./tools/gcc /tools/
 COPY ./tools/g++ /tools/
 
+RUN git config --global --add safe.directory /work/ArangoDB
+RUN git config --global --add safe.directory /work/ArangoDB/enterprise
+RUN git config --global --add safe.directory /work/ArangoDB/docs
+
 CMD [ "/usr/bin/fish" ]
