@@ -28,4 +28,13 @@ RUN update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${CL
 
 RUN LC_ALL="C" update-ccache-symlinks
 
+RUN git config --global --add safe.directory /work/ArangoDB
+RUN git config --global --add safe.directory /work/ArangoDB/enterprise
+RUN git config --global --add safe.directory /work/ArangoDB/docs
+
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/fmt       
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/iresearch
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/rocksdb
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/velocypack
+
 CMD [ "/usr/bin/fish" ]
