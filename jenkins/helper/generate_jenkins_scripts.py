@@ -84,12 +84,12 @@ def generate_ps1_output(args, outfile, tests):
             num_buckets = int(params["buckets"])
             for i in range(num_buckets):
                 output(f'{condition_prefix}'
-                       f'registerTest -testname "{test["name"]}" -weight {test["weight"]} '
+                       f'registerTest -testname "{test["name"]}" -weight {test["wweight"]} '
                        f'-index "{i}" -bucket "{num_buckets}/{i}"{moreargs}{cluster_str}'
                        f'{condition_suffix}')
         else:
             output(f'{condition_prefix}'
-                   f'registerTest -testname "{test["name"]}"{cluster_str} -weight {test["weight"]}{suffix}{moreargs}'
+                   f'registerTest -testname "{test["name"]}"{cluster_str} -weight {test["wweight"]}{suffix}{moreargs}'
                    f'{condition_suffix}')
 
 
@@ -127,6 +127,7 @@ def generate_dump_output(_, outfile, tests):
         params = " ".join(f"{key}={value}" for key, value in test['params'].items())
         output(f"{test['name']}")
         output(f"\tweight: {test['weight']}")
+        output(f"\tweight: {test['wweight']}")
         output(f"\tflags: {' '.join(test['flags'])}")
         output(f"\tparams: {params}")
         output(f"\targs: {' '.join(test['args'])}")
@@ -151,7 +152,8 @@ known_flags = {
 known_parameter = {
     "buckets": "number of buckets to use for this test",
     "suffix": "suffix that is appended to the tests folder name",
-    "weight": "weight that controls execution order. Lower weights are executed later"
+    "weight": "weight that controls execution order on Linux / Mac. Lower weights are executed later",
+    "wweight": "windows weight that controls execution order on Windows machines. Lower weights are executed later"
 }
 
 
@@ -187,7 +189,7 @@ def parse_arguments():
     return args
 
 
-def validate_params(params):
+def validate_params(params, is_cluster):
     """ check for argument validity """
     def parse_number(value):
         """ check value """
@@ -204,6 +206,7 @@ def validate_params(params):
             params[key] = default_value
 
     parse_number_or_default("weight", 250)
+    parse_number_or_default("wweight", 4 if is_cluster else 1)
     parse_number_or_default("buckets")
 
     return params
@@ -249,10 +252,17 @@ def read_definition_line(line):
         if param not in known_parameter:
             raise Exception(f"Unknown parameter `{param}`")
 
-    params = validate_params(params)
     validate_flags(flags)
+    params = validate_params(params, 'cluster' in flags)
 
-    return {"name": name, "weight": params["weight"], "flags": flags, "args": args, "params": params}
+    return {
+        "name": name,
+        "weight": params["weight"],
+        "wweight": params["wweight"],
+        "flags": flags,
+        "args": args,
+        "params": params
+    }
 
 
 def read_definitions(filename):
