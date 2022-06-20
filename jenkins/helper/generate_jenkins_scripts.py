@@ -153,7 +153,7 @@ known_parameter = {
     "buckets": "number of buckets to use for this test",
     "suffix": "suffix that is appended to the tests folder name",
     "weight": "weight that controls execution order on Linux / Mac. Lower weights are executed later",
-    "wweight": "windows weight that controls execution order on Windows machines. Lower weights are executed later"
+    "wweight": "windows weight how many resources will the job use in the SUT? Default: 1 in Single server, 4 in Clusters"
 }
 
 
