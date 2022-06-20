@@ -11,9 +11,11 @@ and forceDisableAVXOn
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and showRepository
+and set -xg RELEASE_IS_HEAD "false"
 and makeDockerRelease "$DOCKER_TAG-noavx"
 and ubiDockerImage
 and findArangoDBVersion
+and set -xg RELEASE_IS_HEAD "false"
 and makeDockerEnterpriseRelease "$DOCKER_TAG-noavx"
 
 set -l s $status

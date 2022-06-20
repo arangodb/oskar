@@ -25,7 +25,7 @@ function prepareOskar
     git clone --progress  -b $OSKAR_BRANCH ssh://git@github.com/arangodb/oskar $OSKAR ; and cd $OSKAR
   else
     echo git checkout -f $OSKAR_BRANCH
-    git fetch --tags ; and git fetch --force ; and git reset --hard ; and git checkout -f $OSKAR_BRANCH ; and git reset --hard origin/$OSKAR_BRANCH
+    git fetch --tags -f ; and git fetch --force ; and git reset --hard ; and git checkout -f $OSKAR_BRANCH ; and git reset --hard origin/$OSKAR_BRANCH
   end
   and echo "oskar updated"
   and source helper.fish
