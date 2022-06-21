@@ -1560,6 +1560,7 @@ function runInContainer
   set c (docker run -d \
              -v $WORKDIR/work/:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
+             -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
              -v "$WORKDIR/scripts/":"/scripts" \
              $mirror \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
@@ -1623,6 +1624,7 @@ function runInContainer
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e WORKSPACE="$WORKSPACE" \
              -e PROMTOOL_PATH="$PROMTOOL_PATH" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
@@ -1670,6 +1672,7 @@ function interactiveContainer
   docker run -it --rm \
     -v $WORKDIR/work:$INNERWORKDIR \
     -v $SSH_AUTH_SOCK:/ssh-agent \
+    -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
     -v "$WORKDIR/scripts":"/scripts" \
     -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
     -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
@@ -1731,6 +1734,7 @@ function interactiveContainer
     -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
     -e VERBOSEBUILD="$VERBOSEBUILD" \
     -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+    -e WORKSPACE="$WORKSPACE" \
     -e PROMTOOL_PATH="$PROMTOOL_PATH" \
     $argv
 
