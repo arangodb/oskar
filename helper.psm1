@@ -379,7 +379,7 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
                 $CONFIG_TYPE = "${type}"
               }
               $MSVS_PATH="C:\Program Files (x86)\Microsoft Visual Studio\$msvs"
-              If (-Not Test-Path -Path "$MSVS_PATH")
+              If (-Not (Test-Path -Path "$MSVS_PATH"))
               {
                   $MSVS_PATH="C:\Program Files\Microsoft Visual Studio\$msvs"
               }
