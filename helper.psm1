@@ -72,13 +72,6 @@ $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
 
-Function VS2017
-{
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2017"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
-    $global:GENERATOR = "Visual Studio 15 2017 Win64"
-    $global:GENERATORID = "v141"
-    $global:MSVS = "2017"
-}
 Function VS2019
 {
     $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
@@ -86,9 +79,16 @@ Function VS2019
     $global:GENERATORID = "v142"
     $global:MSVS = "2019"
 }
+Function VS2022
+{
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2022"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $global:GENERATOR = "Visual Studio 17 2022"
+    $global:GENERATORID = "v143"
+    $global:MSVS = "2022"
+}
 If (-Not($global:GENERATOR))
 {
-    VS2017
+    VS2019
 }
 
 Function findCompilerVersion
@@ -102,15 +102,15 @@ Function findCompilerVersion
 
                 switch ($Matches['version'])
                 {
-                    2017 { VS2017 }
                     2019 { VS2019 }
-                    default { VS2017 }
+                    2022 { VS2022 }
+                    default { VS2019 }
                 }
             return
         }
     }
 
-    VS2017
+    VS2019
 }
 
 findCompilerVersion
