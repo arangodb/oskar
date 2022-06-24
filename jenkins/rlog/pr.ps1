@@ -12,7 +12,7 @@ If ($global:ok)
 {
     setPDBsToWorkspaceOnCrashOnly
     setPDBsArchive7z
-    clcacheOn
+    clcacheOff
     rlogCompile
 
     If ($global:ok)
