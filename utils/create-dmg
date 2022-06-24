@@ -459,7 +459,7 @@ if [ ! -z "${EULA_RSRC}" -a "${EULA_RSRC}" != "-null-" ]; then
 	if [ $BREW_INSTALL -eq 0 ]; then
 		"${AUX_PATH}/dmg-license.py" "${DMG_DIR}/${DMG_NAME}" "${EULA_RSRC}"
 	else
-		python - "${DMG_DIR}/${DMG_NAME}" "${EULA_RSRC}" << 'EOS'
+		python3 - "${DMG_DIR}/${DMG_NAME}" "${EULA_RSRC}" << 'EOS'
 """
 This script adds a license file to a DMG. Requires Xcode and a plain ascii text
 license file.
