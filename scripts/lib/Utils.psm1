@@ -39,7 +39,7 @@ Function createReport
                             Write-Host "Bad result in $file"
                             "Bad result in $file" | Add-Content "$env:TMP\testProtocol.txt"
                             $global:badtests = $global:badtests + "Bad result in $file`r`n"
-                        }   
+                        }
             }
         If(Test-Path -PathType Leaf -Path "$($dir.FullName)\UNITTEST_RESULT_CRASHED.json")
             {
@@ -52,7 +52,7 @@ Function createReport
                             $global:hasTestCrashes = $True
                             "Crash occured in $file" | Add-Content "$env:TMP\testProtocol.txt"
                             $global:badtests = $global:badtests + "Crash occured in $file`r`n"
-                        }   
+                        }
             }
         If ($reportFound -ne $true)
             {
@@ -133,7 +133,7 @@ Function runTests
     Set-Location $global:ARANGODIR
     ForEach ($log in $(Get-ChildItem -Filter "*.log"))
     {
-        Remove-Item -Recurse -Force $log 
+        Remove-Item -Recurse -Force $log
     }
     Pop-Location
 
@@ -143,7 +143,7 @@ Function runTests
         {
             registerClusterTests
             LaunchController $global:TESTSUITE_TIMEOUT
-            createReport  
+            createReport
             Break
         }
         "single"
@@ -210,12 +210,12 @@ Function launchTest($which) {
     $test = $global:launcheableTests[$which]
     Write-Host "Test: " $test['testname'] " - " $test['identifier']
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    Write-Host $arangosh " --- " $test['commandline'] 
+    Write-Host $arangosh " --- " $test['commandline']
     Write-Host "-RedirectStandardOutput " $test['StandardOutput']
     Write-Host "-RedirectStandardError " $test['StandardError']
 
     $process = $(Start-Process -FilePath "$arangosh" -ArgumentList $test['commandline'] -RedirectStandardOutput $test['StandardOutput'] -RedirectStandardError $test['StandardError'] -PassThru)
-    
+
     $global:launcheableTests[$which]['pid'] = $process.Id
     $global:launcheableTests[$which]['running'] = $true
     $global:launcheableTests[$which]['launchDate'] = $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))
@@ -233,94 +233,84 @@ Function launchTest($which) {
 
 Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster, $weight, $sniff, [switch]$vst, [switch]$http2,[switch]$encrypt,[switch]$ssl)
 {
-    Write-Host "$global:ARANGODIR\UnitTests\OskarTestSuitesBlockList"
-    $checkname = If ($vst) { $testname + "_$vst" } ElseIf ($http2) { $testname + "_$http2" } Else { $testname }
-    
-    If(-Not(Select-String -Path "$global:ARANGODIR\UnitTests\OskarTestSuitesBlockList" -pattern "^$checkname$" | select line))
+    $testWeight = 1
+    $testparams = ""
+    $dumpAgencyOnError = ""
+
+    $output = $testname.replace("*", "all")
+    If ($index) {
+      $output = $output+"_$index"
+    }
+    If ($filter) {
+       $testparams = $testparams+" --test $filter"
+    }
+    If ($bucket) {
+        $testparams = $testparams+" --testBuckets $bucket"
+    }
+    If ($cluster -eq $true)
     {
-        $testWeight = 1
-        $testparams = ""
-        $dumpAgencyOnError = ""
-
-        $output = $testname.replace("*", "all")
-        If ($index) {
-          $output = $output+"_$index"
-        }
-        If ($filter) {
-           $testparams = $testparams+" --test $filter"
-        }
-        If ($bucket) {
-            $testparams = $testparams+" --testBuckets $bucket"
-        }
-        If ($cluster -eq $true)
-        {
-            $testWeight = 4
-            $cluster = "true"
-            $dumpAgencyOnError = "true"
-        }
-        Else
-        {
-            $cluster = "false"
-            $dumpAgencyOnError = "false"
-        }
-        If ($testname -eq "agency")
-        {
-            $dumpAgencyOnError = "true"
-        }
-        If ($weight) {
-          $testWeight = $weight
-        }
-
-        If ($vst) {
-          $testparams = $testparams + " --vst true"
-        }
-
-        If ($ssl) {
-          $testparams = $testparams + " --protocol ssl"
-        }
-
-        If ($http2) {
-          $testparams = $testparams + " --http2 true"
-        }
-
-        If ($encrypt) {
-          $testparams = $testparams + " --encryptionAtRest true"
-        }
-
-        If ($sniff) {
-          $testparams = $testparams + " --sniff true --sniffProgram `"$global:TSHARK`" --sniffDevice $global:dumpDevice"
-        }
-        
-        $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE --disableMonitor true"
-
-        New-Item -Path "$env:TMP\$output.out" -ItemType Directory
-        $testparams = $testparams + " --testOutput $env:TMP\$output.out"
-        $testparams = $testparams + " " + $moreParams
-        If (-Not ([string]::IsNullOrEmpty($global:RUBY))) {
-          $testparams = $testparams + " --ruby " + $global:RUBY
-        }
-        
-        $PORT = Get-Random -Minimum 20000 -Maximum 65535
-        $i = $global:testCount
-        $global:testCount = $global:testCount+1
-        $global:launcheableTests += @{
-          running=$false;
-          weight=$testWeight;
-        testname=$testname;
-        identifier=$output;
-          commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams";
-          StandardOutput="$global:ARANGODIR\$output.stdout.log";
-          StandardError="$global:ARANGODIR\$output.stderr.log";
-          pid=-1;
-        }
-        $global:maxTestCount = $global:maxTestCount+1
-        
-        $global:portBase = $($global:portBase + 100)
+        $testWeight = 4
+        $cluster = "true"
+        $dumpAgencyOnError = "true"
     }
     Else
     {
-        Write-Host "Test suite $checkname skipped by UnitTests/OskarTestSuitesBlockList"
+        $cluster = "false"
+        $dumpAgencyOnError = "false"
     }
+    If ($testname -eq "agency")
+    {
+        $dumpAgencyOnError = "true"
+    }
+    If ($weight) {
+      $testWeight = $weight
+    }
+
+    If ($vst) {
+      $testparams = $testparams + " --vst true"
+    }
+
+    If ($ssl) {
+      $testparams = $testparams + " --protocol ssl"
+    }
+
+    If ($http2) {
+      $testparams = $testparams + " --http2 true"
+    }
+
+    If ($encrypt) {
+      $testparams = $testparams + " --encryptionAtRest true"
+    }
+
+    If ($sniff) {
+      $testparams = $testparams + " --sniff true --sniffProgram `"$global:TSHARK`" --sniffDevice $global:dumpDevice"
+    }
+
+    $testparams = $testparams + " --cluster $cluster --coreCheck true --storageEngine $STORAGEENGINE --minPort $global:portBase --maxPort $($global:portBase + 99) --skipNondeterministic $global:SKIPNONDETERMINISTIC --skipTimeCritical $global:SKIPTIMECRITICAL --writeXmlReport true --skipGrey $global:SKIPGREY --dumpAgencyOnError $dumpAgencyOnError --onlyGrey $global:ONLYGREY --buildType $BUILDMODE --disableMonitor true"
+
+    New-Item -Path "$env:TMP\$output.out" -ItemType Directory
+    $testparams = $testparams + " --testOutput $env:TMP\$output.out"
+    $testparams = $testparams + " " + $moreParams
+    If (-Not ([string]::IsNullOrEmpty($global:RUBY))) {
+      $testparams = $testparams + " --ruby " + $global:RUBY
+    }
+
+    $PORT = Get-Random -Minimum 20000 -Maximum 65535
+    $i = $global:testCount
+    $global:testCount = $global:testCount+1
+    $global:launcheableTests += @{
+      running=$false;
+      weight=$testWeight;
+    testname=$testname;
+    identifier=$output;
+      commandline=" -c $global:ARANGODIR\etc\relative\arangosh.conf --log.level warning --server.endpoint tcp://127.0.0.1:$PORT --javascript.execute $global:ARANGODIR\UnitTests\unittest.js -- $testname $testparams";
+      StandardOutput="$global:ARANGODIR\$output.stdout.log";
+      StandardError="$global:ARANGODIR\$output.stderr.log";
+      pid=-1;
+    }
+    $global:maxTestCount = $global:maxTestCount+1
+
+    $global:portBase = $($global:portBase + 100)
     comm
 }
 
@@ -351,7 +341,7 @@ Function LaunchController($seconds)
     While (($seconds -gt 0) -and (($currentRunning -gt 0) -or ($nextLauncheableTest -lt $maxLauncheableTests))) {
         while (($currentScore -lt $numberTestsSlots) -and ($nextLauncheableTest -lt $global:maxTestCount)) {
             Write-Host "Launching $nextLauncheableTest '" $global:launcheableTests[$nextLauncheableTest ]['identifier'] "'"
-            launchTest $nextLauncheableTest 
+            launchTest $nextLauncheableTest
             $currentScore = $currentScore+$global:launcheableTests[$nextLauncheableTest ]['weight']
             Start-Sleep 20
             $seconds = $seconds - 20
