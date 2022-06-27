@@ -6,9 +6,6 @@ if test "$PARALLELISM" = ""
 end
 echo "Using parallelism $PARALLELISM"
 
-/opt/homebrew/opt/llvm
-/opt/homebrew/opt/ccache/libexec
-
 switch "$ARCH"
   case "arm64"
     set -xg BASE_NAME /opt/homebrew/opt/
