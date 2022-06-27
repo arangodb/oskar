@@ -21,11 +21,11 @@ end
 
 set -xg PATH $BASE_NAME/llvm@$COMPILER/bin:$CURRENT_PATH
 
-set -xg CC_NAME clang-$COMPILER
-set -xg CXX_NAME clang++-$COMPILER
+set -xg CC_NAME clang
+set -xg CXX_NAME clang++
 
-set -xg CC clang
-set -xg CXX clang++
+set -xg CC $CC_NAME
+set -xg CXX $CXX_NAME
 
 if test "$SAN" = "On"
   echo "SAN is not support in this environment"
