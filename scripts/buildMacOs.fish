@@ -16,16 +16,16 @@ switch "$ARCH"
     exit
 end
 
-alias clang="$BASE_NAME/llvm@$COMPILER/bin/clang"
-alias clang++="$BASE_NAME/llvm@$COMPILER/bin/clang++"
+#alias clang="$BASE_NAME/llvm@$COMPILER/bin/clang"
+#alias clang++="$BASE_NAME/llvm@$COMPILER/bin/clang++"
 
-export PATH=$BASE_NAME/llvm@$COMPILER/bin:$CURRENT_PATH
+set -xg PATH $BASE_NAME/llvm@$COMPILER/bin:$CURRENT_PATH
 
 set -xg CC_NAME clang-$COMPILER
 set -xg CXX_NAME clang++-$COMPILER
 
-export CC=clang
-export CXX=clang++
+set -xg CC clang
+set -xg CXX clang++
 
 if test "$SAN" = "On"
   echo "SAN is not support in this environment"
