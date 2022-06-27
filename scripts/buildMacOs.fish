@@ -6,8 +6,29 @@ if test "$PARALLELISM" = ""
 end
 echo "Using parallelism $PARALLELISM"
 
-set -xg CC_NAME clang
-set -xg CXX_NAME clang++
+/opt/homebrew/opt/llvm
+/opt/homebrew/opt/ccache/libexec
+
+switch "$ARCH"
+  case "arm64"
+    set -xg BASE_NAME /opt/homebrew/opt/
+  case "x86_64"
+    set -xg BASE_NAME /usr/local/opt/
+  case '*'
+    echo "fatal, unknown CCACHEBINPATH for $ARCH of $CCACHETYPE"
+    exit
+end
+
+alias clang="$BASE_NAME/llvm@$COMPILER/bin/clang"
+alias clang++="$BASE_NAME/llvm@$COMPILER/bin/clang++"
+
+export PATH=$BASE_NAME/llvm@$COMPILER/bin:$CURRENT_PATH
+
+set -xg CC_NAME clang-$COMPILER
+set -xg CXX_NAME clang++-$COMPILER
+
+export CC=clang
+export CXX=clang++
 
 if test "$SAN" = "On"
   echo "SAN is not support in this environment"
