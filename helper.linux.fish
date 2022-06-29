@@ -187,6 +187,9 @@ function findBuildScript
       case 10.2.1_pre1-r3
         echo buildArangoDB5.fish
 
+      case 11.2.1_git20220219-r2
+        echo buildArangoDB6.fish
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -207,6 +210,9 @@ function findStaticBuildScript
 
       case 10.2.1_pre1-r3
         echo buildAlpine5.fish
+
+      case 11.2.1_git20220219-r2
+        echo buildAlpine6.fish
 
       case '*'
         echo "unknown compiler version $version"
