@@ -7,6 +7,7 @@ set -gx THIRDPARTY_BIN third_party/bin
 set -gx THIRDPARTY_SBIN third_party/sbin
 set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
+set -gx CURRENT_PATH $PATH
 set -xg IONICE ""
 set -gx ARCH (uname -m)
 
@@ -81,6 +82,29 @@ function findRequiredMinMacOS
   else
     echo "Using MACOS_MIN version '$v' from '$f'"
     minMacOS $v
+  end
+end
+
+function compiler
+  set -l cversion $argv[1]
+
+  if test "$cversion" = ""
+    set -e COMPILER_VERSION
+    return 0
+  end
+
+  switch $cversion
+    case 12
+      set -gx COMPILER_VERSION $cversion
+
+    case 13
+      set -gx COMPILER_VERSION $cversion
+
+    case 14
+      set -gx COMPILER_VERSION $cversion
+
+    case '*'
+      echo "unknown compiler version $cversion"
   end
 end
 
@@ -213,6 +237,31 @@ function checkOskarOpenSSL
   end
 end
 
+function findRequiredCompiler
+  set -l f $WORKDIR/work/ArangoDB/VERSIONS
+
+  test -f $f
+  or begin
+    echo "Cannot find $f; make sure source is checked out"
+    return 1
+  end
+
+  #if test "$COMPILER_VERSION" != ""
+  #  echo "Compiler version already set to '$COMPILER_VERSION'"
+  #  return 0
+  #end
+
+  set -l v (fgrep LLVM_CLANG_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    echo "$f: no LLVM_CLANG_MACOS specified, using 13"
+    compiler 13
+  else
+    echo "Using compiler '$v' from '$f'"
+    compiler $v
+  end
+end
+
 function findRequiredOpenSSL
   set -l f $WORKDIR/work/ArangoDB/VERSIONS
 
@@ -338,6 +387,7 @@ function switchBranches
   and convertSItoJSON
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
+  and findRequiredCompiler
   and findUseARM
 end
 
@@ -348,6 +398,7 @@ end
 function buildArangoDB
   checkoutIfNeeded
   and findDefaultArchitecture
+  and findRequiredCompiler
   and findUseARM
   and findRequiredMinMacOS
   and prepareOpenSSL
@@ -361,6 +412,7 @@ end
 
 function makeArangoDB
   findDefaultArchitecture
+  and findRequiredCompiler
   and findUseARM
   and findRequiredMinMacOS
   and prepareOpenSSL
@@ -382,16 +434,19 @@ end
 
 function oskar
   checkoutIfNeeded
+  and findRequiredCompiler
   and runLocal $SCRIPTSDIR/runTests.fish
 end
 
 function oskarFull
   checkoutIfNeeded
+  and findRequiredCompiler
   and runLocal $SCRIPTSDIR/runFullTests.fish
 end
 
 function rlogTests
   checkoutIfNeeded
+  and findRequiredCompiler
   and runLocal $SCRIPTSDIR/rlog/pr.fish $argv
 end
 
@@ -533,7 +588,7 @@ end
 ## #############################################################################
 
 function findCompilerVersion
-  gcc -v 2>&1 | tail -1 | awk '{print $3}'
+  echo $COMPILER_VERSION
 end
 
 function findOpenSSLVersion
