@@ -13,7 +13,6 @@ RUN apt-get update && \
     apt-get upgrade -y
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
 
 RUN apt-get install -y build-essential gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} cmake make bison flex python3 ccache git libjemalloc-dev vim exuberant-ctags gdb fish psmisc sudo debhelper debconf jq wget libdb-dev curl gnupg2 gcovr prometheus && apt-get clean
 
