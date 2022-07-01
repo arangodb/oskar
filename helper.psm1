@@ -72,13 +72,6 @@ $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
 
-Function VS2017
-{
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2017"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
-    $global:GENERATOR = "Visual Studio 15 2017 Win64"
-    $global:GENERATORID = "v141"
-    $global:MSVS = "2017"
-}
 Function VS2019
 {
     $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
@@ -86,9 +79,16 @@ Function VS2019
     $global:GENERATORID = "v142"
     $global:MSVS = "2019"
 }
+Function VS2022
+{
+    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All| Where {$_.DisplayName -match "Visual Studio Community 2022"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname |Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $global:GENERATOR = "Visual Studio 17 2022"
+    $global:GENERATORID = "v143"
+    $global:MSVS = "2022"
+}
 If (-Not($global:GENERATOR))
 {
-    VS2017
+    VS2019
 }
 
 Function findCompilerVersion
@@ -102,15 +102,15 @@ Function findCompilerVersion
 
                 switch ($Matches['version'])
                 {
-                    2017 { VS2017 }
                     2019 { VS2019 }
-                    default { VS2017 }
+                    2022 { VS2022 }
+                    default { VS2019 }
                 }
             return
         }
     }
 
-    VS2017
+    VS2019
 }
 
 findCompilerVersion
@@ -378,7 +378,12 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
               {
                 $CONFIG_TYPE = "${type}"
               }
-              $buildCommand = "call `"C:\Program Files (x86)\Microsoft Visual Studio\$msvs\Community\Common7\Tools\vsdevcmd`" -arch=amd64 && perl Configure $CONFIG_TYPE --$mode --prefix=`"${env:installdir}`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A && nmake clean && nmake && nmake install"
+              $MSVS_PATH="C:\Program Files (x86)\Microsoft Visual Studio\$msvs"
+              If (-Not (Test-Path -Path "$MSVS_PATH"))
+              {
+                  $MSVS_PATH="C:\Program Files\Microsoft Visual Studio\$msvs"
+              }
+              $buildCommand = "call `"$MSVS_PATH\Community\Common7\Tools\vsdevcmd`" -arch=amd64 && perl Configure $CONFIG_TYPE --$mode --prefix=`"${env:installdir}`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A && nmake clean && nmake && nmake install"
               Invoke-Expression "& cmd /c '$buildCommand' 2>&1" | tee "${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log"
               If (-Not ($?)) { $global:ok = $false }
             }

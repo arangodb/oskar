@@ -6,8 +6,26 @@ if test "$PARALLELISM" = ""
 end
 echo "Using parallelism $PARALLELISM"
 
+switch "$ARCH"
+  case "arm64"
+    set -xg BASE_NAME /opt/homebrew/opt
+  case "x86_64"
+    set -xg BASE_NAME /usr/local/opt
+  case '*'
+    echo "fatal, unknown ARCH $ARCH"
+    exit
+end
+
+set -xg PATH "$BASE_NAME/llvm@$COMPILER_VERSION/bin:$CURRENT_PATH"
+
 set -xg CC_NAME clang
 set -xg CXX_NAME clang++
+
+set -xg CC $CC_NAME
+set -xg CXX $CXX_NAME
+
+export LDFLAGS="-L$BASE_NAME/llvm@$COMPILER_VERSION/lib -Wl,-rpath,$BASE_NAME/llvm@$COMPILER_VERSION/lib"
+export CPPFLAGS="-I$BASE_NAME/llvm@$COMPILER_VERSION/include"
 
 if test "$SAN" = "On"
   echo "SAN is not support in this environment"
