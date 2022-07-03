@@ -10,6 +10,7 @@ and eval $EDITION
 and eval $STORAGE_ENGINE
 and eval $TEST_SUITE
 and skipGrey
+and setAllLogsToWorkspace
 and rm -f $filename
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and set -l t2 (date +%s)
