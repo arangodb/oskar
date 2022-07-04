@@ -1,8 +1,22 @@
 #!/bin/env python3
 """ read test definition, and generate the output for the specified target """
 import argparse
-import sys
+import sys, os
+from pathlib import Path
+import platform
+import pprint
+from threading  import Thread, Lock
+import time
+import psutil
+from async_client import (
+    CliExecutionException,
+    ArangoCLIprogressiveTimeoutExecutor,
+    dummy_line_result,
+)
+IS_WINDOWS = platform.win32_ver()[0] != ""
+pp = pprint.PrettyPrinter(indent=4)
 
+all_tests = []
 #pylint: disable=line-too-long disable=broad-except
 
 # check python 3
@@ -10,7 +24,276 @@ if sys.version_info[0] != 3:
     print("found python version ", sys.version_info)
     sys.exit()
 
+class TestConfig():
+    def __init__(self):
+        """ defaults for test config """
+        self.parallelity = 3
+        self.db_count = 100
+        self.db_count_chunks = 5
+        self.min_replication_factor = 2
+        self.max_replication_factor = 3
+        self.data_multiplier = 4
+        self.collection_multiplier = 1
+        self.launch_delay = 1.3
+        self.single_shard = False
+        self.db_offset = 0
+        self.progressive_timeout = 100
+        self.weight = 1000
+        self.args = []
+        self.suite = ""
+        self.name = ""
+        self.log = ''
 
+    def expand_vars(self, cfg):
+        self.base_logdir = cfg.base_path / self.name
+        self.base_testdir = cfg.base_path
+        self.base_testdir = cfg.base_path / f'run_{self.name}'
+        self.summary_file = self.base_logdir / 'testfailures.txt'
+        self.crashed_file = self.base_logdir / 'UNITTEST_RESULT_CRASHED.json'
+        self.success_file = self.base_logdir / 'UNITTEST_RESULT_EXECUTIVE_SUMMARY.json'
+        self.report_file =  self.base_logdir / 'UNITTEST_RESULT.json'
+        
+        new_args = [];
+        for param in self.args:
+            if param.startswith('$'):
+                new_args += os.environ[param[1:]].split(' ')
+            else:
+                new_args.append(param)
+        self.args = new_args
+
+    def __repr__(self):
+        return """
+        {0.name} => {0.parallelity}, {0.weight}, -- {1}""".format(
+            self, ' '.join(self.args))
+
+class config:
+    def __init__(self, base_path, bin_path):
+        self.cfgdir = base_path / 'etc' / 'testing'
+        self.bin_dir = bin_path
+        self.base_path = base_path
+        self.passvoid = ''
+        self.test_data_dir = base_path
+
+class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
+    """configuration"""
+
+    def __init__(self, config):
+        self.read_only = False
+        super().__init__(config, None)
+
+    
+    def run_testing(self,
+                    testcase,
+                    testing_args,
+                    timeout,
+                    directory,
+                    verbose
+                    ):
+       # pylint: disable=R0913 disable=R0902
+        """ testing.js wrapper """
+        args = [
+            '-c', str(self.cfg.cfgdir / 'arangosh.conf'),
+            '--log.level', 'warning',
+            "--log.level", "v8=debug",
+            '--server.endpoint', 'none',
+            '--javascript.allow-external-process-control', 'true',
+            '--javascript.execute', self.cfg.base_path / 'UnitTests' / 'unittest.js',
+            ]
+        run_cmd = args +[
+            '--',
+            testcase,
+            '--testOutput', directory ] + testing_args
+        try:
+            return self.run_arango_tool_monitored(
+                self.cfg.bin_dir / "arangosh",
+                run_cmd,
+                timeout,
+                dummy_line_result,
+                verbose,
+                False,
+            )
+        except CliExecutionException as ex:
+            print(ex)
+            return False
+
+def testing_runner(testing_instance, this, arangosh):
+    """ operate one makedata instance """
+    this.success = arangosh.run_testing(this.suite,
+                                        this.args,
+                                        999999999,
+                                        this.base_logdir,
+                                        False)
+    print('done with ' + this.name)
+    this.crashed = this.crashed_file.read_text() == "true"
+    this.success = this.success and this.success_file.read_text() == "true"
+    this.structured_results = this.crashed_file.read_text()
+    this.summary = this.summary_file.read_text()
+
+    if this.crashed or not this.success:
+        print(str(this.log_file.name))
+        print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
+              )
+        failname = this.log_file.parent / ("FAIL_" + str(this.log_file.name))
+        this.log_file.rename(failname)
+        this.log_file = failname
+        # raise Exception("santehusanotehusanotehu")
+
+    testing_instance.done_job(this.weight)
+
+class testingRunner():
+    def __init__(self, cfg):
+        self.cfg = cfg
+        self.slot_lock = Lock()
+        self.available_slots = psutil.cpu_count(logical=False)
+        self.used_slots = 0
+        self.scenarios = []
+        self.arangosh = ArangoshExecutor(self.cfg)
+    
+    def done_job(self, count):
+        """ if one job is finished... """
+        with self.slot_lock:
+            self.used_slots -= count
+
+    def launch_next(self, offset):
+        """ launch one testing job """
+        if self.scenarios[offset].parallelity > (self.available_slots - self.used_slots):
+            return False
+        with self.slot_lock:
+            self.used_slots += self.scenarios[offset].parallelity
+        this = self.scenarios[offset]
+        print("launching " + this.name)
+        pp.pprint(this)
+
+        print(this.log)
+        worker = Thread(target=testing_runner,
+                        args=(self,
+                              this,
+                              self.arangosh))
+        worker.start()
+        return True
+
+    def testing_runner(self):
+        """ run testing suites """
+        mem = psutil.virtual_memory()
+        os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
+
+        #raise Exception("tschuess")
+        start_offset = 0
+        used_slots = 0
+        some_scenario = self.scenarios[0]
+        if not some_scenario.base_logdir.exists():
+            some_scenario.base_logdir.mkdir()
+        if not some_scenario.base_testdir.exists():
+            some_scenario.base_testdir.mkdir()
+        os.environ['TMPDIR'] = str(some_scenario.base_testdir)
+        os.environ['TEMP'] = str(some_scenario.base_testdir) # TODO howto wintendo?
+        while start_offset < len(self.scenarios) or used_slots > 0:
+            used_slots = 0
+            with self.slot_lock:
+                used_slots = self.used_slots
+            if self.available_slots > used_slots:
+                print(f"Launching more: {self.available_slots} > {used_slots}")
+                if start_offset < len(self.scenarios) and self.launch_next(start_offset):
+                    start_offset += 1
+                    time.sleep(5)
+                else:
+                    if used_slots == 0:
+                        print("done")
+                        break
+                    print('elsesleep')
+                    time.sleep(5)
+            else:
+                print('elseelsesleep')
+                time.sleep(5)
+        self.basecfg.index = 0
+        print(self.scenarios)
+        summary = ""
+        for testrun in self.scenarios:
+            if testrun['crashed' ] or not testrun['success' ]:
+                summary += testrun['summary']
+        print("\n")
+        print(summary)
+
+        (some_scenario.base_logdir / 'testfailures.txt').write_text(summary)
+        print(                            some_scenario.base_testdir)
+        shutil.make_archive(some_scenario.base_logdir / 'innerlogs',
+                            "tar",
+                            Path.cwd(),
+                            str(some_scenario.base_testdir) + "/")
+
+        tarfn = datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
+        print(some_scenario.base_logdir)
+        shutil.make_archive(tarfn,
+                            "bztar",
+                            str(some_scenario.base_logdir) + "/",
+                            str(some_scenario.base_logdir) + "/")
+
+    def register_test_func(self, cluster, test):
+        """ print one test function """
+        args = test["args"]
+        params = test["params"]
+        suffix = params.get("suffix", "")
+        name = test["name"]
+        if suffix:
+            name += f"_{suffix}"
+        
+
+        # TODO full, windows, single, cluster
+        if 'single' in test['flags'] and cluster:
+            return;
+        if 'cluster' in test['flags'] and not cluster:
+            return
+        if "enterprise" in test["flags"]:
+            return # todo: detect enterprise
+        if "ldap" in test["flags"] and not 'LDAPHOST' in os.environ:
+            return
+
+        if "buckets" in params:
+            num_buckets = int(params["buckets"])
+            for i in range(num_buckets):
+                cfg = TestConfig()
+                self.scenarios.append(cfg)
+                cfg.weight = test['weight'];
+                cfg.args = [ *args, '--index', f"{i}", '--testBuckets', f'{num_buckets}/{i}'];
+                cfg.suite = test["name"]
+                cfg.name = name + f"_{i}"
+                cfg.parallelity = 3 if (cluster) else 1
+                if test["wweight"] :
+                    cfg.parallelity = test["wweight"]
+                cfg.expand_vars(self.cfg)
+        else:
+            cfg = TestConfig()
+            self.scenarios.append(cfg)
+            cfg.weight = test['weight'];
+            cfg.args = args
+            cfg.suite = test["name"]
+            cfg.name = name
+            cfg.parallelity = 3 if (cluster) else 1
+            if test["wweight"] :
+                cfg.parallelity = test["wweight"]
+            cfg.expand_vars(self.cfg)
+
+def launch(args, outfile, tests):
+    """ Manage test execution on our own """
+
+    definition = Path(args.definitions).resolve()
+    if definition.is_file():
+        definition = definition.parent
+    base_source_dir = (definition / '..').resolve()
+    bin_dir = (base_source_dir / 'build' / 'bin').resolve()
+    if IS_WINDOWS:
+        for target in ['RelWithdebInfo', 'Debug']:
+            if (bin_dir / target).exists():
+                bin_dir = bin_dir / target
+    print('meep')
+    runner = testingRunner(config(base_source_dir, bin_dir))
+    print('meep')
+    for test in tests:
+        runner.register_test_func(args.cluster, test)
+    print(runner.scenarios)
+
+    runner.testing_runner()
+    
 def generate_fish_output(args, outfile, tests):
     """ unix/fish conformant test definitions """
     def output(line):
@@ -137,6 +420,7 @@ formats = {
     "dump": generate_dump_output,
     "fish": generate_fish_output,
     "ps1": generate_ps1_output,
+    "launch": launch,
 }
 
 known_flags = {
@@ -310,6 +594,7 @@ def main():
         generate_output(args, get_output_file(args), tests)
     except Exception as exc:
         print(exc, file=sys.stderr)
+        print(exc.stack)
         sys.exit(1)
 
 
