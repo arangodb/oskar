@@ -378,10 +378,10 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
               {
                 $CONFIG_TYPE = "${type}"
               }
-              $MSVS_PATH="C:\Program Files (x86)\Microsoft Visual Studio\$msvs"
+              $MSVS_PATH="${Env:ProgramFiles(x86)}\Microsoft Visual Studio\$msvs"
               If (-Not (Test-Path -Path "$MSVS_PATH"))
               {
-                  $MSVS_PATH="C:\Program Files\Microsoft Visual Studio\$msvs"
+                  $MSVS_PATH="${Env:ProgramFiles}\Microsoft Visual Studio\$msvs"
               }
               $buildCommand = "call `"$MSVS_PATH\Community\Common7\Tools\vsdevcmd`" -arch=amd64 && perl Configure $CONFIG_TYPE --$mode --prefix=`"${env:installdir}`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A && nmake clean && nmake && nmake install"
               Invoke-Expression "& cmd /c '$buildCommand' 2>&1" | tee "${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log"
