@@ -180,6 +180,10 @@ Function runTests
         LaunchController $global:TESTSUITE_TIMEOUT
         createReport
     }
+    Else
+    {
+        $global:result = "BAD"
+    }
 
     If($global:result -eq "GOOD")
     {
