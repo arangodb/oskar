@@ -18,7 +18,7 @@ Function global:registerSingleTests()
         $out = python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f ps1
         If ($LASTEXITCODE -ne 0)
         {
-            Invoke-Expression "Do-ErrorProneAction -Parameter $out"
+            echo $out | Invoke-Expression -ErrorAction Stop
         }
         Else
         {
@@ -46,7 +46,7 @@ Function global:registerClusterTests()
         $out = python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f ps1 --cluster
         If ($LASTEXITCODE -ne 0)
         {
-            Invoke-Expression "Do-ErrorProneAction -Parameter $out"
+            echo $out | Invoke-Expression -ErrorAction Stop
         }
         Else
         {
