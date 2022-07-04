@@ -26,6 +26,10 @@ set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
 set -gx UBUNTUBUILDIMAGE5_TAG 9
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
+set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
+set -gx UBUNTUBUILDIMAGE6_TAG 1
+set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE5_TAG
+
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
@@ -39,6 +43,10 @@ set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
 set -gx ALPINEBUILDIMAGE5_TAG 10
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
+
+set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
+set -gx ALPINEBUILDIMAGE6_TAG 10
+set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
@@ -86,6 +94,9 @@ function compiler
     case 10.2.1_pre1-r3
       set -gx COMPILER_VERSION $cversion
 
+    case 11.2.1_git20220219-r2
+      set -gx COMPILER_VERSION $cversion
+
     case '*'
       echo "unknown compiler version $cversion"
   end
@@ -128,6 +139,9 @@ function findBuildImage
       case 10.2.1_pre1-r3
         echo $UBUNTUBUILDIMAGE5
 
+      case 11.2.1_git20220219-r2
+        echo $UBUNTUBUILDIMAGE6
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -148,6 +162,9 @@ function findStaticBuildImage
 
       case 10.2.1_pre1-r3
         echo $ALPINEBUILDIMAGE5
+
+      case 11.2.1_git20220219-r2
+        echo $ALPINEBUILDIMAGE6
 
       case '*'
         echo "unknown compiler version $version"
@@ -170,6 +187,9 @@ function findBuildScript
       case 10.2.1_pre1-r3
         echo buildArangoDB5.fish
 
+      case 11.2.1_git20220219-r2
+        echo buildArangoDB6.fish
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -190,6 +210,9 @@ function findStaticBuildScript
 
       case 10.2.1_pre1-r3
         echo buildAlpine5.fish
+
+      case 11.2.1_git20220219-r2
+        echo buildAlpine6.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -1350,6 +1373,22 @@ end
 
 function pullUbuntuBuildImage5 ; docker pull $UBUNTUBUILDIMAGE5 ; end
 
+function buildUbuntuBuildImage6
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUbuntu6.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE6 ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushUbuntuBuildImage6
+  docker tag $UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE6
+  and docker push $UBUNTUBUILDIMAGE6_NAME:latest
+end
+
+function pullUbuntuBuildImage6 ; docker pull $UBUNTUBUILDIMAGE6 ; end
+
 function buildUbuntuPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
@@ -1411,6 +1450,22 @@ function pushAlpineBuildImage5
 end
 
 function pullAlpineBuildImage5 ; docker pull $ALPINEBUILDIMAGE5 ; end
+
+function buildAlpineBuildImage6
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine6.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE6 ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage6
+  docker tag $ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:latest
+  and docker push $ALPINEBUILDIMAGE6
+  and docker push $ALPINEBUILDIMAGE6_NAME:latest
+end
+
+function pullAlpineBuildImage6 ; docker pull $ALPINEBUILDIMAGE6 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
