@@ -82,6 +82,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         verbose=False,
         expect_to_fail=False,
         use_default_auth=True,
+        logfile=None
     ):
         """
         runs a script in background tracing with
@@ -108,11 +109,11 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 run_cmd += ["--server.password", passvoid]
 
         run_cmd += more_args
-        return self.run_monitored(executeable, run_cmd, timeout, result_line, verbose, expect_to_fail)
+        return self.run_monitored(executeable, run_cmd, timeout, result_line, verbose, expect_to_fail, logfile)
         # fmt: on
 
     def run_monitored(
-        self, executeable, args, timeout=60, result_line=dummy_line_result, verbose=False, expect_to_fail=False
+            self, executeable, args, timeout=60, result_line=dummy_line_result, verbose=False, expect_to_fail=False, logfile=None
     ):
         """
         run a script in background tracing with a dynamic timeout that its got output (is still alive...)
@@ -125,7 +126,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             stdout=PIPE,
             stderr=PIPE,
             close_fds=ON_POSIX,
-            cwd=self.cfg.test_data_dir.resolve(),
+            cwd=self.cfg.base_path.resolve(),
         ) as process:
             queue = Queue()
             thread1 = Thread(
@@ -150,7 +151,9 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 print("me PID:%d launched PID:%d with LWPID:N/A and LWPID:N/A" % (os.getpid(), process.pid))
 
             # ... do other things here
-            # out = logfile.open('wb')
+            out = None
+            if logfile:
+                out = logfile.open('wb')
             # read line without blocking
             have_timeout = False
             line_filter = False
@@ -174,13 +177,17 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     if isinstance(line, tuple):
                         if verbose:
                             print("e: " + str(line[0]))
-                        if not str(line[0]).startswith("#"):
-                            result.append(line)
+                        if out:
+                            out.write(line[0])
+                        #if not str(line[0]).startswith("#"):
+                        #    result.append(line)
                     else:
                         close_count += 1
                         if close_count == 2:
                             print(" done!")
                             break
+            if out:
+                out.close()
             timeout_str = ""
             if have_timeout:
                 timeout_str = "TIMEOUT OCCURED!"
@@ -194,20 +201,26 @@ class ArangoCLIprogressiveTimeoutExecutor:
         # attach(str(rc_exit), f"Exit code: {str(rc_exit)}")
 
         if have_timeout or rc_exit != 0:
-            res = (False, timeout_str + convert_result(result), rc_exit, line_filter)
-            if expect_to_fail:
-                return res
-            raise CliExecutionException(f"Execution failed. {res} {have_timeout}", res, have_timeout)
+            res = (False, timeout_str,
+                   # convert_result(result),
+                   rc_exit, line_filter)
+            #if expect_to_fail:
+            return res
+            #raise CliExecutionException(f"Execution failed. {res} {have_timeout}", res, have_timeout)
 
         if not expect_to_fail:
             if len(result) == 0:
                 res = (True, "", 0, line_filter)
             else:
-                res = (True, convert_result(result), 0, line_filter)
+                res = (True, "" ,
+                       #convert_result(result),
+                       0, line_filter)
             return res
 
         if len(result) == 0:
             res = (True, "", 0, line_filter)
         else:
-            res = (True, convert_result(result), 0, line_filter)
+            res = (True, "",
+                   #convert_result(result),
+                   0, line_filter)
         raise CliExecutionException("Execution was expected to fail, but exited successfully.", res, have_timeout)

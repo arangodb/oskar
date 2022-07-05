@@ -1,6 +1,7 @@
 #!/bin/env python3
 """ read test definition, and generate the output for the specified target """
 import argparse
+from datetime import datetime
 import sys, os
 from pathlib import Path
 import platform
@@ -8,6 +9,7 @@ import pprint
 from threading  import Thread, Lock
 import time
 import psutil
+import shutil
 from async_client import (
     CliExecutionException,
     ArangoCLIprogressiveTimeoutExecutor,
@@ -43,16 +45,22 @@ class TestConfig():
         self.suite = ""
         self.name = ""
         self.log = ''
+        self.crashed = True
+        self.success = False
+        self.structured_results = ""
+        self.summary = ""
 
     def expand_vars(self, cfg):
-        self.base_logdir = cfg.base_path / self.name
-        self.base_testdir = cfg.base_path
-        self.base_testdir = cfg.base_path / f'run_{self.name}'
+        self.base_logdir = cfg.test_report_dir / self.name
+        if not self.base_logdir.exists():
+            self.base_logdir.mkdir()
+        self.log_file =  cfg.run_root / f'{self.name}.log'
         self.summary_file = self.base_logdir / 'testfailures.txt'
         self.crashed_file = self.base_logdir / 'UNITTEST_RESULT_CRASHED.json'
         self.success_file = self.base_logdir / 'UNITTEST_RESULT_EXECUTIVE_SUMMARY.json'
         self.report_file =  self.base_logdir / 'UNITTEST_RESULT.json'
-        
+        self.base_testdir = cfg.test_data_dir/ self.name
+
         new_args = [];
         for param in self.args:
             if param.startswith('$'):
@@ -67,12 +75,27 @@ class TestConfig():
             self, ' '.join(self.args))
 
 class config:
-    def __init__(self, base_path, bin_path):
-        self.cfgdir = base_path / 'etc' / 'testing'
-        self.bin_dir = bin_path
-        self.base_path = base_path
+    def __init__(self, definition_file):
+        if definition_file.is_file():
+            definition_file = definition_file.parent
+        base_source_dir = (definition_file / '..').resolve()
+        bin_dir = (base_source_dir / 'build' / 'bin').resolve()
+        if IS_WINDOWS:
+            for target in ['RelWithdebInfo', 'Debug']:
+                if (bin_dir / target).exists():
+                    bin_dir = bin_dir / target
+
+        self.cfgdir = base_source_dir / 'etc' / 'testing'
+        self.bin_dir = bin_dir
+        self.base_path = base_source_dir
         self.passvoid = ''
-        self.test_data_dir = base_path
+        self.run_root = base_source_dir / 'testrun'
+        if self.run_root.exists():
+            shutil.rmtree(self.run_root)
+        self.test_data_dir = self.run_root / 'run'
+        self.test_data_dir.mkdir(parents=True)
+        self.test_report_dir = self.run_root / 'report'
+        self.test_report_dir.mkdir(parents=True)
 
 class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     """configuration"""
@@ -87,6 +110,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     testing_args,
                     timeout,
                     directory,
+                    logfile,
                     verbose
                     ):
        # pylint: disable=R0913 disable=R0902
@@ -111,18 +135,24 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                 dummy_line_result,
                 verbose,
                 False,
+                True,
+                logfile
             )
         except CliExecutionException as ex:
             print(ex)
             return False
-
+SUCCESS = True
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
+    global SUCCESS
+    os.environ['TMPDIR'] = str(this.base_testdir)
+    os.environ['TEMP'] = str(this.base_testdir) # TODO howto wintendo?
     this.success = arangosh.run_testing(this.suite,
                                         this.args,
                                         999999999,
                                         this.base_logdir,
-                                        False)
+                                        this.log_file,
+                                        True)[0] #verbose?
     print('done with ' + this.name)
     this.crashed = this.crashed_file.read_text() == "true"
     this.success = this.success and this.success_file.read_text() == "true"
@@ -136,7 +166,7 @@ def testing_runner(testing_instance, this, arangosh):
         failname = this.log_file.parent / ("FAIL_" + str(this.log_file.name))
         this.log_file.rename(failname)
         this.log_file = failname
-        # raise Exception("santehusanotehusanotehu")
+        SUCCESS = False
 
     testing_instance.done_job(this.weight)
 
@@ -148,6 +178,7 @@ class testingRunner():
         self.used_slots = 0
         self.scenarios = []
         self.arangosh = ArangoshExecutor(self.cfg)
+        self.workers = []
     
     def done_job(self, count):
         """ if one job is finished... """
@@ -170,10 +201,12 @@ class testingRunner():
                               this,
                               self.arangosh))
         worker.start()
+        self.workers.append(worker)
         return True
 
     def testing_runner(self):
         """ run testing suites """
+        global SUCCESS
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
@@ -185,8 +218,6 @@ class testingRunner():
             some_scenario.base_logdir.mkdir()
         if not some_scenario.base_testdir.exists():
             some_scenario.base_testdir.mkdir()
-        os.environ['TMPDIR'] = str(some_scenario.base_testdir)
-        os.environ['TEMP'] = str(some_scenario.base_testdir) # TODO howto wintendo?
         while start_offset < len(self.scenarios) or used_slots > 0:
             used_slots = 0
             with self.slot_lock:
@@ -205,28 +236,31 @@ class testingRunner():
             else:
                 print('elseelsesleep')
                 time.sleep(5)
-        self.basecfg.index = 0
+        for worker in self.workers:
+            worker.join()
         print(self.scenarios)
         summary = ""
         for testrun in self.scenarios:
-            if testrun['crashed' ] or not testrun['success' ]:
-                summary += testrun['summary']
-        print("\n")
+            if testrun.crashed or not testrun.success:
+                summary += testrun.summary
+        print("\n" + "SUCCESS" if SUCCESS else "FAILED")
         print(summary)
-
-        (some_scenario.base_logdir / 'testfailures.txt').write_text(summary)
+        print('a'*80)
+        (Path.cwd() / 'testfailures.txt').write_text(summary)
         print(                            some_scenario.base_testdir)
-        shutil.make_archive(some_scenario.base_logdir / 'innerlogs',
-                            "tar",
+        shutil.make_archive(self.cfg.run_root / 'innerlogs',
+                            "bztar",
                             Path.cwd(),
-                            str(some_scenario.base_testdir) + "/")
+                            str(self.cfg.test_data_dir) + "/")
+
+        shutil.rmtree(self.cfg.test_data_dir, ignore_errors=False)
 
         tarfn = datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
         print(some_scenario.base_logdir)
         shutil.make_archive(tarfn,
                             "bztar",
-                            str(some_scenario.base_logdir) + "/",
-                            str(some_scenario.base_logdir) + "/")
+                            str(self.cfg.run_root) + "/",
+                            str(self.cfg.run_root) + "/")
 
     def register_test_func(self, cluster, test):
         """ print one test function """
@@ -265,7 +299,7 @@ class testingRunner():
             cfg = TestConfig()
             self.scenarios.append(cfg)
             cfg.weight = test['weight'];
-            cfg.args = args
+            cfg.args = [*args]
             cfg.suite = test["name"]
             cfg.name = name
             cfg.parallelity = 3 if (cluster) else 1
@@ -275,19 +309,7 @@ class testingRunner():
 
 def launch(args, outfile, tests):
     """ Manage test execution on our own """
-
-    definition = Path(args.definitions).resolve()
-    if definition.is_file():
-        definition = definition.parent
-    base_source_dir = (definition / '..').resolve()
-    bin_dir = (base_source_dir / 'build' / 'bin').resolve()
-    if IS_WINDOWS:
-        for target in ['RelWithdebInfo', 'Debug']:
-            if (bin_dir / target).exists():
-                bin_dir = bin_dir / target
-    print('meep')
-    runner = testingRunner(config(base_source_dir, bin_dir))
-    print('meep')
+    runner = testingRunner(config(Path(args.definitions).resolve()))
     for test in tests:
         runner.register_test_func(args.cluster, test)
     print(runner.scenarios)
