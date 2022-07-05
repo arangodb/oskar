@@ -15,7 +15,7 @@ Function global:registerSingleTests()
     Try
     {
         $out = python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f ps1 --full
-        If ($LASTEXITCODE -ne 0)
+        If ($LASTEXITCODE -eq 0)
         {
             echo $out | Invoke-Expression -ErrorAction Stop
         }
@@ -42,7 +42,7 @@ Function global:registerClusterTests()
     Try
     {
         $out = python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f ps1 --full --cluster
-        If ($LASTEXITCODE -ne 0)
+        If ($LASTEXITCODE -eq 0)
         {
             echo $out | Invoke-Expression -ErrorAction Stop
         }
