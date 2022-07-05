@@ -12,7 +12,7 @@ Function global:registerSingleTests()
 
     $global:TESTSUITE_TIMEOUT = 9000
     Write-Host "Using test definitions from repo..."
-    python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full | Invoke-Expression
+    python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full 
     comm
 }
 
@@ -23,7 +23,7 @@ Function global:registerClusterTests()
 
     $global:TESTSUITE_TIMEOUT = 18000
     Write-Host "Using test definitions from repo..."
-    python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full --cluster | Invoke-Expression
+    python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full --cluster
     comm
 }
 
