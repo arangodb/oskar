@@ -200,6 +200,7 @@ class testingRunner():
                         args=(self,
                               this,
                               self.arangosh))
+        worker.name = this.name
         worker.start()
         self.workers.append(worker)
         return True
@@ -255,13 +256,13 @@ class testingRunner():
 
         shutil.rmtree(self.cfg.test_data_dir, ignore_errors=False)
 
-        tarfn = Path(os.environ['WORKDIR']) / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
+        tarfile = Path(os.environ['WORKDIR']) / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
         print(some_scenario.base_logdir)
         shutil.make_archive(str(tarfile),
                             "gztar",
                             str(self.cfg.run_root) + "/",
                             str(self.cfg.run_root) + "/")
-        Path(str(tarfn) + '.tar.gz').rename(str(tarfn) +'.7z') # todo
+        Path(str(tarfile) + '.tar.gz').rename(str(tarfile) +'.7z') # todo
     def register_test_func(self, cluster, test):
         """ print one test function """
         args = test["args"]
