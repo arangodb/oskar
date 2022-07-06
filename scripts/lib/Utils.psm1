@@ -137,27 +137,23 @@ Function runTests
     }
     Pop-Location
 
+    $global:result = "GOOD"
+
     Switch -Regex ($TESTSUITE)
     {
         "cluster"
         {
             registerClusterTests
-            LaunchController $global:TESTSUITE_TIMEOUT
-            createReport
             Break
         }
         "single"
         {
             registerSingleTests
-            LaunchController $global:TESTSUITE_TIMEOUT
-            createReport
             Break
         }
         "catchtest"
         {
             registerTest -testname "catch"
-            LaunchController $global:TESTSUITE_TIMEOUT
-            createReport
             Break
         }
         "resilience"
@@ -169,8 +165,6 @@ Function runTests
         "tests"
         {
             registerTests
-            LaunchController $global:TESTSUITE_TIMEOUT
-            createReport
             Break
         }
         "*"
@@ -179,6 +173,16 @@ Function runTests
             $global:result = "BAD"
             Break
         }
+    }
+
+    If ($global:result -eq "GOOD" -And $global:ok)
+    {
+        LaunchController $global:TESTSUITE_TIMEOUT
+        createReport
+    }
+    Else
+    {
+        $global:result = "BAD"
     }
 
     If($global:result -eq "GOOD")
