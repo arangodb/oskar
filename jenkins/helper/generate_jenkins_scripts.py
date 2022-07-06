@@ -57,7 +57,7 @@ class TestConfig():
         self.structured_results = ""
         self.summary = ""
 
-    def expand_vars(self, cfg):
+    def expand_vars(self, cfg, flags):
         self.base_logdir = cfg.test_report_dir / self.name
         if not self.base_logdir.exists():
             self.base_logdir.mkdir()
@@ -78,8 +78,47 @@ class TestConfig():
                     print("Error: failed to expand environment variable: '" + param + "' for '" + self.name + "'")
             else:
                 new_args.append(param)
+        new_args += ['--coreCheck', 'true', '--disableMonitor', 'true', '--writeXmlReport', 'true']
+
+
+        if 'filter' in os.environ:
+            new_args += ['--test', os.environ['filter']]
+        if sniff:
+            if IS_WINDOWS:
+                new_args += ['--sniff', 'true',
+                             '--sniffProgram',  os.environ['TSHARK'],
+                             '--sniffDevice', os.environ['dumpDevice']]
+            else:
+                new_args += ['--sniff', 'sudo']
+        
+        if 'SKIPNONDETERMINISTIC' in os.environ:
+            new_args += ['--skipNondeterministic', os.environ['SKIPNONDETERMINISTIC']]
+        if 'SKIPTIMECRITICAL' in os.environ:
+            new_args += ['--skipTimeCritical', os.environ['SKIPTIMECRITICAL']]
+
+        if 'BUILDMODE' in os.environ:
+            new_args += [ '--buildType',  os.environ['BUILDMODE'] ]
+ 
+        if 'dumpAgencyOnError' in os.environ:
+            new_args += [ '--dumpAgencyOnError', os.environ['dumpAgencyOnError']]
+        if 'portBase' in os.environ:
+            new_args += [ '--minPort', os.environ['portBase'],
+                          '--maxPort', str(int(os.environ['portBase']) + 99)]
+        if 'SKIPGREY' in os.environ:
+            new_args += [ '--skipGrey', os.environ['SKIPGREY']]
+        if 'ONLYGREY' in os.environ:
+            new_args += [ '--onlyGrey', os.environ['ONLYGREY']]
         self.args = new_args
 
+        if 'vst' in flags:
+            new_args += [ '--vst', 'true']
+        if 'ssl' in flags:
+            new_args += [ '--protocol', 'ssl']
+        if 'http2' in flags:
+            new_args += [ '--http2', 'true']
+        if 'encrypt' in flags:
+            new_args += [ '--encryptionAtRest', 'true']
+        
     def __repr__(self):
         return """
         {0.name} => {0.parallelity}, {0.weight}, -- {1}""".format(
@@ -313,8 +352,9 @@ class testingRunner():
             return;
         if cluster:
             if parallelity == 1:
-                parallelity = 3
-            args += ['--cluster', 'true']
+                parallelity = 4
+            args += ['--cluster', 'true',
+                     '--dumpAgencyOnError', 'true']
         if "enterprise" in test["flags"]:
             return # todo: detect enterprise
         if "ldap" in test["flags"] and not 'LDAPHOST' in os.environ:
@@ -329,7 +369,7 @@ class testingRunner():
                 cfg.args = [ *args, '--index', f"{i}", '--testBuckets', f'{num_buckets}/{i}'];
                 cfg.suite = test["name"]
                 cfg.name = name + f"_{i}"
-                cfg.expand_vars(self.cfg)
+                cfg.expand_vars(self.cfg, test['flags'])
                 cfg.parallelity = parallelity
         else:
             cfg = TestConfig()
@@ -339,7 +379,7 @@ class testingRunner():
             cfg.suite = test["name"]
             cfg.name = name
             cfg.parallelity = parallelity
-            cfg.expand_vars(self.cfg)
+            cfg.expand_vars(self.cfg, test['flags'])
 
 def launch(args, outfile, tests):
     """ Manage test execution on our own """
