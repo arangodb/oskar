@@ -175,8 +175,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 else:
                     tcount = 0
                     if isinstance(line, tuple):
-                        if verbose:
-                            print("e: " + str(line[0]))
+                        #if verbose:
+                        #    print("e: " + str(line[0]))
                         if out:
                             out.write(line[0])
                         #if not str(line[0]).startswith("#"):

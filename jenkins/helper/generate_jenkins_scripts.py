@@ -16,6 +16,8 @@ from async_client import (
     dummy_line_result,
 )
 IS_WINDOWS = platform.win32_ver()[0] != ""
+SUCCESS = True
+RUNNING_SUITES = []
 pp = pprint.PrettyPrinter(indent=4)
 
 all_tests = []
@@ -105,7 +107,8 @@ class config:
 class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     """configuration"""
 
-    def __init__(self, config):
+    def __init__(self, config, slot_lock):
+        self.slot_lock = slot_lock
         self.read_only = False
         super().__init__(config, None)
 
@@ -120,6 +123,9 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     ):
        # pylint: disable=R0913 disable=R0902
         """ testing.js wrapper """
+        global RUNNING_SUITES
+        print('------')
+        print(testing_args)
         args = [
             '-c', str(self.cfg.cfgdir / 'arangosh.conf'),
             '--log.level', 'warning',
@@ -146,7 +152,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
         except CliExecutionException as ex:
             print(ex)
             return False
-SUCCESS = True
+
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
     global SUCCESS
@@ -163,7 +169,9 @@ def testing_runner(testing_instance, this, arangosh):
     this.success = this.success and this.success_file.read_text() == "true"
     this.structured_results = this.crashed_file.read_text()
     this.summary = this.summary_file.read_text()
-
+    with arangosh.slot_lock:
+        RUNNING_SUITES.remove(this.name)
+    
     if this.crashed or not this.success:
         print(str(this.log_file.name))
         print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
@@ -182,9 +190,14 @@ class testingRunner():
         self.available_slots = psutil.cpu_count(logical=False)
         self.used_slots = 0
         self.scenarios = []
-        self.arangosh = ArangoshExecutor(self.cfg)
+        self.arangosh = ArangoshExecutor(self.cfg, self.slot_lock)
         self.workers = []
-    
+
+    def print_active(self):
+        global RUNNING_SUITES
+        with self.slot_lock:
+            print("Running: " + str(RUNNING_SUITES) + " => Slots: " + str(self.used_slots))
+
     def done_job(self, count):
         """ if one job is finished... """
         with self.slot_lock:
@@ -192,6 +205,7 @@ class testingRunner():
 
     def launch_next(self, offset):
         """ launch one testing job """
+        global RUNNING_SUITES
         if self.scenarios[offset].parallelity > (self.available_slots - self.used_slots):
             return False
         with self.slot_lock:
@@ -201,6 +215,9 @@ class testingRunner():
         pp.pprint(this)
 
         print(this.log)
+        with self.slot_lock:
+            RUNNING_SUITES.append(this.name)
+
         worker = Thread(target=testing_runner,
                         args=(self,
                               this,
@@ -213,12 +230,16 @@ class testingRunner():
     def testing_runner(self):
         """ run testing suites """
         global SUCCESS
+        global RUNNING_SUITES
+        
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
         #raise Exception("tschuess")
         start_offset = 0
         used_slots = 0
+        if len(self.scenarios) == 0:
+            raise Exception("no valid scenarios loaded")
         some_scenario = self.scenarios[0]
         if not some_scenario.base_logdir.exists():
             some_scenario.base_logdir.mkdir()
@@ -237,10 +258,12 @@ class testingRunner():
                     if used_slots == 0:
                         print("done")
                         break
+                    self.print_active()
                     print('elsesleep')
                     time.sleep(5)
             else:
                 print('elseelsesleep')
+                self.print_active()
                 time.sleep(5)
         for worker in self.workers:
             worker.join()
@@ -274,15 +297,21 @@ class testingRunner():
         params = test["params"]
         suffix = params.get("suffix", "")
         name = test["name"]
+        weight = 1 
         if suffix:
             name += f"_{suffix}"
-        
 
+        if test["wweight"] :
+            parallelity = test["wweight"]
         # TODO full, windows, single, cluster
         if 'single' in test['flags'] and cluster:
             return;
         if 'cluster' in test['flags'] and not cluster:
-            return
+            return;
+        if cluster:
+            if parallelity == 1:
+                parallelity = 3
+            args += ['--cluster', 'true']
         if "enterprise" in test["flags"]:
             return # todo: detect enterprise
         if "ldap" in test["flags"] and not 'LDAPHOST' in os.environ:
@@ -297,10 +326,8 @@ class testingRunner():
                 cfg.args = [ *args, '--index', f"{i}", '--testBuckets', f'{num_buckets}/{i}'];
                 cfg.suite = test["name"]
                 cfg.name = name + f"_{i}"
-                cfg.parallelity = 3 if (cluster) else 1
-                if test["wweight"] :
-                    cfg.parallelity = test["wweight"]
                 cfg.expand_vars(self.cfg)
+                cfg.parallelity = parallelity
         else:
             cfg = TestConfig()
             self.scenarios.append(cfg)
@@ -308,14 +335,14 @@ class testingRunner():
             cfg.args = [*args]
             cfg.suite = test["name"]
             cfg.name = name
-            cfg.parallelity = 3 if (cluster) else 1
-            if test["wweight"] :
-                cfg.parallelity = test["wweight"]
+            cfg.parallelity = parallelity
             cfg.expand_vars(self.cfg)
 
 def launch(args, outfile, tests):
     """ Manage test execution on our own """
     runner = testingRunner(config(Path(args.definitions).resolve()))
+    print(args)
+    print(tests)
     for test in tests:
         runner.register_test_func(args.cluster, test)
     print(runner.scenarios)
