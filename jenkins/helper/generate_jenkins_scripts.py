@@ -26,6 +26,11 @@ if sys.version_info[0] != 3:
     print("found python version ", sys.version_info)
     sys.exit()
 
+def get_workspace():
+    if 'WORKDIR' in os.environ:
+        return Path(os.environ['WORKDIR'])
+    return Path.cwd() / 'work'
+    
 class TestConfig():
     def __init__(self):
         """ defaults for test config """
@@ -247,7 +252,7 @@ class testingRunner():
         print("\n" + "SUCCESS" if SUCCESS else "FAILED")
         print(summary)
         print('a'*80)
-        (Path(os.environ['WORKDIR']) / 'testfailures.txt').write_text(summary)
+        (get_workspace() / 'testfailures.txt').write_text(summary)
         print(                            some_scenario.base_testdir)
         shutil.make_archive(self.cfg.run_root / 'innerlogs',
                             "bztar",
@@ -256,7 +261,7 @@ class testingRunner():
 
         shutil.rmtree(self.cfg.test_data_dir, ignore_errors=False)
 
-        tarfile = Path(os.environ['WORKDIR']) / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
+        tarfile = get_workspace() / / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
         print(some_scenario.base_logdir)
         shutil.make_archive(str(tarfile),
                             "gztar",
