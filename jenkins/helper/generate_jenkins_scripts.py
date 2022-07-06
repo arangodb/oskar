@@ -246,7 +246,7 @@ class testingRunner():
         print("\n" + "SUCCESS" if SUCCESS else "FAILED")
         print(summary)
         print('a'*80)
-        (Path.cwd() / 'testfailures.txt').write_text(summary)
+        (Path(os.environ['WORKDIR']) / 'testfailures.txt').write_text(summary)
         print(                            some_scenario.base_testdir)
         shutil.make_archive(self.cfg.run_root / 'innerlogs',
                             "bztar",
@@ -255,13 +255,13 @@ class testingRunner():
 
         shutil.rmtree(self.cfg.test_data_dir, ignore_errors=False)
 
-        tarfn = datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
+        tarfn = Path(os.environ['WORKDIR']) / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
         print(some_scenario.base_logdir)
-        shutil.make_archive(tarfn,
-                            "bztar",
+        shutil.make_archive(str(tarfile),
+                            "gztar",
                             str(self.cfg.run_root) + "/",
                             str(self.cfg.run_root) + "/")
-
+        Path(str(tarfn) + '.tar.gz').rename(str(tarfn) +'.7z') # todo
     def register_test_func(self, cluster, test):
         """ print one test function """
         args = test["args"]
