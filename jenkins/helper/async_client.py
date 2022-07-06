@@ -169,8 +169,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     line_filter = line_filter or result_line(line)
                 except Empty:
                     tcount += 1
-                    if verbose:
-                        progress("T " + str(tcount))
+                    #if verbose:
+                    #    progress("T " + str(tcount))
                     have_timeout = tcount >= timeout
                 else:
                     tcount = 0

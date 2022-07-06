@@ -71,7 +71,11 @@ class TestConfig():
         new_args = [];
         for param in self.args:
             if param.startswith('$'):
-                new_args += os.environ[param[1:]].split(' ')
+                paramname = param[1:]
+                if paramname in os.environ:
+                    new_args += os.environ[paramname].split(' ')
+                else:
+                    print("Error: failed to expand environment variable: '" + param + "' for '" + self.name + "'")
             else:
                 new_args.append(param)
         self.args = new_args
@@ -181,6 +185,7 @@ def testing_runner(testing_instance, this, arangosh):
         this.log_file = failname
         SUCCESS = False
 
+    print(this.weight)
     testing_instance.done_job(this.weight)
 
 class testingRunner():
@@ -259,10 +264,8 @@ class testingRunner():
                         print("done")
                         break
                     self.print_active()
-                    print('elsesleep')
                     time.sleep(5)
             else:
-                print('elseelsesleep')
                 self.print_active()
                 time.sleep(5)
         for worker in self.workers:
@@ -341,8 +344,6 @@ class testingRunner():
 def launch(args, outfile, tests):
     """ Manage test execution on our own """
     runner = testingRunner(config(Path(args.definitions).resolve()))
-    print(args)
-    print(tests)
     for test in tests:
         runner.register_test_func(args.cluster, test)
     print(runner.scenarios)
