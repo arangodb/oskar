@@ -261,7 +261,7 @@ class testingRunner():
 
         shutil.rmtree(self.cfg.test_data_dir, ignore_errors=False)
 
-        tarfile = get_workspace() / / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
+        tarfile = get_workspace() / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
         print(some_scenario.base_logdir)
         shutil.make_archive(str(tarfile),
                             "gztar",
