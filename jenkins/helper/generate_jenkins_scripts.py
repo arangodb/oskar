@@ -40,6 +40,8 @@ if sys.version_info[0] != 3:
 def get_workspace():
     if 'WORKDIR' in os.environ:
         return Path(os.environ['WORKDIR'])
+    if 'INNERWORKDIR' in os.environ:
+        return Path(os.environ['INNERWORKDIR'])
     return Path.cwd() / 'work'
     
 class TestConfig():
