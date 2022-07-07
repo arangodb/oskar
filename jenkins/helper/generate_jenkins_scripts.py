@@ -135,6 +135,7 @@ class TestConfig():
 
 class config:
     def __init__(self, definition_file):
+        print(os.environ)
         if definition_file.is_file():
             definition_file = definition_file.parent
         base_source_dir = (definition_file / '..').resolve()
@@ -231,7 +232,8 @@ def testing_runner(testing_instance, this, arangosh):
         failname = this.log_file.parent / ("FAIL_" + str(this.log_file.name))
         this.log_file.rename(failname)
         this.log_file = failname
-        SUCCESS = False
+        with arangosh.slot_lock:
+            SUCCESS = False
 
     print(this.weight)
     testing_instance.done_job(this.parallelity)
@@ -339,11 +341,12 @@ class testingRunner():
 
         tarfile = get_workspace() / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
         print(some_scenario.base_logdir)
+        print("Creating " + str(tarfile))
         shutil.make_archive(str(tarfile),
                             ZIPFORMAT,
                             str(self.cfg.run_root) + "/",
                             str(self.cfg.run_root) + "/")
-        # Path(str(tarfile) + '.tar.gz').rename(str(tarfile) +'.7z') # todo
+
     def register_test_func(self, cluster, test):
         """ print one test function """
         args = test["args"]
