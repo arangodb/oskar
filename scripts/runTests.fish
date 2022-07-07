@@ -35,7 +35,8 @@ set -l CT
 echo "Using test definitions from arangodb repo"
 
 function launchClusterTests
-  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster  return 1
+  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster
+  return 1
 end
 
 ################################################################################
