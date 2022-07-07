@@ -225,7 +225,7 @@ def testing_runner(testing_instance, this, arangosh):
         SUCCESS = False
 
     print(this.weight)
-    testing_instance.done_job(this.weight)
+    testing_instance.done_job(this.parallelity)
 
 class testingRunner():
     def __init__(self, cfg):
@@ -298,6 +298,7 @@ class testingRunner():
                 if start_offset < len(self.scenarios) and self.launch_next(start_offset):
                     start_offset += 1
                     time.sleep(5)
+                    self.print_active()
                 else:
                     if used_slots == 0:
                         print("done")
