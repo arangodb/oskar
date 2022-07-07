@@ -8,31 +8,9 @@ source $SCRIPTS/lib/tests.fish
 
 set -l ST
 echo "Using test definitions from arangodb repo"
-python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f fish | source
-
-set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
-set -g STL (count $STS)
-echo $STS
 
 function launchSingleTests
-  set -g launchCount (math $launchCount + 1)
-
-  if test $launchCount -gt $STL
-    return 0
-  end
-
-  set -l test $STS[$launchCount]
-
-  if test -n "$TEST"
-    if echo $test | fgrep -q "$TEST"
-      echo "Running test '$test' (contains '$TEST')"
-    else
-      echo "Skipping test '$test' (does not contain '$TEST')"
-      return 1
-    end
-  end
-
-  eval $test
+  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch
   return 1
 end
 
@@ -55,21 +33,9 @@ end
 
 set -l CT
 echo "Using test definitions from arangodb repo"
-python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f fish --cluster | source
-  
-set -g CTS (echo -e $CT | fgrep , | sort -rn | awk -F, '{print $2}')
-set -g CTL (count $CTS)
-echo $CTS
 
 function launchClusterTests
-  set -g launchCount (math $launchCount + 1)
-
-  if test $launchCount -gt $CTL
-    return 0
-  end
-
-  eval $CTS[$launchCount]
-  return 1
+  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster  return 1
 end
 
 ################################################################################
@@ -133,8 +99,6 @@ end
 set evalCmd "waitOrKill $timeLimit $suiteRunner"
 eval $evalCmd
 set timeout $status
-
-createReport
 
 echo "RESULT: $result"
 echo "TIMEOUT: $timeout"

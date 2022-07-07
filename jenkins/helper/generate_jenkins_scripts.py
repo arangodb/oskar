@@ -333,7 +333,7 @@ class testingRunner():
                             "gztar",
                             str(self.cfg.run_root) + "/",
                             str(self.cfg.run_root) + "/")
-        Path(str(tarfile) + '.tar.gz').rename(str(tarfile) +'.7z') # todo
+        # Path(str(tarfile) + '.tar.gz').rename(str(tarfile) +'.7z') # todo
     def register_test_func(self, cluster, test):
         """ print one test function """
         args = test["args"]
