@@ -39,6 +39,6 @@ RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/iresearch
 RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/rocksdb
 RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/velocypack
 
-RUN pip3 install py7zr psutil
+RUN apt-get install -y pip3 && pip3 install py7zr psutil
 
 CMD [ "/usr/bin/fish" ]
