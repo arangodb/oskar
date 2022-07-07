@@ -10,6 +10,14 @@ from threading  import Thread, Lock
 import time
 import psutil
 import shutil
+ZIPFORMAT="gztar"
+try:
+    import py7zr
+    shutil.register_archive_format('7zip', py7zr.pack_7zarchive, description='7zip archive')
+    ZIPFORMAT="7zip"
+finally:
+    True
+
 from async_client import (
     CliExecutionException,
     ArangoCLIprogressiveTimeoutExecutor,
@@ -19,6 +27,7 @@ IS_WINDOWS = platform.win32_ver()[0] != ""
 SUCCESS = True
 RUNNING_SUITES = []
 pp = pprint.PrettyPrinter(indent=4)
+
 
 all_tests = []
 #pylint: disable=line-too-long disable=broad-except
@@ -275,6 +284,7 @@ class testingRunner():
         """ run testing suites """
         global SUCCESS
         global RUNNING_SUITES
+        global ZIPFORMAT
         
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
@@ -330,7 +340,7 @@ class testingRunner():
         tarfile = get_workspace() / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
         print(some_scenario.base_logdir)
         shutil.make_archive(str(tarfile),
-                            "gztar",
+                            ZIPFORMAT,
                             str(self.cfg.run_root) + "/",
                             str(self.cfg.run_root) + "/")
         # Path(str(tarfile) + '.tar.gz').rename(str(tarfile) +'.7z') # todo
