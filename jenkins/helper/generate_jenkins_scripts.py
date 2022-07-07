@@ -135,7 +135,7 @@ class config:
                 if (bin_dir / target).exists():
                     bin_dir = bin_dir / target
 
-        self.cfgdir = base_source_dir / 'etc' / 'testing'
+        self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
         self.passvoid = ''
@@ -293,9 +293,9 @@ class testingRunner():
             used_slots = 0
             with self.slot_lock:
                 used_slots = self.used_slots
-            if self.available_slots > used_slots:
+            if self.available_slots > used_slots and start_offset < len(self.scenarios):
                 print(f"Launching more: {self.available_slots} > {used_slots}")
-                if start_offset < len(self.scenarios) and self.launch_next(start_offset):
+                if self.launch_next(start_offset):
                     start_offset += 1
                     time.sleep(5)
                     self.print_active()
