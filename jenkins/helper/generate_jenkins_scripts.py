@@ -15,8 +15,8 @@ try:
     import py7zr
     shutil.register_archive_format('7zip', py7zr.pack_7zarchive, description='7zip archive')
     ZIPFORMAT="7zip"
-finally:
-    True
+except ModuleNotFoundError:
+    pass
 
 from async_client import (
     CliExecutionException,

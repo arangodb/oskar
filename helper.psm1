@@ -42,6 +42,7 @@ Else
         $global:TSHARK = ""
   }
 }
+$ENV:TSHARK=$global:TSHARK
 
 $global:HANDLE_EXE = $null
 If (Get-Command handle.exe -ErrorAction SilentlyContinue)
@@ -65,7 +66,6 @@ Else
 {
   Remove-Item "$global:COREDIR\*" -Recurse -Force
 }
-$global:RUBY = (Get-Command ruby.exe).Path
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"

@@ -295,9 +295,6 @@ Function registerTest($testname, $index, $bucket, $filter, $moreParams, $cluster
     New-Item -Path "$env:TMP\$output.out" -ItemType Directory
     $testparams = $testparams + " --testOutput $env:TMP\$output.out"
     $testparams = $testparams + " " + $moreParams
-    If (-Not ([string]::IsNullOrEmpty($global:RUBY))) {
-      $testparams = $testparams + " --ruby " + $global:RUBY
-    }
 
     $PORT = Get-Random -Minimum 20000 -Maximum 65535
     $i = $global:testCount
