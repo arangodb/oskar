@@ -2,14 +2,22 @@
 """ read test definition, and generate the output for the specified target """
 import argparse
 from datetime import datetime
-import sys, os
+import sys
+import os
 from pathlib import Path
 import platform
 import pprint
 from threading  import Thread, Lock
 import time
-import psutil
 import shutil
+import psutil
+
+from async_client import (
+    CliExecutionException,
+    ArangoCLIprogressiveTimeoutExecutor,
+    dummy_line_result,
+)
+
 ZIPFORMAT="gztar"
 try:
     import py7zr
@@ -18,16 +26,8 @@ try:
 except ModuleNotFoundError:
     pass
 
-from async_client import (
-    CliExecutionException,
-    ArangoCLIprogressiveTimeoutExecutor,
-    dummy_line_result,
-)
 IS_WINDOWS = platform.win32_ver()[0] != ""
-SUCCESS = True
-RUNNING_SUITES = []
 pp = pprint.PrettyPrinter(indent=4)
-
 
 all_tests = []
 #pylint: disable=line-too-long disable=broad-except
@@ -38,37 +38,38 @@ if sys.version_info[0] != 3:
     sys.exit()
 
 def get_workspace():
+    """ evaluates the directory to put reports to """
     if 'WORKDIR' in os.environ:
         return Path(os.environ['WORKDIR'])
     if 'INNERWORKDIR' in os.environ:
         return Path(os.environ['INNERWORKDIR'])
     return Path.cwd() / 'work'
-    
+
 class TestConfig():
-    def __init__(self):
+    """ setup of one test """
+    # pylint: disabe=too-many-instance-attributes disable=too-many-arguments
+    # pylint: disable=too-many-branches disable=too-many-statements
+    # pylint: disable=too-few-public-methods
+    def __init__(self,
+                 cfg,
+                 name,
+                 suite,
+                 args,
+                 weight,
+                 parallelity,
+                 flags):
         """ defaults for test config """
-        self.parallelity = 3
-        self.db_count = 100
-        self.db_count_chunks = 5
-        self.min_replication_factor = 2
-        self.max_replication_factor = 3
-        self.data_multiplier = 4
-        self.collection_multiplier = 1
+        self.parallelity = parallelity
         self.launch_delay = 1.3
-        self.single_shard = False
-        self.db_offset = 0
         self.progressive_timeout = 100
-        self.weight = 1000
-        self.args = []
-        self.suite = ""
-        self.name = ""
-        self.log = ''
+        self.weight = weight
+        self.suite = suite
+        self.name = name
         self.crashed = True
         self.success = False
         self.structured_results = ""
         self.summary = ""
 
-    def expand_vars(self, cfg, flags):
         self.base_logdir = cfg.test_report_dir / self.name
         if not self.base_logdir.exists():
             self.base_logdir.mkdir()
@@ -79,63 +80,67 @@ class TestConfig():
         self.report_file =  self.base_logdir / 'UNITTEST_RESULT.json'
         self.base_testdir = cfg.test_data_dir/ self.name
 
-        new_args = [];
-        for param in self.args:
+        self.args = []
+        for param in args:
             if param.startswith('$'):
                 paramname = param[1:]
                 if paramname in os.environ:
-                    new_args += os.environ[paramname].split(' ')
+                    self.args += os.environ[paramname].split(' ')
                 else:
                     print("Error: failed to expand environment variable: '" + param + "' for '" + self.name + "'")
             else:
-                new_args.append(param)
-        new_args += ['--coreCheck', 'true', '--disableMonitor', 'true', '--writeXmlReport', 'true']
+                self.args.append(param)
+        self.args += ['--coreCheck', 'true', '--disableMonitor', 'true', '--writeXmlReport', 'true']
 
 
         if 'filter' in os.environ:
-            new_args += ['--test', os.environ['filter']]
+            self.args += ['--test', os.environ['filter']]
         if 'sniff' in flags:
             if IS_WINDOWS:
-                new_args += ['--sniff', 'true',
+                self.args += ['--sniff', 'true',
                              '--sniffProgram',  os.environ['TSHARK'],
                              '--sniffDevice', os.environ['dumpDevice']]
             else:
-                new_args += ['--sniff', 'sudo']
-        
+                self.args += ['--sniff', 'sudo']
+
         if 'SKIPNONDETERMINISTIC' in os.environ:
-            new_args += ['--skipNondeterministic', os.environ['SKIPNONDETERMINISTIC']]
+            self.args += ['--skipNondeterministic', os.environ['SKIPNONDETERMINISTIC']]
         if 'SKIPTIMECRITICAL' in os.environ:
-            new_args += ['--skipTimeCritical', os.environ['SKIPTIMECRITICAL']]
+            self.args += ['--skipTimeCritical', os.environ['SKIPTIMECRITICAL']]
 
         if 'BUILDMODE' in os.environ:
-            new_args += [ '--buildType',  os.environ['BUILDMODE'] ]
- 
+            self.args += [ '--buildType',  os.environ['BUILDMODE'] ]
+
         if 'dumpAgencyOnError' in os.environ:
-            new_args += [ '--dumpAgencyOnError', os.environ['dumpAgencyOnError']]
+            self.args += [ '--dumpAgencyOnError', os.environ['dumpAgencyOnError']]
         if 'portBase' in os.environ:
-            new_args += [ '--minPort', os.environ['portBase'],
+            self.args += [ '--minPort', os.environ['portBase'],
                           '--maxPort', str(int(os.environ['portBase']) + 99)]
         if 'SKIPGREY' in os.environ:
-            new_args += [ '--skipGrey', os.environ['SKIPGREY']]
+            self.args += [ '--skipGrey', os.environ['SKIPGREY']]
         if 'ONLYGREY' in os.environ:
-            new_args += [ '--onlyGrey', os.environ['ONLYGREY']]
-        self.args = new_args
+            self.args += [ '--onlyGrey', os.environ['ONLYGREY']]
 
         if 'vst' in flags:
-            new_args += [ '--vst', 'true']
+            self.args += [ '--vst', 'true']
         if 'ssl' in flags:
-            new_args += [ '--protocol', 'ssl']
+            self.args += [ '--protocol', 'ssl']
         if 'http2' in flags:
-            new_args += [ '--http2', 'true']
+            self.args += [ '--http2', 'true']
         if 'encrypt' in flags:
-            new_args += [ '--encryptionAtRest', 'true']
-        
+            self.args += [ '--encryptionAtRest', 'true']
+
     def __repr__(self):
+        """ get visible representation """
+        # pylint: disable=consider-using-f-string
         return """
         {0.name} => {0.parallelity}, {0.weight}, -- {1}""".format(
-            self, ' '.join(self.args))
+            self,
+            ' '.join(self.args))
 
-class config:
+class SiteConfig:
+    """ this environment - adapted to oskar defaults """
+    # pylint: disable=too-few-public-methods
     def __init__(self, definition_file):
         print(os.environ)
         if definition_file.is_file():
@@ -162,12 +167,11 @@ class config:
 class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     """configuration"""
 
-    def __init__(self, config, slot_lock):
+    def __init__(self, site_config, slot_lock):
         self.slot_lock = slot_lock
         self.read_only = False
-        super().__init__(config, None)
+        super().__init__(site_config, None)
 
-    
     def run_testing(self,
                     testcase,
                     testing_args,
@@ -178,7 +182,6 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     ):
        # pylint: disable=R0913 disable=R0902
         """ testing.js wrapper """
-        global RUNNING_SUITES
         print('------')
         print(testing_args)
         args = [
@@ -210,7 +213,6 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
-    global SUCCESS
     os.environ['TMPDIR'] = str(this.base_testdir)
     os.environ['TEMP'] = str(this.base_testdir) # TODO howto wintendo?
     this.success = arangosh.run_testing(this.suite,
@@ -225,8 +227,8 @@ def testing_runner(testing_instance, this, arangosh):
     this.structured_results = this.crashed_file.read_text()
     this.summary = this.summary_file.read_text()
     with arangosh.slot_lock:
-        RUNNING_SUITES.remove(this.name)
-    
+        testing_instance.running_suites.remove(this.name)
+
     if this.crashed or not this.success:
         print(str(this.log_file.name))
         print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
@@ -235,12 +237,13 @@ def testing_runner(testing_instance, this, arangosh):
         this.log_file.rename(failname)
         this.log_file = failname
         with arangosh.slot_lock:
-            SUCCESS = False
-
-    print(this.weight)
+            if this.crashed:
+                testing_instance.crashed =True
+            testing_instance.success = False
     testing_instance.done_job(this.parallelity)
 
-class testingRunner():
+class TestingRunner():
+    """ manages test runners, creates report """
     def __init__(self, cfg):
         self.cfg = cfg
         self.slot_lock = Lock()
@@ -249,11 +252,13 @@ class testingRunner():
         self.scenarios = []
         self.arangosh = ArangoshExecutor(self.cfg, self.slot_lock)
         self.workers = []
+        self.running_suites = []
+        self.success = True
 
     def print_active(self):
-        global RUNNING_SUITES
+        """ output currently active testsuites """
         with self.slot_lock:
-            print("Running: " + str(RUNNING_SUITES) + " => Slots: " + str(self.used_slots))
+            print("Running: " + str(self.running_suites) + " => Active Slots: " + str(self.used_slots))
 
     def done_job(self, count):
         """ if one job is finished... """
@@ -262,7 +267,6 @@ class testingRunner():
 
     def launch_next(self, offset):
         """ launch one testing job """
-        global RUNNING_SUITES
         if self.scenarios[offset].parallelity > (self.available_slots - self.used_slots):
             return False
         with self.slot_lock:
@@ -271,9 +275,8 @@ class testingRunner():
         print("launching " + this.name)
         pp.pprint(this)
 
-        print(this.log)
         with self.slot_lock:
-            RUNNING_SUITES.append(this.name)
+            self.running_suites.append(this.name)
 
         worker = Thread(target=testing_runner,
                         args=(self,
@@ -286,10 +289,6 @@ class testingRunner():
 
     def testing_runner(self):
         """ run testing suites """
-        global SUCCESS
-        global RUNNING_SUITES
-        global ZIPFORMAT
-        
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
@@ -329,7 +328,7 @@ class testingRunner():
         for testrun in self.scenarios:
             if testrun.crashed or not testrun.success:
                 summary += testrun.summary
-        print("\n" + "SUCCESS" if SUCCESS else "FAILED")
+        print("\n" + "SUCCESS" if self.success else "FAILED")
         print(summary)
         print('a'*80)
         (get_workspace() / 'testfailures.txt').write_text(summary)
@@ -355,7 +354,6 @@ class testingRunner():
         params = test["params"]
         suffix = params.get("suffix", "")
         name = test["name"]
-        weight = 1 
         if suffix:
             name += f"_{suffix}"
 
@@ -363,9 +361,9 @@ class testingRunner():
             parallelity = test["wweight"]
         # TODO full, windows, single, cluster
         if 'single' in test['flags'] and cluster:
-            return;
+            return
         if 'cluster' in test['flags'] and not cluster:
-            return;
+            return
         if cluster:
             if parallelity == 1:
                 parallelity = 4
@@ -379,114 +377,34 @@ class testingRunner():
         if "buckets" in params:
             num_buckets = int(params["buckets"])
             for i in range(num_buckets):
-                cfg = TestConfig()
-                self.scenarios.append(cfg)
-                cfg.weight = test['weight'];
-                cfg.args = [ *args, '--index', f"{i}", '--testBuckets', f'{num_buckets}/{i}'];
-                cfg.suite = test["name"]
-                cfg.name = name + f"_{i}"
-                cfg.expand_vars(self.cfg, test['flags'])
-                cfg.parallelity = parallelity
+                self.scenarios.append(
+                    TestConfig(self.cfg,
+                               name + f"_{i}",
+                               test["name"],
+                               [ *args,
+                                 '--index', f"{i}",
+                                 '--testBuckets', f'{num_buckets}/{i}'],
+                               test['weight'],
+                               parallelity,
+                               test['flags']))
         else:
-            cfg = TestConfig()
-            self.scenarios.append(cfg)
-            cfg.weight = test['weight'];
-            cfg.args = [*args]
-            cfg.suite = test["name"]
-            cfg.name = name
-            cfg.parallelity = parallelity
-            cfg.expand_vars(self.cfg, test['flags'])
+            self.scenarios.append(
+                TestConfig(self.cfg,
+                           name,
+                           test["name"],
+                           [ *args],
+                           test['weight'],
+                           parallelity,
+                           test['flags']))
 
-def launch(args, outfile, tests):
+def launch(args, tests):
     """ Manage test execution on our own """
-    runner = testingRunner(config(Path(args.definitions).resolve()))
+    runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
     for test in tests:
         runner.register_test_func(args.cluster, test)
     print(runner.scenarios)
 
     runner.testing_runner()
-    
-def generate_fish_output(args, outfile, tests):
-    """ unix/fish conformant test definitions """
-    def output(line):
-        """ output one line """
-        print(line, file=outfile)
-
-    def print_test_func(test, func, varname):
-        """ print one test function """
-        args = " ".join(test["args"])
-        params = test["params"]
-        suffix = params.get("suffix", "-")
-
-        conditions = []
-        if "enterprise" in test["flags"]:
-            conditions.append("isENTERPRISE;")
-        if "ldap" in test["flags"]:
-            conditions.append("hasLDAPHOST;")
-
-        if len(conditions) > 0:
-            conditions_string = " and ".join(conditions) + " and "
-        else:
-            conditions_string = ""
-
-        if "buckets" in params:
-            num_buckets = int(params["buckets"])
-            for i in range(num_buckets):
-                output(
-                    f'{conditions_string}'
-                    f'set {varname} "${varname}""{test["weight"]},{func} \'{test["name"]}\''
-                    f' {i} --testBuckets {num_buckets}/{i} {args}\\n"')
-        else:
-            output(f'{conditions_string}'
-                   f'set {varname} "${varname}""{test["weight"]},{func} \'{test["name"]}\' '
-                   f'{suffix} {args}\\n"')
-
-    def print_all_tests(func, varname):
-        """ iterate over all definitions """
-        for test in tests:
-            print_test_func(test, func, varname)
-
-    if args.cluster:
-        print_all_tests("runClusterTest1", "CT")
-    else:
-        print_all_tests("runSingleTest1", "ST")
-
-
-def generate_ps1_output(args, outfile, tests):
-    """ powershell conformant test definitions """
-    def output(line):
-        """ output one line """
-        print(line, file=outfile)
-
-    for test in tests:
-        params = test["params"]
-        suffix = f' -index "{params["suffix"]}"' if "suffix" in params else ""
-        cluster_str = " -cluster $true" if args.cluster else ""
-        condition_prefix = ""
-        condition_suffix = ""
-        if "enterprise" in test["flags"]:
-            condition_prefix = 'If ($ENTERPRISEEDITION -eq "On") { '
-            condition_suffix = ' }'
-        if "ldap" in test["flags"]:
-            raise Exception("ldap not supported for windows")
-
-        moreargs = ""
-        args_list = test["args"]
-        if len(args_list) > 0:
-            moreargs = f' -moreParams "{" ".join(args_list)}"'
-
-        if "buckets" in params:
-            num_buckets = int(params["buckets"])
-            for i in range(num_buckets):
-                output(f'{condition_prefix}'
-                       f'registerTest -testname "{test["name"]}" -weight {test["wweight"]} '
-                       f'-index "{i}" -bucket "{num_buckets}/{i}"{moreargs}{cluster_str}'
-                       f'{condition_suffix}')
-        else:
-            output(f'{condition_prefix}'
-                   f'registerTest -testname "{test["name"]}"{cluster_str} -weight {test["wweight"]}{suffix}{moreargs}'
-                   f'{condition_suffix}')
-
 
 def filter_tests(args, tests):
     """ filter testcase by operations target Single/Cluster/full """
@@ -512,11 +430,11 @@ def filter_tests(args, tests):
     return list(tests)
 
 
-def generate_dump_output(_, outfile, tests):
+def generate_dump_output(_, tests):
     """ interactive version output to inspect comprehension """
     def output(line):
         """ output one line """
-        print(line, file=outfile)
+        print(line)
 
     for test in tests:
         params = " ".join(f"{key}={value}" for key, value in test['params'].items())
@@ -530,8 +448,6 @@ def generate_dump_output(_, outfile, tests):
 
 formats = {
     "dump": generate_dump_output,
-    "fish": generate_fish_output,
-    "ps1": generate_ps1_output,
     "launch": launch,
 }
 
@@ -573,7 +489,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("definitions", help="file containing the test definitions", type=str)
     parser.add_argument("-f", "--format", type=str, choices=formats.keys(), help="which format to output",
-                        default="fish")
+                        default="launch")
     parser.add_argument("-o", "--output", type=str, help="output file, default is '-', which means stdout", default="-")
     parser.add_argument("--validate-only", help="validates the test definition file", action="store_true")
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
@@ -681,19 +597,11 @@ def read_definitions(filename):
     return tests
 
 
-def generate_output(args, outfile, tests):
+def generate_output(args, tests):
     """ generate output """
     if args.format not in formats:
         raise Exception(f"Unknown format `{args.format}`")
-    formats[args.format](args, outfile, tests)
-
-
-def get_output_file(args):
-    """ get output file """
-    if args.output == '-':
-        return sys.stdout
-    return open(args.output, "w", encoding="utf-8")
-
+    formats[args.format](args, tests)
 
 def main():
     """ entrypoint """
@@ -703,7 +611,7 @@ def main():
         if args.validate_only:
             return  # nothing left to do
         tests = filter_tests(args, tests)
-        generate_output(args, get_output_file(args), tests)
+        generate_output(args, tests)
     except Exception as exc:
         print(exc, file=sys.stderr)
         print(exc.stack)
