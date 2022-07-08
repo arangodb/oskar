@@ -583,6 +583,10 @@ Function showConfig
     Write-Host "------------------------------------------------------------------------------"
     Write-Host "Cache Statistics"
     showCacheStats
+    $ENV:SKIPNONDETERMINISTIC = $SKIPNONDETERMINISTIC
+    $ENV:SKIPTIMECRITICAL = $SKIPTIMECRITICAL
+    $ENV:SKIPGREY = $SKIPGREY
+    $ENV:ONLYGREY = "$ONLYGREY
     comm
 }
 
