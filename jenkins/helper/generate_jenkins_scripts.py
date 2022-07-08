@@ -504,7 +504,7 @@ def filter_tests(args, tests):
     else:
         filters.append(lambda test: "full" not in test["flags"])
 
-    if args.format == "ps1":
+    if args.format == "ps1" or IS_WINDOWS:
         filters.append(lambda test: "!windows" not in test["flags"])
 
     for one_filter in filters:
