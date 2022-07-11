@@ -66,6 +66,7 @@ Else
 {
   Remove-Item "$global:COREDIR\*" -Recurse -Force
 }
+$env:COREDIR=$global:COREDIR
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
