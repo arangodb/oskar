@@ -7,11 +7,12 @@ source $SCRIPTS/lib/tests.fish
 ################################################################################
 
 set -l ST
-echo "Using test definitions from arangodb repo"
 
 function launchSingleTests
+  echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch
-  return 1
+  and set -xg result "GOOD"
+  or set -xg result "BAD"
 end
 
 ################################################################################
@@ -32,11 +33,12 @@ end
 ################################################################################
 
 set -l CT
-echo "Using test definitions from arangodb repo"
 
 function launchClusterTests
+  echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster
-  return 1
+  and set -xg result "GOOD"
+  or set -xg result "BAD"
 end
 
 ################################################################################
@@ -64,19 +66,19 @@ set -g suiteRunner ""
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
-    set timeLimit 4200
+    set -xg timeLimit 4200
     set suiteRunner "launchClusterTests"
   case "single"
     resetLaunch 1
-    set timeLimit 3900
+    set -xg  timeLimit 3900
     set suiteRunner "launchSingleTests"
   case "catchtest"
     resetLaunch 1
-    set timeLimit 1800
+    set -xg  timeLimit 1800
     set suiteRunner "launchCatchTest"
   case "resilience"
     resetLaunch 4
-    set timeLimit 3600
+    set -xg timeLimit 3600
     set suiteRunner "launchResilienceTests"
   case "*"
     echo Unknown test suite $TESTSUITE
@@ -97,14 +99,11 @@ if test "$SAN" = "On"
   end
 end
 
-set evalCmd "waitOrKill $timeLimit $suiteRunner"
-eval $evalCmd
-set timeout $status
+eval "$suiteRunner"
 
 echo "RESULT: $result"
-echo "TIMEOUT: $timeout"
 
-if test $result = GOOD -a $timeout = 0
+if test $result = GOOD
   exit 0
 else
   exit 1

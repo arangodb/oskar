@@ -27,6 +27,8 @@ except ModuleNotFoundError:
     pass
 
 IS_WINDOWS = platform.win32_ver()[0] != ""
+IS_MAC = platform.mac_ver()[0] != ""
+
 pp = pprint.PrettyPrinter(indent=4)
 
 all_tests = []
@@ -143,6 +145,7 @@ class SiteConfig:
     # pylint: disable=too-few-public-methods
     def __init__(self, definition_file):
         print(os.environ)
+
         if definition_file.is_file():
             definition_file = definition_file.parent
         base_source_dir = (definition_file / '..').resolve()
@@ -339,14 +342,41 @@ class TestingRunner():
                             str(self.cfg.test_data_dir) + "/")
 
         shutil.rmtree(self.cfg.test_data_dir, ignore_errors=False)
-
+        #core_dir = Path.cwd()
+        #core_pattern = "core*"
+        #if COREDIR in os.environ:
+        #    core_dir = Path(os.environ['COREDIR'])
+        #if IS_MAC:
+        #    core_dir = Path('/cores')
+        #if IS_WINDOWS:
+        #    core_pattern = "*.dmp"
+        #is_empty = not bool(sorted(core_dir.glob(core_pattern)))
+        #if not is_empty:
+        #    crash_report_file = get_workspace() / datetime.now(tz=None).strftime("crashreport-%d-%b-%YT%H.%M.%SZ")
+        #    print("creating crashreport: " + str(crash_report_file))
+        #    shutil.make_archive(str(crash_report_file),
+        #                        ZIPFORMAT,
+        #                        str(core_dir) + "/",
+        #                        str(core_dir) + "/",
+        #                        True)
+        #    binary_report_file = get_workspace() / datetime.now(tz=None).strftime("binaries-%d-%b-%YT%H.%M.%SZ")
+        #    print("creating crashreport binary support zip: " + str(binary_report_file))
+        #    shutil.make_archive(str(binary_report_file),
+        #                        ZIPFORMAT,
+        #                        str(bin_dir) + "/",
+        #                        str(bin_dir) + "/",
+        #                        True)
+        #    for corefile in core_dir.glob(core_pattern):
+        #        print("Deleting corefile " + str(corefile))
+        #        corefile.unlink()
         tarfile = get_workspace() / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
         print(some_scenario.base_logdir)
         print("Creating " + str(tarfile))
         shutil.make_archive(str(tarfile),
                             ZIPFORMAT,
                             str(self.cfg.run_root) + "/",
-                            str(self.cfg.run_root) + "/")
+                            str(self.cfg.run_root) + "/",
+                            True)
 
     def register_test_func(self, cluster, test):
         """ print one test function """
@@ -403,8 +433,10 @@ def launch(args, tests):
     for test in tests:
         runner.register_test_func(args.cluster, test)
     print(runner.scenarios)
-
-    runner.testing_runner()
+    try:
+        runner.testing_runner()
+    finally:
+        sys.exit(0 if runner.success else 1)
 
 def filter_tests(args, tests):
     """ filter testcase by operations target Single/Cluster/full """

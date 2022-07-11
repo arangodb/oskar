@@ -459,11 +459,11 @@ function oskar
   and if test "$SAN" = "On"
     parallelism 2
     clearSanStatus
-    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    runInContainer --security-opt seccomp=unconfined --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
     set s (math $s + (getSanStatus))
   else
-    runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    runInContainer --security-opt seccomp=unconfined --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
   end
 
