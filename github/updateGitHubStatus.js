@@ -11,10 +11,12 @@ let pullRequestExtraInformation = {
 // Variables we need from jenkins env:
 const apiToken = process.env.API_TOKEN;       // well, a token :)
 const repository = process.env.REPO;          // Format: arangodb/arangodb
+const jobName = process.env.JOB_NAME;         // Format: jenkins-job-name
 const targetUrl = process.env.JOB_ID;         // Format: https://www.abc.de/#123
 const actionState = process.env.ACTION_STATE; // States: setPending, setError, setFailure, setSuccess
 const githubBranchName = process.env.ARANGODB_BRANCH;
 const githubCommitSHA = process.env.ARANGODB_COMMIT;
+
 
 // error = bool, message = string, extra = object
 const exitAndWriteResultToFile = (error, message, status, extra) => {
@@ -74,15 +76,15 @@ let actionStateIsValid = () => {
 if (!actionStateIsValid()) {
   exitAndWriteResultToFile(true, "No valid JOB_ID env found!");
 }
+if (!jobName) {
+  exitAndWriteResultToFile(true, "No valid JOB_NAME env found!");
+}
 if (!apiToken) {
   exitAndWriteResultToFile(true, "No valid API_TOKEN env found!");
 }
 if (!targetUrl) {
   exitAndWriteResultToFile(true, "No valid JOB_ID env found!");
 }
-
-// TODO Future: Read the job name from ENV variables
-const jobName = "arangodb-matrix-pr";
 if (!repository) {
   exitAndWriteResultToFile(true, "No valid REPO env found!", "FAIL_NO_BRANCH");
 }

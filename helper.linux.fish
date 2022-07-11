@@ -15,30 +15,38 @@ set -gx ARCH (uname -m)
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 14
+set -gx UBUNTUBUILDIMAGE3_TAG 15
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 15
+set -gx UBUNTUBUILDIMAGE4_TAG 16
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 8
+set -gx UBUNTUBUILDIMAGE5_TAG 9
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
+
+set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
+set -gx UBUNTUBUILDIMAGE6_TAG 1
+set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 18
+set -gx ALPINEBUILDIMAGE3_TAG 19
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 19
+set -gx ALPINEBUILDIMAGE4_TAG 20
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
-set -gx ALPINEBUILDIMAGE5_TAG 9
+set -gx ALPINEBUILDIMAGE5_TAG 10
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
+
+set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
+set -gx ALPINEBUILDIMAGE6_TAG 1
+set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
@@ -49,7 +57,7 @@ set -gx CENTOSPACKAGINGIMAGE_TAG 3
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
 
 set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck-$ARCH
-set -gx CPPCHECKIMAGE_TAG 6
+set -gx CPPCHECKIMAGE_TAG 7
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
 
 set -gx LDAPIMAGE_NAME arangodb/ldap-test-$ARCH
@@ -84,6 +92,9 @@ function compiler
       set -gx COMPILER_VERSION $cversion
 
     case 10.2.1_pre1-r3
+      set -gx COMPILER_VERSION $cversion
+
+    case 11.2.1_git20220219-r2
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -128,6 +139,9 @@ function findBuildImage
       case 10.2.1_pre1-r3
         echo $UBUNTUBUILDIMAGE5
 
+      case 11.2.1_git20220219-r2
+        echo $UBUNTUBUILDIMAGE6
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -148,6 +162,9 @@ function findStaticBuildImage
 
       case 10.2.1_pre1-r3
         echo $ALPINEBUILDIMAGE5
+
+      case 11.2.1_git20220219-r2
+        echo $ALPINEBUILDIMAGE6
 
       case '*'
         echo "unknown compiler version $version"
@@ -170,6 +187,9 @@ function findBuildScript
       case 10.2.1_pre1-r3
         echo buildArangoDB5.fish
 
+      case 11.2.1_git20220219-r2
+        echo buildArangoDB6.fish
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -190,6 +210,9 @@ function findStaticBuildScript
 
       case 10.2.1_pre1-r3
         echo buildAlpine5.fish
+
+      case 11.2.1_git20220219-r2
+        echo buildAlpine6.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -1352,6 +1375,22 @@ end
 
 function pullUbuntuBuildImage5 ; docker pull $UBUNTUBUILDIMAGE5 ; end
 
+function buildUbuntuBuildImage6
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUbuntu6.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE6 ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushUbuntuBuildImage6
+  docker tag $UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE6
+  and docker push $UBUNTUBUILDIMAGE6_NAME:latest
+end
+
+function pullUbuntuBuildImage6 ; docker pull $UBUNTUBUILDIMAGE6 ; end
+
 function buildUbuntuPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
@@ -1413,6 +1452,22 @@ function pushAlpineBuildImage5
 end
 
 function pullAlpineBuildImage5 ; docker pull $ALPINEBUILDIMAGE5 ; end
+
+function buildAlpineBuildImage6
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine6.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE6 ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage6
+  docker tag $ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:latest
+  and docker push $ALPINEBUILDIMAGE6
+  and docker push $ALPINEBUILDIMAGE6_NAME:latest
+end
+
+function pullAlpineBuildImage6 ; docker pull $ALPINEBUILDIMAGE6 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
@@ -1560,9 +1615,10 @@ function runInContainer
   # if we receive a TERM outside the container. Note that this does not
   # cover SIGINT, since this will directly abort the whole function.
   set c (docker run -d \
-             -v $WORKDIR/work:$INNERWORKDIR \
+             -v $WORKDIR/work/:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
-             -v "$WORKDIR/scripts":"/scripts" \
+             -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
+             -v "$WORKDIR/scripts/":"/scripts" \
              $mirror \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
@@ -1573,6 +1629,7 @@ function runInContainer
              -e SAN_MODE="$SAN_MODE" \
              -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
              -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+             -e BUILD_SEPP="$BUILD_SEPP" \
              -e BUILDMODE="$BUILDMODE" \
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
@@ -1624,6 +1681,7 @@ function runInContainer
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
              -e VERBOSEBUILD="$VERBOSEBUILD" \
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+             -e WORKSPACE="$WORKSPACE" \
              -e PROMTOOL_PATH="$PROMTOOL_PATH" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
@@ -1671,6 +1729,7 @@ function interactiveContainer
   docker run -it --rm \
     -v $WORKDIR/work:$INNERWORKDIR \
     -v $SSH_AUTH_SOCK:/ssh-agent \
+    -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
     -v "$WORKDIR/scripts":"/scripts" \
     -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
     -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
@@ -1681,6 +1740,7 @@ function interactiveContainer
     -e SAN_MODE="$SAN_MODE" \
     -e AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
     -e AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+    -e BUILD_SEPP="$BUILD_SEPP" \
     -e BUILDMODE="$BUILDMODE" \
     -e CCACHEBINPATH="$CCACHEBINPATH" \
     -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
@@ -1731,6 +1791,7 @@ function interactiveContainer
     -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
     -e VERBOSEBUILD="$VERBOSEBUILD" \
     -e VERBOSEOSKAR="$VERBOSEOSKAR" \
+    -e WORKSPACE="$WORKSPACE" \
     -e PROMTOOL_PATH="$PROMTOOL_PATH" \
     $argv
 
@@ -1872,9 +1933,11 @@ function updateOskar
   and pullUbuntuBuildImage3
   and pullUbuntuBuildImage4
   and pullUbuntuBuildImage5
+  and pullUbuntuBuildImage6
   and pullAlpineBuildImage3
   and pullAlpineBuildImage4
   and pullAlpineBuildImage5
+  and pullAlpineBuildImage6
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage

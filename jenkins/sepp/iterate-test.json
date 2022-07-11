@@ -1,0 +1,39 @@
+{
+  "rocksdb": {},
+  "setup": {
+    "collections": [
+      {
+        "name": "testcol",
+        "type": "document"
+      }
+    ],
+    "prefill": {
+      "testcol": {
+        "default": {
+          "collection": "testcol",
+          "document": {
+            "source": "inline",
+            "value": {}
+          },
+          "documentModifier": {},
+          "documentsPerTrx": 100
+        },
+        "stopAfter": {
+          "operations": 250000
+        },
+        "threads": 4
+      }
+    }
+  },
+  "workload": {
+    "iterate": {
+      "default": {
+        "collection": "testcol"
+      },
+      "stopAfter": {
+        "runtime": 4000
+      },
+      "threads": 1
+    }
+  }
+}

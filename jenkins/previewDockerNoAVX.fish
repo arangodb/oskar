@@ -22,6 +22,7 @@ and set -xg RELEASE_TYPE "preview"
 and showRepository
 and showConfig
 and pingDetails
+and set -xg RELEASE_IS_HEAD "false"
 and makeDockerRelease "$DOCKER_TAG_JENKINS-noavx"
 
 set -l s $status
