@@ -61,7 +61,7 @@ if 'TEMP' in os.environ:
 if 'INNERWORKDIR' in os.environ:
     temp = Path(os.environ['INNERWORKDIR'])
     wd = temp / 'ArangoDB'
-    wd.cd()
+    wd.cwd()
     temp = temp / 'tmp'
 
 if not temp.exists():
