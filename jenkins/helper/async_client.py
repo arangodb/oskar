@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 """ Run a javascript command by spawning an arangosh
     to the configured connection """
-
 import os
 from queue import Queue, Empty
+import platform
+import signal
 import sys
 from subprocess import PIPE, Popen
 from threading import Thread
@@ -13,7 +14,15 @@ from asciiprint import print_progress as progress
 #import tools.loghelper as lh
 
 ON_POSIX = "posix" in sys.builtin_module_names
+IS_WINDOWS = platform.win32_ver()[0] != ""
 
+def sigint_boomerang_handler(signum, frame):
+    """do the right thing to behave like linux does"""
+    # pylint: disable=unused-argument
+    if signum != signal.SIGINT:
+        sys.exit(1)
+    # pylint: disable=unnecessary-pass
+    pass
 
 def dummy_line_result(line):
     """do nothing with the line..."""
@@ -78,6 +87,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         executeable,
         more_args,
         timeout=60,
+        deadline=0,
         result_line=dummy_line_result,
         verbose=False,
         expect_to_fail=False,
@@ -109,16 +119,16 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 run_cmd += ["--server.password", passvoid]
 
         run_cmd += more_args
-        return self.run_monitored(executeable, run_cmd, timeout, result_line, verbose, expect_to_fail, logfile)
+        return self.run_monitored(executeable, run_cmd, timeout, deadline, result_line, verbose, expect_to_fail, logfile)
         # fmt: on
 
     def run_monitored(
-            self, executeable, args, timeout=60, result_line=dummy_line_result, verbose=False, expect_to_fail=False, logfile=None
+            self, executeable, args, timeout=60, deadline=0, result_line=dummy_line_result, verbose=False, expect_to_fail=False, logfile=None
     ):
         """
         run a script in background tracing with a dynamic timeout that its got output (is still alive...)
         """
-
+        rc_exit = 0
         run_cmd = [executeable] + args
         print(run_cmd, verbose)
         with Popen(
@@ -171,7 +181,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     tcount += 1
                     #if verbose:
                     #    progress("T " + str(tcount))
-                    have_timeout = tcount >= timeout
+                    have_timeout = tcount >= timeout or time.now() > deadline
                 else:
                     tcount = 0
                     if isinstance(line, tuple):
@@ -190,11 +200,25 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 out.close()
             timeout_str = ""
             if have_timeout:
+                # Send testing.js break / sigint
+                if IS_WINDOWS:
+                    original_sigint_handler = signal.getsignal(signal.SIGINT)
+                    signal.signal(signal.SIGINT, sigint_boomerang_handler)
+                    process.send_signal(process.pid, signal.CTRL_BREAK_EVENT)
+                else:
+                    process.send_signal(process.pid, signal.SIGINT)
+                try:
+                    # give it some time to exit:
+                    rc_exit = process.wait(60)
+                except TimeoutExpired:
+                    # if its not willing, use force:
+                    process.kill()
+                    rc_exit = process.wait()
                 timeout_str = "TIMEOUT OCCURED!"
                 print(timeout_str)
                 timeout_str += "\n"
-                process.kill()
-            rc_exit = process.wait()
+            else:
+                rc_exit = process.wait()
             thread1.join()
             thread2.join()
 

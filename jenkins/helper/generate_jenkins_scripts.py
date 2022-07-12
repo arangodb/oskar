@@ -148,6 +148,7 @@ class SiteConfig:
         self.timeout = 1800
         if 'timeLimit' in os.environ:
             self.timeout = int(os.environ['timeLimit'])
+        self.deadline = time.now() + timedelta(seconds=self.timeout)
         if definition_file.is_file():
             definition_file = definition_file.parent
         base_source_dir = (definition_file / '..').resolve()
@@ -206,6 +207,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                 self.cfg.bin_dir / "arangosh",
                 run_cmd,
                 timeout,
+                self.cfg.deadline,
                 dummy_line_result,
                 verbose,
                 False,
