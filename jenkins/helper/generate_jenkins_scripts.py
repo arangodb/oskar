@@ -63,6 +63,9 @@ if 'INNERWORKDIR' in os.environ:
     wd = temp / 'ArangoDB'
     wd.cd()
     temp = temp / 'tmp'
+
+if not temp.exists():
+    temp.mkdir(parents=True)
 os.environ['TMPDIR'] = str(temp)
 os.environ['TEMP'] = str(temp)
 
