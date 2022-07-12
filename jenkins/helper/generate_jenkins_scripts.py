@@ -1,7 +1,7 @@
 #!/bin/env python3
 """ read test definition, and generate the output for the specified target """
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
 import os
 from pathlib import Path
@@ -148,7 +148,7 @@ class SiteConfig:
         self.timeout = 1800
         if 'timeLimit' in os.environ:
             self.timeout = int(os.environ['timeLimit'])
-        self.deadline = time.now() + timedelta(seconds=self.timeout)
+        self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         if definition_file.is_file():
             definition_file = definition_file.parent
         base_source_dir = (definition_file / '..').resolve()

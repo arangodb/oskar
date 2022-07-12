@@ -6,6 +6,7 @@ from queue import Queue, Empty
 import platform
 import signal
 import sys
+from datetime import datetime
 from subprocess import PIPE, Popen
 from threading import Thread
 # from allure_commons._allure import attach
@@ -181,7 +182,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     tcount += 1
                     #if verbose:
                     #    progress("T " + str(tcount))
-                    have_timeout = tcount >= timeout or time.now() > deadline
+                    have_timeout = tcount >= timeout or datetime.now() > deadline
                 else:
                     tcount = 0
                     if isinstance(line, tuple):
