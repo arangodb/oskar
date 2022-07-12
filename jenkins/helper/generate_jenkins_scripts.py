@@ -55,6 +55,17 @@ def get_workspace():
             return p
     return Path.cwd() / 'work'
 
+temp = Path("/tmp/")
+if 'TEMP' in os.environ:
+    temp = Path(os.environ['TEMP'])
+if 'INNERWORKDIR' in os.environ:
+    temp = Path(os.environ['INNERWORKDIR'])
+    wd = temp / 'ArangoDB'
+    wd.cd()
+    temp = temp / 'tmp'
+os.environ['TMPDIR'] = str(temp)
+os.environ['TEMP'] = str(temp)
+
 class TestConfig():
     """ setup of one test """
     # pylint: disabe=too-many-instance-attributes disable=too-many-arguments
@@ -228,8 +239,6 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
-    os.environ['TMPDIR'] = str(this.base_testdir)
-    os.environ['TEMP'] = str(this.base_testdir) # TODO howto wintendo?
     this.success = arangosh.run_testing(this.suite,
                                         this.args,
                                         999999999,
