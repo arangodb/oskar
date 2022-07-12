@@ -136,7 +136,7 @@ class TestConfig():
         """ get visible representation """
         # pylint: disable=consider-using-f-string
         return """
-        {0.name} => {0.parallelity}, {0.weight}, -- {1}""".format(
+        {0.name} => {0.parallelity}, {0.weight}, {0.success} -- {1}""".format(
             self,
             ' '.join(self.args))
 
@@ -145,7 +145,9 @@ class SiteConfig:
     # pylint: disable=too-few-public-methods
     def __init__(self, definition_file):
         print(os.environ)
-
+        self.timeout = 1800
+        if 'timeLimit' in os.environ:
+            self.timeout = int(os.environ['timeLimit'])
         if definition_file.is_file():
             definition_file = definition_file.parent
         base_source_dir = (definition_file / '..').resolve()
@@ -241,7 +243,7 @@ def testing_runner(testing_instance, this, arangosh):
         this.log_file = failname
         with arangosh.slot_lock:
             if this.crashed:
-                testing_instance.crashed =True
+                testing_instance.crashed = True
             testing_instance.success = False
     testing_instance.done_job(this.parallelity)
 
@@ -257,11 +259,13 @@ class TestingRunner():
         self.workers = []
         self.running_suites = []
         self.success = True
+        self.crashed = False
 
     def print_active(self):
         """ output currently active testsuites """
         with self.slot_lock:
             print("Running: " + str(self.running_suites) + " => Active Slots: " + str(self.used_slots))
+        sys.stdout.flush()
 
     def done_job(self, count):
         """ if one job is finished... """
@@ -311,6 +315,7 @@ class TestingRunner():
                 used_slots = self.used_slots
             if self.available_slots > used_slots and start_offset < len(self.scenarios):
                 print(f"Launching more: {self.available_slots} > {used_slots}")
+                sys.stdout.flush()
                 if self.launch_next(start_offset):
                     start_offset += 1
                     time.sleep(5)
@@ -326,56 +331,67 @@ class TestingRunner():
                 time.sleep(5)
         for worker in self.workers:
             worker.join()
+
+    def generate_report_txt(self):
+        """ create the summary testfailures.txt from all bits """
         print(self.scenarios)
         summary = ""
         for testrun in self.scenarios:
+            print(testrun)
             if testrun.crashed or not testrun.success:
                 summary += testrun.summary
-        print("\n" + "SUCCESS" if self.success else "FAILED")
         print(summary)
-        print('a'*80)
         (get_workspace() / 'testfailures.txt').write_text(summary)
-        print(                            some_scenario.base_testdir)
+
+    def generate_crash_report(self):
+        """ crash report zips """
+        core_dir = Path.cwd()
+        core_pattern = "core*"
+        if 'COREDIR' in os.environ:
+            core_dir = Path(os.environ['COREDIR'])
+        if IS_MAC:
+            core_dir = Path('/cores')
+        if IS_WINDOWS:
+            core_pattern = "*.dmp"
+        is_empty = not bool(sorted(core_dir.glob(core_pattern)))
+        print(core_dir)
+        if not is_empty:
+            crash_report_file = get_workspace() / datetime.now(tz=None).strftime("crashreport-%d-%b-%YT%H.%M.%SZ")
+            print("creating crashreport: " + str(crash_report_file))
+            sys.stdout.flush()
+            shutil.make_archive(str(crash_report_file),
+                                ZIPFORMAT,
+                                core_dir,
+                                core_dir,
+                                True)
+            binary_report_file = get_workspace() / datetime.now(tz=None).strftime("binaries-%d-%b-%YT%H.%M.%SZ")
+            print("creating crashreport binary support zip: " + str(binary_report_file))
+            sys.stdout.flush()
+            shutil.make_archive(str(binary_report_file),
+                                ZIPFORMAT,
+                                self.cfg.bin_dir,
+                                self.cfg.bin_dir,
+                                True)
+            for corefile in core_dir.glob(core_pattern):
+                print("Deleting corefile " + str(corefile))
+                sys.stdout.flush()
+                corefile.unlink()
+
+    def generate_test_report(self):
+        """ regular testresults zip """
+        tarfile = get_workspace() / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
+        print("Creating " + str(tarfile))
+        sys.stdout.flush()
         shutil.make_archive(self.cfg.run_root / 'innerlogs',
                             "bztar",
                             Path.cwd(),
-                            str(self.cfg.test_data_dir) + "/")
+                            self.cfg.test_data_dir)
 
         shutil.rmtree(self.cfg.test_data_dir, ignore_errors=False)
-        #core_dir = Path.cwd()
-        #core_pattern = "core*"
-        #if COREDIR in os.environ:
-        #    core_dir = Path(os.environ['COREDIR'])
-        #if IS_MAC:
-        #    core_dir = Path('/cores')
-        #if IS_WINDOWS:
-        #    core_pattern = "*.dmp"
-        #is_empty = not bool(sorted(core_dir.glob(core_pattern)))
-        #if not is_empty:
-        #    crash_report_file = get_workspace() / datetime.now(tz=None).strftime("crashreport-%d-%b-%YT%H.%M.%SZ")
-        #    print("creating crashreport: " + str(crash_report_file))
-        #    shutil.make_archive(str(crash_report_file),
-        #                        ZIPFORMAT,
-        #                        str(core_dir) + "/",
-        #                        str(core_dir) + "/",
-        #                        True)
-        #    binary_report_file = get_workspace() / datetime.now(tz=None).strftime("binaries-%d-%b-%YT%H.%M.%SZ")
-        #    print("creating crashreport binary support zip: " + str(binary_report_file))
-        #    shutil.make_archive(str(binary_report_file),
-        #                        ZIPFORMAT,
-        #                        str(bin_dir) + "/",
-        #                        str(bin_dir) + "/",
-        #                        True)
-        #    for corefile in core_dir.glob(core_pattern):
-        #        print("Deleting corefile " + str(corefile))
-        #        corefile.unlink()
-        tarfile = get_workspace() / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
-        print(some_scenario.base_logdir)
-        print("Creating " + str(tarfile))
-        shutil.make_archive(str(tarfile),
+        shutil.make_archive(tarfile,
                             ZIPFORMAT,
-                            str(self.cfg.run_root) + "/",
-                            str(self.cfg.run_root) + "/",
+                            self.cfg.run_root,
+                            self.cfg.run_root,
                             True)
 
     def register_test_func(self, cluster, test):
@@ -427,6 +443,16 @@ class TestingRunner():
                            parallelity,
                            test['flags']))
 
+    def print_and_exit_closing_stance(self):
+        """ our finaly good buye stance. """
+        print("\n" + "SUCCESS" if self.success else "FAILED")
+        retval = 0
+        if not self.success:
+            retval = 1
+        if self.crashed:
+            retval = 2
+        sys.exit(retval)
+
 def launch(args, tests):
     """ Manage test execution on our own """
     runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
@@ -435,8 +461,20 @@ def launch(args, tests):
     print(runner.scenarios)
     try:
         runner.testing_runner()
+        runner.generate_report_txt()
+        runner.generate_crash_report()
+        runner.generate_test_report()
+    except Exception as exc:
+        print()
+        sys.stderr.flush()
+        sys.stdout.flush()
+        print(exc, file=sys.stderr)
+        print(exc.stack)
     finally:
-        sys.exit(0 if runner.success else 1)
+        sys.stderr.flush()
+        sys.stdout.flush()
+        print('waserlaube')
+        runner.print_and_exit_closing_stance()
 
 def filter_tests(args, tests):
     """ filter testcase by operations target Single/Cluster/full """
