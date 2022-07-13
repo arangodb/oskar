@@ -42,6 +42,10 @@ if sys.version_info[0] != 3:
 
 def get_workspace():
     """ evaluates the directory to put reports to """
+    if 'INNERWORKDIR' in os.environ:
+        workdir = Path(os.environ['INNERWORKDIR'])
+        if workdir.exists():
+            return workdir
     if 'WORKDIR' in os.environ:
         workdir = Path(os.environ['WORKDIR'])
         if workdir.exists():
@@ -50,10 +54,6 @@ def get_workspace():
     #    workdir = Path(os.environ['WORKSPACE'])
     #    if workdir.exists():
     #        return workdir
-    if 'INNERWORKDIR' in os.environ:
-        workdir = Path(os.environ['INNERWORKDIR'])
-        if workdir.exists():
-            return workdir
     return Path.cwd() / 'work'
 
 temp = Path("/tmp/")
