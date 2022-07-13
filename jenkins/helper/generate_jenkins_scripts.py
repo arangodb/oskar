@@ -9,6 +9,7 @@ import platform
 import pprint
 from threading  import Thread, Lock
 import time
+from traceback import print_exc
 import shutil
 import psutil
 
@@ -42,17 +43,17 @@ if sys.version_info[0] != 3:
 def get_workspace():
     """ evaluates the directory to put reports to """
     if 'WORKDIR' in os.environ:
-        p = Path(os.environ['WORKDIR'])
-        if p.exists():
-            return p
+        workdir = Path(os.environ['WORKDIR'])
+        if workdir.exists():
+            return workdir
     #if 'WORKSPACE' in os.environ:
-    #    p = Path(os.environ['WORKSPACE'])
-    #    if p.exists():
-    #        return p
+    #    workdir = Path(os.environ['WORKSPACE'])
+    #    if workdir.exists():
+    #        return workdir
     if 'INNERWORKDIR' in os.environ:
-        p = Path(os.environ['INNERWORKDIR'])
-        if p.exists():
-            return p
+        workdir = Path(os.environ['INNERWORKDIR'])
+        if workdir.exists():
+            return workdir
     return Path.cwd() / 'work'
 
 temp = Path("/tmp/")
@@ -119,7 +120,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
 
 class TestConfig():
     """ setup of one test """
-    # pylint: disabe=too-many-instance-attributes disable=too-many-arguments
+    # pylint: disable=too-many-instance-attributes disable=too-many-arguments
     # pylint: disable=too-many-branches disable=too-many-statements
     # pylint: disable=too-few-public-methods
     def __init__(self,
@@ -127,14 +128,14 @@ class TestConfig():
                  name,
                  suite,
                  args,
-                 weight,
+                 priority,
                  parallelity,
                  flags):
         """ defaults for test config """
         self.parallelity = parallelity
         self.launch_delay = 1.3
         self.progressive_timeout = 100
-        self.weight = weight
+        self.priority = priority
         self.suite = suite
         self.name = name
         self.crashed = True
@@ -206,13 +207,17 @@ class TestConfig():
         """ get visible representation """
         # pylint: disable=consider-using-f-string
         return """
-        {0.name} => {0.parallelity}, {0.weight}, {0.success} -- {1}""".format(
+        {0.name} => {0.parallelity}, {0.priority}, {0.success} -- {1}""".format(
             self,
             ' '.join(self.args))
 
+def get_priority(test_config):
+    """ sorter function to return the priority """
+    return test_config.priority
+
 class SiteConfig:
     """ this environment - adapted to oskar defaults """
-    # pylint: disable=too-few-public-methods
+    # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
         print(os.environ)
         self.timeout = 1800
@@ -271,6 +276,7 @@ def testing_runner(testing_instance, this, arangosh):
 
 class TestingRunner():
     """ manages test runners, creates report """
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, cfg):
         self.cfg = cfg
         self.slot_lock = Lock()
@@ -427,7 +433,6 @@ class TestingRunner():
 
         if test["wweight"] :
             parallelity = test["wweight"]
-        # TODO full, windows, single, cluster
         if 'single' in test['flags'] and cluster:
             return
         if 'cluster' in test['flags'] and not cluster:
@@ -438,7 +443,7 @@ class TestingRunner():
             args += ['--cluster', 'true',
                      '--dumpAgencyOnError', 'true']
         if "enterprise" in test["flags"]:
-            return # todo: detect enterprise
+            return
         if "ldap" in test["flags"] and not 'LDAPHOST' in os.environ:
             return
 
@@ -465,6 +470,10 @@ class TestingRunner():
                            parallelity,
                            test['flags']))
 
+    def sort_by_priority(self):
+        """ sort the tests by their priority for the excecution """
+        self.scenarios.sort(key=get_priority)
+
     def print_and_exit_closing_stance(self):
         """ our finaly good buye stance. """
         print("\n" + "SUCCESS" if self.success else "FAILED")
@@ -480,6 +489,7 @@ def launch(args, tests):
     runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
     for test in tests:
         runner.register_test_func(args.cluster, test)
+    runner.sort_by_priority()
     print(runner.scenarios)
     try:
         runner.testing_runner()
@@ -491,7 +501,7 @@ def launch(args, tests):
         sys.stderr.flush()
         sys.stdout.flush()
         print(exc, file=sys.stderr)
-        print(exc.stack)
+        print_exc()
     finally:
         sys.stderr.flush()
         sys.stdout.flush()
@@ -710,7 +720,7 @@ def main():
         generate_output(args, tests)
     except Exception as exc:
         print(exc, file=sys.stderr)
-        print(exc.stack)
+        print_exc()
         sys.exit(1)
 
 
