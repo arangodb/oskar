@@ -142,6 +142,9 @@ class TestConfig():
         self.success = True
         self.structured_results = ""
         self.summary = ""
+        self.start = None
+        self.finish = None
+        self.delta_seconds = 0
 
         self.base_logdir = cfg.test_report_dir / self.name
         if not self.base_logdir.exists():
@@ -204,6 +207,12 @@ class TestConfig():
             self.args += [ '--encryptionAtRest', 'true']
 
     def __repr__(self):
+        return """
+{0.name} => {0.parallelity}, {0.priority}, {0.success} -- {1}""".format(
+            self,
+            ' '.join(self.args))
+
+    def print_test_log_line(self):
         """ get visible representation """
         # pylint: disable=consider-using-f-string
         resultstr = "Good result in"
@@ -216,6 +225,19 @@ class TestConfig():
             self,
             resultstr,
             ' '.join(self.args))
+
+    def print_testruns_line(self):
+        """ get visible representation """
+        # pylint: disable=consider-using-f-string
+        resultstr = "GOOD"
+        if not self.success:
+            resultstr = "BAD"
+        if self.crashed:
+            resultstr = "CRASH"
+        return """
+<tr><td>{0.name}</td><td align="right">{0.delta}</td><td align="right">{1}</td></tr>""".format(
+            self,
+            resultstr)
 
 def get_priority(test_config):
     """ sorter function to return the priority """
@@ -253,12 +275,16 @@ class SiteConfig:
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
+    this.start = datetime.now(tz=None)
     this.success = arangosh.run_testing(this.suite,
                                         this.args,
                                         999999999,
                                         this.base_logdir,
                                         this.log_file,
                                         True)[0] #verbose?
+    this.finish = datetime.now(tz=None)
+    this.delta = this.finish - this.start
+    this.delta_seconds = this.delta.total_seconds()
     print('done with ' + this.name)
     this.crashed = this.crashed_file.read_text() == "true"
     this.success = this.success and this.success_file.read_text() == "true"
@@ -433,7 +459,29 @@ class TestingRunner():
         logfile = get_workspace() / 'test.log'
         with open(logfile, "w", encoding="utf-8") as filep:
             for one_scenario in self.scenarios:
-                filep.write(str(one_scenario))
+                filep.write(one_scenario.print_test_log_line())
+
+    def create_testruns_file(self):
+        """ create the log file with the stati """
+        logfile = get_workspace() / 'testRuns.html'
+        state = 'GOOD'
+        if not self.success:
+            state  = 'BAD'
+        if self.crashed:
+            state = 'CRASHED'
+        with open(logfile, "w", encoding="utf-8") as filep:
+            filep.write('''
+<table>
+<tr><th>Test</th><th>Runtime</th><th>Status</th></tr>
+''')
+            total = 0
+            for one_scenario in self.scenarios:
+                filep.write(one_scenario.print_testruns_line())
+                total += one_scenario.delta_seconds
+            filep.write('''
+<tr style="background-color: red;color: white;"><td>TOTAL</td><td align="right"></td><td align="right">{0}</td></tr>
+</table>
+'''.format(state))
 
     def register_test_func(self, cluster, test):
         """ print one test function """
@@ -519,6 +567,7 @@ def launch(args, tests):
         sys.stderr.flush()
         sys.stdout.flush()
         runner.create_log_file()
+        runner.create_testruns_file()
         runner.print_and_exit_closing_stance()
 
 def filter_tests(args, tests):
