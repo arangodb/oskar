@@ -495,7 +495,6 @@ def launch(args, tests):
     finally:
         sys.stderr.flush()
         sys.stdout.flush()
-        print('waserlaube')
         runner.print_and_exit_closing_stance()
 
 def filter_tests(args, tests):
