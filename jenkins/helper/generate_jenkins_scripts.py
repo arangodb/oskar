@@ -138,8 +138,8 @@ class TestConfig():
         self.priority = priority
         self.suite = suite
         self.name = name
-        self.crashed = True
-        self.success = False
+        self.crashed = False
+        self.success = True
         self.structured_results = ""
         self.summary = ""
 
@@ -206,9 +206,15 @@ class TestConfig():
     def __repr__(self):
         """ get visible representation """
         # pylint: disable=consider-using-f-string
+        resultstr = "Good result in"
+        if not self.success:
+            resultstr = "Bad result in"
+        if self.crashed:
+            resultstr = "Crash occured in"
         return """
-        {0.name} => {0.parallelity}, {0.priority}, {0.success} -- {1}""".format(
+{1} {0.name} => {0.parallelity}, {0.priority}, {0.success} -- {2}""".format(
             self,
+            resultstr,
             ' '.join(self.args))
 
 def get_priority(test_config):
@@ -422,6 +428,13 @@ class TestingRunner():
                             self.cfg.run_root,
                             True)
 
+    def create_log_file(self):
+        """ create the log file with the stati """
+        logfile = get_workspace() / 'test.log'
+        with open(logfile, "w", encoding="utf-8") as filep:
+            for one_scenario in self.scenarios:
+                filep.write(str(one_scenario))
+
     def register_test_func(self, cluster, test):
         """ print one test function """
         args = test["args"]
@@ -505,6 +518,7 @@ def launch(args, tests):
     finally:
         sys.stderr.flush()
         sys.stdout.flush()
+        runner.create_log_file()
         runner.print_and_exit_closing_stance()
 
 def filter_tests(args, tests):
