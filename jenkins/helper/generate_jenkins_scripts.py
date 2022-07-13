@@ -69,6 +69,54 @@ if not temp.exists():
 os.environ['TMPDIR'] = str(temp)
 os.environ['TEMP'] = str(temp)
 
+class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
+    """configuration"""
+
+    def __init__(self, site_config, slot_lock):
+        self.slot_lock = slot_lock
+        self.read_only = False
+        super().__init__(site_config, None)
+
+    def run_testing(self,
+                    testcase,
+                    testing_args,
+                    timeout,
+                    directory,
+                    logfile,
+                    verbose
+                    ):
+       # pylint: disable=R0913 disable=R0902
+        """ testing.js wrapper """
+        print('------')
+        print(testing_args)
+        args = [
+            '-c', str(self.cfg.cfgdir / 'arangosh.conf'),
+            '--log.level', 'warning',
+            "--log.level", "v8=debug",
+            '--server.endpoint', 'none',
+            '--javascript.allow-external-process-control', 'true',
+            '--javascript.execute', self.cfg.base_path / 'UnitTests' / 'unittest.js',
+            ]
+        run_cmd = args +[
+            '--',
+            testcase,
+            '--testOutput', directory ] + testing_args
+        try:
+            return self.run_arango_tool_monitored(
+                self.cfg.bin_dir / "arangosh",
+                run_cmd,
+                timeout,
+                self.cfg.deadline,
+                dummy_line_result,
+                verbose,
+                False,
+                True,
+                logfile
+            )
+        except CliExecutionException as ex:
+            print(ex)
+            return False
+
 class TestConfig():
     """ setup of one test """
     # pylint: disabe=too-many-instance-attributes disable=too-many-arguments
@@ -191,54 +239,6 @@ class SiteConfig:
         self.test_data_dir.mkdir(parents=True)
         self.test_report_dir = self.run_root / 'report'
         self.test_report_dir.mkdir(parents=True)
-
-class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
-    """configuration"""
-
-    def __init__(self, site_config, slot_lock):
-        self.slot_lock = slot_lock
-        self.read_only = False
-        super().__init__(site_config, None)
-
-    def run_testing(self,
-                    testcase,
-                    testing_args,
-                    timeout,
-                    directory,
-                    logfile,
-                    verbose
-                    ):
-       # pylint: disable=R0913 disable=R0902
-        """ testing.js wrapper """
-        print('------')
-        print(testing_args)
-        args = [
-            '-c', str(self.cfg.cfgdir / 'arangosh.conf'),
-            '--log.level', 'warning',
-            "--log.level", "v8=debug",
-            '--server.endpoint', 'none',
-            '--javascript.allow-external-process-control', 'true',
-            '--javascript.execute', self.cfg.base_path / 'UnitTests' / 'unittest.js',
-            ]
-        run_cmd = args +[
-            '--',
-            testcase,
-            '--testOutput', directory ] + testing_args
-        try:
-            return self.run_arango_tool_monitored(
-                self.cfg.bin_dir / "arangosh",
-                run_cmd,
-                timeout,
-                self.cfg.deadline,
-                dummy_line_result,
-                verbose,
-                False,
-                True,
-                logfile
-            )
-        except CliExecutionException as ex:
-            print(ex)
-            return False
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
@@ -514,6 +514,9 @@ def filter_tests(args, tests):
     else:
         filters.append(lambda test: "full" not in test["flags"])
 
+    if args.gtest:
+        filters.append(lambda test: "gtest" ==  test["name"])
+
     if args.format == "ps1" or IS_WINDOWS:
         filters.append(lambda test: "!windows" not in test["flags"])
 
@@ -548,6 +551,7 @@ known_flags = {
     "single": "this test requires a single server",
     "full": "this test is only executed in full tests",
     "!full": "this test is only executed in non-full tests",
+    "gtest": "only the gtest are to be executed",
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
     "!windows": "test is excluded from ps1 output"
@@ -587,6 +591,7 @@ def parse_arguments():
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
+    parser.add_argument("--gtest", help="only runt gtest", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")
     args = parser.parse_args()
 

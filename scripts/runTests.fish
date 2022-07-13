@@ -6,8 +6,6 @@ source $SCRIPTS/lib/tests.fish
 ## Single tests: runtime,command
 ################################################################################
 
-set -l ST
-
 function launchSingleTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch
@@ -19,20 +17,15 @@ end
 ## Catch tests
 ################################################################################
 
-function launchCatchTest
-  switch $launchCount
-    case  0 ; runCatchTest1 catch -
-    case '*' ; return 0
-  end
-  set -g launchCount (math $launchCount + 1)
-  return 1
+function launchGTest
+  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest
+  and set -xg result "GOOD"
+  or set -xg result "BAD"
 end
 
 ################################################################################
 ## Cluster tests: runtime,command
 ################################################################################
-
-set -l CT
 
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
@@ -72,10 +65,14 @@ switch $TESTSUITE
     resetLaunch 1
     set -xg  timeLimit 3900
     set suiteRunner "launchSingleTests"
+  case "gtest"
+    resetLaunch 1
+    set -xg  timeLimit 1800
+    set suiteRunner "launchGTest"
   case "catchtest"
     resetLaunch 1
     set -xg  timeLimit 1800
-    set suiteRunner "launchCatchTest"
+    set suiteRunner "launchGTest"
   case "resilience"
     resetLaunch 4
     set -xg timeLimit 3600
