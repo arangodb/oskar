@@ -41,14 +41,14 @@ if sys.version_info[0] != 3:
 
 def get_workspace():
     """ evaluates the directory to put reports to """
-    if 'WORKSPACE' in os.environ:
-        p = Path(os.environ['WORKSPACE'])
-        if p.exists():
-            return p
     if 'WORKDIR' in os.environ:
         p = Path(os.environ['WORKDIR'])
         if p.exists():
             return p
+    #if 'WORKSPACE' in os.environ:
+    #    p = Path(os.environ['WORKSPACE'])
+    #    if p.exists():
+    #        return p
     if 'INNERWORKDIR' in os.environ:
         p = Path(os.environ['INNERWORKDIR'])
         if p.exists():
