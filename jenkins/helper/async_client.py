@@ -195,9 +195,9 @@ class ArangoCLIprogressiveTimeoutExecutor:
             if have_timeout:
                 # Send testing.js break / sigint
                 if IS_WINDOWS:
-                    process.send_signal(process.pid, signal.CTRL_BREAK_EVENT)
+                    process.send_signal(signal.CTRL_BREAK_EVENT)
                 else:
-                    process.send_signal(process.pid, signal.SIGINT)
+                    process.send_signal(signal.SIGINT)
                 try:
                     # give it some time to exit:
                     rc_exit = process.wait(60)
