@@ -27,6 +27,12 @@ try:
 except ModuleNotFoundError:
     pass
 
+# check python 3
+if sys.version_info[0] != 3:
+    print("found unsupported python version ", sys.version_info)
+    sys.exit()
+
+
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
 
@@ -35,10 +41,18 @@ pp = pprint.PrettyPrinter(indent=4)
 all_tests = []
 #pylint: disable=line-too-long disable=broad-except
 
-# check python 3
-if sys.version_info[0] != 3:
-    print("found python version ", sys.version_info)
-    sys.exit()
+def sigint_boomerang_handler(signum, frame):
+    """do the right thing to behave like linux does"""
+    # pylint: disable=unused-argument
+    if signum != signal.SIGINT:
+        sys.exit(1)
+    # pylint: disable=unnecessary-pass
+    pass
+
+if IS_WINDOWS:
+    original_sigint_handler = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, sigint_boomerang_handler)
+
 
 def get_workspace():
     """ evaluates the directory to put reports to """

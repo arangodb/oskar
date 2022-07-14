@@ -17,14 +17,6 @@ from asciiprint import print_progress as progress
 ON_POSIX = "posix" in sys.builtin_module_names
 IS_WINDOWS = platform.win32_ver()[0] != ""
 
-def sigint_boomerang_handler(signum, frame):
-    """do the right thing to behave like linux does"""
-    # pylint: disable=unused-argument
-    if signum != signal.SIGINT:
-        sys.exit(1)
-    # pylint: disable=unnecessary-pass
-    pass
-
 def dummy_line_result(line):
     """do nothing with the line..."""
     # pylint: disable=pointless-statement
@@ -203,8 +195,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
             if have_timeout:
                 # Send testing.js break / sigint
                 if IS_WINDOWS:
-                    original_sigint_handler = signal.getsignal(signal.SIGINT)
-                    signal.signal(signal.SIGINT, sigint_boomerang_handler)
                     process.send_signal(process.pid, signal.CTRL_BREAK_EVENT)
                 else:
                     process.send_signal(process.pid, signal.SIGINT)
