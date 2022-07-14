@@ -1592,9 +1592,9 @@ Function buildWindows
     Push-Location $pwd
     Set-Location "$global:ARANGODIR\build"
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    Write-Host "Build: cmake --build . --config `"$BUILDMODE`" $global:BUILDPARAMS"
+    Write-Host "Build: cmake --build . --config `"$BUILDMODE`" -j `"$numberSlots`" $global:BUILDPARAMS"
     #Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.${global:PDBS_ARCHIVE_TYPE}" -ErrorAction SilentlyContinue
-    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`"" -priority "Normal"
+    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" -j `"$numberSlots`"" -priority "Normal"
     If ($global:ok)
     {
         Copy-Item "$global:ARANGODIR\build\bin\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\bin\"; comm
