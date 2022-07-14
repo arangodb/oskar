@@ -2,11 +2,12 @@
 """ read test definition, and generate the output for the specified target """
 import argparse
 from datetime import datetime, timedelta
-import sys
 import os
 from pathlib import Path
 import platform
 import pprint
+import signal
+import sys
 from threading  import Thread, Lock
 import time
 from traceback import print_exc
