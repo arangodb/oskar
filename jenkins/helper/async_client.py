@@ -193,6 +193,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 out.close()
             timeout_str = ""
             if have_timeout:
+                print("Deadline reached! Killing " + str(run_cmd))
+                sys.stdout.flush()
                 # Send testing.js break / sigint
                 if IS_WINDOWS:
                     process.send_signal(signal.CTRL_BREAK_EVENT)
