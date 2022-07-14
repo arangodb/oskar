@@ -1594,7 +1594,7 @@ Function buildWindows
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`" -j `"$numberSlots`" $global:BUILDPARAMS"
     #Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.${global:PDBS_ARCHIVE_TYPE}" -ErrorAction SilentlyContinue
-    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" -j `"$numberSlots`"" -priority "Normal"
+    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" -j `"$numberSlots`"" -priority "High"
     If ($global:ok)
     {
         Copy-Item "$global:ARANGODIR\build\bin\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\bin\"; comm
