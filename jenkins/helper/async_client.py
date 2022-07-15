@@ -7,11 +7,11 @@ import platform
 import signal
 import sys
 from datetime import datetime
-from subprocess import PIPE, Popen
+from subprocess import PIPE, Popen, TimeoutExpired
 from threading import Thread
 # from allure_commons._allure import attach
 
-from asciiprint import print_progress as progress
+# from asciiprint import print_progress as progress
 #import tools.loghelper as lh
 
 ON_POSIX = "posix" in sys.builtin_module_names
@@ -26,9 +26,12 @@ def dummy_line_result(line):
 
 def enqueue_stdout(std_out, queue, instance):
     """add stdout to the specified queue"""
-    for line in iter(std_out.readline, b""):
-        # print("O: " + str(line))
-        queue.put((line, instance))
+    try:
+        for line in iter(std_out.readline, b""):
+            # print("O: " + str(line))
+            queue.put((line, instance))
+    except ValueError as ex:
+        print("communication line seems to be closed: " + str(ex))
     # print('0 done!')
     queue.put(-1)
     std_out.close()
@@ -36,9 +39,12 @@ def enqueue_stdout(std_out, queue, instance):
 
 def enqueue_stderr(std_err, queue, instance):
     """add stderr to the specified queue"""
-    for line in iter(std_err.readline, b""):
-        # print("E: " + str(line))
-        queue.put((line, instance))
+    try:
+        for line in iter(std_err.readline, b""):
+            # print("E: " + str(line))
+            queue.put((line, instance))
+    except ValueError as ex:
+        print("communication line seems to be closed: " + str(ex))
     # print('1 done!')
     queue.put(-1)
     std_err.close()
