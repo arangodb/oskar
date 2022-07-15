@@ -1594,9 +1594,9 @@ Function buildWindows
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --parallel -- /p:CL_MPcount=$numberSlots $global:BUILDPARAMS"
     #Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.${global:PDBS_ARCHIVE_TYPE}" -ErrorAction SilentlyContinue
-    $env:UseMultiToolTask=true
-    $env:EnforceProcessCountAcrossBuilds=true
-    $env:EnableClServerMode=true     
+    $env:UseMultiToolTask = "true"
+    $env:EnforceProcessCountAcrossBuilds = "true"
+    $env:EnableClServerMode= "true"
     proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --parallel -- /p:CL_MPcount=$numberSlots" -priority "High"
     If ($global:ok)
     {
