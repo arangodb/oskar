@@ -1597,7 +1597,7 @@ Function buildWindows
     $env:UseMultiToolTask = "true"
     $env:EnforceProcessCountAcrossBuilds = "true"
     $env:EnableClServerMode= "true"
-    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --parallel -- /p:CL_MPcount=$numberSlots" -priority "High"
+    proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --parallel -- /p:CL_MPcount=$numberSlots" -logfile "$INNERWORKDIR\build $global:BUILDPARAMS" -priority "High"
     If ($global:ok)
     {
         Copy-Item "$global:ARANGODIR\build\bin\$BUILDMODE\*" -Destination "$global:ARANGODIR\build\bin\"; comm
