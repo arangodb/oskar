@@ -8,7 +8,7 @@ source $SCRIPTS/lib/tests.fish
 
 function launchSingleTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -18,7 +18,7 @@ end
 ################################################################################
 
 function launchGTest
-  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -29,7 +29,7 @@ end
 
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end

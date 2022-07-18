@@ -10,7 +10,7 @@ set -xg ADDITIONAL_OPTIONS $argv
 
 function launchSingleTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -20,7 +20,7 @@ end
 ################################################################################
 
 function launchGTest
-  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -31,7 +31,7 @@ end
 
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end

@@ -12,8 +12,24 @@ Function global:registerSingleTests()
 
     $global:TESTSUITE_TIMEOUT = 9000
     Write-Host "Using test definitions from repo..."
-    python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full 
-    comm
+    Try
+    {
+        python "$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full
+        If ($LASTEXITCODE -eq 0)
+        {
+            echo $out | Invoke-Expression -ErrorAction Stop
+        }
+        Else
+        {
+            throw "$out"
+        }
+        Set-Variable -Name "ok" -Value $true -Scope global
+    }
+    Catch
+    {
+        Write-Host "Error: $_"
+        Set-Variable -Name "ok" -Value $false -Scope global
+    }
 }
 
 Function global:registerClusterTests()
@@ -23,8 +39,24 @@ Function global:registerClusterTests()
 
     $global:TESTSUITE_TIMEOUT = 18000
     Write-Host "Using test definitions from repo..."
-    python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full --cluster
-    comm
+    Try
+    {
+        python "$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full --cluster
+        If ($LASTEXITCODE -eq 0)
+        {
+            echo $out | Invoke-Expression -ErrorAction Stop
+        }
+        Else
+        {
+            throw "$out"
+        }
+        Set-Variable -Name "ok" -Value $true -Scope global
+    }
+    Catch
+    {
+        Write-Host "Error: $_"
+        Set-Variable -Name "ok" -Value $false -Scope global
+    }
 }
 
 runTests

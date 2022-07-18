@@ -7,8 +7,9 @@ import platform
 import signal
 import sys
 from datetime import datetime
-from subprocess import PIPE, Popen, TimeoutExpired
+from subprocess import PIPE
 from threading import Thread
+import psutil
 # from allure_commons._allure import attach
 
 # from asciiprint import print_progress as progress
@@ -16,7 +17,7 @@ from threading import Thread
 
 ON_POSIX = "posix" in sys.builtin_module_names
 IS_WINDOWS = platform.win32_ver()[0] != ""
-
+IO_NO = 0
 def dummy_line_result(line):
     """do nothing with the line..."""
     # pylint: disable=pointless-statement
@@ -24,28 +25,28 @@ def dummy_line_result(line):
     return True
 
 
-def enqueue_stdout(std_out, queue, instance):
+def enqueue_stdout(std_out, queue, instance, my_number):
     """add stdout to the specified queue"""
     try:
         for line in iter(std_out.readline, b""):
             # print("O: " + str(line))
             queue.put((line, instance))
     except ValueError as ex:
-        print("communication line seems to be closed: " + str(ex))
-    # print('0 done!')
+        print(str(my_number) + " communication line seems to be closed: " + str(ex))
+    print(str(my_number) + ' x0 done!')
     queue.put(-1)
     std_out.close()
 
 
-def enqueue_stderr(std_err, queue, instance):
+def enqueue_stderr(std_err, queue, instance, my_number):
     """add stderr to the specified queue"""
     try:
         for line in iter(std_err.readline, b""):
             # print("E: " + str(line))
             queue.put((line, instance))
     except ValueError as ex:
-        print("communication line seems to be closed: " + str(ex))
-    # print('1 done!')
+        print(str(my_number) + " communication line seems to be closed: " + str(ex))
+    print(str(my_number) + ' x1 done!')
     queue.put(-1)
     std_err.close()
 
@@ -57,6 +58,15 @@ def convert_result(result_array):
         result += "\n" + one_line[0].decode("utf-8").rstrip()
     return result
 
+def kill_children(identifier, children):
+    """ slash all processes enlisted in children - if they still exist """
+    for one_child in children:
+        try:
+            print(identifier + " killing " + one_child.name() + " - " + str(one_child.pid))
+            one_child.kill()
+            one_child.wait()
+        except psutil.NoSuchProcess:  # pragma: no cover
+            pass
 
 class CliExecutionException(Exception):
     """transport CLI error texts"""
@@ -118,19 +128,39 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 run_cmd += ["--server.password", passvoid]
 
         run_cmd += more_args
-        return self.run_monitored(executeable, run_cmd, timeout, deadline, result_line, verbose, expect_to_fail, logfile)
+        return self.run_monitored(executeable,
+                                  run_cmd,
+                                  timeout,
+                                  deadline,
+                                  result_line,
+                                  verbose,
+                                  expect_to_fail,
+                                  logfile)
         # fmt: on
 
-    def run_monitored(
-            self, executeable, args, timeout=60, deadline=0, result_line=dummy_line_result, verbose=False, expect_to_fail=False, logfile=None
-    ):
+    def run_monitored(self,
+                      executeable,
+                      args,
+                      timeout=60,
+                      deadline=0,
+                      result_line=dummy_line_result,
+                      verbose=False, expect_to_fail=False, logfile=None
+                      ):
         """
-        run a script in background tracing with a dynamic timeout that its got output (is still alive...)
+        run a script in background tracing with a dynamic timeout that its got output
+        Deadline will represent an absolute timeout at which it will be signalled to
+        exit, and yet another minute later a hard kill including sub processes will
+        follow.
+        (is still alive...)
         """
-        rc_exit = 0
+        global IO_NO
+        my_number = IO_NO
+        IO_NO += 1
+        rc_exit = None
         run_cmd = [executeable] + args
+        children = []
         print(run_cmd, verbose)
-        with Popen(
+        with psutil.Popen(
             run_cmd,
             stdout=PIPE,
             stderr=PIPE,
@@ -139,25 +169,30 @@ class ArangoCLIprogressiveTimeoutExecutor:
         ) as process:
             queue = Queue()
             thread1 = Thread(
-                name="readIO",
+                name="readIO " + str(my_number),
                 target=enqueue_stdout,
-                args=(process.stdout, queue, self.connect_instance),
+                args=(process.stdout, queue, self.connect_instance, my_number),
             )
             thread2 = Thread(
-                name="readErrIO",
+                name="readErrIO " + str(my_number),
                 target=enqueue_stderr,
-                args=(process.stderr, queue, self.connect_instance),
+                args=(process.stderr, queue, self.connect_instance, my_number),
             )
             thread1.start()
             thread2.start()
-
+            print(dir(process))
             try:
                 print(
-                    "me PID:%d launched PID:%d with LWPID:%d and LWPID:%d"
-                    % (os.getpid(), process.pid, thread1.native_id, thread2.native_id)
+                      f"{0} me PID:{1} launched PID:{2} with LWPID:{3} and LWPID:{4}"(
+                          my_number,
+                          os.getpid(),
+                          process.pid,
+                          thread1.native_id,
+                          thread2.native_id)
                 )
             except AttributeError:
-                print("me PID:%d launched PID:%d with LWPID:N/A and LWPID:N/A" % (os.getpid(), process.pid))
+                print(f"{0} me PID:{1} launched PID:{2} with LWPID:N/A and LWPID:N/A"(
+                    my_number, os.getpid(), process.pid))
 
             # ... do other things here
             out = None
@@ -169,19 +204,75 @@ class ArangoCLIprogressiveTimeoutExecutor:
             tcount = 0
             close_count = 0
             result = []
+            have_deadline = 0
+            deadline_wait_count = 0
             while not have_timeout:
                 #if not verbose:
                 #    progress("sj" + str(tcount))
                 line = ""
+                empty = False
                 try:
                     line = queue.get(timeout=1)
                     line_filter = line_filter or result_line(line)
                 except Empty:
+                    # print(str(my_number)  + '..' + str(deadline_wait_count))
+                    empty = True
                     tcount += 1
                     #if verbose:
                     #    progress("T " + str(tcount))
-                    have_timeout = tcount >= timeout or datetime.now() > deadline
-                else:
+                    have_timeout = tcount >= timeout
+                    if have_timeout:
+                        children = process.children(recursive=True)
+                        process.kill()
+                        kill_children(str(my_number), children)
+                        rc_exit = process.wait()
+                    if datetime.now() > deadline:
+                        have_deadline += 1
+                if have_deadline == 1:
+                    have_deadline += 1
+                    print(str(my_number)  + " Deadline reached! Signaling " + str(run_cmd))
+                    sys.stdout.flush()
+                    # Send testing.js break / sigint
+                    children = process.children(recursive=True)
+                    if IS_WINDOWS:
+                        process.send_signal(signal.CTRL_BREAK_EVENT)
+                    else:
+                        process.send_signal(signal.SIGINT)
+                elif have_deadline > 1:
+                    try:
+                        # give it some time to exit:
+                        print(str(my_number)  +" try wait exit:")
+                        children = children + process.children(recursive=True)
+                        rc_exit = process.wait(1)
+                        print(str(my_number) + " exited: " + str(rc_exit))
+                        kill_children(str(my_number), children)
+                        print(str(my_number)  +' flushing')
+                        # process.stderr.flush()
+                        # process.stdout.flush()
+                        print(str(my_number)  +' closing')
+                        process.stderr.close()
+                        process.stdout.close()
+                        break
+                    except psutil.TimeoutExpired:
+                        deadline_wait_count += 1
+                        print(str(my_number)  +
+                              ' timeout waiting for exit ' +
+                              str(deadline_wait_count))
+                        # if its not willing, use force:
+                        if deadline_wait_count > 60:
+                            print(str(my_number)  +' getting children')
+                            children = process.children(recursive=True)
+                            kill_children(str(my_number), children)
+                            print(str(my_number)  +' killing')
+                            process.kill()
+                            print(str(my_number)  +' waiting')
+                            rc_exit = process.wait()
+                            print(str(my_number)  +' closing')
+                            process.stderr.close()
+                            process.stdout.close()
+                            break
+
+                elif not empty:
                     tcount = 0
                     if isinstance(line, tuple):
                         #if verbose:
@@ -192,34 +283,28 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         #    result.append(line)
                     else:
                         close_count += 1
+                        print(str(my_number)  +" 1 done!")
                         if close_count == 2:
-                            print(" done!")
                             break
+            print(str(my_number)  +" done")
             if out:
+                print(str(my_number)  +" closing")
                 out.close()
+                print(str(my_number)  +" closed")
             timeout_str = ""
             if have_timeout:
-                print("Deadline reached! Killing " + str(run_cmd))
-                sys.stdout.flush()
-                # Send testing.js break / sigint
-                if IS_WINDOWS:
-                    process.send_signal(signal.CTRL_BREAK_EVENT)
-                else:
-                    process.send_signal(signal.SIGINT)
-                try:
-                    # give it some time to exit:
-                    rc_exit = process.wait(60)
-                except TimeoutExpired:
-                    # if its not willing, use force:
-                    process.kill()
-                    rc_exit = process.wait()
                 timeout_str = "TIMEOUT OCCURED!"
                 print(timeout_str)
                 timeout_str += "\n"
-            else:
+            elif rc_exit is None:
+                print(str(my_number)  +" waiting for exit")
                 rc_exit = process.wait()
+                print(str(my_number)  +" done")
+            print(str(my_number)  +" joining io")
+            kill_children(str(my_number), children)
             thread1.join()
             thread2.join()
+            print(str(my_number)  +" OK")
 
         # attach(str(rc_exit), f"Exit code: {str(rc_exit)}")
 
@@ -229,7 +314,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
                    rc_exit, line_filter)
             #if expect_to_fail:
             return res
-            #raise CliExecutionException(f"Execution failed. {res} {have_timeout}", res, have_timeout)
+            #raise CliExecutionException(f"Execution failed. {res} {have_timeout}"(
+            # (res, have_timeout))
 
         if not expect_to_fail:
             if len(result) == 0:
@@ -246,4 +332,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             res = (True, "",
                    #convert_result(result),
                    0, line_filter)
-        raise CliExecutionException("Execution was expected to fail, but exited successfully.", res, have_timeout)
+        raise CliExecutionException(
+            f"{0} Execution was expected to fail, but exited successfully."(
+                my_number),
+            res, have_timeout)

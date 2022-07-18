@@ -160,6 +160,7 @@ class TestConfig():
         self.start = None
         self.finish = None
         self.delta_seconds = 0
+        self.delta = None
 
         self.base_logdir = cfg.test_report_dir / self.name
         if not self.base_logdir.exists():
@@ -305,7 +306,9 @@ def testing_runner(testing_instance, this, arangosh):
     this.success = this.success and this.success_file.read_text() == "true"
     this.structured_results = this.crashed_file.read_text()
     this.summary = this.summary_file.read_text()
+    print('xxx')
     with arangosh.slot_lock:
+        print('yyy')
         testing_instance.running_suites.remove(this.name)
 
     if this.crashed or not this.success:
@@ -316,6 +319,7 @@ def testing_runner(testing_instance, this, arangosh):
         this.log_file.rename(failname)
         this.log_file = failname
         with arangosh.slot_lock:
+            print('zzz')
             if this.crashed:
                 testing_instance.crashed = True
             testing_instance.success = False
@@ -384,7 +388,10 @@ class TestingRunner():
             some_scenario.base_logdir.mkdir()
         if not some_scenario.base_testdir.exists():
             some_scenario.base_testdir.mkdir()
-        while start_offset < len(self.scenarios) or used_slots > 0:
+        print(self.cfg.deadline)
+        if datetime.now() > self.cfg.deadline:
+            raise ValueError("test already timed out before started?")
+        while (datetime.now() < self.cfg.deadline) and (start_offset < len(self.scenarios) or used_slots > 0):
             used_slots = 0
             with self.slot_lock:
                 used_slots = self.used_slots
@@ -404,7 +411,10 @@ class TestingRunner():
             else:
                 self.print_active()
                 time.sleep(5)
+        deadline = (datetime.now() > self.cfg.deadline)
         for worker in self.workers:
+            if deadline:
+                print("Deadline: Waiting for " + worker.name)
             worker.join()
 
     def generate_report_txt(self):
