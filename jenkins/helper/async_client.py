@@ -183,16 +183,19 @@ class ArangoCLIprogressiveTimeoutExecutor:
             print(dir(process))
             try:
                 print(
-                      f"{0} me PID:{1} launched PID:{2} with LWPID:{3} and LWPID:{4}"(
-                          my_number,
-                          os.getpid(),
-                          process.pid,
-                          thread1.native_id,
-                          thread2.native_id)
+                    "{0} me PID:{1} launched PID:{2} with LWPID:{3} and LWPID:{4}".format(
+                        str(my_number),
+                        str(os.getpid()),
+                        str(process.pid),
+                        str(thread1.native_id),
+                        str(thread2.native_id))
                 )
             except AttributeError:
-                print(f"{0} me PID:{1} launched PID:{2} with LWPID:N/A and LWPID:N/A"(
-                    my_number, os.getpid(), process.pid))
+                print(
+                    "{0} me PID:{1} launched PID:{2} with LWPID:N/A and LWPID:N/A".format(
+                        str(my_number),
+                        str(os.getpid()),
+                        str(process.pid)))
 
             # ... do other things here
             out = None
@@ -314,7 +317,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                    rc_exit, line_filter)
             #if expect_to_fail:
             return res
-            #raise CliExecutionException(f"Execution failed. {res} {have_timeout}"(
+            #raise CliExecutionException("Execution failed. {res} {have_timeout}".format(
             # (res, have_timeout))
 
         if not expect_to_fail:
@@ -333,6 +336,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
                    #convert_result(result),
                    0, line_filter)
         raise CliExecutionException(
-            f"{0} Execution was expected to fail, but exited successfully."(
-                my_number),
+            "{0} Execution was expected to fail, but exited successfully.".format(
+                str(my_number)),
             res, have_timeout)
