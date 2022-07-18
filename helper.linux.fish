@@ -1109,6 +1109,23 @@ function buildDockerAny
      set IMAGE_NAME1 $DOCKER_TAG
      set IMAGE_NAME2 $DOCKER_TAG
   else
+    set -l archSuffix ""
+    if test "$USE_ARM" = "On"
+      switch "$ARCH"
+        case "x86_64"
+          set archSuffix "-amd64"
+        case '*'
+          if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+          set archSuffix "-arm64v8"
+        else
+          echo "fatal, unknown architecture $ARCH for docker"
+          exit 1
+        end
+      end
+    end
+
+    set DOCKER_TAG $DOCKER_TAG$archSuffix
+
     if test "$ENTERPRISEEDITION" = "On"
       if test "$RELEASE_TYPE" = "stable"
         set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
@@ -1119,7 +1136,7 @@ function buildDockerAny
       set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
 
       if test "$RELEASE_IS_HEAD" = "true"
-        set IMAGE_NAME3 arangodb/enterprise-preview:latest
+        set IMAGE_NAME3 arangodb/enterprise-preview:latest$archSuffix
       end
     else
       if test "$RELEASE_TYPE" = "stable"
@@ -1131,7 +1148,7 @@ function buildDockerAny
       set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
 
       if test "$RELEASE_IS_HEAD" = "true"
-        set IMAGE_NAME3 arangodb/arangodb-preview:latest
+        set IMAGE_NAME3 arangodb/arangodb-preview:latest$archSuffix
       end
     end
   end
