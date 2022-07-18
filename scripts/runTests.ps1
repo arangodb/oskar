@@ -19,13 +19,12 @@ Function global:registerSingleTests()
         python "$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt"
         If ($LASTEXITCODE -eq 0)
         {
-            echo $out | Invoke-Expression -ErrorAction Stop
+            Set-Variable -Name "ok" -Value $true -Scope global
         }
         Else
         {
-            throw "$out"
+            Set-Variable -Name "ok" -Value $false -Scope global
         }
-        Set-Variable -Name "ok" -Value $true -Scope global
     }
     Catch
     {
@@ -48,13 +47,12 @@ Function global:registerClusterTests()
         python "$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" --cluster
         If ($LASTEXITCODE -eq 0)
         {
-            echo $out | Invoke-Expression -ErrorAction Stop
+            Set-Variable -Name "ok" -Value $true -Scope global
         }
         Else
         {
-            throw "$out"
+            Set-Variable -Name "ok" -Value $false -Scope global
         }
-        Set-Variable -Name "ok" -Value $true -Scope global
     }
     Catch
     {
