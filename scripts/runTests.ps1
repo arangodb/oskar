@@ -14,7 +14,7 @@ Function global:registerSingleTests()
 
     Write-Host "Using test definitions from repo..."
     pip install py7zr
-    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py -- $INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -logfile $false -priority "Normal"
+    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -logfile $false -priority "Normal"
 }
 
 Function global:registerClusterTests()
@@ -26,7 +26,7 @@ Function global:registerClusterTests()
 
     Write-Host "Using test definitions from repo..."
     pip install py7zr
-    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py -- $INNERWORKDIR\ArangoDB\tests\test-definitions.txt --cluster" -logfile $false -priority "Normal"
+    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt --cluster" -logfile $false -priority "Normal"
 }
 
 runTests
