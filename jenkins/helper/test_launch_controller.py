@@ -443,6 +443,7 @@ class TestingRunner():
                     more_running = self.used_slots == 0
             if more_running:
                 print("Geronimoooo!")
+                self.success = False
                 sys.exit(4)
         for worker in self.workers:
             if deadline:
