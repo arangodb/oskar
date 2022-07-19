@@ -14,8 +14,8 @@ Function global:registerSingleTests()
     Write-Host "Using test definitions from repo..."
     Try
     {
-        python "$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full
-        If ($LASTEXITCODE -eq 0)
+        proc = Start-Process "python" -Argumentlist '"$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full'  -Wait -Passthru
+        If ($proc.ExitCode -eq 0)
         {
             Set-Variable -Name "ok" -Value $true -Scope global
         }
@@ -40,8 +40,8 @@ Function global:registerClusterTests()
     Write-Host "Using test definitions from repo..."
     Try
     {
-        python "$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full --cluster
-        If ($LASTEXITCODE -eq 0)
+        proc = Start-Process "python" -Argumentlist '"$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full --cluster'  -Wait -Passthru
+        If ($proc.ExitCode -eq 0)
         {
             Set-Variable -Name "ok" -Value $true -Scope global
         }

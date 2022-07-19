@@ -16,8 +16,8 @@ Function global:registerSingleTests()
     Try
     {
         pip install py7zr
-        python "$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt"
-        If ($LASTEXITCODE -eq 0)
+        proc = Start-Process "python" -Argumentlist '"$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt"'  -Wait -Passthru
+        If ($proc.ExitCode -eq 0)
         {
             Set-Variable -Name "ok" -Value $true -Scope global
         }
@@ -44,8 +44,8 @@ Function global:registerClusterTests()
     Try
     {
         pip install py7zr
-        python "$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" --cluster
-        If ($LASTEXITCODE -eq 0)
+        proc = Start-Process "python" -Argumentlist '"$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" --cluster'  -Wait -Passthru
+        If ($proc.ExitCode -eq 0)
         {
             Set-Variable -Name "ok" -Value $true -Scope global
         }
