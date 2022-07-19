@@ -418,7 +418,7 @@ class TestingRunner():
         deadline = (datetime.now() > self.cfg.deadline)
         if deadline:
             # 5 minutes for threads to clean up their stuff
-            hard_deadline = self.cfg.deadline + 120#  300
+            hard_deadline = self.cfg.deadline + timedelta(seconds=120)#  300
             more_running = True
             while ((datetime.now() > hard_deadline) and more_running):
                 time.sleep(1)
