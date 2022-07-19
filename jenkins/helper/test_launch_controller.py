@@ -310,9 +310,7 @@ def testing_runner(testing_instance, this, arangosh):
     this.success = this.success and this.success_file.read_text() == "true"
     this.structured_results = this.crashed_file.read_text()
     this.summary = this.summary_file.read_text()
-    print('xxx')
     with arangosh.slot_lock:
-        print('yyy')
         testing_instance.running_suites.remove(this.name_enum)
 
     if this.crashed or not this.success:
@@ -323,7 +321,6 @@ def testing_runner(testing_instance, this, arangosh):
         this.log_file.rename(failname)
         this.log_file = failname
         with arangosh.slot_lock:
-            print('zzz')
             if this.crashed:
                 testing_instance.crashed = True
             testing_instance.success = False
