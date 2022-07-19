@@ -53,7 +53,9 @@ def sigint_boomerang_handler(signum, frame):
 if IS_WINDOWS:
     original_sigint_handler = signal.getsignal(signal.SIGINT)
     signal.signal(signal.SIGINT, sigint_boomerang_handler)
-
+    # pylint: disable=unused-import
+    # this will patch psutil for us:
+    import monkeypatch_psutil
 
 def get_workspace():
     """ evaluates the directory to put reports to """
