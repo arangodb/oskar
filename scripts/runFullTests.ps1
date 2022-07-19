@@ -14,7 +14,7 @@ Function global:registerSingleTests()
     Write-Host "Using test definitions from repo..."
     Try
     {
-        proc = Start-Process (Get-Command "python.exe").path -Argumentlist '"$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full'  -Wait -Passthru
+        proc = proc = Start-Process -FilePath "$env:WORKSPACE\jenkins\helper\test_launch_controller.py"  -Argumentlist '"$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full'  -Wait -Passthru
         If ($proc.ExitCode -eq 0)
         {
             Set-Variable -Name "ok" -Value $true -Scope global
@@ -40,7 +40,7 @@ Function global:registerClusterTests()
     Write-Host "Using test definitions from repo..."
     Try
     {
-        proc = Start-Process (Get-Command "python.exe").path -Argumentlist '"$env:WORKSPACE\jenkins\helper\test_launch_controller.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full --cluster'  -Wait -Passthru
+        proc = Start-Process -FilePath "$env:WORKSPACE\jenkins\helper\test_launch_controller.py"  -Argumentlist '"$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f launch --full --cluster'  -Wait -Passthru
         If ($proc.ExitCode -eq 0)
         {
             Set-Variable -Name "ok" -Value $true -Scope global
