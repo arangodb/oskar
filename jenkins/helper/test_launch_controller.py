@@ -99,6 +99,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     timeout,
                     directory,
                     logfile,
+                    identifier, 
                     verbose
                     ):
        # pylint: disable=R0913 disable=R0902
@@ -127,7 +128,8 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                 verbose,
                 False,
                 True,
-                logfile
+                logfile,
+                identifier
             )
         except CliExecutionException as ex:
             print(ex)
@@ -153,6 +155,7 @@ class TestConfig():
         self.priority = priority
         self.suite = suite
         self.name = name
+        self.name_enum = name
         self.crashed = False
         self.success = True
         self.structured_results = ""
@@ -297,11 +300,12 @@ def testing_runner(testing_instance, this, arangosh):
                                         999999999,
                                         this.base_logdir,
                                         this.log_file,
+                                        this.name_enum,
                                         True)[0] #verbose?
     this.finish = datetime.now(tz=None)
     this.delta = this.finish - this.start
     this.delta_seconds = this.delta.total_seconds()
-    print('done with ' + this.name)
+    print(f'done with {this.name_enum}')
     this.crashed = this.crashed_file.read_text() == "true"
     this.success = this.success and this.success_file.read_text() == "true"
     this.structured_results = this.crashed_file.read_text()
@@ -309,7 +313,7 @@ def testing_runner(testing_instance, this, arangosh):
     print('xxx')
     with arangosh.slot_lock:
         print('yyy')
-        testing_instance.running_suites.remove(this.name)
+        testing_instance.running_suites.remove(this.name_enum)
 
     if this.crashed or not this.success:
         print(str(this.log_file.name))
@@ -351,18 +355,19 @@ class TestingRunner():
         with self.slot_lock:
             self.used_slots -= count
 
-    def launch_next(self, offset):
+    def launch_next(self, offset, counter):
         """ launch one testing job """
         if self.scenarios[offset].parallelity > (self.available_slots - self.used_slots):
             return False
         with self.slot_lock:
             self.used_slots += self.scenarios[offset].parallelity
         this = self.scenarios[offset]
-        print("launching " + this.name)
+        this.name_enum = f"{this.name} {str(counter)}"
+        print(f"launching {this.name_enum}")
         pp.pprint(this)
 
         with self.slot_lock:
-            self.running_suites.append(this.name)
+            self.running_suites.append(this.name_enum)
 
         worker = Thread(target=testing_runner,
                         args=(self,
@@ -381,6 +386,7 @@ class TestingRunner():
         #raise Exception("tschuess")
         start_offset = 0
         used_slots = 0
+        counter = 0
         if len(self.scenarios) == 0:
             raise Exception("no valid scenarios loaded")
         some_scenario = self.scenarios[0]
@@ -396,11 +402,12 @@ class TestingRunner():
             with self.slot_lock:
                 used_slots = self.used_slots
             if self.available_slots > used_slots and start_offset < len(self.scenarios):
-                print(f"Launching more: {self.available_slots} > {used_slots}")
+                print(f"Launching more: {self.available_slots} > {used_slots} {counter}")
                 sys.stdout.flush()
-                if self.launch_next(start_offset):
+                if self.launch_next(start_offset, counter):
                     start_offset += 1
                     time.sleep(5)
+                    counter += 1
                     self.print_active()
                 else:
                     if used_slots == 0:
