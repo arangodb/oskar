@@ -99,7 +99,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     timeout,
                     directory,
                     logfile,
-                    identifier, 
+                    identifier,
                     verbose
                     ):
        # pylint: disable=R0913 disable=R0902
@@ -419,6 +419,34 @@ class TestingRunner():
                 self.print_active()
                 time.sleep(5)
         deadline = (datetime.now() > self.cfg.deadline)
+        if deadline:
+            # 5 minutes for threads to clean up their stuff
+            hard_deadline = self.cfg.deadline + 120#  300
+            more_running = True
+            while ((datetime.now() > hard_deadline) and more_running):
+                time.sleep(1)
+                with self.slot_lock:
+                    more_running = self.used_slots == 0
+
+            if ((datetime.now() > hard_deadline) and more_running):
+                print("someone won't exit!")
+                mica = os.getpid()
+                myself = psutil.Process(mica)
+                children = myself.children(recursive=True)
+                for one_child in children:
+                    if one_child.pid != mica:
+                        try:
+                            print(f"Main: killing {one_child.name()} - {str(one_child.pid)}")
+                            one_child.kill()
+                        except psutil.NoSuchProcess:  # pragma: no cover
+                            pass
+                print("giving 5s")
+                time.sleep(5)
+                with self.slot_lock:
+                    more_running = self.used_slots == 0
+            if more_running:
+                print("Geronimoooo!")
+                sys.exit(4)
         for worker in self.workers:
             if deadline:
                 print("Deadline: Waiting for " + worker.name)

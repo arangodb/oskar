@@ -61,7 +61,7 @@ def kill_children(identifier, children):
     """ slash all processes enlisted in children - if they still exist """
     for one_child in children:
         try:
-            print(identifier + " killing " + one_child.name() + " - " + str(one_child.pid))
+            print(f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}")
             one_child.kill()
             one_child.wait()
         except psutil.NoSuchProcess:  # pragma: no cover
@@ -257,7 +257,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         break
                     except psutil.TimeoutExpired:
                         deadline_wait_count += 1
-                        print(f"{identifier}  timeout waiting for exit {str(deadline_wait_count)}")
+                        print(f"{identifier} timeout waiting for exit {str(deadline_wait_count)}")
                         # if its not willing, use force:
                         if deadline_wait_count > 60:
                             print(f"{identifier} getting children")
