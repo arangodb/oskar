@@ -241,16 +241,21 @@ const checkPRMethod = (prCheckData, sha) => {
 
   const parsePullRequestItems = (prCheckData) => {
     let infoItem;
-    let foundPullRequestsArray = prCheckData.items;
+    if (!prCheckData.hasOwnProperty('items')) {
+      exitAndWriteResultToFile(true, 'Could not parse expected attribute: "items". Format might have been changed.');
+    }
+
+    let foundPullRequestsArray = prCheckData.items.slice().reverse();
 
     // iterate in reverse order, as the last items are the most relevant ones
-    foundPullRequestsArray.slice().reverse().forEach(pullRequestItem => {
+    for (let pullRequestItem of foundPullRequestsArray) {
       // check if found item is valid (means it must be part of our given repository)
       if (pullRequestItem.url && pullRequestItem.url.indexOf(repository) != -1) {
         // means we've found a valid repository into our given repository
         infoItem = pullRequestItem;
+        break;
       }
-    });
+    };
 
     if (!infoItem) {
       // We've not found any valid pull request, therefore we cannot continue.
