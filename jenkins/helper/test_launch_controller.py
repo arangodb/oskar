@@ -73,19 +73,20 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
-temp = Path("/tmp/")
+TEMP = Path("/tmp/")
 if 'TEMP' in os.environ:
-    temp = Path(os.environ['TEMP'])
+    TEMP = Path(os.environ['TEMP'])
 if 'INNERWORKDIR' in os.environ:
-    temp = Path(os.environ['INNERWORKDIR'])
-    wd = temp / 'ArangoDB'
+    TEMP = Path(os.environ['INNERWORKDIR'])
+    wd = TEMP / 'ArangoDB'
     wd.cwd()
-    temp = temp / 'tmp'
-
-if not temp.exists():
-    temp.mkdir(parents=True)
-os.environ['TMPDIR'] = str(temp)
-os.environ['TEMP'] = str(temp)
+    TEMP = TEMP / 'tmp'
+else:
+    TEMP = TEMP / 'ArangoDB'
+if not TEMP.exists():
+    TEMP.mkdir(parents=True)
+os.environ['TMPDIR'] = str(TEMP)
+os.environ['TEMP'] = str(TEMP)
 
 class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     """configuration"""
@@ -377,8 +378,8 @@ class TestingRunner():
 
     def handle_deadline(self):
         """ here we make sure no worker thread is stuck during its extraordinary shutdown """
-        # 5 minutes for threads to clean up their stuff
-        hard_deadline = self.cfg.deadline + timedelta(seconds=120)#  300
+        # 5 minutes for threads to clean up their stuff, else we consider them blocked
+        hard_deadline = self.cfg.deadline + timedelta(seconds=300)
         more_running = True
         mica = None
         print(f"Main: waiting for hard deadline {str(hard_deadline)}")
@@ -421,7 +422,6 @@ class TestingRunner():
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
-        #raise Exception("tschuess")
         start_offset = 0
         used_slots = 0
         counter = 0
@@ -493,16 +493,16 @@ class TestingRunner():
             sys.stdout.flush()
             shutil.make_archive(str(crash_report_file),
                                 ZIPFORMAT,
-                                core_dir,
-                                core_dir,
+                                (core_dir / '..').resolve(),
+                                core_dir.name,
                                 True)
             binary_report_file = get_workspace() / datetime.now(tz=None).strftime("binaries-%d-%b-%YT%H.%M.%SZ")
             print("creating crashreport binary support zip: " + str(binary_report_file))
             sys.stdout.flush()
             shutil.make_archive(str(binary_report_file),
                                 ZIPFORMAT,
-                                self.cfg.bin_dir,
-                                self.cfg.bin_dir,
+                                (self.cfg.bin_dir / '..').resolve(),
+                                self.cfg.bin_dir.name,
                                 True)
             for corefile in core_dir.glob(core_pattern):
                 print("Deleting corefile " + str(corefile))
@@ -515,16 +515,17 @@ class TestingRunner():
         print("Creating " + str(tarfile))
         sys.stdout.flush()
         shutil.make_archive(self.cfg.run_root / 'innerlogs',
-                            "bztar",
-                            Path.cwd(),
-                            self.cfg.test_data_dir)
+                            ZIPFORMAT,
+                            (TEMP / '..').resolve(),
+                            TEMP.name)
 
-        shutil.rmtree(self.cfg.test_data_dir, ignore_errors=False)
+        shutil.rmtree(TEMP, ignore_errors=False)
         shutil.make_archive(tarfile,
                             ZIPFORMAT,
                             self.cfg.run_root,
-                            self.cfg.run_root,
+                            '.',
                             True)
+        shutil.rmtree(self.cfg.run_root, ignore_errors=False)
 
     def create_log_file(self):
         """ create the log file with the stati """
