@@ -1028,6 +1028,52 @@ function makeDockerEnterpriseRelease
   end
 end
 
+function makeDockerMultiarch
+  set -l DOCKER_TAG $argv[1]
+
+  # build tag
+  set -l MANIFEST_NAME1 ""
+
+  # latest tag
+  set -l MANIFEST_NAME2 ""
+
+  if test "$ENTERPRISEEDITION" = "On"
+    if test "$RELEASE_TYPE" = "stable"
+      set MANIFEST_NAME1 arangodb/enterprise:$DOCKER_TAG
+    else
+      set MANIFEST_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
+    end
+
+    if test "$RELEASE_IS_HEAD" = "true"
+      set MANIFEST_NAME2 arangodb/enterprise-preview:latest
+    end
+  else
+    if test "$RELEASE_TYPE" = "stable"
+      set MANIFEST_NAME1 arangodb/arangodb:$DOCKER_TAG
+    else
+      set MANIFEST_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
+    end
+
+    if test "$RELEASE_IS_HEAD" = "true"
+      set MANIFEST_NAME2 arangodb/arangodb-preview:latest
+    end
+  end
+
+  pushDockerManifest $MANIFEST_NAME1
+  and if test "$RELEASE_IS_HEAD" = "true"
+        pushDockerManifest $MANIFEST_NAME2
+      end
+  or return 1
+
+  if test "$GCR_REG" = "On"
+    pushDockerManifest $GCR_REG_PREFIX$MANIFEST_NAME1
+    and if test "$RELEASE_IS_HEAD" = "true"
+          pushDockerManifest $GCR_REG_PREFIX$MANIFEST_NAME2
+        end
+    or return 1
+  end
+end
+
 function makeDockerDebug
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
@@ -1296,6 +1342,23 @@ function pushDockerImage
   end
 
   docker push $imagename
+end
+
+function pushDockerManifest
+  if test (count $argv) -eq 0
+    echo Must give manifest name as argument
+    return 1
+  end
+
+  set manifestname $argv[1]
+
+  docker manifest create \
+  $manifestname \
+  --amend $manifestname-amd64 \
+  --amend $manifestname-arm64v8
+  and docker manifest push $manifestname
+  and return 0
+  or return 1
 end
 
 function buildDockerLocal
