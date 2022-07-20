@@ -228,10 +228,8 @@ class TestConfig():
             self.args += [ '--encryptionAtRest', 'true']
 
     def __repr__(self):
-        return """
-{0.name} => {0.parallelity}, {0.priority}, {0.success} -- {1}""".format(
-            self,
-            ' '.join(self.args))
+        return f"""
+{self.name} => {self.parallelity}, {self.priority}, {self.success} -- {' '.join(self.args)}"""
 
     def print_test_log_line(self):
         """ get visible representation """
@@ -377,6 +375,47 @@ class TestingRunner():
         self.workers.append(worker)
         return True
 
+    def handle_deadline(self):
+        """ here we make sure no worker thread is stuck during its extraordinary shutdown """
+        # 5 minutes for threads to clean up their stuff
+        hard_deadline = self.cfg.deadline + timedelta(seconds=120)#  300
+        more_running = True
+        mica = None
+        print(f"Main: waiting for hard deadline {str(hard_deadline)}")
+        while ((datetime.now() > hard_deadline) and more_running):
+            time.sleep(1)
+            with self.slot_lock:
+                more_running = self.used_slots != 0
+        if more_running:
+            print("Main: reaching hard Time limit!")
+            mica = os.getpid()
+            myself = psutil.Process(mica)
+            children = myself.children(recursive=True)
+            for one_child in children:
+                if one_child.pid != mica:
+                    try:
+                        print(f"Main: killing {one_child.name()} - {str(one_child.pid)}")
+                        one_child.kill()
+                    except psutil.NoSuchProcess:  # pragma: no cover
+                        pass
+            print("Main: giving workers 5 more seconds to exit.")
+            time.sleep(5)
+            with self.slot_lock:
+                more_running = self.used_slots != 0
+        else:
+            print("Main: workers terminated on time")
+        if more_running:
+            print("Main: Threads won't come to an end! Geronimoooo!")
+            sys.stdout.flush()
+            self.success = False
+            if IS_WINDOWS:
+                # pylint: disable=protected-access
+                # we want to exit without waiting for threads:
+                os._exit(4)
+            else:
+                os.kill(mica, signal.SIGKILL)
+                sys.exit(4)
+
     def testing_runner(self):
         """ run testing suites """
         mem = psutil.virtual_memory()
@@ -417,39 +456,12 @@ class TestingRunner():
             else:
                 self.print_active()
                 time.sleep(5)
-        deadline = (datetime.now() > self.cfg.deadline)
+        deadline = datetime.now() > self.cfg.deadline
         if deadline:
-            # 5 minutes for threads to clean up their stuff
-            hard_deadline = self.cfg.deadline + timedelta(seconds=120)#  300
-            more_running = True
-            while ((datetime.now() > hard_deadline) and more_running):
-                time.sleep(1)
-                with self.slot_lock:
-                    more_running = self.used_slots == 0
-
-            if ((datetime.now() > hard_deadline) and more_running):
-                print("someone won't exit!")
-                mica = os.getpid()
-                myself = psutil.Process(mica)
-                children = myself.children(recursive=True)
-                for one_child in children:
-                    if one_child.pid != mica:
-                        try:
-                            print(f"Main: killing {one_child.name()} - {str(one_child.pid)}")
-                            one_child.kill()
-                        except psutil.NoSuchProcess:  # pragma: no cover
-                            pass
-                print("giving 5s")
-                time.sleep(5)
-                with self.slot_lock:
-                    more_running = self.used_slots == 0
-            if more_running:
-                print("Geronimoooo!")
-                self.success = False
-                sys.exit(4)
+            self.handle_deadline()
         for worker in self.workers:
             if deadline:
-                print("Deadline: Waiting for " + worker.name)
+                print("Deadline: Joining threads of " + worker.name_enum)
             worker.join()
 
     def generate_report_txt(self):
@@ -538,10 +550,10 @@ class TestingRunner():
             for one_scenario in self.scenarios:
                 filep.write(one_scenario.print_testruns_line())
                 total += one_scenario.delta_seconds
-            filep.write('''
-<tr style="background-color: red;color: white;"><td>TOTAL</td><td align="right"></td><td align="right">{0}</td></tr>
+            filep.write(f'''
+<tr style="background-color: red;color: white;"><td>TOTAL</td><td align="right"></td><td align="right">{state}</td></tr>
 </table>
-'''.format(state))
+''')
 
     def register_test_func(self, cluster, test):
         """ print one test function """
