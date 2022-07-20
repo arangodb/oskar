@@ -158,7 +158,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         rc_exit = None
         run_cmd = [executeable] + args
         children = []
-        print(run_cmd, verbose)
+        print(f"{identifier}: launching {str(run_cmd)}")
         with psutil.Popen(
             run_cmd,
             stdout=PIPE,
@@ -179,7 +179,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
             )
             thread1.start()
             thread2.start()
-            print(dir(process))
             try:
                 print(
                     "{0} me PID:{1} launched PID:{2} with LWPID:{3} and LWPID:{4}".format(
@@ -224,7 +223,10 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     #    progress("T " + str(tcount))
                     have_timeout = tcount >= timeout
                     if have_timeout:
-                        children = process.children(recursive=True)
+                        try:
+                            children = process.children(recursive=True)
+                        except psutil.NoSuchProcess:
+                            pass
                         process.kill()
                         kill_children(identifier, children)
                         rc_exit = process.wait()
@@ -234,8 +236,12 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     have_deadline += 1
                     print(f"{identifier} Deadline reached! Signaling  {str(run_cmd)}")
                     sys.stdout.flush()
+                    out.write(f"{identifier} Oskar-Deadline reached - will trigger shutdown!\n")
                     # Send testing.js break / sigint
-                    children = process.children(recursive=True)
+                    try:
+                        children = process.children(recursive=True)
+                    except psutil.NoSuchProcess:
+                        pass
                     if IS_WINDOWS:
                         process.send_signal(signal.CTRL_BREAK_EVENT)
                     else:
@@ -244,7 +250,10 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     try:
                         # give it some time to exit:
                         print(f"{identifier} try wait exit:")
-                        children = children + process.children(recursive=True)
+                        try:
+                            children = children + process.children(recursive=True)
+                        except psutil.NoSuchProcess:
+                            pass
                         rc_exit = process.wait(1)
                         print(f"{identifier}  exited: {str(rc_exit)}")
                         kill_children(identifier, children)
@@ -261,7 +270,10 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         # if its not willing, use force:
                         if deadline_wait_count > 60:
                             print(f"{identifier} getting children")
-                            children = process.children(recursive=True)
+                            try:
+                                children = process.children(recursive=True)
+                            except psutil.NoSuchProcess:
+                                pass
                             kill_children(identifier, children)
                             print(f"{identifier} killing")
                             process.kill()
