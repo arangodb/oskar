@@ -432,7 +432,7 @@ echo "Done fixing permissions."
 # make the top window open itself on mount:
 if [ $SANDBOX_SAFE -eq 0 ]; then
 	echo "Blessing started"
-  [[ $(uname -p) == 'arm2' ]] && openfolder="--openfolder ${MOUNT_DIR}" || openfolder=""
+  [[ $(uname -p) == 'arm' ]] && openfolder="" || openfolder="--openfolder ${MOUNT_DIR}"
 	bless --folder "${MOUNT_DIR}" "${openfolder}"
 	echo "Blessing finished"
 else
