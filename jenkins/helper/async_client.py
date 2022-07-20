@@ -208,6 +208,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
             have_deadline = 0
             deadline_wait_count = 0
             while not have_timeout:
+                # if you want to tail the output, enable this:
+                # out.flush()
                 #if not verbose:
                 #    progress("sj" + str(tcount))
                 line = ""
@@ -236,7 +238,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     have_deadline += 1
                     print(f"{identifier} Deadline reached! Signaling  {str(run_cmd)}")
                     sys.stdout.flush()
-                    out.write(f"{identifier} Oskar-Deadline reached - will trigger shutdown!\n")
+                    out.write(bytearray(f"{identifier} Oskar-Deadline reached - will trigger shutdown!\n", 'utf-8'))
+                    out.flush()
                     # Send testing.js break / sigint
                     try:
                         children = process.children(recursive=True)
@@ -246,7 +249,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         process.send_signal(signal.CTRL_BREAK_EVENT)
                     else:
                         process.send_signal(signal.SIGINT)
-                elif have_deadline > 1:
+                elif have_deadline > 1 and empty:
                     try:
                         # give it some time to exit:
                         print(f"{identifier} try wait exit:")
@@ -268,7 +271,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         deadline_wait_count += 1
                         print(f"{identifier} timeout waiting for exit {str(deadline_wait_count)}")
                         # if its not willing, use force:
-                        if deadline_wait_count > 60:
+                        if deadline_wait_count > 180:
                             print(f"{identifier} getting children")
                             try:
                                 children = process.children(recursive=True)
@@ -284,7 +287,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                             process.stdout.close()
                             break
 
-                elif not empty:
+                if not empty:
                     tcount = 0
                     if isinstance(line, tuple):
                         #if verbose:
