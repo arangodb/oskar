@@ -251,7 +251,7 @@ if supported, set number of concurrent builds to `PARALLELISM`
 - `SKIPTIMECRITICAL` passed on as value to `--skipTimeCritical` to the testing.
 - `BUILDMODE` passed on as value to `--buildType` to the testing.
 - `DUMPAGENCYONERROR` passed on as value to `--dumpAgencyOnError` to the testing.
-- `PORTBASE` passed on as value to `--minPort` and `--maxPort` (+100) to the testing.
+- `PORTBASE` passed on as value to `--minPort` and `--maxPort` (+99) to the testing. Defaults to 7000
 - `SKIPGREY` passed on as value to `--skipGrey` to the testing.
 - `ONLYGREY` passed on as value to `--onlyGrey` to the testing.
 - `TIMELIMIT` is used to calculate the execution deadline starting point in time.

@@ -211,9 +211,10 @@ class TestConfig():
 
         if 'DUMPAGENCYONERROR' in os.environ:
             self.args += [ '--dumpAgencyOnError', os.environ['DUMPAGENCYONERROR']]
-        if 'PORTBASE' in os.environ:
-            self.args += [ '--minPort', os.environ['PORTBASE'],
-                          '--maxPort', str(int(os.environ['PORTBASE']) + 99)]
+
+        myport = cfg.portbase
+        cfg.portbase += 100
+        self.args += [ '--minPort', str(myport), '--maxPort', str(myport + 99)]
         if 'SKIPGREY' in os.environ:
             self.args += [ '--skipGrey', os.environ['SKIPGREY']]
         if 'ONLYGREY' in os.environ:
@@ -292,6 +293,10 @@ class SiteConfig:
         self.test_data_dir.mkdir(parents=True)
         self.test_report_dir = self.run_root / 'report'
         self.test_report_dir.mkdir(parents=True)
+        self.portbase = 7000
+        if 'PORTBASE' in os.environ:
+            self.portbase = int(os.environ['PORTBASE'])
+
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
