@@ -88,6 +88,25 @@ if not TEMP.exists():
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
 
+def list_all_processes():
+    """list all processes for later reference"""
+    pseaf = "PID  Process"
+    # pylint: disable=catching-non-exception
+    for process in psutil.process_iter(["pid", "name"]):
+        cmdline = process.name
+        try:
+            cmdline = str(process.cmdline())
+            if cmdline == "[]":
+                cmdline = "[" + process.name() + "]"
+        except psutil.AccessDenied:
+            pass
+        except psutil.ProcessLookupError:
+            pass
+        except psutil.NoSuchProcess:
+            pass
+        print(f"{process.pid} {cmdline}")
+    print(pseaf)
+
 class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     """configuration"""
 
@@ -395,6 +414,7 @@ class TestingRunner():
                 more_running = self.used_slots != 0
         if more_running:
             print("Main: reaching hard Time limit!")
+            list_all_processes()
             mica = os.getpid()
             myself = psutil.Process(mica)
             children = myself.children(recursive=True)
@@ -413,6 +433,7 @@ class TestingRunner():
             print("Main: workers terminated on time")
         if more_running:
             print("Main: force-terminates the python process due to overall unresponsiveness! Geronimoooo!")
+            list_all_processes()
             sys.stdout.flush()
             self.success = False
             if IS_WINDOWS:
