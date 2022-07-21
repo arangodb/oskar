@@ -1656,13 +1656,17 @@ Function storeSymbols
             New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true
         }
         findArangoDBVersion | Out-Null
-        ForEach ($SYMBOL in $((Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName))
-        {
-            Write-Host "Symbol: symstore.exe add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress"
-            proc -process "symstore.exe" -argument "add /f `"$SYMBOL`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
+        $PDB_LIST_CONTENT = ($($(Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName) -Join "`r`n")
+        $PDB_LIST_FILE = "$env:TMP\pdbList.txt"
+        [IO.File]::WriteAllText($PDB_LIST_FILE, $PDB_LIST_CONTENT, [System.Text.Encoding]::ASCII)
+        If ($ENTERPRISEEDITION -eq "On"){
+            $EDITION = "Enterprise"
+        } Else {
+            $EDITION = "Community"
         }
+        Write-Host "Symbol: symstore.exe add /f @`"$PDB_LIST_FILE`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /v `"$global:ARANGODB_FULL_VERSION`" /c `"Edition: $EDITION` /t ArangoDB /compress"
+        proc -process "symstore.exe" -argument "add /f @`"$PDB_LIST_FILE`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /v `"$global:ARANGODB_FULL_VERSION`" /c `"Edition: $EDITION`" /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
         #uploadSymbols functionality moved to jenkins/releaseUploadFiles3.fish due to problems with gsutil on Windows
-        #uploadSymbols
         Pop-Location
     }
 }
