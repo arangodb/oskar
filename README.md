@@ -322,7 +322,7 @@ The life cycle of a testrun will be as follows:
  - meanwhile the main thread has a *fixed* deadline: 5 minutes after the `TESTSUITE_TIMEOUT` is reached.
  - if not all workers have indicated their exit before this final deadline:
    - the main thread will start killing any subprocesses of itself which it finds.
-   - after this wait another 5s, to see whether the workers may have been unblocked by the killing
+   - after this wait another 20s, to see whether the workers may have been unblocked by the killing
  - if not, it shouts "Geronimoooo" and takes the big shotgun, and force-terminates the python process which is running it. This will kill all threads as well and terminate the process.
  - if all workers have indicated their exit in time, their threads will be joined.
  - reports will be generated.

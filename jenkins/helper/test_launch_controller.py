@@ -405,8 +405,8 @@ class TestingRunner():
                         one_child.kill()
                     except psutil.NoSuchProcess:  # pragma: no cover
                         pass
-            print("Main: giving workers 5 more seconds to exit.")
-            time.sleep(5)
+            print("Main: giving workers 20 more seconds to exit.")
+            time.sleep(20)
             with self.slot_lock:
                 more_running = self.used_slots != 0
         else:
