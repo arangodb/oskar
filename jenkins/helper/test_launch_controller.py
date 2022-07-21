@@ -296,13 +296,14 @@ class SiteConfig:
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
     this.start = datetime.now(tz=None)
-    this.success = arangosh.run_testing(this.suite,
-                                        this.args,
-                                        999999999,
-                                        this.base_logdir,
-                                        this.log_file,
-                                        this.name_enum,
-                                        True)[0] #verbose?
+    ret = arangosh.run_testing(this.suite,
+                               this.args,
+                               999999999,
+                               this.base_logdir,
+                               this.log_file,
+                               this.name_enum,
+                               True) #verbose?
+    this.success = ret[0]
     this.finish = datetime.now(tz=None)
     this.delta = this.finish - this.start
     this.delta_seconds = this.delta.total_seconds()
@@ -461,7 +462,7 @@ class TestingRunner():
             self.handle_deadline()
         for worker in self.workers:
             if deadline:
-                print("Deadline: Joining threads of " + worker.name_enum)
+                print("Deadline: Joining threads of " + worker.name)
             worker.join()
 
     def generate_report_txt(self):

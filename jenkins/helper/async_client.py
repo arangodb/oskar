@@ -57,15 +57,25 @@ def convert_result(result_array):
         result += "\n" + one_line[0].decode("utf-8").rstrip()
     return result
 
-def kill_children(identifier, children):
+def add_message_to_report(outfile, string):
+    print(string)
+    outfile.write(bytearray(f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n", "utf-8"))
+    outfile.flush()
+    sys.stdout.flush()
+    return string + '\n';
+    
+
+def kill_children(identifier, out_file, children):
     """ slash all processes enlisted in children - if they still exist """
+    err = ""
     for one_child in children:
         try:
-            print(f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}")
+            err += add_message_to_report(out_file, f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}")
             one_child.kill()
             one_child.wait()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
+    return err
 
 class CliExecutionException(Exception):
     """transport CLI error texts"""
@@ -138,7 +148,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                                   logfile,
                                   identifier)
         # fmt: on
-
+        
     def run_monitored(self,
                       executeable,
                       args,
@@ -157,6 +167,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         """
         rc_exit = None
         run_cmd = [executeable] + args
+        error = ""
         children = []
         print(f"{identifier}: launching {str(run_cmd)}")
         with psutil.Popen(
@@ -209,7 +220,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             deadline_wait_count = 0
             while not have_timeout:
                 # if you want to tail the output, enable this:
-                # out.flush()
+                out.flush()
                 #if not verbose:
                 #    progress("sj" + str(tcount))
                 line = ""
@@ -230,16 +241,15 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         except psutil.NoSuchProcess:
                             pass
                         process.kill()
-                        kill_children(identifier, children)
+                        error += kill_children(identifier, out, children)
                         rc_exit = process.wait()
                     if datetime.now() > deadline:
                         have_deadline += 1
                 if have_deadline == 1:
                     have_deadline += 1
-                    print(f"{identifier} Deadline reached! Signaling  {str(run_cmd)}")
-                    sys.stdout.flush()
-                    out.write(bytearray(f"{identifier} Oskar-Deadline reached - will trigger shutdown!\n", 'utf-8'))
-                    out.flush()
+                    error += add_message_to_report(
+                        out,
+                        f"{identifier} Oskar-Deadline reached - will trigger shutdown!")
                     # Send testing.js break / sigint
                     try:
                         children = process.children(recursive=True)
@@ -258,8 +268,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         except psutil.NoSuchProcess:
                             pass
                         rc_exit = process.wait(1)
-                        print(f"{identifier}  exited: {str(rc_exit)}")
-                        kill_children(identifier, children)
+                        error += add_message_to_report(out, f"{identifier}  exited: {str(rc_exit)}")
+                        error += kill_children(identifier, out, children)
                         # print(f"{identifier} flushing")
                         # process.stderr.flush()
                         # process.stdout.flush()
@@ -277,8 +287,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
                                 children = process.children(recursive=True)
                             except psutil.NoSuchProcess:
                                 pass
-                            kill_children(identifier, children)
-                            print(f"{identifier} killing")
+                            error += kill_children(identifier, out, children)
+                            error += add_message_to_report(out, f"{identifier} killing")
                             process.kill()
                             print(f"{identifier} waiting")
                             rc_exit = process.wait()
@@ -304,6 +314,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             print(f"{identifier} IO-Loop done")
             if out:
                 print(f"{identifier} closing {logfile}")
+                out.flush()
                 out.close()
                 print(f"{identifier} {logfile} closed")
             timeout_str = ""
@@ -312,11 +323,11 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 print(timeout_str)
                 timeout_str += "\n"
             elif rc_exit is None:
-                print(f"{identifier} waiting for exit")
+                print(f"{identifier} waiting for regular exit")
                 rc_exit = process.wait()
                 print(f"{identifier} done")
             print(f"{identifier} joining io Threads")
-            kill_children(identifier, children)
+            error += kill_children(identifier, out, children)
             thread1.join()
             thread2.join()
             print(f"{identifier} OK")
@@ -326,7 +337,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         if have_timeout or rc_exit != 0:
             res = (False, timeout_str,
                    # convert_result(result),
-                   rc_exit, line_filter)
+                   rc_exit, line_filter, error)
             #if expect_to_fail:
             return res
             #raise CliExecutionException("Execution failed. {res} {have_timeout}".format(
@@ -334,19 +345,19 @@ class ArangoCLIprogressiveTimeoutExecutor:
 
         if not expect_to_fail:
             if len(result) == 0:
-                res = (True, "", 0, line_filter)
+                res = (True, "", 0, line_filter, error)
             else:
                 res = (True, "" ,
                        #convert_result(result),
-                       0, line_filter)
+                       0, line_filter, error)
             return res
 
         if len(result) == 0:
-            res = (True, "", 0, line_filter)
+            res = (True, "", 0, line_filter, error)
         else:
             res = (True, "",
                    #convert_result(result),
-                   0, line_filter)
+                   0, line_filter, error)
         raise CliExecutionException(
             f"{identifier} Execution was expected to fail, but exited successfully.",
             res, have_timeout)
