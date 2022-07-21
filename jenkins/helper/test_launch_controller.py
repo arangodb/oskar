@@ -311,7 +311,7 @@ def testing_runner(testing_instance, this, arangosh):
     this.crashed = this.crashed_file.read_text() == "true"
     this.success = this.success and this.success_file.read_text() == "true"
     this.structured_results = this.crashed_file.read_text()
-    this.summary = this.summary_file.read_text()
+    this.summary = ret[4] + this.summary_file.read_text()
     with arangosh.slot_lock:
         testing_instance.running_suites.remove(this.name_enum)
 

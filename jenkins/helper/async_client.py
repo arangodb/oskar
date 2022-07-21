@@ -220,7 +220,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             deadline_wait_count = 0
             while not have_timeout:
                 # if you want to tail the output, enable this:
-                out.flush()
+                # out.flush()
                 #if not verbose:
                 #    progress("sj" + str(tcount))
                 line = ""
