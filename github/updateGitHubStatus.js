@@ -309,7 +309,8 @@ const checkPRMethod = (prCheckData, sha) => {
 }
 
 const checkPRExists = (sha) => {
-  const checkPRExistencePath = `/search/issues?q=${sha}`;
+  const queryString = encodeURIComponent(`${sha} repo:${repository}`);
+  const checkPRExistencePath = `/search/issues?q=${queryString}`;
   getRequest(checkPRExistencePath, checkPRMethod, sha);
 }
 
