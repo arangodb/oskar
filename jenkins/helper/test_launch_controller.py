@@ -181,7 +181,7 @@ class TestConfig():
         self.args = []
         for param in args:
             if param.startswith('$'):
-                paramname = param[1:]
+                paramname = param[1:].upper()
                 if paramname in os.environ:
                     self.args += os.environ[paramname].split(' ')
                 else:
@@ -197,7 +197,7 @@ class TestConfig():
             if IS_WINDOWS:
                 self.args += ['--sniff', 'true',
                              '--sniffProgram',  os.environ['TSHARK'],
-                             '--sniffDevice', os.environ['dumpDevice']]
+                             '--sniffDevice', os.environ['DUMPDEVICE']]
             else:
                 self.args += ['--sniff', 'sudo']
 
@@ -209,11 +209,11 @@ class TestConfig():
         if 'BUILDMODE' in os.environ:
             self.args += [ '--buildType',  os.environ['BUILDMODE'] ]
 
-        if 'dumpAgencyOnError' in os.environ:
-            self.args += [ '--dumpAgencyOnError', os.environ['dumpAgencyOnError']]
-        if 'portBase' in os.environ:
-            self.args += [ '--minPort', os.environ['portBase'],
-                          '--maxPort', str(int(os.environ['portBase']) + 99)]
+        if 'DUMPAGENCYONERROR' in os.environ:
+            self.args += [ '--dumpAgencyOnError', os.environ['DUMPAGENCYONERROR']]
+        if 'PORTBASE' in os.environ:
+            self.args += [ '--minPort', os.environ['PORTBASE'],
+                          '--maxPort', str(int(os.environ['PORTBASE']) + 99)]
         if 'SKIPGREY' in os.environ:
             self.args += [ '--skipGrey', os.environ['SKIPGREY']]
         if 'ONLYGREY' in os.environ:
@@ -269,8 +269,8 @@ class SiteConfig:
     def __init__(self, definition_file):
         print(os.environ)
         self.timeout = 1800
-        if 'timeLimit' in os.environ:
-            self.timeout = int(os.environ['timeLimit'])
+        if 'timeLimit'.upper() in os.environ:
+            self.timeout = int(os.environ['timeLimit'.upper()])
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         if definition_file.is_file():
             definition_file = definition_file.parent
@@ -407,7 +407,7 @@ class TestingRunner():
         else:
             print("Main: workers terminated on time")
         if more_running:
-            print("Main: Threads won't come to an end! Geronimoooo!")
+            print("Main: force-terminates the python process due to overall unresponsiveness! Geronimoooo!")
             sys.stdout.flush()
             self.success = False
             if IS_WINDOWS:
@@ -732,7 +732,6 @@ def parse_arguments():
     parser.add_argument("definitions", help="file containing the test definitions", type=str)
     parser.add_argument("-f", "--format", type=str, choices=formats.keys(), help="which format to output",
                         default="launch")
-    parser.add_argument("-o", "--output", type=str, help="output file, default is '-', which means stdout", default="-")
     parser.add_argument("--validate-only", help="validates the test definition file", action="store_true")
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
