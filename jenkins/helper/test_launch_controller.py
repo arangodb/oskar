@@ -273,6 +273,7 @@ class SiteConfig:
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
+        self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 300)
         if definition_file.is_file():
             definition_file = definition_file.parent
         base_source_dir = (definition_file / '..').resolve()
@@ -385,11 +386,10 @@ class TestingRunner():
     def handle_deadline(self):
         """ here we make sure no worker thread is stuck during its extraordinary shutdown """
         # 5 minutes for threads to clean up their stuff, else we consider them blocked
-        hard_deadline = self.cfg.deadline + timedelta(seconds=300)
         more_running = True
         mica = None
-        print(f"Main: waiting for hard deadline {str(hard_deadline)}")
-        while ((datetime.now() > hard_deadline) and more_running):
+        print(f"Main: {str(datetime.now())} soft deadline reached: {str(self.cfg.deadline)} now waiting for hard deadline {str(self.cfg.hard_deadline)}")
+        while ((datetime.now() > self.cfg.hard_deadline) and more_running):
             time.sleep(1)
             with self.slot_lock:
                 more_running = self.used_slots != 0
