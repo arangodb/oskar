@@ -355,10 +355,10 @@ class TestingRunner():
             print("Running: " + str(self.running_suites) + " => Active Slots: " + str(self.used_slots))
         sys.stdout.flush()
 
-    def done_job(self, count):
+    def done_job(self, parallelity):
         """ if one job is finished... """
         with self.slot_lock:
-            self.used_slots -= count
+            self.used_slots -= parallelity
 
     def launch_next(self, offset, counter):
         """ launch one testing job """
@@ -389,7 +389,7 @@ class TestingRunner():
         more_running = True
         mica = None
         print(f"Main: {str(datetime.now())} soft deadline reached: {str(self.cfg.deadline)} now waiting for hard deadline {str(self.cfg.hard_deadline)}")
-        while ((datetime.now() > self.cfg.hard_deadline) and more_running):
+        while ((datetime.now() < self.cfg.hard_deadline) and more_running):
             time.sleep(1)
             with self.slot_lock:
                 more_running = self.used_slots != 0
