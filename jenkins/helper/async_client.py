@@ -312,11 +312,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         if close_count == 2:
                             break
             print(f"{identifier} IO-Loop done")
-            if out:
-                print(f"{identifier} closing {logfile}")
-                out.flush()
-                out.close()
-                print(f"{identifier} {logfile} closed")
             timeout_str = ""
             if have_timeout:
                 timeout_str = "TIMEOUT OCCURED!"
@@ -326,8 +321,13 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 print(f"{identifier} waiting for regular exit")
                 rc_exit = process.wait()
                 print(f"{identifier} done")
-            print(f"{identifier} joining io Threads")
             error += kill_children(identifier, out, children)
+            if out:
+                print(f"{identifier} closing {logfile}")
+                out.flush()
+                out.close()
+                print(f"{identifier} {logfile} closed")
+            print(f"{identifier} joining io Threads")
             thread1.join()
             thread2.join()
             print(f"{identifier} OK")
