@@ -77,9 +77,12 @@ def kill_children(identifier, out_file, children):
     for one_child in children:
         try:
             err += add_message_to_report(out_file, f"{identifier}: waiting {one_child.name()} - {str(one_child.pid)}")
-            one_child.wait()
+            one_child.wait(5)
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
+        except Exception as ex:
+            print(ex)
+            sys.stdout.flush()
     return err
 
 class CliExecutionException(Exception):
