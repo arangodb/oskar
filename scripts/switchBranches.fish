@@ -25,7 +25,8 @@ function checkoutRepo
     if echo "$branch" | grep -q "^v"
       git checkout -- .
     else
-      git fetch --force --all origin
+      git remote update origin
+      git fetch --force --all
       git reset --hard "$branch"
     end
     and git clean -fdx
