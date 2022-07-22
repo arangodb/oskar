@@ -106,6 +106,7 @@ def list_all_processes():
             pass
         print(f"{process.pid} {cmdline}")
     print(pseaf)
+    sys.stdout.flush()
 
 class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     """configuration"""
@@ -422,6 +423,13 @@ class TestingRunner():
                 if one_child.pid != mica:
                     try:
                         print(f"Main: killing {one_child.name()} - {str(one_child.pid)}")
+                        one_child.kill()
+                    except psutil.NoSuchProcess:  # pragma: no cover
+                        pass
+            for one_child in children:
+                if one_child.pid != mica:
+                    try:
+                        print(f"Main: waiting {one_child.name()} - {str(one_child.pid)}")
                         one_child.kill()
                     except psutil.NoSuchProcess:  # pragma: no cover
                         pass
