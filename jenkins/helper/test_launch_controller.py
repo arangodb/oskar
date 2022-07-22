@@ -424,16 +424,12 @@ class TestingRunner():
                 if one_child.pid != mica:
                     try:
                         print(f"Main: killing {one_child.name()} - {str(one_child.pid)}")
+                        one_child.resume()
                         one_child.kill()
                     except psutil.NoSuchProcess:  # pragma: no cover
                         pass
-            for one_child in children:
-                if one_child.pid != mica:
-                    try:
-                        print(f"Main: waiting {one_child.name()} - {str(one_child.pid)}")
-                        one_child.kill()
-                    except psutil.NoSuchProcess:  # pragma: no cover
-                        pass
+            print(f"Main: waiting for the children to terminate")
+            psutil.wait_procs(children, timeout=20)
             print("Main: giving workers 20 more seconds to exit.")
             time.sleep(60)
             with self.slot_lock:
