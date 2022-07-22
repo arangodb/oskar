@@ -75,8 +75,9 @@ def kill_children(identifier, out_file, children):
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
-    print(f"Main: waiting for the children to terminate")
+    err += add_message_to_report(out_file, f"Main: waiting for the children to terminate")
     psutil.wait_procs(children, timeout=20)
+    return err
 
 class CliExecutionException(Exception):
     """transport CLI error texts"""
