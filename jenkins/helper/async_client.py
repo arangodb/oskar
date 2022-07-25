@@ -62,23 +62,30 @@ def add_message_to_report(outfile, string):
     outfile.write(bytearray(f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n", "utf-8"))
     outfile.flush()
     sys.stdout.flush()
-    return string + '\n';
-    
+    return string + '\n'
 
 def kill_children(identifier, out_file, children):
     """ slash all processes enlisted in children - if they still exist """
     err = ""
+    killed = []
     for one_child in children:
+        if one_child.pid in killed:
+            continue
         try:
-            err += add_message_to_report(out_file, f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}")
+            killed.append(one_child.pid)
+            err += add_message_to_report(
+                out_file,
+                f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}")
             one_child.resume()
+        except psutil.NoSuchProcess:
+            pass
         except psutil.AccessDenied:
             pass
         try:
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
-    err += add_message_to_report(out_file, f"Main: waiting for the children to terminate")
+    err += add_message_to_report(out_file, "Main: waiting for the children to terminate")
     psutil.wait_procs(children, timeout=20)
     return err
 
@@ -153,7 +160,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                                   logfile,
                                   identifier)
         # fmt: on
-        
+
     def run_monitored(self,
                       executeable,
                       args,
