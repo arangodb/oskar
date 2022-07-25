@@ -425,13 +425,15 @@ class TestingRunner():
                     try:
                         print(f"Main: killing {one_child.name()} - {str(one_child.pid)}")
                         one_child.resume()
+                    except psutil.NoSuchProcess:
+                        pass
                     except psutil.AccessDenied:
                         pass
                     try:
                         one_child.kill()
                     except psutil.NoSuchProcess:  # pragma: no cover
                         pass
-            print(f"Main: waiting for the children to terminate")
+            print("Main: waiting for the children to terminate")
             psutil.wait_procs(children, timeout=20)
             print("Main: giving workers 20 more seconds to exit.")
             time.sleep(60)
