@@ -360,8 +360,8 @@ class TestingRunner():
     def __init__(self, cfg):
         self.cfg = cfg
         self.slot_lock = Lock()
-        self.available_slots = psutil.cpu_count(logical=False)
-        self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
+        self.available_slots = psutil.cpu_count() #logical=False)
+        # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         self.used_slots = 0
         self.scenarios = []
         self.arangosh = ArangoshExecutor(self.cfg, self.slot_lock)
