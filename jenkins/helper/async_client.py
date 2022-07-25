@@ -72,6 +72,9 @@ def kill_children(identifier, out_file, children):
         try:
             err += add_message_to_report(out_file, f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}")
             one_child.resume()
+        except psutil.AccessDenied:
+            pass
+        try:
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass

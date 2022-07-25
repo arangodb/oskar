@@ -425,6 +425,9 @@ class TestingRunner():
                     try:
                         print(f"Main: killing {one_child.name()} - {str(one_child.pid)}")
                         one_child.resume()
+                    except psutil.AccessDenied:
+                        pass
+                    try:
                         one_child.kill()
                     except psutil.NoSuchProcess:  # pragma: no cover
                         pass
