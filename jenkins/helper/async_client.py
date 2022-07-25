@@ -77,6 +77,12 @@ def kill_children(identifier, out_file, children):
                 out_file,
                 f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}")
             one_child.resume()
+        except FileNotFoundError:
+            pass
+        except AttributeError:
+            pass
+        except ProcessLookupError:
+            pass
         except psutil.NoSuchProcess:
             pass
         except psutil.AccessDenied:
