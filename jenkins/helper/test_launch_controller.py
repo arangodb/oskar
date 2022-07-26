@@ -293,7 +293,7 @@ class SiteConfig:
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
-        self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 300)
+        self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 600)
         if definition_file.is_file():
             definition_file = definition_file.parent
         base_source_dir = (definition_file / '..').resolve()
@@ -791,7 +791,10 @@ def validate_params(params, is_cluster):
     def parse_number_or_default(key, default_value=None):
         """ check number """
         if key in params:
-            params[key] = parse_number(params[key])
+            if params[key][0] == '*': # factor the default
+                params[key] = default_value * parse_number(params[key][1:])
+            else:
+                params[key] = parse_number(params[key])
         elif default_value is not None:
             params[key] = default_value
 

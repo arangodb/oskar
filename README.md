@@ -289,6 +289,7 @@ where
   - weight - sequence priority of test, 250 is the default.
   - wweight - execution slots to book. defaults to 1, if cluster 4.
   - buckets - split testcases to be launched in concurent chunks
+  Specifying a `*` in front of the number takes the default and multiplies it by the value.
 - suffix - if a testsuite is launched several times, make it distinguishable
   like shell_aql => shell_aql_vst ; Bucket indexes are appended afterwards.
 - `--` literally the two dashes to split the line at.
