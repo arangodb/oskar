@@ -6,8 +6,21 @@ if test -z "$DOCKER_TAG"
   exit 1
 end
 
-set -xg TAG "$DOCKER_TAG"
+if test "$USE_ARM" = "On"
+  switch "$ARCH"
+    case "x86_64"
+      set archSuffix "-amd64"
+    case '*'
+      if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+      set archSuffix "-arm64v8"
+    else
+      echo "fatal, unknown architecture $ARCH for docker"
+      exit 1
+    end
+  end
+end
 
+set TAG $DOCKER_TAG$archSuffix
 set -xg HUB_ENTERPRISE "arangodb/enterprise-test:$TAG"
 
 cleanPrepareLockUpdateClear
