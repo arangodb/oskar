@@ -645,7 +645,7 @@ class TestingRunner():
 
     def sort_by_priority(self):
         """ sort the tests by their priority for the excecution """
-        self.scenarios.sort(key=get_priority)
+        self.scenarios.sort(key=get_priority, reverse=True)
 
     def print_and_exit_closing_stance(self):
         """ our finaly good buye stance. """
