@@ -360,7 +360,7 @@ class TestingRunner():
     def __init__(self, cfg):
         self.cfg = cfg
         self.slot_lock = Lock()
-        self.available_slots = psutil.cpu_count() #logical=False)
+        self.available_slots = round(psutil.cpu_count() * 1.25) #logical=False)
         # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         self.used_slots = 0
         self.scenarios = []
@@ -373,7 +373,9 @@ class TestingRunner():
     def print_active(self):
         """ output currently active testsuites """
         with self.slot_lock:
-            print("Running: " + str(self.running_suites) + " => Active Slots: " + str(self.used_slots))
+            print("Running: " + str(self.running_suites) +
+                  " => Active Slots: " + str(self.used_slots) +
+                  " => Load: " + str(psutil.getloadavg()))
         sys.stdout.flush()
 
     def done_job(self, parallelity):
