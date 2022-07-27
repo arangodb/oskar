@@ -55,6 +55,15 @@ and set PACKAGES_DEVEL (find $SRC -lname devel -printf "%f\n")
 and gsutil rsync -d -r $DST/devel $DST/$PACKAGES_DEVEL
 and gsutil cp $SRC/index.html $DST/index.html
 
+function uploadNightlyWindowsSymbols
+  ssh root@symbol.arangodb.biz "cd /script/ && python program.py /mnt/symsrv_arangodb_nightly"
+  and ssh root@symbol.arangodb.biz "gsutil rsync -r /mnt/symsrv_arangodb_nightly gs://download.arangodb.com/symsrv_arangodb_nightly"
+end
+
+# there might be internet hickups
+uploadNightlyWindowsSymbols
+or uploadNightlyWindowsSymbols
+
 set -l s $status
 unlockDirectory
 exit $s
