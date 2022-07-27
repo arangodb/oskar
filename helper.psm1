@@ -70,6 +70,7 @@ $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
+$global:STORESYMBOLS = $false
 $env:TMP = "$INNERWORKDIR\tmp"
 
 Function VS2019
@@ -1645,30 +1646,83 @@ Function signWindows
     Pop-Location
 }
 
+Function isNightly {
+    return $global:ARANGODB_VERSION_RELEASE_TYPE -eq "nightly"
+}
+
+Function storeSymbolsOn {
+    $global:STORESYMBOLS = $true
+}
+
+Function storeSymbolsOff {
+    $global:STORESYMBOLS = $false
+}
+
+Function attachSymbolNas {
+    If (-not((Get-SmbMapping -LocalPath S: -ErrorAction SilentlyContinue).Status -eq "OK"))
+    {
+        New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true        
+    }
+}
+
 Function storeSymbols
 {
-    If (-Not((Get-Content $INNERWORKDIR\ArangoDB\CMakeLists.txt) -match 'set\(ARANGODB_VERSION_RELEASE_TYPE \"nightly\"'))
-    {
-        Push-Location $pwd
-        Set-Location "$global:ARANGODIR\build\"
-        If (-not((Get-SmbMapping -LocalPath S: -ErrorAction SilentlyContinue).Status -eq "OK"))
-        {
-            New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true
-        }
-        findArangoDBVersion | Out-Null
-        $PDB_LIST_CONTENT = ($($(Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName) -Join "`r`n")
-        $PDB_LIST_FILE = "$env:TMP\pdbList.txt"
-        [IO.File]::WriteAllText($PDB_LIST_FILE, $PDB_LIST_CONTENT, [System.Text.Encoding]::ASCII)
-        If ($ENTERPRISEEDITION -eq "On"){
-            $EDITION = "Enterprise"
-        } Else {
-            $EDITION = "Community"
-        }
-        Write-Host "Symbol: symstore.exe add /f @`"$PDB_LIST_FILE`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /v `"$global:ARANGODB_FULL_VERSION`" /c `"Edition: $EDITION` /t ArangoDB /compress"
-        proc -process "symstore.exe" -argument "add /f @`"$PDB_LIST_FILE`" /s `"S:\symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR`" /t ArangoDB /v `"$global:ARANGODB_FULL_VERSION`" /c `"Edition: $EDITION`" /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
-        #uploadSymbols functionality moved to jenkins/releaseUploadFiles3.fish due to problems with gsutil on Windows
-        Pop-Location
+    attachSymbolNas
+    Push-Location $pwd
+    findArangoDBVersion | Out-Null
+    if (isNightly){
+        $STORE_FOLDER="symsrv_arangodb_nightly"
+    } else{
+        $STORE_FOLDER="symsrv_arangodb$global:ARANGODB_VERSION_MAJOR$global:ARANGODB_VERSION_MINOR"
     }
+    Set-Location "$global:ARANGODIR\build\"
+    If (-not((Get-SmbMapping -LocalPath S: -ErrorAction SilentlyContinue).Status -eq "OK"))
+    {
+        New-SmbMapping -LocalPath 'S:' -RemotePath '\\symbol.arangodb.biz\symbol' -Persistent $true
+    }
+    $PDB_LIST_CONTENT = ($($(Get-ChildItem "$global:ARANGODIR\build\bin\$BUILDMODE" -Recurse -Filter "*.pdb").FullName) -Join "`r`n")
+    $PDB_LIST_FILE = "$env:TMP\pdbList.txt"
+    [IO.File]::WriteAllText($PDB_LIST_FILE, $PDB_LIST_CONTENT, [System.Text.Encoding]::ASCII)
+    If ($ENTERPRISEEDITION -eq "On"){
+        $EDITION = "Enterprise"
+    } Else {
+        $EDITION = "Community"
+    }
+    Write-Host "Running command: symstore.exe add /f @`"$PDB_LIST_FILE`" /s `"S:\$STORE_FOLDER`" /t ArangoDB /v `"$global:ARANGODB_FULL_VERSION`" /c `"Edition: $EDITION` /compress"
+    proc -process "symstore.exe" -argument "add /f @`"$PDB_LIST_FILE`" /s `"S:\$STORE_FOLDER`" /t ArangoDB /v `"$global:ARANGODB_FULL_VERSION`" /c `"Edition: $EDITION`" /compress" -logfile "$INNERWORKDIR\symstore" -priority "Normal"
+    # functionality moved to jenkins/releaseUploadFiles3.fish due to problems with gsutil on Windows
+    # uploadSymbols
+    Pop-Location
+}
+
+Function deleteSymbols($full_version, $version_major, $version_minor)
+{
+    attachSymbolNas
+    $STORE_FOLDER="symsrv_arangodb$version_major$version_minor"
+    $SERVER_FILE = "S:\$STORE_FOLDER\000Admin\server.txt"
+    $TRANSACTION_LIST = Import-Csv -Path $SERVER_FILE -Header 'TransactionID', 'TransactionType', 'PtrFile', 'Date', 'Time', 'Product', 'Version', 'Comment', 'UnusedColumn'
+    $TRANSACTION_IDS = ($TRANSACTION_LIST | Where-Object -Property "TransactionType" -eq 'add' | Where-Object -Property "Version" -eq $full_version).TransactionID
+    Foreach ($TRANSACTION_ID in $TRANSACTION_IDS) { 
+        Write-Host "Running command: symstore.exe del /i `"$TRANSACTION_ID`" /s `"S:\$STORE_FOLDER`""
+        proc -process "symstore.exe" -argument "del /i `"$TRANSACTION_ID`" /s `"S:\$STORE_FOLDER`""
+    }
+}
+
+Function deleteNightlySymbolsOlderThan($days)
+{
+    attachSymbolNas
+    $SERVER_FILE = "S:\symsrv_arangodb_nightly\000Admin\server.txt"
+    $TRANSACTION_LIST = Import-Csv -Path $SERVER_FILE -Header 'TransactionID', 'TransactionType', 'PtrFile', 'Date', 'Time', 'Product', 'Version', 'Comment', 'UnusedColumn'
+    $OLD_TRANSACTION_IDS = ($TRANSACTION_LIST | Where-Object -Property "TransactionType" -eq 'add' | Select-Object TransactionId, @{label = 'DaysOld';Expression={((Get-Date) - [datetime]::ParseExact($_.'Date','MM/dd/yyyy',$null)).Days}} | Where-Object -Property DaysOld -gt $days).TransactionId
+    Foreach ($TRANSACTION_ID in $OLD_TRANSACTION_IDS) { 
+        Write-Host "Running command: symstore.exe del /i `"$TRANSACTION_ID`" /s `"S:\symsrv_arangodb_nightly`""
+        proc -process "symstore.exe" -argument "del /i `"$TRANSACTION_ID`" /s `"S:\symsrv_arangodb_nightly`""
+    }
+}
+
+Function cleanOldNightlyDebugSymbols
+{
+    deleteNightlySymbolsOlderThan 90
 }
 
 Function setNightlyRelease
