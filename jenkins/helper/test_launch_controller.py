@@ -527,7 +527,7 @@ class TestingRunner():
             'arangodbtests']
         for one_file in self.cfg.bin_dir.iterdir():
             if (one_file.suffix == '.lib' or
-                (one_file.suffix.stem not in needed) ):
+                (one_file.stem not in needed) ):
                 print(f'Deleting {str(one_file)}')
                 one_file.unlink(missing_ok=True)
 
