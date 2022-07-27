@@ -542,7 +542,7 @@ class TestingRunner():
             core_pattern = "*.dmp"
         is_empty = not bool(sorted(core_dir.glob(core_pattern)))
         print(core_dir)
-        if not is_empty:
+        if self.crashed or not is_empty:
             crash_report_file = get_workspace() / datetime.now(tz=None).strftime("crashreport-%d-%b-%YT%H.%M.%SZ")
             print("creating crashreport: " + str(crash_report_file))
             sys.stdout.flush()
