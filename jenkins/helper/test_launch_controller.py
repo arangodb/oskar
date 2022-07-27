@@ -514,6 +514,22 @@ class TestingRunner():
         print(summary)
         (get_workspace() / 'testfailures.txt').write_text(summary)
 
+    def cleanup_unneeded_binary_files(self):
+        """ delete all files not needed for the crashreport binaries """
+        needed = [
+            'arangod',
+            'arangosh',
+            'arangodump',
+            'arangorestore',
+            'arangoimport',
+            'arangobackup',
+            'arangodbtests']
+        for one_file in self.cfg.bin_dir.iterdir():
+            if (one_file.suffix == '.lib' or
+                (one_file.suffix.stem not in needed) ):
+                print(f'Deleting {str(one_file)}')
+                one_file.unlink(missing_ok=True)
+
     def generate_crash_report(self):
         """ crash report zips """
         core_dir = Path.cwd()
@@ -535,6 +551,7 @@ class TestingRunner():
                                 (core_dir / '..').resolve(),
                                 core_dir.name,
                                 True)
+            self.cleanup_unneeded_binary_files()
             binary_report_file = get_workspace() / datetime.now(tz=None).strftime("binaries-%d-%b-%YT%H.%M.%SZ")
             print("creating crashreport binary support zip: " + str(binary_report_file))
             sys.stdout.flush()
