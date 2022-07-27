@@ -10,3 +10,5 @@ release
 .bash_history
 .config
 .local
+.stdout.log
+.stderr.log

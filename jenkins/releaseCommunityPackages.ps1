@@ -7,6 +7,8 @@ If ($global:ok)
     signPackageOn
     clcacheOff
     makeCommunityRelease
+    storeSymbolsOn
+    storeSymbols
 }
 $s = $global:ok
 moveResultsToWorkspace
