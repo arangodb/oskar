@@ -360,7 +360,8 @@ class TestingRunner():
     def __init__(self, cfg):
         self.cfg = cfg
         self.slot_lock = Lock()
-        self.available_slots = round(psutil.cpu_count() * 1.25) #logical=False)
+        
+        self.available_slots = round(psutil.cpu_count() * 1.5) #logical=False)
         # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         self.used_slots = 0
         self.scenarios = []
