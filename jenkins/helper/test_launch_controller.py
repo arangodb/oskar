@@ -499,6 +499,7 @@ class TestingRunner():
         print(self.cfg.deadline)
         if datetime.now() > self.cfg.deadline:
             raise ValueError("test already timed out before started?")
+        print(f"Main: Starting {str(datetime.now())} soft deadline will be: {str(self.cfg.deadline)} hard deadline will be: {str(self.cfg.hard_deadline)}")
         while (datetime.now() < self.cfg.deadline) and (start_offset < len(self.scenarios) or used_slots > 0):
             used_slots = 0
             with self.slot_lock:
