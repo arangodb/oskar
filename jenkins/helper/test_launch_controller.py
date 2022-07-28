@@ -409,8 +409,7 @@ class TestingRunner():
             return False
         load = psutil.getloadavg()
         if ((load[0] > self.max_load) or
-            (load[1] > self.max_load) or
-            (load[2] > self.max_load)):
+            (load[1] > self.max_load)):
             print(F"Load to high: {str(load)} waiting before spawning more")
             return False
         with self.slot_lock:
