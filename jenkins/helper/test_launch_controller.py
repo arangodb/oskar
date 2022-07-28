@@ -517,6 +517,7 @@ class TestingRunner():
 
     def cleanup_unneeded_binary_files(self):
         """ delete all files not needed for the crashreport binaries """
+        shutil.rmtree(str(self.cfg.bin_dir / 'tzdata'))
         needed = [
             'arangod',
             'arangosh',
