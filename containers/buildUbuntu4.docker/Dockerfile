@@ -1,3 +1,4 @@
+
 FROM ubuntu:20.04
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
@@ -31,5 +32,7 @@ RUN LC_ALL="C" update-ccache-symlinks
 RUN git config --global --add safe.directory /work/ArangoDB
 RUN git config --global --add safe.directory /work/ArangoDB/enterprise
 RUN git config --global --add safe.directory /work/ArangoDB/docs
+
+RUN apt-get install -y python3-pip && pip3 install py7zr psutil 
 
 CMD [ "/usr/bin/fish" ]
