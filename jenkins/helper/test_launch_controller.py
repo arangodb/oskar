@@ -354,14 +354,29 @@ def testing_runner(testing_instance, this, arangosh):
             testing_instance.success = False
     testing_instance.done_job(this.parallelity)
 
+def get_socket_count():
+    """ get the number of sockets lingering destruction """
+    counter = 0
+    for socket in psutil.net_connections(kind='inet'):
+        if socket.status in [
+                psutil.CONN_FIN_WAIT1,
+                psutil.CONN_FIN_WAIT1,
+                psutil.CONN_CLOSE_WAIT]:
+            counter += 1
+    return counter
+
 class TestingRunner():
     """ manages test runners, creates report """
     # pylint: disable=too-many-instance-attributes
     def __init__(self, cfg):
         self.cfg = cfg
         self.slot_lock = Lock()
-        
-        self.available_slots = round(psutil.cpu_count() * 1.5) #logical=False)
+        self.no_threads = psutil.cpu_count()
+        self.available_slots = round(self.no_threads * 2) #logical=False)
+        if IS_WINDOWS:
+            self.max_load = 0.85
+        else:
+            self.max_load = self.no_threads * 0.9
         # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         self.used_slots = 0
         self.scenarios = []
@@ -387,6 +402,16 @@ class TestingRunner():
     def launch_next(self, offset, counter):
         """ launch one testing job """
         if self.scenarios[offset].parallelity > (self.available_slots - self.used_slots):
+            return False
+        sock_count = get_socket_count()
+        if sock_count > 8000:
+            print(f"Socket count: {sock_count}, waiting before spawning more")
+            return False
+        load = psutil.getloadavg()
+        if ((load[0] > self.max_load) or
+            (load[1] > self.max_load) or
+            (load[2] > self.max_load)):
+            print(F"Load to high: {str(load)} waiting before spawning more")
             return False
         with self.slot_lock:
             self.used_slots += self.scenarios[offset].parallelity
