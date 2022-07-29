@@ -334,10 +334,13 @@ def testing_runner(testing_instance, this, arangosh):
     this.delta = this.finish - this.start
     this.delta_seconds = this.delta.total_seconds()
     print(f'done with {this.name_enum}')
-    this.crashed = this.crashed_file.read_text() == "true"
-    this.success = this.success and this.success_file.read_text() == "true"
-    this.structured_results = this.crashed_file.read_text()
-    this.summary = ret[4] + this.summary_file.read_text()
+    this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
+    this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
+    if this.report_file.exists():
+        this.structured_results = this.report_file.read_text()
+    this.summary = ret[4]
+    if this.summary_file.exists():
+        this.summary += this.summary_file.read_text()
     with arangosh.slot_lock:
         testing_instance.running_suites.remove(this.name_enum)
 
@@ -348,6 +351,9 @@ def testing_runner(testing_instance, this, arangosh):
         failname = this.log_file.parent / ("FAIL_" + str(this.log_file.name))
         this.log_file.rename(failname)
         this.log_file = failname
+        if (this.summary == "" and failname.stat().st_size < 1024*10):
+            print("pulling undersized test output into testfailures.txt")
+            this.summary = failname.read_text(encoding='utf-8')
         with arangosh.slot_lock:
             if this.crashed:
                 testing_instance.crashed = True
