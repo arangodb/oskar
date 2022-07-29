@@ -91,7 +91,7 @@ def kill_children(identifier, out_file, children):
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
-    err += add_message_to_report(out_file, "Main: waiting for the children to terminate")
+    print(f"{identifier}: Waiting for the children to terminate")
     psutil.wait_procs(children, timeout=20)
     return err
 
