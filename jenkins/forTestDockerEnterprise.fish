@@ -4,24 +4,27 @@ source jenkins/helper/jenkins.fish
 if test -z "$DOCKER_TAG"
   echo "DOCKER_TAG required"
   exit 1
+else
+  set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG"
 end
 
-if test "$USE_ARM" = "On"
-  switch "$ARCH"
-    case "x86_64"
-      set archSuffix "-amd64"
-    case '*'
-      if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
-      set archSuffix "-arm64v8"
-    else
-      echo "fatal, unknown architecture $ARCH for docker"
-      exit 1
+set archSuffix ""
+
+function setArchSuffix
+  if test "$USE_ARM" = "On"
+    switch "$ARCH"
+      case "x86_64"
+        set archSuffix "-amd64"
+      case '*'
+        if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+        set archSuffix "-arm64v8"
+      else
+        echo "fatal, unknown architecture $ARCH for docker"
+        exit 1
+      end
     end
   end
 end
-
-set TAG $DOCKER_TAG$archSuffix
-set -xg HUB_ENTERPRISE "arangodb/enterprise-test:$TAG"
 
 cleanPrepareLockUpdateClear
 and rm -rf $WORKSPACE/imagenames.log
@@ -32,6 +35,8 @@ and buildStaticArangoDB
 and downloadStarter
 and downloadSyncer
 and copyRclone "linux"
+and setArchSuffix
+and set -xg HUB_ENTERPRISE "arangodb/enterprise-test:$$DOCKER_TAG_JENKINS$archSuffix"
 and buildDockerImage $HUB_ENTERPRISE
 and docker push $HUB_ENTERPRISE
 and docker tag $HUB_ENTERPRISE $GCR_REG_PREFIX$HUB_ENTERPRISE
