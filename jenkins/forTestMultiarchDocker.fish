@@ -34,6 +34,7 @@ function forTestDockerMultiarch
   if test "$GCR_REG" = "On"
     pushDockerManifest $GCR_REG_PREFIX$MANIFEST_NAME
     or return 1
+  end
 end
 
 cleanPrepareLockUpdateClear
