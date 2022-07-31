@@ -13,14 +13,14 @@ if test -z "$EDITION"
   exit 1
 end
 
-set -l NO_AVX_SUFFIX ""
+set NO_AVX_SUFFIX ""
 if test FORCE_NO_AVX = "true"
   set NO_AVX_SUFFIX "-noavx"
 end
 
 function forTestDockerMultiarch
   set -l DOCKER_TAG $argv[1]
-  set -l MANIFEST_NAME ""
+  set MANIFEST_NAME ""
 
   if test "$ENTERPRISEEDITION" = "On"
     set MANIFEST_NAME arangodb/enterprise-test$NO_AVX_SUFFIX:$DOCKER_TAG
