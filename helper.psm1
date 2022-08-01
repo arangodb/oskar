@@ -901,7 +901,7 @@ Function findRcloneVersion
         $RCLONE_VERSION = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_VERSION" | Select Line
         If ($RCLONE_VERSION -ne "")
         {
-            If ($RCLONE_VERSION -match '.+' -And $Matches.count -eq 1)
+            If ($RCLONE_VERSION -match '[0-9]+\.[0-9]+\.[0-9]+' -And $Matches.count -eq 1)
             {
                 $global:RCLONE_VERSION = $Matches[0]
             }
