@@ -41,7 +41,7 @@ function convertSItoJSON
       cat $WORKDIR/work/sourceInfo.log | while read -l line
       set -l var (echo $line | cut -f1 -d ':')
       switch "$var"
-        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Syncer"
+        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Syncer" "Rclone"
           set -l val (echo $line | cut -f2 -d ' ')
           if test -n $val
             set fields "$fields  \"$var\":\""(echo $line | cut -f2 -d ' ')\"\n""
@@ -72,6 +72,7 @@ function initSourceInfo
   echo "Starter: N/A" >> work/sourceInfo.log
   echo "Enterprise: N/A" >> work/sourceInfo.log
   echo "Syncer: N/A" >> work/sourceInfo.log
+  echo "Rclone: N/A" >> work/sourceInfo.log
   
   popd
   convertSItoJSON
@@ -376,6 +377,22 @@ if test ! -d work ; mkdir work ; end
 if test -z "$ARANGODB_DOCS_BRANCH" ; set -gx ARANGODB_DOCS_BRANCH "main"
 else ; set -gx ARANGODB_DOCS_BRANCH $ARANGODB_DOCS_BRANCH ; end
 
+function findRcloneVersion
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+  set -xg RCLONE_VERSION "1.51.0"
+
+  test -f $f
+  and begin
+    set -l v (fgrep RCLONE_VERSION $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+    if test "$v" != ""
+      set -xg RCLONE_VERSION "$v"
+    end
+
+    setupSourceInfo "Rclone" "$RCLONE_VERSION"
+  end
+end
+
 function findUseRclone
   set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
 
@@ -428,9 +445,11 @@ function copyRclone
       end
   end
 
-  echo Copying rclone from rclone/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  findRcloneVersion
+
+  echo Copying rclone from rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp -L $WORKDIR/rclone/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+  cp -L $WORKDIR/rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 ## #############################################################################

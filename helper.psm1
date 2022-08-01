@@ -892,6 +892,25 @@ If (-Not($ENABLE_REPORT_DUMPS))
     enableDumpsToReport
 }
 
+Function findRcloneVersion
+{
+    $global:RCLONE_VERSION = "1.51.0"
+
+    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
+    {
+        $RCLONE_VERSION = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_VERSION" | Select Line
+        If ($RCLONE_VERSION -ne "")
+        {
+            If ($RCLONE_VERSION -match '.+' -And $Matches.count -eq 1)
+            {
+                $global:RCLONE_VERSION = $Matches[0]
+            }
+        }
+    }
+
+    setupSourceInfo "Rclone" "$global:RCLONE_VERSION"
+}
+
 Function findUseRclone
 {
     If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
@@ -1048,8 +1067,9 @@ Function copyRclone
         Write-Host "Not copying rclone since it's not used!"
         return
     }
-    Write-Host "Copying rclone from rclone\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."
-    Copy-Item ("$global:WORKDIR\rclone\" + $(Get-Content "$global:WORKDIR\rclone\rclone-arangodb-windows-amd64.exe")) -Destination "$global:ARANGODIR\build\rclone-arangodb.exe"
+    findRcloneVersion
+    Write-Host "Copying rclone from rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."
+    Copy-Item ("$global:WORKDIR\rclone\v${global:RCLONE_VERSION}" + $(Get-Content "$global:WORKDIR\rclone\rclone-arangodb-windows-amd64.exe")) -Destination "$global:ARANGODIR\build\rclone-arangodb.exe"
 }
 
 ################################################################################
@@ -1163,7 +1183,7 @@ Function convertSItoJSON
             $var = $line.split(":")[0]
             switch -Regex ($var)
             {
-                'oskar|VERSION|Community|Starter|Enterprise|Syncer'
+                'oskar|VERSION|Community|Starter|Enterprise|Syncer|Rclone'
                 {
                     $val = $line.split(" ")[1]
                     If (-Not [string]::IsNullOrEmpty($val))
@@ -1200,7 +1220,8 @@ Function initSourceInfo
     Write-Output "Community: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
     Write-Output "Starter: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
     Write-Output "Enterprise: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
-    Write-Output "Syncer: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
+    Write-Output "Syncer: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
+    Write-Output "Rclone: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
   
     Pop-Location
     convertSItoJSON
