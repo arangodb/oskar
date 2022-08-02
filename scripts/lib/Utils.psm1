@@ -151,9 +151,9 @@ Function runTests
             registerSingleTests
             Break
         }
-        "catchtest"
+        "gtest"
         {
-            registerTest -testname "catch"
+            registerTest -testname "gtest"
             Break
         }
         "resilience"
