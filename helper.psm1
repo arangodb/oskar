@@ -1068,8 +1068,8 @@ Function copyRclone
         return
     }
     findRcloneVersion
-    Write-Host "Copying rclone from rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."
-    Copy-Item ("$global:WORKDIR\rclone" + $(Get-Content "$global:WORKDIR\rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe")) -Destination "$global:ARANGODIR\build\rclone-arangodb.exe"
+    Write-Host "Copying rclone from rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."    
+    Copy-Item -Path "$global:WORKDIR\rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe" -Destination "$global:ARANGODIR\build\rclone-arangodb.exe" -Force
 }
 
 ################################################################################
