@@ -10,6 +10,9 @@ ADD install.tar.gz /
 COPY setup.sh /setup.sh
 RUN /setup.sh && rm /setup.sh
 
+# Adjust TZ by default since tzdata package isn't present (BTS-913)
+RUN echo "UTC" > /etc/timezone
+
 # The following is magic for unholy OpenShift security business.
 # Containers in OpenShift by default run with a random UID but with GID 0,
 # and we want that they can access the database and doc directories even
