@@ -24,8 +24,8 @@ if not test -z $SAN; and test $SAN = "On"
 
   echo `which llvm-symbolizer`
 
-  symbolyzer="/usr/lib/llvm-14/bin/llvm-symbolizer"
-  common_options="external_symbolizer_path=$symbolyzer:log_exe_name=true"
+  set symbolyzer "/usr/lib/llvm-14/bin/llvm-symbolizer"
+  set common_options "external_symbolizer_path=$symbolyzer:log_exe_name=true"
 
   switch "$SAN_MODE"
     case "AULSan"
