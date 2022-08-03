@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.6
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
 MAINTAINER Frank Celler <info@arangodb.com>
 
 RUN microdnf update -y && rm -rf /var/cache/yum
