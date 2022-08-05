@@ -56,7 +56,7 @@ if not test -z $SAN; and test $SAN = "On"
       echo "UBSAN: $UBSAN_OPTIONS"
     case "TSan"
       # thread sanitizer
-      set -xg TSAN_OPTIONS "$common_options:log_path=/work/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
+      set -xg TSAN_OPTIONS "$common_options:symbolize=0:log_path=/work/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
