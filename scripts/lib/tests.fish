@@ -53,7 +53,8 @@ if not test -z $SAN; and test $SAN = "On"
       echo "UBSAN: $UBSAN_OPTIONS"
     case "TSan"
       # thread sanitizer
-      set -xg TSAN_OPTIONS "$common_options:allow_addr2line=true:external_symbolizer_path=(which addr2line):log_path=/work/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
+      set addr2line_path (which addr2line)
+      set -xg TSAN_OPTIONS "$common_options:allow_addr2line=true:external_symbolizer_path=$addr2line_path:log_path=/work/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
