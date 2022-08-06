@@ -22,10 +22,7 @@ set -e TSAN_OPTIONS
 if not test -z $SAN; and test $SAN = "On"
   echo "Use SAN mode: $SAN_MODE"
 
-  echo `which llvm-symbolizer`
-
-  set symbolyzer "/usr/lib/llvm-14/bin/llvm-symbolizer"
-  set common_options "external_symbolizer_path=$symbolyzer:log_exe_name=true"
+  set common_options "log_exe_name=true"
 
   switch "$SAN_MODE"
     case "AULSan"
@@ -56,7 +53,7 @@ if not test -z $SAN; and test $SAN = "On"
       echo "UBSAN: $UBSAN_OPTIONS"
     case "TSan"
       # thread sanitizer
-      set -xg TSAN_OPTIONS "$common_options:log_path=/work/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
+      set -xg TSAN_OPTIONS "$common_options:allow_addr2line=true:external_symbolizer_path=(which addr2line):log_path=/work/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
