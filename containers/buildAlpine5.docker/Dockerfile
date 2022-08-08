@@ -14,10 +14,10 @@ COPY ./tools/install-poll.sh /tools/
 RUN /tools/install-poll.sh
 
 COPY ./tools/install-openssl.sh /tools/
-RUN [ "/tools/install-openssl.sh", "1.1.1", "n" ]
+RUN [ "/tools/install-openssl.sh", "1.1.1", "q" ]
 
 COPY ./tools/install-openldap.sh /tools/
-RUN [ "/tools/install-openldap.sh", "1.1.1n" ]
+RUN [ "/tools/install-openldap.sh", "1.1.1q" ]
 
 RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl
 
@@ -26,5 +26,14 @@ RUN apk add py3-pip && pip install gcovr==5 && apk del py3-pip
 COPY ./scripts /scripts
 COPY ./tools/gcc /tools/
 COPY ./tools/g++ /tools/
+
+RUN git config --global --add safe.directory /work/ArangoDB
+RUN git config --global --add safe.directory /work/ArangoDB/enterprise
+RUN git config --global --add safe.directory /work/ArangoDB/docs
+
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/fmt
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/iresearch
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/rocksdb
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/velocypack
 
 CMD [ "/usr/bin/fish" ]

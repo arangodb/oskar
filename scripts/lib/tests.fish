@@ -89,29 +89,25 @@ function runAnyTest
 
   if test $VERBOSEOSKAR = On ; echo "$launchCount: Launching $l0" ; end
 
-  if grep -e "\b$t\b" -e "\b$l0\b" UnitTests/OskarTestSuitesBlockList
-    echo Test suite $l0 skipped by UnitTests/OskarTestSuitesBlockList
-  else
-    set -l arguments \'"$t"\' \
-      (not test -z $SAN; and test $SAN = "On"; and echo "--isAsan true") \
-      --storageEngine $STORAGEENGINE \
-      --minPort $portBase --maxPort (math $portBase + 99) \
-      --skipNondeterministic "$SKIPNONDETERMINISTIC" \
-      --skipTimeCritical "$SKIPTIMECRITICAL" \
-      --testOutput "$l2" \
-      --writeXmlReport false \
-      --skipGrey "$SKIPGREY" \
-      --onlyGrey "$ONLYGREY" \
-      --coreCheck true \
-      $ADDITIONAL_OPTIONS \
-      $argv
+  set -l arguments \'"$t"\' \
+    (not test -z $SAN; and test $SAN = "On"; and echo "--isAsan true") \
+    --storageEngine $STORAGEENGINE \
+    --minPort $portBase --maxPort (math $portBase + 99) \
+    --skipNondeterministic "$SKIPNONDETERMINISTIC" \
+    --skipTimeCritical "$SKIPTIMECRITICAL" \
+    --testOutput "$l2" \
+    --writeXmlReport false \
+    --skipGrey "$SKIPGREY" \
+    --onlyGrey "$ONLYGREY" \
+    --coreCheck true \
+    $ADDITIONAL_OPTIONS \
+    $argv
 
-    echo (pwd) "-" scripts/unittest $arguments
-    mkdir -p "$l2"
-    fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 2>&1; date -u +%s > $l2/stopped" &
-    set -g portBase (math $portBase + 100)
-    sleep 1
-  end
+  echo (pwd) "-" scripts/unittest $arguments
+  mkdir -p "$l2"
+  fish -c "date -u +%s > $l2/started; scripts/unittest $arguments > $l1 2>&1; date -u +%s > $l2/stopped" &
+  set -g portBase (math $portBase + 100)
+  sleep 1
 end
 
 function runSingleTest1
@@ -226,8 +222,8 @@ function createReport
   echo $result >> testProtocol.txt
   and begin
     pushd $INNERWORKDIR
-    echo tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
-    eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases --exclude rocksdb --exclude journals tmp
+    echo tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases tmp
+    eval $IONICE nice -n 10 tar czvf "$INNERWORKDIR/ArangoDB/innerlogs.tar.gz" --exclude databases tmp
     popd
   end
   and begin

@@ -41,7 +41,7 @@ function convertSItoJSON
       cat $WORKDIR/work/sourceInfo.log | while read -l line
       set -l var (echo $line | cut -f1 -d ':')
       switch "$var"
-        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Syncer"
+        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Syncer" "Rclone"
           set -l val (echo $line | cut -f2 -d ' ')
           if test -n $val
             set fields "$fields  \"$var\":\""(echo $line | cut -f2 -d ' ')\"\n""
@@ -72,6 +72,7 @@ function initSourceInfo
   echo "Starter: N/A" >> work/sourceInfo.log
   echo "Enterprise: N/A" >> work/sourceInfo.log
   echo "Syncer: N/A" >> work/sourceInfo.log
+  echo "Rclone: N/A" >> work/sourceInfo.log
   
   popd
   convertSItoJSON
@@ -290,6 +291,11 @@ function silentBuild ; set -gx VERBOSEBUILD Off ; end
 if test -z "$VERBOSEBUILD"; silentBuild
 else ; set -gx VERBOSEBUILD $VERBOSEBUILD ; end
 
+function buildSeppOn ; set -gx BUILD_SEPP On ; end
+function buildSeppOff ; set -gx BUILD_SEPP Off ; end
+if test -z "$BUILD_SEPP" ; buildSeppOff
+else ; set -gx BUILD_SEPP $BUILD_SEPP ; end
+
 function showDetails ; set -gx SHOW_DETAILS On ; end
 function hideDetails ; set -gx SHOW_DETAILS Off ; end
 function pingDetails ; set -gx SHOW_DETAILS Ping ; end
@@ -361,7 +367,6 @@ if test -z "$USE_STRICT_OPENSSL"; and test "$IS_JENKINS" = "true"
   strictOpenSSL
 else; set -gx USE_STRICT_OPENSSL $USE_STRICT_OPENSSL; end
 
-
 # main code between function definitions
 # WORDIR IS pwd -  at least check if ./scripts and something
 # else is available before proceeding
@@ -371,6 +376,22 @@ if test ! -d work ; mkdir work ; end
 
 if test -z "$ARANGODB_DOCS_BRANCH" ; set -gx ARANGODB_DOCS_BRANCH "main"
 else ; set -gx ARANGODB_DOCS_BRANCH $ARANGODB_DOCS_BRANCH ; end
+
+function findRcloneVersion
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+  set -xg RCLONE_VERSION "1.51.0"
+
+  test -f $f
+  and begin
+    set -l v (fgrep RCLONE_VERSION $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+    if test "$v" != ""
+      set -xg RCLONE_VERSION "$v"
+    end
+
+    setupSourceInfo "Rclone" "$RCLONE_VERSION"
+  end
+end
 
 function findUseRclone
   set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
@@ -424,9 +445,11 @@ function copyRclone
       end
   end
 
-  echo Copying rclone from rclone/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  findRcloneVersion
+
+  echo Copying rclone from rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp -L $WORKDIR/rclone/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+  cp -L $WORKDIR/rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 ## #############################################################################
@@ -456,6 +479,18 @@ function oskarCompile
   else
     buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
   end
+end
+
+function rlogCompile
+  showConfig
+  showRepository
+  set -x NOSTRIP 1
+
+  buildStaticArangoDB \
+    -DDEBUG_SYNC_REPLICATION=On \
+    -DUSE_FAILURE_TESTS=On \
+    -DUSE_SEPARATE_REPLICATION2_TESTS_BINARY=On \
+    ; or return $status
 end
 
 function oskar1
@@ -734,6 +769,22 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
+  set -l arch ""
+
+  if test "$USE_ARM" = "On"
+    switch "$ARCH"
+      case "x86_64"
+        set arch "_$ARCH"
+      case '*'
+        if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+          set arch "_arm64"
+        else
+          echo "fatal, unknown architecture $ARCH for TGZ"
+          exit 1
+        end
+    end
+  end
+
   set -l suffix ""
   test $PLATFORM = "darwin"; and set suffix ".bak"
 
@@ -747,27 +798,27 @@ function buildTarGzPackageHelper
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and cp bin/README ./README
-  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v/g" README
+  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
   and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
-  and rm -rf "$WORKDIR/work/$name-$v"
-  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
+  and rm -rf "$WORKDIR/work/$name-$v$arch"
+  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v$arch"
   and cd $WORKDIR/work
   or begin ; popd ; return 1 ; end
 
-  rm -rf "$name-$os-$v"
-  and ln -s "$name-$v" "$name-$os-$v"
-  and tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v"
-  and rm -rf "$name-$os-$v"
+  rm -rf "$name-$os-$v$arch"
+  and ln -s "$name-$v$arch" "$name-$os-$v$arch"
+  and tar -c -z -f "$WORKDIR/work/$name-$os-$v$arch.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
+  and rm -rf "$name-$os-$v$arch"
   set s $status
 
   if test "$s" -eq 0
-    rm -rf "$name-client-$os-$v"
-    and ln -s "$name-$v" "$name-client-$os-$v"
-    and mv "$name-client-$os-$v/bin/README" "$name-client-$os-$v/README"
-    and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v/g" "$name-client-$os-$v/README"
-    and rm -rf "$name-client-$os-$v/README.bak"
-    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" -h \
+    rm -rf "$name-client-$os-$v$arch"
+    and ln -s "$name-$v$arch" "$name-client-$os-$v$arch"
+    and mv "$name-client-$os-$v$arch/bin/README" "$name-client-$os-$v$arch/README"
+    and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
+    and rm -rf "$name-client-$os-$v$arch/README.bak"
+    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" -h \
       --exclude "etc" \
       --exclude "var" \
       --exclude "*.initd" \
@@ -777,17 +828,17 @@ function buildTarGzPackageHelper
       --exclude "arangod.8" \
       --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
-      --exclude "$name-client-$os-$v/sbin" \
-      --exclude "$name-client-$os-$v/bin/arangod" \
-      --exclude "$name-client-$os-$v/bin/arangodb" \
-      --exclude "$name-client-$os-$v/bin/arangosync" \
-      --exclude "$name-client-$os-$v/usr/sbin" \
-      --exclude "$name-client-$os-$v/usr/bin/arangodb" \
-      --exclude "$name-client-$os-$v/usr/bin/arangosync" \
-      --exclude "$name-client-$os-$v/usr/share/arangodb3/arangodb-update-db" \
-      --exclude "$name-client-$os-$v/usr/share/arangodb3/js/server" \
-      "$name-client-$os-$v"
-    and rm -rf "$name-client-$os-$v"
+      --exclude "$name-client-$os-$v$arch/sbin" \
+      --exclude "$name-client-$os-$v$arch/bin/arangod" \
+      --exclude "$name-client-$os-$v$arch/bin/arangodb" \
+      --exclude "$name-client-$os-$v$arch/bin/arangosync" \
+      --exclude "$name-client-$os-$v$arch/usr/sbin" \
+      --exclude "$name-client-$os-$v$arch/usr/bin/arangodb" \
+      --exclude "$name-client-$os-$v$arch/usr/bin/arangosync" \
+      --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/arangodb-update-db" \
+      --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/js/server" \
+      "$name-client-$os-$v$arch"
+    and rm -rf "$name-client-$os-$v$arch"
     set s $status
   end
 
@@ -1165,7 +1216,24 @@ function buildBundleSnippet
     set DOWNLOAD_LINK ""
   end
 
-  set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
+  set -l dmgArch "x86_64"
+  set -l tgzArch ""
+  if test "$USE_ARM" = "On"
+    switch "$ARCH"
+      case "x86_64"
+        set arch "$ARCH"
+      case '*'
+        if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+          set arch "arm64"
+        else
+          echo "fatal, unknown architecture $ARCH for rclone"
+          exit 1
+        end
+      set tgzArch "_$arch"
+    end
+  end
+
+  set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.$arch.dmg"
 
   set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/MacOSX/
   set -l OUT $argv[2]/release/snippets
@@ -1175,14 +1243,14 @@ function buildBundleSnippet
   set -l BUNDLE_SIZE_SERVER (expr (wc -c < $IN/$BUNDLE_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l BUNDLE_SHA256_SERVER (shasum -a 256 -b < $IN/$BUNDLE_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macos-$ARANGODB_VERSION.tar.gz"
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macos-$ARANGODB_VERSION$tgzArch.tar.gz"
 
   if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-macos-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-macos-$ARANGODB_TGZ_UPSTREAM$tgzArch.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
   set -l TARGZ_SHA256_CLIENT ""
 
@@ -1401,6 +1469,7 @@ function showConfig
   printf $fmt3 'Enterprise' $ENTERPRISEEDITION      '(community/enterprise)'
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER             '(maintainerOn/Off)'
+  printf $fmt3 'Build sepp' $BUILD_SEPP             '(buildSeppOn/buildSeppOff)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'

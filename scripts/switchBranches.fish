@@ -18,14 +18,17 @@ function checkoutRepo
 
   git checkout -- .
   and git fetch --tags -f
-  and git fetch
+  and git fetch --all -f
   and git submodule deinit --all -f
   and git checkout -f "$branch"
   and if test "$clean" = "true"
     if echo "$branch" | grep -q "^v"
       git checkout -- .
     else
-      git reset --hard "origin/$branch"
+      git remote update origin
+      git fetch --force --all
+      git pull
+      git reset --hard "$branch"
     end
     and git clean -fdx
   else

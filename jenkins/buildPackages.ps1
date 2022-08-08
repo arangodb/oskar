@@ -16,7 +16,7 @@ If (!$env:ARANGODB_PACKAGES -or $env:ARANGODB_PACKAGES -eq "")
     Exit 1
 }
 
-# \\nas02.arangodb.biz\buildfiles
+# \\nas01.arangodb.biz\buildfiles
 If (!$env:NAS_SHARE_ROOT -or $env:NAS_SHARE_ROOT -eq "" -and $env:COPY_TO_STAGE2 -eq $true)
 {
     Write-Host "NAS_SHARE_ROOT required"

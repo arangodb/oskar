@@ -432,7 +432,12 @@ echo "Done fixing permissions."
 # make the top window open itself on mount:
 if [ $SANDBOX_SAFE -eq 0 ]; then
 	echo "Blessing started"
-	bless --folder "${MOUNT_DIR}" --openfolder "${MOUNT_DIR}"
+	if [[ $(uname -p) == 'arm' ]]
+	then
+	  bless --folder "${MOUNT_DIR}"
+	else
+	  bless --folder "${MOUNT_DIR}" --openfolder "${MOUNT_DIR}"
+	fi
 	echo "Blessing finished"
 else
 	echo "Skipping blessing on sandbox"
@@ -459,7 +464,7 @@ if [ ! -z "${EULA_RSRC}" -a "${EULA_RSRC}" != "-null-" ]; then
 	if [ $BREW_INSTALL -eq 0 ]; then
 		"${AUX_PATH}/dmg-license.py" "${DMG_DIR}/${DMG_NAME}" "${EULA_RSRC}"
 	else
-		python - "${DMG_DIR}/${DMG_NAME}" "${EULA_RSRC}" << 'EOS'
+		python3 - "${DMG_DIR}/${DMG_NAME}" "${EULA_RSRC}" << 'EOS'
 """
 This script adds a license file to a DMG. Requires Xcode and a plain ascii text
 license file.

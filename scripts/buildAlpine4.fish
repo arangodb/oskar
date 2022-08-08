@@ -47,6 +47,10 @@ else
     -DUSE_GOOGLE_TESTS=Off
 end
 
+if test "$BUILD_SEPP" = "On"
+  set -g FULLARGS $FULLARGS -DBUILD_SEPP=ON
+end
+
 if test "$SAN" = "On"
   echo "SAN is not support in this environment"
   exit 1

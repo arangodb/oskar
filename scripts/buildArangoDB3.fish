@@ -47,6 +47,10 @@ else
     -DUSE_GOOGLE_TESTS=Off
 end
 
+if test "$BUILD_SEPP" = "On"
+  set -g FULLARGS $FULLARGS -DBUILD_SEPP=ON
+end
+
 #if test "$PLATFORM" = "linux"
 #  set -g FULLARGS $FULLARGS \
 #   -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold \

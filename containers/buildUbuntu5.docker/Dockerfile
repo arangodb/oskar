@@ -18,7 +18,7 @@ RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache
 
 COPY ./tools/* /tools/
 
-RUN [ "/tools/install.sh", "1.1.1", "n" ]
+RUN [ "/tools/install.sh", "1.1.1", "q" ]
 
 COPY ./scripts /scripts
 
@@ -27,5 +27,14 @@ RUN export LC_ALL="C" && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | 
 RUN update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${CLANG_VERSION} 100 && update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${CLANG_VERSION} 100
 
 RUN LC_ALL="C" update-ccache-symlinks
+
+RUN git config --global --add safe.directory /work/ArangoDB
+RUN git config --global --add safe.directory /work/ArangoDB/enterprise
+RUN git config --global --add safe.directory /work/ArangoDB/docs
+
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/fmt       
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/iresearch
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/rocksdb
+RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/velocypack
 
 CMD [ "/usr/bin/fish" ]
