@@ -1,11 +1,9 @@
 #!/usr/bin/env fish
 source jenkins/helper/jenkins.fish
 
-if test -z "$DOCKER_TAG"
-  echo "DOCKER_TAG required"
+if test -z "$RELEASE_TAG"
+  echo "RELEASE_TAG required"
   exit 1
-else
-  set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG"
 end
 
 if test -z "$EDITION"
@@ -14,14 +12,15 @@ if test -z "$EDITION"
 end
 
 cleanPrepareLockUpdateClear
+and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and set -xg RELEASE_TYPE "preview"
 and if test "$EDITION" = "All"; or test "$EDITION" = "Community"
       community
-      makeDockerMultiarch "$DOCKER_TAG_JENKINS"
+      makeDockerMultiarch "$DOCKER_TAG"
     end
 and if test "$EDITION" = "All"; or test "$EDITION" = "Entreprise"
       enterprise
-      makeDockerMultiarch "$DOCKER_TAG_JENKINS"
+      makeDockerMultiarch "$DOCKER_TAG"
     end
 
 set -l s $status
