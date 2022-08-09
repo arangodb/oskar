@@ -1291,7 +1291,7 @@ Function switchBranches($branch_c,$branch_e)
         setupSourceInfo "VERSION" "N/A"
         setupSourceInfo "Community" "N/A"
     }
-    If ($ENTERPRISEEDITION -eq "On")
+    If ($global:ok -And $ENTERPRISEEDITION -eq "On")
     {
         $branch_e = $branch_e.ToString()
 
