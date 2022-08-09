@@ -1045,7 +1045,7 @@ Function downloadSyncer
     {
         Write-Host "Need  environment variable set!"
     }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+(-preview-[0-9]+)?)|latest' | Out-Null
     $SYNCER_REV = $Matches[0]
     If ($SYNCER_REV -eq "latest")
     {
