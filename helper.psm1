@@ -1054,7 +1054,7 @@ Function downloadSyncer
     }
     $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
     $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
-    Write-Host "Download: Syncer"
+    Write-Host "Download: Syncer $SYNCER_REV"
     curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
     If (Select-String -Path "$global:ARANGODIR\build\arangosync.exe" -Pattern '"message": "Not Found"')
     {
@@ -1905,11 +1905,14 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    Write-Host "CMakeOutput ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR\ArangoDB\build\CMakeFiles -Filter "*.log"))
+    If (Test-Path -Path $INNERWORKDIR\ArangoDB\build\CMakeFiles)
     {
-        Write-Host "Move $INNERWORKDIR\ArangoDB\build\CMakeFiles\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\CMakeFiles\$file" -Destination $ENV:WORKSPACE; comm
+        Write-Host "CMakeOutput ..."
+        ForEach ($file in $(Get-ChildItem $INNERWORKDIR\ArangoDB\build\CMakeFiles -Filter "*.log"))
+        {
+            Write-Host "Move $INNERWORKDIR\ArangoDB\build\CMakeFiles\$file"
+            Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\CMakeFiles\$file" -Destination $ENV:WORKSPACE; comm
+        }
     }
 
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes))
