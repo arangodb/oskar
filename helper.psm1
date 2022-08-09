@@ -1056,7 +1056,15 @@ Function downloadSyncer
     $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
     Write-Host "Download: Syncer"
     curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
-    setupSourceInfo "Syncer" $SYNCER_REV
+    If (Select-String -Path "$global:ARANGODIR\build\arangosync.exe" -Pattern '"message": "Not Found"')
+    {
+        Write-Host "Download: Syncer FAILED!"
+        $global:ok = $false
+    }
+    Else
+    {
+        setupSourceInfo "Syncer" $SYNCER_REV
+    }
 }
 
 Function copyRclone
@@ -1580,6 +1588,10 @@ Function configureWindows
       {
           downloadStarter
           downloadSyncer
+          If (-Not $global:ok)
+          {
+              return
+          }
           copyRclone
           $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
           If ($global:USE_RCLONE -eq "true")
