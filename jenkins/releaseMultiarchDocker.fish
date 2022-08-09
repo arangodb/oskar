@@ -18,7 +18,7 @@ and if test "$EDITION" = "All"; or test "$EDITION" = "Community"
       community
       makeDockerMultiarch "$DOCKER_TAG"
     end
-and if test "$EDITION" = "All"; or test "$EDITION" = "Entreprise"
+and if test "$EDITION" = "All"; or test "$EDITION" = "Enterprise"
       enterprise
       makeDockerMultiarch "$DOCKER_TAG"
     end
