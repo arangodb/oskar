@@ -1051,7 +1051,7 @@ Function downloadSyncer
     {
         Write-Host "Need  environment variable set!"
     }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+(-preview-[0-9]+)?)|latest' | Out-Null
     $SYNCER_REV = $Matches[0]
     If ($SYNCER_REV -eq "latest")
     {
@@ -1060,9 +1060,17 @@ Function downloadSyncer
     }
     $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
     $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
-    Write-Host "Download: Syncer"
+    Write-Host "Download: Syncer $SYNCER_REV"
     curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
-    setupSourceInfo "Syncer" $SYNCER_REV
+    If (Select-String -Path "$global:ARANGODIR\build\arangosync.exe" -Pattern '"message": "Not Found"')
+    {
+        Write-Host "Download: Syncer FAILED!"
+        $global:ok = $false
+    }
+    Else
+    {
+        setupSourceInfo "Syncer" $SYNCER_REV
+    }
 }
 
 Function copyRclone
@@ -1074,8 +1082,8 @@ Function copyRclone
         return
     }
     findRcloneVersion
-    Write-Host "Copying rclone from rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."
-    Copy-Item ("$global:WORKDIR\rclone" + $(Get-Content "$global:WORKDIR\rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe")) -Destination "$global:ARANGODIR\build\rclone-arangodb.exe"
+    Write-Host "Copying rclone from rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."    
+    Copy-Item -Path "$global:WORKDIR\rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe" -Destination "$global:ARANGODIR\build\rclone-arangodb.exe" -Force
 }
 
 ################################################################################
@@ -1297,7 +1305,7 @@ Function switchBranches($branch_c,$branch_e)
         setupSourceInfo "VERSION" "N/A"
         setupSourceInfo "Community" "N/A"
     }
-    If ($ENTERPRISEEDITION -eq "On")
+    If ($global:ok -And $ENTERPRISEEDITION -eq "On")
     {
         $branch_e = $branch_e.ToString()
 
@@ -1586,6 +1594,10 @@ Function configureWindows
       {
           downloadStarter
           downloadSyncer
+          If (-Not $global:ok)
+          {
+              return
+          }
           copyRclone
           $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
           If ($global:USE_RCLONE -eq "true")
@@ -1899,11 +1911,14 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    Write-Host "CMakeOutput ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR\ArangoDB\build\CMakeFiles -Filter "*.log"))
+    If (Test-Path -Path $INNERWORKDIR\ArangoDB\build\CMakeFiles)
     {
-        Write-Host "Move $INNERWORKDIR\ArangoDB\build\CMakeFiles\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\CMakeFiles\$file" -Destination $ENV:WORKSPACE; comm
+        Write-Host "CMakeOutput ..."
+        ForEach ($file in $(Get-ChildItem $INNERWORKDIR\ArangoDB\build\CMakeFiles -Filter "*.log"))
+        {
+            Write-Host "Move $INNERWORKDIR\ArangoDB\build\CMakeFiles\$file"
+            Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\CMakeFiles\$file" -Destination $ENV:WORKSPACE; comm
+        }
     }
 
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes))

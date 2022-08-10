@@ -38,7 +38,7 @@ function checkoutRepo
       git pull
     end
   end
-  git submodule update --init --force
+  and git submodule update --init --force
   return $status
 end
 
