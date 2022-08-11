@@ -25,12 +25,3 @@ else
   or exit 1
   popd
 end
-and if test ! -d upgrade-data-tests.git
-  git clone --progress --mirror ssh://git@github.com/arangodb/upgrade-data-tests.git
-  or exit 1
-else
-  pushd upgrade-data-tests.git
-  and git remote update
-  or exit 1
-  popd
-end

@@ -364,11 +364,6 @@ function runLocal
   return $s
 end
 
-function checkoutUpgradeDataTests
-  runLocal $SCRIPTSDIR/checkoutUpgradeDataTests.fish
-  or return $status
-end
-
 function checkoutArangoDB
   runLocal $SCRIPTSDIR/checkoutArangoDB.fish
   or return $status

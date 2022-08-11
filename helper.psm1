@@ -69,7 +69,6 @@ $global:RUBY = (Get-Command ruby.exe).Path
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
-$global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
 
 Function VS2019
@@ -1110,58 +1109,6 @@ Function checkoutEnterprise
     }
 }
 
-Function checkoutUpgradeDataTests
-{
-    If ($global:ok)
-    {
-        Push-Location $pwd
-        If (Test-Path -PathType Container -Path $global:UPGRADEDATADIR)
-        {
-            Set-Location $global:UPGRADEDATADIR
-            If (Test-Path -PathType Container -Path "$global:UPGRADEDATADIR\.git")
-            {
-                proc -process "git" -argument "rev-parse --is-inside-work-tree" -logfile $false -priority "Normal"
-                If ($global:ok)
-                {
-                    If (($(git remote show -n origin) | Select-String -Pattern " Fetch " -CaseSensitive | %{$_.Line.Split("/")[-1]}) -eq 'upgrade-data-tests')
-                    {
-                        Write-Host "=="$(Get-Date)"== started fetch 'upgrade-data-tests'"
-                        proc -process "git" -argument "remote update" -logfile $false -priority "Normal" 
-                        proc -process "git" -argument "checkout -f" -logfile $false -priority "Normal"
-                        Write-Host "=="$(Get-Date)"== finished fetch 'upgrade-data-tests'"
-                        $needReset = $False
-                        If ($(git status -uno) | Select-String -Pattern "behind" -CaseSensitive)
-                        {
-                            Write-Host "=="$(Get-Date)"== started clean and reset 'upgrade-data-tests'"
-                            proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
-                            proc -process "git" -argument "reset --hard origin/devel" -logfile $false -priority "Normal"
-                            Write-Host "=="$(Get-Date)"== finished clean and reset 'upgrade-data-tests'"
-                        }
-                    } Else { $needReset = $True }
-                } Else { $needReset = $True }
-            } Else { $needReset = $True }
-            If ($needReset -eq $True)
-            {
-              Set-Location $global:ARANGODIR
-              Remove-Item -Recurse -Force $global:UPGRADEDATADIR
-            }
-        }
-        If (-Not(Test-Path -PathType Container -Path $global:UPGRADEDATADIR))
-        {
-            If (Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
-            {
-                Remove-Item -Force "$HOME\.ssh\known_hosts"
-                proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
-            }
-            Set-Location $global:ARANGODIR
-            Write-Host "=="$(Get-Date)"== started clone 'upgrade-data-tests'"
-            proc -process "git" -argument "clone ssh://git@github.com/arangodb/upgrade-data-tests" -logfile $false -priority "Normal"
-            Write-Host "=="$(Get-Date)"== finished clone 'upgrade-data-tests'"
-        }
-        Pop-Location
-    }
-}
-
 Function checkoutIfNeeded
 {
     If ($ENTERPRISEEDITION -eq "On")
@@ -1178,7 +1125,6 @@ Function checkoutIfNeeded
             checkoutArangoDB
         }
     }
-    checkoutUpgradeDataTests
 }
 
 Function convertSItoJSON
