@@ -16,9 +16,9 @@ function checkoutRepo
   set -l branch (string trim $argv[1])
   set -l clean $argv[2]
 
-  git checkout -- .
-  and git fetch --tags -f
+  git fetch --tags -f
   and git fetch --all -f
+  and git checkout -- .
   and git submodule deinit --all -f
   and git checkout -f "$branch"
   and if test "$clean" = "true"
