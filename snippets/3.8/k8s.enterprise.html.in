@@ -3,8 +3,9 @@
     ArangoDB is available for Kubernetes.
   </p>
   <p>
-    The processor(s) must support the SSE 4.2 instruction set (Intel
-    Westmere or better, AMD Bulldozer or better, etc.)
+    The processor(s) must support the <strong>x86-64</strong> instruction set,
+    as well as the <strong>SSE 4.2</strong> instruction set extension
+    (Intel Westmere or better, AMD Bulldozer or better, etc.).
   </p>
   <p>
     In order to install ArangoDB in your Kubernetes Cluster, first

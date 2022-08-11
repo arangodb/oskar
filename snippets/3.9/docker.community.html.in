@@ -3,8 +3,9 @@
     ArangoDB is available as Docker container.
   </p>
   <p>
-    The processor(s) must support the SSE 4.2 and AVX instruction sets (Intel
-    Sandy Bridge or better, AMD Bulldozer or better, etc.)
+    The processor(s) must support the <strong>x86-64</strong> instruction set,
+    as well as the <strong>SSE 4.2</strong> and <strong>AVX</strong> instruction
+    set extensions (Intel Sandy Bridge or better, AMD Bulldozer or better, etc.).
   </p>
   <p>
     In order to install the stand-alone version use
