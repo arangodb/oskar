@@ -695,7 +695,7 @@ function buildSourcePackage
   and cp -a ArangoDB ArangoDB-$SOURCE_TAG
   and pushd ArangoDB-$SOURCE_TAG
   and find . -maxdepth 1 -name "arangodb-tmp.sock*" -delete
-  and rm -rf enterprise upgrade-data-tests mini-chaos
+  and rm -rf enterprise mini-chaos
   and git clean -f -d -x
   and rm -rf .git
   and popd
@@ -1546,13 +1546,6 @@ function showRepository
     else
       printf $fmt3 'Enterprise' 'not configured'
     end
-    if test -d $WORKDIR/work/ArangoDB/upgrade-data-tests
-      pushd upgrade-data-tests
-      printf $fmt3 'Test Data' (findBranch)
-      popd
-    else
-      printf $fmt3 'Test Data' 'missing'
-    end
     if test -d $WORKDIR/work/ArangoDB/mini-chaos
       pushd mini-chaos
       printf $fmt3 'Mini Chaos' (findBranch)
@@ -1882,7 +1875,6 @@ function checkoutIfNeeded
       checkoutArangoDB
     end
   end
-  and checkoutUpgradeDataTests
 end
 
 function clearResults
