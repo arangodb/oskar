@@ -22,16 +22,18 @@ set -e TSAN_OPTIONS
 if not test -z $SAN; and test $SAN = "On"
   echo "Use SAN mode: $SAN_MODE"
 
+  set common_options "log_exe_name=true"
+
   switch "$SAN_MODE"
     case "AULSan"
       # address sanitizer
-      set -xg ASAN_OPTIONS "log_path=/work/aulsan.log:log_exe_name=true:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=1:detect_stack_use_after_return=false:detect_odr_violation=1:allow_addr2line=true:detect_deadlocks=true:strict_init_order=true"
+      set -xg ASAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=true:detect_stack_use_after_return=false:detect_odr_violation=1:strict_init_order=true"
 
       # leak sanitizer
-      set -xg LSAN_OPTIONS "log_path=/work/aulsan.log:log_exe_name=true"
+      set -xg LSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log"
 
       # undefined behavior sanitizer
-      set -xg UBSAN_OPTIONS "log_path=/work/aulsan.log:log_exe_name=true"
+      set -xg UBSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
@@ -51,15 +53,14 @@ if not test -z $SAN; and test $SAN = "On"
       echo "UBSAN: $UBSAN_OPTIONS"
     case "TSan"
       # thread sanitizer
-      set -xg TSAN_OPTIONS "log_path=/work/tsan.log:log_exe_name=true"
-      
-      # additional settings
-      set TSAN_OPTIONS "$TSAN_OPTIONS:second_deadlock_stack=1"
+      set addr2line_path (which addr2line)
+      set -xg TSAN_OPTIONS "$common_options:allow_addr2line=true:external_symbolizer_path=$addr2line_path:log_path=$INNERWORKDIR/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
         set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0"
       end
+
       echo "TSAN: $TSAN_OPTIONS"
     case '*'
       echo "Unknown sanitizer mode: $SAN_MODE"
