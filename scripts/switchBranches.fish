@@ -39,6 +39,8 @@ function checkoutRepo
     end
   end
   and git submodule update --init --force
+  
+  echo "STATUS: $status"
   return $status
 end
 
