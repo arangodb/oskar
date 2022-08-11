@@ -27,13 +27,13 @@ if not test -z $SAN; and test $SAN = "On"
   switch "$SAN_MODE"
     case "AULSan"
       # address sanitizer
-      set -xg ASAN_OPTIONS "$common_options:log_path=/work/aulsan.log:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=true:detect_stack_use_after_return=false:detect_odr_violation=1:strict_init_order=true"
+      set -xg ASAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=true:detect_stack_use_after_return=false:detect_odr_violation=1:strict_init_order=true"
 
       # leak sanitizer
-      set -xg LSAN_OPTIONS "$common_options:log_path=/work/aulsan.log"
+      set -xg LSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log"
 
       # undefined behavior sanitizer
-      set -xg UBSAN_OPTIONS "$common_options:log_path=/work/aulsan.log"
+      set -xg UBSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
@@ -54,7 +54,7 @@ if not test -z $SAN; and test $SAN = "On"
     case "TSan"
       # thread sanitizer
       set addr2line_path (which addr2line)
-      set -xg TSAN_OPTIONS "$common_options:allow_addr2line=true:external_symbolizer_path=$addr2line_path:log_path=/work/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
+      set -xg TSAN_OPTIONS "$common_options:allow_addr2line=true:external_symbolizer_path=$addr2line_path:log_path=$INNERWORKDIR/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
