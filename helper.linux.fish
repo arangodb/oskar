@@ -285,11 +285,6 @@ function checkoutMirror
   or return $status
 end
 
-function checkoutUpgradeDataTests
-  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutUpgradeDataTests.fish
-  or return $status
-end
-
 function checkoutArangoDB
   runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutArangoDB.fish
   or return $status
