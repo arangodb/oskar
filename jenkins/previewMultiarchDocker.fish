@@ -17,7 +17,7 @@ if test -z "$MODE"
   echo "MODE required"
   exit 1
 else
-  if "$MODE" = "DEBUG"
+  if test "$MODE" = "DEBUG"
     set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-debug"
   end
 end

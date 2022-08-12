@@ -1347,11 +1347,14 @@ function pushDockerManifest
 
   set manifestname $argv[1]
 
+  docker manifest inspect $manifestname
+  and docker manifest rm $manifestname
+
   docker manifest create \
   $manifestname \
   --amend $manifestname-amd64 \
   --amend $manifestname-arm64v8
-  and docker manifest push $manifestname
+  and docker manifest push --purge $manifestname
   and return 0
   or return 1
 end
