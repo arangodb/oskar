@@ -15,9 +15,10 @@ import shutil
 import psutil
 
 from async_client import (
-    CliExecutionException,
     ArangoCLIprogressiveTimeoutExecutor,
-    dummy_line_result,
+    make_logfile_params,
+    logfile_line_result,
+    delete_logfile_params
 )
 
 ZIPFORMAT="gztar"
@@ -131,6 +132,8 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
         print(testing_args)
         args = [
             '-c', str(self.cfg.cfgdir / 'arangosh.conf'),
+            "--log.foreground-tty", "true",
+            "--log.force-direct", "true",
             '--log.level', 'warning',
             "--log.level", "v8=debug",
             '--server.endpoint', 'none',
@@ -141,22 +144,19 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
             '--',
             testcase,
             '--testOutput', directory ] + testing_args
-        try:
-            return self.run_arango_tool_monitored(
-                self.cfg.bin_dir / "arangosh",
-                run_cmd,
-                timeout,
-                self.cfg.deadline,
-                dummy_line_result,
-                verbose,
-                False,
-                True,
-                logfile,
-                identifier
-            )
-        except CliExecutionException as ex:
-            print(ex)
-            return False
+        params = make_logfile_params(verbose, logfile, self.cfg.trace)
+        ret = self.run_monitored(
+            self.cfg.bin_dir / "arangosh",
+            run_cmd,
+            params=params,
+            progressive_timeout=timeout,
+            deadline=self.cfg.deadline,
+            result_line_handler=logfile_line_result,
+            identifier=identifier
+        )
+        delete_logfile_params(params)
+        ret['error'] = params['error']
+        return ret
 
 class TestConfig():
     """ setup of one test """
@@ -196,7 +196,7 @@ class TestConfig():
         self.crashed_file = self.base_logdir / 'UNITTEST_RESULT_CRASHED.json'
         self.success_file = self.base_logdir / 'UNITTEST_RESULT_EXECUTIVE_SUMMARY.json'
         self.report_file =  self.base_logdir / 'UNITTEST_RESULT.json'
-        self.base_testdir = cfg.test_data_dir/ self.name
+        self.base_testdir = cfg.test_data_dir_x / self.name
 
         self.args = []
         for param in args:
@@ -289,6 +289,7 @@ class SiteConfig:
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
         print(os.environ)
+        self.trace = False
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
@@ -306,12 +307,13 @@ class SiteConfig:
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
+        self.test_data_dir = base_source_dir
         self.passvoid = ''
         self.run_root = base_source_dir / 'testrun'
         if self.run_root.exists():
             shutil.rmtree(self.run_root)
-        self.test_data_dir = self.run_root / 'run'
-        self.test_data_dir.mkdir(parents=True)
+        self.test_data_dir_x = self.run_root / 'run'
+        self.test_data_dir_x.mkdir(parents=True)
         self.test_report_dir = self.run_root / 'report'
         self.test_report_dir.mkdir(parents=True)
         self.portbase = 7000
@@ -329,7 +331,11 @@ def testing_runner(testing_instance, this, arangosh):
                                this.log_file,
                                this.name_enum,
                                True) #verbose?
-    this.success = ret[0]
+    this.success = (
+        not ret["progressive_timeout"] or
+        not ret["have_deadline"] or
+        ret["rc_exit"] == 0
+    )
     this.finish = datetime.now(tz=None)
     this.delta = this.finish - this.start
     this.delta_seconds = this.delta.total_seconds()
@@ -338,7 +344,7 @@ def testing_runner(testing_instance, this, arangosh):
     this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
     if this.report_file.exists():
         this.structured_results = this.report_file.read_text()
-    this.summary = ret[4]
+    this.summary = ret['error']
     if this.summary_file.exists():
         this.summary += this.summary_file.read_text()
     with arangosh.slot_lock:
