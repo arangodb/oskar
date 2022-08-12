@@ -3,9 +3,9 @@
     The following packages are for Red Hat-based Linux distributions.
   </p>
   <p>
-    The processor(s) must support the <strong>x86-64</strong> instruction set,
-    as well as the <strong>SSE 4.2</strong> and <strong>AVX</strong> instruction
-    set extensions (Intel Sandy Bridge or better, AMD Bulldozer or better, etc.).
+    The processor(s) must be 64-bit ARM chips (<strong>AArch64</strong>).
+    The minimum requirement is <strong>ARMv8</strong> with <strong>Neon</strong>
+    (SIMD extension).
   </p>
   <p>
     We provide a single package containing the server and the client tools. For
