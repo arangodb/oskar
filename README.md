@@ -237,7 +237,7 @@ if supported, set number of concurrent builds to `PARALLELISM`
 `jenkins/helper/test_launch_controller.py` is used to control multiple test executions.
 
 ### Its dependencies over stock python3 are:
- - psutil to controll subprocesses
+ - psutil to control subprocesses
  - py7zr (optional) to build 7z reports instead of tar.bz2
 
 ### Its reading these environment variables:
