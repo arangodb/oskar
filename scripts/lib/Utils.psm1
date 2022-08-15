@@ -175,16 +175,6 @@ Function runTests
         }
     }
 
-    If ($global:result -eq "GOOD" -And $global:ok)
-    {
-        LaunchController $global:TESTSUITE_TIMEOUT
-        createReport
-    }
-    Else
-    {
-        $global:result = "BAD"
-    }
-
     If($global:result -eq "GOOD")
     {
         Set-Variable -Name "ok" -Value $true -Scope global
