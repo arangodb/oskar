@@ -240,7 +240,7 @@ if supported, set number of concurrent builds to `PARALLELISM`
  - psutil to control subprocesses
  - py7zr (optional) to build 7z reports instead of tar.bz2
 
-### Its reading these environment variables:
+### It's reading these environment variables:
 - `INNERWORKDIR` - as the directory to place the report files
 - `WORKDIR` - used instead if `INNERWORKDIR` hasn't been set.
 - `TEMP` - temporary directory if not `INNERWORKDIR`/ArangoDB
