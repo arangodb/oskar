@@ -237,10 +237,10 @@ if supported, set number of concurrent builds to `PARALLELISM`
 `jenkins/helper/test_launch_controller.py` is used to control multiple test executions.
 
 ### Its dependencies over stock python3 are:
- - psutil to controll subprocesses
+ - psutil to control subprocesses
  - py7zr (optional) to build 7z reports instead of tar.bz2
 
-### Its reading these environment variables:
+### It's reading these environment variables:
 - `INNERWORKDIR` - as the directory to place the report files
 - `WORKDIR` - used instead if `INNERWORKDIR` hasn't been set.
 - `TEMP` - temporary directory if not `INNERWORKDIR`/ArangoDB
@@ -269,13 +269,13 @@ if supported, set number of concurrent builds to `PARALLELISM`
     - `single`: this test requires a single server
     - `full`: this test is only executed in full tests
     - `!full`: this test is only executed in non-full tests
-    - `gtest`: only the gtest are to be executed
+    - `gtest`: only the gtests are to be executed
     - `ldap`: ldap
-    - `enterprise`: this tests is only executed with the enterprise version
+    - `enterprise`: this test is only executed with the enterprise version
     - `!windows`: test is excluded from ps1 output
  - `--cluster` filter `test-definition.txt` for all tests flagged as `cluster`
  - `--full` - all tests including those flagged as `full` are executed.
- - `--gtest` - only gtest are executed
+ - `--gtest` - only gtests are executed
  - `--all` - output unfiltered
  
 ### Syntax in `test-definition.txt`
