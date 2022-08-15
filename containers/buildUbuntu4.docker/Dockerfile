@@ -8,7 +8,7 @@ ENV COMPILER_VERSION 9
 
 ENV CLANG_VERSION 12
 
-RUN apt-get update && \
+RUN apt-get update --fix-missing && \
     apt-get install -y software-properties-common && \
     apt-get update && \
     apt-get upgrade -y

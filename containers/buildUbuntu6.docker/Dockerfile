@@ -7,7 +7,7 @@ ENV COMPILER_VERSION 11
 
 ENV CLANG_VERSION 14
 
-RUN apt-get update && \
+RUN apt-get update --fix-missing && \
     apt-get install -y software-properties-common && \
     apt-get update && \
     apt-get upgrade -y
