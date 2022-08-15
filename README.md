@@ -275,7 +275,7 @@ if supported, set number of concurrent builds to `PARALLELISM`
     - `!windows`: test is excluded from ps1 output
  - `--cluster` filter `test-definition.txt` for all tests flagged as `cluster`
  - `--full` - all tests including those flagged as `full` are executed.
- - `--gtest` - only gtest are executed
+ - `--gtest` - only gtests are executed
  - `--all` - output unfiltered
  
 ### Syntax in `test-definition.txt`
