@@ -269,7 +269,7 @@ if supported, set number of concurrent builds to `PARALLELISM`
     - `single`: this test requires a single server
     - `full`: this test is only executed in full tests
     - `!full`: this test is only executed in non-full tests
-    - `gtest`: only the gtest are to be executed
+    - `gtest`: only the gtests are to be executed
     - `ldap`: ldap
     - `enterprise`: this tests is only executed with the enterprise version
     - `!windows`: test is excluded from ps1 output
