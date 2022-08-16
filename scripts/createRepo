@@ -26,7 +26,7 @@ usage(){
 
 provided(){
     echo -n "createRepo <version:'$1'> <in_path'$2'> <repo_path'$3'>"
-    echo " <in_name'$4'> <repo_name'$5'> <arch'$5'> <package_type'$7'>"
+    echo " <in_name'$4'> <repo_name'$5'> <arch'$6'> <package_type'$7'>"
 }
 
 #provided "$@"
@@ -66,7 +66,7 @@ create_repo(){
     #set -x
     provided "$@"
     local version="$1"                     # X.Y.Z[-(H | (alpha | beta | milestone | rc).R)]
-    local major_minor=$(expr "$version" : '\([0-9].[0-9]\)')      # X.Y
+    local major_minor=$(expr "$version" : '\([0-9].[0-9]*\)')      # X.Y
     local version_fs="${major_minor/./}"   # XY[-(alpha | beta | milestone | rc).R]
     [[ "${version%%-*}" = "${version}" ]] || [[ "${version##*-}" =~ ^[1-9]+$ ]] || version_fs="${version_fs}-${version##*-}"
     local in_path="$2"                     # /mnt/data/fileserver
@@ -94,10 +94,10 @@ create_repo(){
                       "$repo_path/$repo_community/$repo_name" \
                       "$url_community"
   echo "enterprise #################################"
-    create_repo_edition "$version" "$major_minor" "$arch" "$package_type"\
-                        "$in_path/$in_enterprise/$in_name" \
-                        "$repo_path/$repo_enterprise/$repo_name" \
-                        "$url_enterprise"
+  create_repo_edition "$version" "$major_minor" "$arch" "$package_type"\
+                      "$in_path/$in_enterprise/$in_name" \
+                      "$repo_path/$repo_enterprise/$repo_name" \
+                      "$url_enterprise"
 }
 
 create_repo_edition(){
@@ -135,21 +135,22 @@ create_repo_deb(){
     local url="$7"
 
     # sign files
-    cd "$in" || { echo "can not enter source dir"; exit 1; }
-    for file in "$in"/*"$major_minor"*.deb; do
-        fbase="${file%.deb}"
-        noext="${fbase##*/}"
-        [[ -f "$file" ]] || ferr "create_repo_deb - file: $file - does not exist"
-        [[ -d "$repo" ]] || ferr "create_repo_deb - reop: $repo - does not exist"
-        if cmp -s "$file" "$repo/amd64/${noext}.deb"; then
-	  echo "file already exists '$file'"
-	else
-	  cp "$file" "$repo/amd64/${noext}.deb" \
-	      || { echo "could not move $file" to "$repo"; exit 1;  }
-	  "$script_dir"/debSign "$repo/amd64/${noext}.deb" || ferr "failed to sign $repo/amd64/${noext}.deb"
-        fi
+    for arch in "${arch_array[@]}"; do
+        cd "$in" || { echo "can not enter source dir"; exit 1; }
+        for file in "$in"/*"$major_minor"*${arch}*.deb; do
+            fbase="${file%.deb}"
+            noext="${fbase##*/}"
+            [[ -f "$file" ]] || ferr "create_repo_deb - file: $file - does not exist"
+            [[ -d "$repo" ]] || ferr "create_repo_deb - reop: $repo - does not exist"
+            if cmp -s "$file" "$repo/${arch}/${noext}.deb"; then
+    	          echo "file already exists '$file'"
+    	      else
+    	          cp "$file" "$repo/${arch}/${noext}.deb" \
+    	          || { echo "could not move $file" to "$repo"; exit 1;  }
+    	          "$script_dir"/debSign "$repo/${arch}/${noext}.deb" || ferr "failed to sign $repo/${arch}/${noext}.deb"
+            fi
+        done
     done
-
     cd "$repo" || { echo "can not enter repo"; exit 1; }
     echo
     echo "now building reop"
@@ -192,19 +193,20 @@ create_repo_rpm(){
     local url="$7"
 
     # sign files
-    cd "$in" || { echo "can not enter source dir"; exit 1; }
-    for file in "$in"/*"$major_minor"*.rpm; do
-        fbase="${file%.rpm}"
-        noext="${fbase##*/}"
-        if cmp -s "$file" "$repo/x86_64/${noext}.rpm"; then
-	  echo "file already exists '$file'"
-	else
-	  "$script_dir"/rpmSign.exp "$file" || ferr "failed to sign $file"
-	  cp "$file" "$repo/x86_64/${noext}.rpm" \
-	      || { echo "could not move $file" to "$repo"; exit 1;  }
-	fi
+    for arch in "${arch_array[@]}"; do
+        cd "$in" || { echo "can not enter source dir"; exit 1; }
+        for file in "$in"/*"$major_minor"*${arch}*.rpm; do
+            fbase="${file%.rpm}"
+            noext="${fbase##*/}"
+            if cmp -s "$file" "$repo/${arch}/${noext}.rpm"; then
+    	          echo "file already exists '$file'"
+    	      else
+    	          "$script_dir"/rpmSign.exp "$file" || ferr "failed to sign $file"
+    	          cp "$file" "$repo/${arch}/${noext}.rpm" \
+    	          || { echo "could not move $file" to "$repo"; exit 1;  }
+    	      fi
+        done
     done
-
     cd "$repo" || { echo "can not enter repo"; exit 1; }
     echo
     echo "now building reop"

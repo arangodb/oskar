@@ -12,24 +12,46 @@ repo="/repositories"
 
 test -n "$version" || exit 1
 
+echo "USE_ARM=$USE_ARM"
+
 #centos
 #fedora
 #suse
 mkdir -p $repo/Community/RPM/x86_64
 mkdir -p $repo/Enterprise/RPM/x86_64
+if [[ "$USE_ARM" = "On" ]]
+then
+  mkdir -p $repo/Community/RPM/aarch64
+  mkdir -p $repo/Enterprise/RPM/aarch64
+fi
+
+arch_list="x86_64"
+[[ "$USE_ARM" = "On" ]] && arch_list="$arch_list:aarch64"
+
+echo "User archs are $arch_list"
 
 ensure_oskar "$version" "$incoming" "$repo" \
             "Linux" "RPM" \
-            "x86_64" "rpm"
+            "$arch_list" "rpm"
 
 #debian
 #ubuntu
 mkdir -p $repo/Community/Debian/amd64
 mkdir -p $repo/Enterprise/Debian/amd64
+if [[ "$USE_ARM" = "On" ]]
+then
+  mkdir -p $repo/Community/Debian/arm64
+  mkdir -p $repo/Enterprise/Debian/arm64
+fi
+
+arch_list="amd64"
+[[ "$USE_ARM" = "On" ]] && arch_list="$arch_list:arm64"
+
+echo "User archs are $arch_list"
 
 ensure_oskar "$version" "$incoming" "$repo" \
             "Linux" "Debian" \
-            "amd64" "deb"
+            "$arch_list" "deb"
 
 chown -R $UID.$GID $repo
 
