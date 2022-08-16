@@ -343,7 +343,7 @@ def testing_runner(testing_instance, this, arangosh):
     this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
     this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
     if this.report_file.exists():
-        this.structured_results = this.report_file.read_text()
+        this.structured_results = this.report_file.read_text(encoding="UTF-8", errors='ignore')
     this.summary = ret['error']
     if this.summary_file.exists():
         this.summary += this.summary_file.read_text()
