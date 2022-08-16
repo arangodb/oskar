@@ -473,11 +473,10 @@ function oskarCompile
   showRepository
   set -x NOSTRIP 1
   
-  # note: DEBUG_SYNC_REPLICATION is removed from 3.8 onwards an can be removed here too soon 
   if test "$SAN" = "On"
-    buildArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+    buildArangoDB -DUSE_FAILURE_TESTS=On ; or return $status
   else
-    buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On ; or return $status
+    buildStaticArangoDB -DUSE_FAILURE_TESTS=On ; or return $status
   end
 end
 
@@ -487,7 +486,6 @@ function rlogCompile
   set -x NOSTRIP 1
 
   buildStaticArangoDB \
-    -DDEBUG_SYNC_REPLICATION=On \
     -DUSE_FAILURE_TESTS=On \
     -DUSE_SEPARATE_REPLICATION2_TESTS_BINARY=On \
     ; or return $status

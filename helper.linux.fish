@@ -423,9 +423,8 @@ function makeStaticArangoDB
 end
 
 function buildStaticCoverage
-  # note: DEBUG_SYNC_REPLICATION is removed from 3.8 onwards an can be removed here too soon 
   coverageOn
-  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On -DDEBUG_SYNC_REPLICATION=On 
+  and buildStaticArangoDB -DUSE_FAILURE_TESTS=On
 end
 
 function buildExamples
