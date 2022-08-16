@@ -20,6 +20,9 @@ ln -s $SCRIPTSDIR/tools/sccache-apple-darwin-$ARCH $SCRIPTSDIR/tools/sccache
 
 function defaultMacOSXDeploymentTarget
   set -xg MACOSX_DEPLOYMENT_TARGET 10.14
+  if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+    set -xg MACOSX_DEPLOYMENT_TARGET 11.0
+  end
 end
 
 if test -z "$MACOSX_DEPLOYMENT_TARGET"
@@ -80,7 +83,14 @@ function findRequiredMinMacOS
     echo "$f: no MACOS_MIN specified, using $MACOSX_DEPLOYMENT_TARGET"
     minMacOS $MACOSX_DEPLOYMENT_TARGET
   else
-    echo "Using MACOS_MIN version '$v' from '$f'"
+    if test "$USE_ARM" = "On"
+      if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+        echo "Using MACOS_MIN version '11.0' instead of '$v' from '$f' for ARM!"
+        set v "11.0"
+      end
+    else
+      echo "Using MACOS_MIN version '$v' from '$f'"
+    end
     minMacOS $v
   end
 end
