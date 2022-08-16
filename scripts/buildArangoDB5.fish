@@ -4,6 +4,11 @@ source ./scripts/lib/build.fish
 if test "$PARALLELISM" = ""
   set -xg PARALLELISM 64
 end
+
+if test "$SAN" = "On"
+  set PARALLELISM 10
+end
+
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
