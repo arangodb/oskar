@@ -158,6 +158,8 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
         ret['error'] = params['error']
         return ret
 
+TEST_LOG_FILES = []
+
 class TestConfig():
     """ setup of one test """
     # pylint: disable=too-many-instance-attributes disable=too-many-arguments
@@ -192,6 +194,12 @@ class TestConfig():
         if not self.base_logdir.exists():
             self.base_logdir.mkdir()
         self.log_file =  cfg.run_root / f'{self.name}.log'
+        global TEST_LOG_FILES
+        try:
+            print(TEST_LOG_FILES.index(str(self.log_file)))
+            raise Exception(f'duplicate testfile {str(self.log_file)}')
+        except ValueError:
+            TEST_LOG_FILES.append(str(self.log_file))
         self.summary_file = self.base_logdir / 'testfailures.txt'
         self.crashed_file = self.base_logdir / 'UNITTEST_RESULT_CRASHED.json'
         self.success_file = self.base_logdir / 'UNITTEST_RESULT_EXECUTIVE_SUMMARY.json'
@@ -294,7 +302,7 @@ class SiteConfig:
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
-        self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 600)
+        self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
             definition_file = definition_file.parent
         base_source_dir = (definition_file / '..').resolve()
