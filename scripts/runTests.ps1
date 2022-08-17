@@ -10,7 +10,7 @@ Function global:registerSingleTests()
 
     Write-Host "Registering tests..."
 
-    $global:TIMELIMIT = 3900
+    $env:TIMELIMIT = 3900
 
     Write-Host "Using test definitions from repo..."
     pip install py7zr
@@ -22,7 +22,7 @@ Function global:registerClusterTests()
     noteStartAndRepoState
     Write-Host "Registering tests..."
 
-    $global:TIMELIMIT = 6600
+    $env:TIMELIMIT = 6600
 
     Write-Host "Using test definitions from repo..."
     pip install py7zr
