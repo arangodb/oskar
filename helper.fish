@@ -166,7 +166,7 @@ if test -z "$MINIMAL_DEBUG_INFO"
   set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
 end
 
-function defaultArchecture
+function defaultArchitecture
   if test (count $argv) -lt 1
     set -gx DEFAULT_ARCHITECTURE "westmere"
   else
@@ -185,7 +185,7 @@ function findDefaultArchitecture
     set v (fgrep DEFAULT_ARCHITECTURE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
   end
 
-  defaultArchecture $v
+  defaultArchitecture $v
 end
 
 test -z "$DEFAULT_ARCHITECTURE"; and findDefaultArchitecture
