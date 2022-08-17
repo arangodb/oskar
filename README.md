@@ -305,7 +305,7 @@ themselves will spawn a set of I/O threads to capture the output of testing.js i
 
 The life cycle of a testrun will be as follows:
 
- - the environment variable `TESTSUITE_TIMEOUT` defines a *deadline* to all the tests, how much seconds should be allowed.
+ - the environment variable `TIMELIMIT` defines a *deadline* to all the tests, how much seconds should be allowed.
  - tests are running in worker threads.
  - main thread keeps control, launches more worker threads, once machine bandwith permits, but only every 5s as closest to not overwhelm the machine while launching arangods.
  - tests themselves have their timeouts; `testing.js` will abort if they are reached.
@@ -320,7 +320,7 @@ The life cycle of a testrun will be as follows:
  - this should unblock the workers I/O threads, and they should exit.
  - the `waitpid()` on `testing.js` should exit, I/O threads should be joined, results should be passed up to the main thread.
  - so the workers still have a slugish interpretation of the *deadline*, giving them the chance to collect as much knowledge about the test execution as posible.
- - meanwhile the main thread has a *fixed* deadline: 5 minutes after the `TESTSUITE_TIMEOUT` is reached.
+ - meanwhile the main thread has a *fixed* deadline: 5 minutes after the `TIMELIMIT` is reached.
  - if not all workers have indicated their exit before this final deadline:
    - the main thread will start killing any subprocesses of itself which it finds.
    - after this wait another 20s, to see whether the workers may have been unblocked by the killing
