@@ -69,7 +69,6 @@ $global:RUBY = (Get-Command ruby.exe).Path
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
-$global:UPGRADEDATADIR = "$global:ARANGODIR\upgrade-data-tests"
 $env:TMP = "$INNERWORKDIR\tmp"
 
 Function VS2019
@@ -892,6 +891,25 @@ If (-Not($ENABLE_REPORT_DUMPS))
     enableDumpsToReport
 }
 
+Function findRcloneVersion
+{
+    $global:RCLONE_VERSION = "1.51.0"
+
+    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
+    {
+        $RCLONE_VERSION = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_VERSION" | Select Line
+        If ($RCLONE_VERSION -ne "")
+        {
+            If ($RCLONE_VERSION -match '[0-9]+\.[0-9]+\.[0-9]+' -And $Matches.count -eq 1)
+            {
+                $global:RCLONE_VERSION = $Matches[0]
+            }
+        }
+    }
+
+    setupSourceInfo "Rclone" "$global:RCLONE_VERSION"
+}
+
 Function findUseRclone
 {
     If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
@@ -1026,7 +1044,7 @@ Function downloadSyncer
     {
         Write-Host "Need  environment variable set!"
     }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+)|latest' | Out-Null
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+(-preview-[0-9]+)?)|latest' | Out-Null
     $SYNCER_REV = $Matches[0]
     If ($SYNCER_REV -eq "latest")
     {
@@ -1035,9 +1053,17 @@ Function downloadSyncer
     }
     $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
     $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
-    Write-Host "Download: Syncer"
+    Write-Host "Download: Syncer $SYNCER_REV"
     curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
-    setupSourceInfo "Syncer" $SYNCER_REV
+    If (Select-String -Path "$global:ARANGODIR\build\arangosync.exe" -Pattern '"message": "Not Found"')
+    {
+        Write-Host "Download: Syncer FAILED!"
+        $global:ok = $false
+    }
+    Else
+    {
+        setupSourceInfo "Syncer" $SYNCER_REV
+    }
 }
 
 Function copyRclone
@@ -1048,8 +1074,9 @@ Function copyRclone
         Write-Host "Not copying rclone since it's not used!"
         return
     }
-    Write-Host "Copying rclone from rclone\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."
-    Copy-Item ("$global:WORKDIR\rclone\" + $(Get-Content "$global:WORKDIR\rclone\rclone-arangodb-windows-amd64.exe")) -Destination "$global:ARANGODIR\build\rclone-arangodb.exe"
+    findRcloneVersion
+    Write-Host "Copying rclone from rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."    
+    Copy-Item -Path "$global:WORKDIR\rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe" -Destination "$global:ARANGODIR\build\rclone-arangodb.exe" -Force
 }
 
 ################################################################################
@@ -1082,58 +1109,6 @@ Function checkoutEnterprise
     }
 }
 
-Function checkoutUpgradeDataTests
-{
-    If ($global:ok)
-    {
-        Push-Location $pwd
-        If (Test-Path -PathType Container -Path $global:UPGRADEDATADIR)
-        {
-            Set-Location $global:UPGRADEDATADIR
-            If (Test-Path -PathType Container -Path "$global:UPGRADEDATADIR\.git")
-            {
-                proc -process "git" -argument "rev-parse --is-inside-work-tree" -logfile $false -priority "Normal"
-                If ($global:ok)
-                {
-                    If (($(git remote show -n origin) | Select-String -Pattern " Fetch " -CaseSensitive | %{$_.Line.Split("/")[-1]}) -eq 'upgrade-data-tests')
-                    {
-                        Write-Host "=="$(Get-Date)"== started fetch 'upgrade-data-tests'"
-                        proc -process "git" -argument "remote update" -logfile $false -priority "Normal" 
-                        proc -process "git" -argument "checkout -f" -logfile $false -priority "Normal"
-                        Write-Host "=="$(Get-Date)"== finished fetch 'upgrade-data-tests'"
-                        $needReset = $False
-                        If ($(git status -uno) | Select-String -Pattern "behind" -CaseSensitive)
-                        {
-                            Write-Host "=="$(Get-Date)"== started clean and reset 'upgrade-data-tests'"
-                            proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
-                            proc -process "git" -argument "reset --hard origin/devel" -logfile $false -priority "Normal"
-                            Write-Host "=="$(Get-Date)"== finished clean and reset 'upgrade-data-tests'"
-                        }
-                    } Else { $needReset = $True }
-                } Else { $needReset = $True }
-            } Else { $needReset = $True }
-            If ($needReset -eq $True)
-            {
-              Set-Location $global:ARANGODIR
-              Remove-Item -Recurse -Force $global:UPGRADEDATADIR
-            }
-        }
-        If (-Not(Test-Path -PathType Container -Path $global:UPGRADEDATADIR))
-        {
-            If (Test-Path -PathType Leaf -Path "$HOME\.ssh\known_hosts")
-            {
-                Remove-Item -Force "$HOME\.ssh\known_hosts"
-                proc -process "ssh" -argument "-o StrictHostKeyChecking=no git@github.com" -logfile $false -priority "Normal"
-            }
-            Set-Location $global:ARANGODIR
-            Write-Host "=="$(Get-Date)"== started clone 'upgrade-data-tests'"
-            proc -process "git" -argument "clone ssh://git@github.com/arangodb/upgrade-data-tests" -logfile $false -priority "Normal"
-            Write-Host "=="$(Get-Date)"== finished clone 'upgrade-data-tests'"
-        }
-        Pop-Location
-    }
-}
-
 Function checkoutIfNeeded
 {
     If ($ENTERPRISEEDITION -eq "On")
@@ -1150,7 +1125,6 @@ Function checkoutIfNeeded
             checkoutArangoDB
         }
     }
-    checkoutUpgradeDataTests
 }
 
 Function convertSItoJSON
@@ -1163,7 +1137,7 @@ Function convertSItoJSON
             $var = $line.split(":")[0]
             switch -Regex ($var)
             {
-                'oskar|VERSION|Community|Starter|Enterprise|Syncer'
+                'oskar|VERSION|Community|Starter|Enterprise|Syncer|Rclone'
                 {
                     $val = $line.split(" ")[1]
                     If (-Not [string]::IsNullOrEmpty($val))
@@ -1200,7 +1174,8 @@ Function initSourceInfo
     Write-Output "Community: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
     Write-Output "Starter: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
     Write-Output "Enterprise: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
-    Write-Output "Syncer: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
+    Write-Output "Syncer: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append
+    Write-Output "Rclone: N/A" | Out-File -Encoding "utf8" "$global:INNERWORKDIR\sourceInfo.log" -Append -NoNewLine
   
     Pop-Location
     convertSItoJSON
@@ -1270,7 +1245,7 @@ Function switchBranches($branch_c,$branch_e)
         setupSourceInfo "VERSION" "N/A"
         setupSourceInfo "Community" "N/A"
     }
-    If ($ENTERPRISEEDITION -eq "On")
+    If ($global:ok -And $ENTERPRISEEDITION -eq "On")
     {
         $branch_e = $branch_e.ToString()
 
@@ -1559,6 +1534,10 @@ Function configureWindows
       {
           downloadStarter
           downloadSyncer
+          If (-Not $global:ok)
+          {
+              return
+          }
           copyRclone
           $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
           If ($global:USE_RCLONE -eq "true")
@@ -1639,8 +1618,8 @@ Function signWindows
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     ForEach ($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
-        Write-Host "Sign: signtool.exe sign /fd sha1 /td sha1 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
-        proc -process signtool.exe -argument "sign /fd sha1 /td sha1 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
+        Write-Host "Sign: signtool.exe sign /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
+        proc -process signtool.exe -argument "sign /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
     }
     Pop-Location
 }
@@ -1872,11 +1851,14 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
-    Write-Host "CMakeOutput ..."
-    ForEach ($file in $(Get-ChildItem $INNERWORKDIR\ArangoDB\build\CMakeFiles -Filter "*.log"))
+    If (Test-Path -Path $INNERWORKDIR\ArangoDB\build\CMakeFiles)
     {
-        Write-Host "Move $INNERWORKDIR\ArangoDB\build\CMakeFiles\$file"
-        Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\CMakeFiles\$file" -Destination $ENV:WORKSPACE; comm
+        Write-Host "CMakeOutput ..."
+        ForEach ($file in $(Get-ChildItem $INNERWORKDIR\ArangoDB\build\CMakeFiles -Filter "*.log"))
+        {
+            Write-Host "Move $INNERWORKDIR\ArangoDB\build\CMakeFiles\$file"
+            Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\build\CMakeFiles\$file" -Destination $ENV:WORKSPACE; comm
+        }
     }
 
     If ($PDBS_TO_WORKSPACE -eq "always" -or ($PDBS_TO_WORKSPACE -eq "crash" -and $global:hasTestCrashes))

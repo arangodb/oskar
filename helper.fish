@@ -41,7 +41,7 @@ function convertSItoJSON
       cat $WORKDIR/work/sourceInfo.log | while read -l line
       set -l var (echo $line | cut -f1 -d ':')
       switch "$var"
-        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Syncer"
+        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Syncer" "Rclone"
           set -l val (echo $line | cut -f2 -d ' ')
           if test -n $val
             set fields "$fields  \"$var\":\""(echo $line | cut -f2 -d ' ')\"\n""
@@ -72,6 +72,7 @@ function initSourceInfo
   echo "Starter: N/A" >> work/sourceInfo.log
   echo "Enterprise: N/A" >> work/sourceInfo.log
   echo "Syncer: N/A" >> work/sourceInfo.log
+  echo "Rclone: N/A" >> work/sourceInfo.log
   
   popd
   convertSItoJSON
@@ -165,7 +166,7 @@ if test -z "$MINIMAL_DEBUG_INFO"
   set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
 end
 
-function defaultArchecture
+function defaultArchitecture
   if test (count $argv) -lt 1
     set -gx DEFAULT_ARCHITECTURE "westmere"
   else
@@ -184,7 +185,7 @@ function findDefaultArchitecture
     set v (fgrep DEFAULT_ARCHITECTURE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
   end
 
-  defaultArchecture $v
+  defaultArchitecture $v
 end
 
 test -z "$DEFAULT_ARCHITECTURE"; and findDefaultArchitecture
@@ -376,6 +377,22 @@ if test ! -d work ; mkdir work ; end
 if test -z "$ARANGODB_DOCS_BRANCH" ; set -gx ARANGODB_DOCS_BRANCH "main"
 else ; set -gx ARANGODB_DOCS_BRANCH $ARANGODB_DOCS_BRANCH ; end
 
+function findRcloneVersion
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+  set -xg RCLONE_VERSION "1.51.0"
+
+  test -f $f
+  and begin
+    set -l v (fgrep RCLONE_VERSION $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+    if test "$v" != ""
+      set -xg RCLONE_VERSION "$v"
+    end
+
+    setupSourceInfo "Rclone" "$RCLONE_VERSION"
+  end
+end
+
 function findUseRclone
   set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
 
@@ -428,9 +445,11 @@ function copyRclone
       end
   end
 
-  echo Copying rclone from rclone/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
+  findRcloneVersion
+
+  echo Copying rclone from rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  cp -L $WORKDIR/rclone/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
+  cp -L $WORKDIR/rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
 ## #############################################################################
@@ -676,7 +695,7 @@ function buildSourcePackage
   and cp -a ArangoDB ArangoDB-$SOURCE_TAG
   and pushd ArangoDB-$SOURCE_TAG
   and find . -maxdepth 1 -name "arangodb-tmp.sock*" -delete
-  and rm -rf enterprise upgrade-data-tests mini-chaos
+  and rm -rf enterprise mini-chaos
   and git clean -f -d -x
   and rm -rf .git
   and popd
@@ -750,6 +769,22 @@ function buildTarGzPackageHelper
     set name arangodb3
   end
 
+  set -l arch ""
+
+  if test "$USE_ARM" = "On"
+    switch "$ARCH"
+      case "x86_64"
+        set arch "_$ARCH"
+      case '*'
+        if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+          set arch "_arm64"
+        else
+          echo "fatal, unknown architecture $ARCH for TGZ"
+          exit 1
+        end
+    end
+  end
+
   set -l suffix ""
   test $PLATFORM = "darwin"; and set suffix ".bak"
 
@@ -763,27 +798,27 @@ function buildTarGzPackageHelper
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and cp bin/README ./README
-  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v/g" README
+  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
   and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
-  and rm -rf "$WORKDIR/work/$name-$v"
-  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
+  and rm -rf "$WORKDIR/work/$name-$v$arch"
+  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v$arch"
   and cd $WORKDIR/work
   or begin ; popd ; return 1 ; end
 
-  rm -rf "$name-$os-$v"
-  and ln -s "$name-$v" "$name-$os-$v"
-  and tar -c -z -f "$WORKDIR/work/$name-$os-$v.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v"
-  and rm -rf "$name-$os-$v"
+  rm -rf "$name-$os-$v$arch"
+  and ln -s "$name-$v$arch" "$name-$os-$v$arch"
+  and tar -c -z -f "$WORKDIR/work/$name-$os-$v$arch.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
+  and rm -rf "$name-$os-$v$arch"
   set s $status
 
   if test "$s" -eq 0
-    rm -rf "$name-client-$os-$v"
-    and ln -s "$name-$v" "$name-client-$os-$v"
-    and mv "$name-client-$os-$v/bin/README" "$name-client-$os-$v/README"
-    and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v/g" "$name-client-$os-$v/README"
-    and rm -rf "$name-client-$os-$v/README.bak"
-    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v.tar.gz" -h \
+    rm -rf "$name-client-$os-$v$arch"
+    and ln -s "$name-$v$arch" "$name-client-$os-$v$arch"
+    and mv "$name-client-$os-$v$arch/bin/README" "$name-client-$os-$v$arch/README"
+    and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
+    and rm -rf "$name-client-$os-$v$arch/README.bak"
+    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" -h \
       --exclude "etc" \
       --exclude "var" \
       --exclude "*.initd" \
@@ -793,17 +828,17 @@ function buildTarGzPackageHelper
       --exclude "arangod.8" \
       --exclude "arango-dfdb.8" \
       --exclude "rcarangod.8" \
-      --exclude "$name-client-$os-$v/sbin" \
-      --exclude "$name-client-$os-$v/bin/arangod" \
-      --exclude "$name-client-$os-$v/bin/arangodb" \
-      --exclude "$name-client-$os-$v/bin/arangosync" \
-      --exclude "$name-client-$os-$v/usr/sbin" \
-      --exclude "$name-client-$os-$v/usr/bin/arangodb" \
-      --exclude "$name-client-$os-$v/usr/bin/arangosync" \
-      --exclude "$name-client-$os-$v/usr/share/arangodb3/arangodb-update-db" \
-      --exclude "$name-client-$os-$v/usr/share/arangodb3/js/server" \
-      "$name-client-$os-$v"
-    and rm -rf "$name-client-$os-$v"
+      --exclude "$name-client-$os-$v$arch/sbin" \
+      --exclude "$name-client-$os-$v$arch/bin/arangod" \
+      --exclude "$name-client-$os-$v$arch/bin/arangodb" \
+      --exclude "$name-client-$os-$v$arch/bin/arangosync" \
+      --exclude "$name-client-$os-$v$arch/usr/sbin" \
+      --exclude "$name-client-$os-$v$arch/usr/bin/arangodb" \
+      --exclude "$name-client-$os-$v$arch/usr/bin/arangosync" \
+      --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/arangodb-update-db" \
+      --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/js/server" \
+      "$name-client-$os-$v$arch"
+    and rm -rf "$name-client-$os-$v$arch"
     set s $status
   end
 
@@ -827,22 +862,33 @@ function makeSnippets
   set IN $argv[1]
   set OUT $argv[2]
 
+  set archSnippets "X86"
+  if test "$USE_ARM" = "On"
+    set archSnippets "X86" "ARM"
+  end
+
   community
   and buildSourceSnippet $IN $OUT
-  and buildDebianSnippet $IN $OUT
-  and buildRPMSnippet $IN $OUT
-  and buildTarGzSnippet $IN $OUT
-  and buildBundleSnippet $IN $OUT
-  and buildWindowsSnippet $IN $OUT
-  and buildDockerSnippet $OUT
 
-  and enterprise
-  and buildDebianSnippet $IN $OUT
-  and buildRPMSnippet $IN $OUT
-  and buildTarGzSnippet $IN $OUT
-  and buildBundleSnippet $IN $OUT
-  and buildWindowsSnippet $IN $OUT
-  and buildDockerSnippet $OUT
+  for edition in "community" "enterprise"
+    eval "$edition"
+    and buildDockerSnippet $OUT
+    and for arch in $archSnippets
+          switch "$arch"
+            case "X86"
+              buildDebianSnippet $IN $OUT "amd64" "x86_64"
+              and buildRPMSnippet $IN $OUT "x86_64" "x86_64"
+              and buildTarGzSnippet $IN $OUT "x86_64"
+              and buildBundleSnippet $IN $OUT "x86_64"
+              and buildWindowsSnippet $IN $OUT "win64"
+            case "ARM"
+              buildDebianSnippet $IN $OUT "arm64" "arm64"
+              and buildRPMSnippet $IN $OUT "aarch64" "arm64"
+              and buildTarGzSnippet $IN $OUT "arm64"
+              and buildBundleSnippet $IN $OUT "arm64"
+          end
+        end
+  end
 end
 
 ## #############################################################################
@@ -900,6 +946,15 @@ end
 ## #############################################################################
 
 function buildDebianSnippet
+  set snippetArch "-$argv[3]"
+  set packageArch $argv[3]
+  set tarGzSuffix "_$argv[4]"
+
+  if test "$USE_ARM" = "Off"
+    set snippetArch ""
+    set tarGzSuffix ""
+  end
+
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
@@ -916,9 +971,9 @@ function buildDebianSnippet
   end
 
   set -l DEBIAN_VERSION "$ARANGODB_DEBIAN_UPSTREAM""-$ARANGODB_DEBIAN_REVISION"
-  set -l DEBIAN_NAME_CLIENT "$ARANGODB_PKG_NAME""-client_$DEBIAN_VERSION""_amd64.deb"
-  set -l DEBIAN_NAME_SERVER "$ARANGODB_PKG_NAME""_$DEBIAN_VERSION""_amd64.deb"
-  set -l DEBIAN_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-dbg_$DEBIAN_VERSION""_amd64.deb"
+  set -l DEBIAN_NAME_CLIENT "$ARANGODB_PKG_NAME""-client_$DEBIAN_VERSION""_$packageArch.deb"
+  set -l DEBIAN_NAME_SERVER "$ARANGODB_PKG_NAME""_$DEBIAN_VERSION""_$packageArch.deb"
+  set -l DEBIAN_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-dbg_$DEBIAN_VERSION""_$packageArch.deb"
 
   set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Linux/
   set -l OUT $argv[2]/release/snippets
@@ -935,14 +990,14 @@ function buildDebianSnippet
   set -l DEBIAN_SHA256_CLIENT (shasum -a 256 -b < $IN/$DEBIAN_NAME_CLIENT | awk '{print $1}')
   set -l DEBIAN_SHA256_DEBUG_SYMBOLS (shasum -a 256 -b < $IN/$DEBIAN_NAME_DEBUG_SYMBOLS | awk '{print $1}')
 
-  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_TGZ_UPSTREAM$tarGzSuffix.tar.gz"
 
   if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAMtarGzSuffix.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
   set -l TARGZ_SHA256_CLIENT ""
 
@@ -951,7 +1006,7 @@ function buildDebianSnippet
     set TARGZ_SHA256_CLIENT (shasum -a 256 -b < $IN/$TARGZ_NAME_CLIENT | awk '{print $1}')
   end
 
-  set -l n "$OUT/download-$ARANGODB_PKG_NAME-debian.html"
+  set -l n "$OUT/download-$ARANGODB_PKG_NAME-debian$snippetArch.html"
 
   sed -e "s|@DEBIAN_NAME_SERVER@|$DEBIAN_NAME_SERVER|g" \
       -e "s|@DEBIAN_NAME_CLIENT@|$DEBIAN_NAME_CLIENT|g" \
@@ -977,7 +1032,7 @@ function buildDebianSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       -e "s|@DEBIAN_VERSION@|$DEBIAN_VERSION|g" \
-      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/debian.html.in > $n
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/debian$snippetArch.html.in > $n
 
   and echo "Debian Snippet: $n"
 end
@@ -987,6 +1042,15 @@ end
 ## #############################################################################
 
 function buildRPMSnippet
+  set snippetArch "-$argv[3]"
+  set packageArch $argv[3]
+  set tarGzSuffix "_$argv[4]"
+
+  if test "$USE_ARM" = "Off"
+    set snippetArch ""
+    set tarGzSuffix ""
+  end
+
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
@@ -1003,9 +1067,9 @@ function buildRPMSnippet
   end
 
   set -l RPM_VERSION "$ARANGODB_RPM_UPSTREAM-$ARANGODB_RPM_REVISION"
-  set -l RPM_NAME_CLIENT "$ARANGODB_PKG_NAME-client-$RPM_VERSION.x86_64.rpm"
-  set -l RPM_NAME_SERVER "$ARANGODB_PKG_NAME-$RPM_VERSION.x86_64.rpm"
-  set -l RPM_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-debuginfo-$RPM_VERSION.x86_64.rpm"
+  set -l RPM_NAME_CLIENT "$ARANGODB_PKG_NAME-client-$RPM_VERSION.$packageArch.rpm"
+  set -l RPM_NAME_SERVER "$ARANGODB_PKG_NAME-$RPM_VERSION.$packageArch.rpm"
+  set -l RPM_NAME_DEBUG_SYMBOLS "$ARANGODB_PKG_NAME-debuginfo-$RPM_VERSION.$packageArch.rpm"
 
   set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Linux/
   set -l OUT $argv[2]/release/snippets
@@ -1022,14 +1086,14 @@ function buildRPMSnippet
   set -l RPM_SHA256_CLIENT (shasum -a 256 -b < $IN/$RPM_NAME_CLIENT | awk '{print $1}')
   set -l RPM_SHA256_DEBUG_SYMBOLS (shasum -a 256 -b < $IN/$RPM_NAME_DEBUG_SYMBOLS | awk '{print $1}')
 
-  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_TGZ_UPSTREAM$tarGzSuffix.tar.gz"
 
   if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM$tarGzSuffix.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
   set -l TARGZ_SHA256_CLIENT ""
 
@@ -1038,7 +1102,7 @@ function buildRPMSnippet
     set TARGZ_SHA256_CLIENT (shasum -a 256 -b < $IN/$TARGZ_NAME_CLIENT | awk '{print $1}')
   end
 
-  set -l n "$OUT/download-$ARANGODB_PKG_NAME-rpm.html"
+  set -l n "$OUT/download-$ARANGODB_PKG_NAME-rpm$snippetArch.html"
 
   sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
       -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
@@ -1065,11 +1129,11 @@ function buildRPMSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
-      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/rpm.html.in > $n
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/rpm$snippetArch.html.in > $n
 
   and echo "RPM Snippet: $n"
 
-  and set -l n "$OUT/download-$ARANGODB_PKG_NAME-suse.html"
+  and set -l n "$OUT/download-$ARANGODB_PKG_NAME-suse$snippetArch.html"
 
   and sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
       -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
@@ -1096,7 +1160,7 @@ function buildRPMSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
-      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/suse.html.in > $n
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/suse$snippetArch.html.in > $n
 
   and echo "SUSE Snippet: $n"
 end
@@ -1106,6 +1170,14 @@ end
 ## #############################################################################
 
 function buildTarGzSnippet
+  set snippetArch "-$argv[3]"
+  set tarGzSuffix "_$argv[3]"
+
+  if test "$USE_ARM" = "Off"
+    set snippetArch ""
+    set tarGzSuffix ""
+  end
+
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
@@ -1121,7 +1193,7 @@ function buildTarGzSnippet
     set DOWNLOAD_LINK ""
   end
 
-  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_VERSION.tar.gz"
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-linux-$ARANGODB_VERSION$tarGzSuffix.tar.gz"
 
   set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Linux/
   set -l OUT $argv[2]/release/snippets
@@ -1131,7 +1203,7 @@ function buildTarGzSnippet
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM$tarGzSuffix.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
   set -l TARGZ_SHA256_CLIENT ""
 
@@ -1140,7 +1212,7 @@ function buildTarGzSnippet
     set TARGZ_SHA256_CLIENT (shasum -a 256 -b < $IN/$TARGZ_NAME_CLIENT | awk '{print $1}')
   end
 
-  set -l n "$OUT/download-$ARANGODB_PKG_NAME-linux.html"
+  set -l n "$OUT/download-$ARANGODB_PKG_NAME-linux$snippetArch.html"
 
   sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
@@ -1156,7 +1228,7 @@ function buildTarGzSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
-      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/linux.html.in > $n
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/linux$snippetArch.html.in > $n
 
   and echo "TarGZ Snippet: $n"
 end
@@ -1166,6 +1238,14 @@ end
 ## #############################################################################
 
 function buildBundleSnippet
+  set snippetArch "-$argv[3]"
+  set packageArch $argv[3]
+  set tarGzSuffix "_$argv[3]"
+
+  if test "$USE_ARM" = "Off"
+    set snippetArch ""
+  end
+
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
@@ -1181,7 +1261,7 @@ function buildBundleSnippet
     set DOWNLOAD_LINK ""
   end
 
-  set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.x86_64.dmg"
+  set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.$packageArch.dmg"
 
   set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/MacOSX/
   set -l OUT $argv[2]/release/snippets
@@ -1191,14 +1271,14 @@ function buildBundleSnippet
   set -l BUNDLE_SIZE_SERVER (expr (wc -c < $IN/$BUNDLE_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l BUNDLE_SHA256_SERVER (shasum -a 256 -b < $IN/$BUNDLE_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macos-$ARANGODB_VERSION.tar.gz"
+  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macos-$ARANGODB_VERSION$tarGzSuffix.tar.gz"
 
   if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
 
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-macos-$ARANGODB_TGZ_UPSTREAM.tar.gz"
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-macos-$ARANGODB_TGZ_UPSTREAM$tarGzSuffix.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
   set -l TARGZ_SHA256_CLIENT ""
 
@@ -1207,7 +1287,7 @@ function buildBundleSnippet
     set TARGZ_SHA256_CLIENT (shasum -a 256 -b < $IN/$TARGZ_NAME_CLIENT | awk '{print $1}')
   end
 
-  set -l n "$OUT/download-$ARANGODB_PKG_NAME-macosx.html"
+  set -l n "$OUT/download-$ARANGODB_PKG_NAME-macosx$snippetArch.html"
 
   sed -e "s|@BUNDLE_NAME_SERVER@|$BUNDLE_NAME_SERVER|g" \
       -e "s|@BUNDLE_SIZE_SERVER@|$BUNDLE_SIZE_SERVER|g" \
@@ -1226,7 +1306,7 @@ function buildBundleSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
-      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/macosx.html.in > $n
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/macosx$snippetArch.html.in > $n
 
   and echo "MacOSX Bundle Snippet: $n"
 end
@@ -1236,6 +1316,13 @@ end
 ## #############################################################################
 
 function buildWindowsSnippet
+  set snippetArch "-$argv[3]"
+  set packageArch $argv[3]
+
+  if test "$USE_ARM" = "Off"
+    set snippetArch ""
+  end
+
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_EDITION_LC "enterprise"
@@ -1253,9 +1340,9 @@ function buildWindowsSnippet
     set DOWNLOAD_LINK ""
   end
 
-  set -l WINDOWS_NAME_SERVER_EXE "$ARANGODB_PKG_NAME-$ARANGODB_VERSION""_win64.exe"
-  set -l WINDOWS_NAME_SERVER_ZIP "$ARANGODB_PKG_NAME-$ARANGODB_VERSION""_win64.zip"
-  set -l WINDOWS_NAME_CLIENT_EXE "$ARANGODB_PKG_NAME-client-$ARANGODB_VERSION""_win64.exe"
+  set -l WINDOWS_NAME_SERVER_EXE "$ARANGODB_PKG_NAME-$ARANGODB_VERSION""_$packageArch.exe"
+  set -l WINDOWS_NAME_SERVER_ZIP "$ARANGODB_PKG_NAME-$ARANGODB_VERSION""_$packageArch.zip"
+  set -l WINDOWS_NAME_CLIENT_EXE "$ARANGODB_PKG_NAME-client-$ARANGODB_VERSION""_$packageArch.exe"
 
   set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Windows/
   set -l OUT $argv[2]/release/snippets
@@ -1273,7 +1360,7 @@ function buildWindowsSnippet
   set -l WINDOWS_SIZE_CLIENT_EXE (expr (wc -c < $IN/$WINDOWS_NAME_CLIENT_EXE | tr -d " ") / 1024 / 1024)
   set -l WINDOWS_SHA256_CLIENT_EXE (shasum -a 256 -b < $IN/$WINDOWS_NAME_CLIENT_EXE | awk '{print $1}')
 
-  set -l n "$OUT/download-windows-$ARANGODB_EDITION_LC.html"
+  set -l n "$OUT/download-windows$snippetArch-$ARANGODB_EDITION_LC.html"
 
   sed -e "s|@WINDOWS_NAME_SERVER_EXE@|$WINDOWS_NAME_SERVER_EXE|g" \
       -e "s|@WINDOWS_SIZE_SERVER_EXE@|$WINDOWS_SIZE_SERVER_EXE|g" \
@@ -1292,7 +1379,7 @@ function buildWindowsSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
-      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/windows.html.in > $n
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/windows$snippetArch.html.in > $n
 
   and echo "Windows Snippet: $n"
 end
@@ -1493,13 +1580,6 @@ function showRepository
       end
     else
       printf $fmt3 'Enterprise' 'not configured'
-    end
-    if test -d $WORKDIR/work/ArangoDB/upgrade-data-tests
-      pushd upgrade-data-tests
-      printf $fmt3 'Test Data' (findBranch)
-      popd
-    else
-      printf $fmt3 'Test Data' 'missing'
     end
     if test -d $WORKDIR/work/ArangoDB/mini-chaos
       pushd mini-chaos
@@ -1830,7 +1910,6 @@ function checkoutIfNeeded
       checkoutArangoDB
     end
   end
-  and checkoutUpgradeDataTests
 end
 
 function clearResults

@@ -1,4 +1,4 @@
-FROM alpine:3.14
+FROM alpine:3.16
 MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 RUN apk add --no-cache pwgen nodejs numactl numactl-tools
@@ -9,6 +9,9 @@ ENV GLIBCXX_FORCE_NEW=1
 ADD install.tar.gz /
 COPY setup.sh /setup.sh
 RUN /setup.sh && rm /setup.sh
+
+# Adjust TZ by default since tzdata package isn't present (BTS-913)
+RUN echo "UTC" > /etc/timezone
 
 # The following is magic for unholy OpenShift security business.
 # Containers in OpenShift by default run with a random UID but with GID 0,

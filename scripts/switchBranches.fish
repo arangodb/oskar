@@ -16,16 +16,19 @@ function checkoutRepo
   set -l branch (string trim $argv[1])
   set -l clean $argv[2]
 
-  git checkout -- .
-  and git fetch --tags -f
-  and git fetch
+  git fetch --tags -f
+  and git fetch --all -f
+  and git checkout -- .
   and git submodule deinit --all -f
   and git checkout -f "$branch"
   and if test "$clean" = "true"
     if echo "$branch" | grep -q "^v"
       git checkout -- .
     else
-      git reset --hard "origin/$branch"
+      git remote update origin
+      git fetch --force --all
+      git pull
+      git reset --hard "$branch"
     end
     and git clean -fdx
   else
@@ -35,7 +38,9 @@ function checkoutRepo
       git pull
     end
   end
-  git submodule update --init --force
+  and git submodule update --init --force
+  
+  echo "STATUS: $status"
   return $status
 end
 

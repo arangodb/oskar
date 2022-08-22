@@ -15,37 +15,37 @@ set -gx ARCH (uname -m)
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 15
+set -gx UBUNTUBUILDIMAGE3_TAG 16
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 16
+set -gx UBUNTUBUILDIMAGE4_TAG 17
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 9
+set -gx UBUNTUBUILDIMAGE5_TAG 10
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
-set -gx UBUNTUBUILDIMAGE6_TAG 1
+set -gx UBUNTUBUILDIMAGE6_TAG 2
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 19
+set -gx ALPINEBUILDIMAGE3_TAG 20
 set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 20
+set -gx ALPINEBUILDIMAGE4_TAG 21
 set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
 
 set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
-set -gx ALPINEBUILDIMAGE5_TAG 10
+set -gx ALPINEBUILDIMAGE5_TAG 11
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
-set -gx ALPINEBUILDIMAGE6_TAG 1
+set -gx ALPINEBUILDIMAGE6_TAG 2
 set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -53,7 +53,7 @@ set -gx ALPINEUTILSIMAGE_TAG 4
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
-set -gx CENTOSPACKAGINGIMAGE_TAG 2
+set -gx CENTOSPACKAGINGIMAGE_TAG 3
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
 
 set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck-$ARCH
@@ -282,11 +282,6 @@ function checkoutMirror
   end
 
   runInContainer -v $argv[1]:/mirror $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMirror.fish
-  or return $status
-end
-
-function checkoutUpgradeDataTests
-  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutUpgradeDataTests.fish
   or return $status
 end
 
@@ -747,6 +742,7 @@ function buildDebianPackage
   set -l TARGET $WORKDIR/work/debian
   set -l EDITION arangodb3
   set -l EDITIONFOLDER $SOURCE/community
+  set -l ARCH (dpkg --print-architecture)
 
   if test "$ENTERPRISEEDITION" = "On"
     echo Building enterprise edition debian package...
@@ -783,6 +779,7 @@ function buildDebianPackage
   and echo >> $ch
   and echo -n " -- ArangoDB <hackers@arangodb.com>  " >> $ch
   and date -R >> $ch
+  and sed -i "s/@ARCHITECTURE@/$ARCH/g" $TARGET/control
   and runInContainer $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/buildDebianPackage.fish
   set -l s $status
   if test $s -ne 0
@@ -1026,6 +1023,52 @@ function makeDockerEnterpriseRelease
   end
 end
 
+function makeDockerMultiarch
+  set -l DOCKER_TAG $argv[1]
+
+  # build tag
+  set -l MANIFEST_NAME1 ""
+
+  # latest tag
+  set -l MANIFEST_NAME2 ""
+
+  if test "$ENTERPRISEEDITION" = "On"
+    if test "$RELEASE_TYPE" = "stable"
+      set MANIFEST_NAME1 arangodb/enterprise:$DOCKER_TAG
+    else
+      set MANIFEST_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
+    end
+
+    if test "$RELEASE_IS_HEAD" = "true"
+      set MANIFEST_NAME2 arangodb/enterprise-preview:latest
+    end
+  else
+    if test "$RELEASE_TYPE" = "stable"
+      set MANIFEST_NAME1 arangodb/arangodb:$DOCKER_TAG
+    else
+      set MANIFEST_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
+    end
+
+    if test "$RELEASE_IS_HEAD" = "true"
+      set MANIFEST_NAME2 arangodb/arangodb-preview:latest
+    end
+  end
+
+  pushDockerManifest $MANIFEST_NAME1
+  and if test "$RELEASE_IS_HEAD" = "true"
+        pushDockerManifest $MANIFEST_NAME2
+      end
+  or return 1
+
+  if test "$GCR_REG" = "On"
+    pushDockerManifest $GCR_REG_PREFIX$MANIFEST_NAME1
+    and if test "$RELEASE_IS_HEAD" = "true"
+          pushDockerManifest $GCR_REG_PREFIX$MANIFEST_NAME2
+        end
+    or return 1
+  end
+end
+
 function makeDockerDebug
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
@@ -1107,6 +1150,23 @@ function buildDockerAny
      set IMAGE_NAME1 $DOCKER_TAG
      set IMAGE_NAME2 $DOCKER_TAG
   else
+    set -l archSuffix ""
+    if test "$USE_ARM" = "On"
+      switch "$ARCH"
+        case "x86_64"
+          set archSuffix "-amd64"
+        case '*'
+          if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+          set archSuffix "-arm64v8"
+        else
+          echo "fatal, unknown architecture $ARCH for docker"
+          exit 1
+        end
+      end
+    end
+
+    set DOCKER_TAG $DOCKER_TAG$archSuffix
+
     if test "$ENTERPRISEEDITION" = "On"
       if test "$RELEASE_TYPE" = "stable"
         set IMAGE_NAME1 arangodb/enterprise:$DOCKER_TAG
@@ -1117,7 +1177,7 @@ function buildDockerAny
       set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
 
       if test "$RELEASE_IS_HEAD" = "true"
-        set IMAGE_NAME3 arangodb/enterprise-preview:latest
+        set IMAGE_NAME3 arangodb/enterprise-preview:latest$archSuffix
       end
     else
       if test "$RELEASE_TYPE" = "stable"
@@ -1129,7 +1189,7 @@ function buildDockerAny
       set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
 
       if test "$RELEASE_IS_HEAD" = "true"
-        set IMAGE_NAME3 arangodb/arangodb-preview:latest
+        set IMAGE_NAME3 arangodb/arangodb-preview:latest$archSuffix
       end
     end
   end
@@ -1277,6 +1337,26 @@ function pushDockerImage
   end
 
   docker push $imagename
+end
+
+function pushDockerManifest
+  if test (count $argv) -eq 0
+    echo Must give manifest name as argument
+    return 1
+  end
+
+  set manifestname $argv[1]
+
+  docker manifest inspect $manifestname
+  and docker manifest rm $manifestname
+
+  docker manifest create \
+  $manifestname \
+  --amend $manifestname-amd64 \
+  --amend $manifestname-arm64v8
+  and docker manifest push --purge $manifestname
+  and return 0
+  or return 1
 end
 
 function buildDockerLocal

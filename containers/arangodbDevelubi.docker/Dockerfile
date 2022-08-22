@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.6
 MAINTAINER Frank Celler <info@arangodb.com>
 
 RUN microdnf update -y && rm -rf /var/cache/yum
@@ -24,19 +24,21 @@ ADD ./LICENSE /licenses/LICENSE
 
 ENV GLIBCXX_FORCE_NEW=1
 
-
 RUN microdnf install gpg wget binutils && \
-    curl -L -O http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/numactl-libs-2.0.12-13.el8.x86_64.rpm && \
-    rpm -i numactl-libs-2.0.12-13.el8.x86_64.rpm && \
-    rm numactl-libs-2.0.12-13.el8.x86_64.rpm && \
-    curl -L -O http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/numactl-2.0.12-13.el8.x86_64.rpm && \
-    rpm -i numactl-2.0.12-13.el8.x86_64.rpm && \
-    rm numactl-2.0.12-13.el8.x86_64.rpm && \
+    curl -L -O http://mirror.centos.org/centos/8-stream/BaseOS/$(uname -p)/os/Packages/numactl-libs-2.0.12-13.el8.$(uname -p).rpm && \
+    rpm -i numactl-libs-2.0.12-13.el8.$(uname -p).rpm && \
+    rm numactl-libs-2.0.12-13.el8.$(uname -p).rpm && \
+    curl -L -O http://mirror.centos.org/centos/8-stream/BaseOS/$(uname -p)/os/Packages/numactl-2.0.12-13.el8.$(uname -p).rpm && \
+    rpm -i numactl-2.0.12-13.el8.$(uname -p).rpm && \
+    rm numactl-2.0.12-13.el8.$(uname -p).rpm && \
     microdnf clean all
 
 ADD install.tar.gz /
 COPY setup.sh /setup.sh
 RUN /setup.sh && rm /setup.sh
+
+# Adjust TZ by default since tzdata package isn't present (BTS-913)
+RUN echo "UTC" > /etc/timezone
 
 # The following is magic for unholy OpenShift security business.
 # Containers in OpenShift by default run with a random UID but with GID 0,
