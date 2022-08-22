@@ -301,6 +301,9 @@ class SiteConfig:
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
+        if psutil.cpu_count() <=8:
+            print("Small machine detected, doubling deadline!")
+            self.timeout *= 2
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
