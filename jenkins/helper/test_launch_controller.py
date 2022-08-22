@@ -554,6 +554,10 @@ class TestingRunner():
             if deadline:
                 print("Deadline: Joining threads of " + worker.name)
             worker.join()
+        if self.success:
+            for scenario in self.scenarios:
+                if not scenario.success:
+                    self.success = False
 
     def generate_report_txt(self):
         """ create the summary testfailures.txt from all bits """
