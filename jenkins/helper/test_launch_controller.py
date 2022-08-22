@@ -426,10 +426,13 @@ class TestingRunner():
         """ launch one testing job """
         if self.scenarios[offset].parallelity > (self.available_slots - self.used_slots):
             return False
-        sock_count = get_socket_count()
-        if sock_count > 8000:
-            print(f"Socket count: {sock_count}, waiting before spawning more")
-            return False
+        try:
+            sock_count = get_socket_count()
+            if sock_count > 8000:
+                print(f"Socket count: {sock_count}, waiting before spawning more")
+                return False
+        except psutil.AccessDenied:
+            pass
         load = psutil.getloadavg()
         if ((load[0] > self.max_load) or
             (load[1] > self.max_load1)):
@@ -594,14 +597,13 @@ class TestingRunner():
         if IS_WINDOWS:
             core_pattern = "*.dmp"
         files = sorted(core_dir.glob(core_pattern))
-        print(core_dir)
         if len(files) > core_max_count:
             count = 0
             for one_crash_file in files:
                 count += 1
                 if count > core_max_count:
                     print(f'{core_max_count} reached. will not archive {one_crash_file}')
-                    one_crash_file.unlink(missin_ok=True)
+                    one_crash_file.unlink(missing_ok=True)
         is_empty = len(files) == 0
         if self.crashed or not is_empty:
             crash_report_file = get_workspace() / datetime.now(tz=None).strftime("crashreport-%d-%b-%YT%H.%M.%SZ")
