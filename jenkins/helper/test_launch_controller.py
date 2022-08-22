@@ -539,7 +539,7 @@ class TestingRunner():
                     counter += 1
                     self.print_active()
                 else:
-                    if used_slots == 0:
+                    if used_slots == 0 and start_offset >= len(self.scenarios):
                         print("done")
                         break
                     self.print_active()
