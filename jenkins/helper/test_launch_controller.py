@@ -395,8 +395,10 @@ class TestingRunner():
         self.available_slots = round(self.no_threads * 2) #logical=False)
         if IS_WINDOWS:
             self.max_load = 0.85
+            self.max_load1 = 0.75
         else:
             self.max_load = self.no_threads * 0.9
+            self.max_load1 = self.no_threads * 0.9
         # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         self.used_slots = 0
         self.scenarios = []
@@ -405,6 +407,7 @@ class TestingRunner():
         self.running_suites = []
         self.success = True
         self.crashed = False
+        self.cluster = False
 
     def print_active(self):
         """ output currently active testsuites """
@@ -429,7 +432,7 @@ class TestingRunner():
             return False
         load = psutil.getloadavg()
         if ((load[0] > self.max_load) or
-            (load[1] > self.max_load)):
+            (load[1] > self.max_load1)):
             print(F"Load to high: {str(load)} waiting before spawning more")
             return False
         with self.slot_lock:
@@ -579,6 +582,9 @@ class TestingRunner():
 
     def generate_crash_report(self):
         """ crash report zips """
+        core_max_count = 4 # single server crashdumps...
+        if self.cluster:
+            core_max_count = 15 # 3 cluster instances
         core_dir = Path.cwd()
         core_pattern = "core*"
         if 'COREDIR' in os.environ:
@@ -587,8 +593,16 @@ class TestingRunner():
             core_dir = Path('/cores')
         if IS_WINDOWS:
             core_pattern = "*.dmp"
-        is_empty = not bool(sorted(core_dir.glob(core_pattern)))
+        files = sorted(core_dir.glob(core_pattern))
         print(core_dir)
+        if len(files) > core_max_count:
+            count = 0
+            for one_crash_file in files:
+                count += 1
+                if count > core_max_count:
+                    print(f'{core_max_count} reached. will not archive {one_crash_file}')
+                    one_crash_file.unlink(missin_ok=True)
+        is_empty = len(files) == 0
         if self.crashed or not is_empty:
             crash_report_file = get_workspace() / datetime.now(tz=None).strftime("crashreport-%d-%b-%YT%H.%M.%SZ")
             print("creating crashreport: " + str(crash_report_file))
@@ -675,6 +689,7 @@ class TestingRunner():
         if 'cluster' in test['flags'] and not cluster:
             return
         if cluster:
+            self.cluster = True
             if parallelity == 1:
                 parallelity = 4
             args += ['--cluster', 'true',
