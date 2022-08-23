@@ -514,6 +514,7 @@ class TestingRunner():
 
     def testing_runner(self):
         """ run testing suites """
+        # pylint: disable=too-many-branches
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
@@ -573,7 +574,9 @@ class TestingRunner():
         for testrun in self.scenarios:
             print(testrun)
             if testrun.crashed or not testrun.success:
-                summary += testrun.summary
+                summary += f"==={testrun.name}===\n{testrun.summary}"
+            if testrun.finish is None:
+                summary += f"==={testrun.name}===\nhasn't been launched at all!"
         print(summary)
         (get_workspace() / 'testfailures.txt').write_text(summary)
 
