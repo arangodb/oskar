@@ -302,6 +302,8 @@ class SiteConfig:
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
+        elif 'timeLimit' in os.environ:
+            self.timeout = int(os.environ['timeLimit'])
         if psutil.cpu_count() <= 8:
             print("Small machine detected, quadrupling deadline!")
             self.timeout *= 4
@@ -579,9 +581,9 @@ class TestingRunner():
         for testrun in self.scenarios:
             print(testrun)
             if testrun.crashed or not testrun.success:
-                summary += f"==={testrun.name}===\n{testrun.summary}"
+                summary += f"\n=== {testrun.name} ===\n{testrun.summary}"
             if testrun.finish is None:
-                summary += f"==={testrun.name}===\nhasn't been launched at all!"
+                summary += f"\n=== {testrun.name} ===\nhasn't been launched at all!"
         print(summary)
         (get_workspace() / 'testfailures.txt').write_text(summary)
 
