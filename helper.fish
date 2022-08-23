@@ -95,7 +95,8 @@ end
 function single ; set -gx TESTSUITE single ; end
 function cluster ; set -gx TESTSUITE cluster ; end
 function resilience ; set -gx TESTSUITE resilience ; end
-function catchtest ; set -gx TESTSUITE catchtest ; end
+function catchtest ; set -gx TESTSUITE gtest ; end
+function gtest ; set -gx TESTSUITE gtest ; end
 if test -z "$TESTSUITE" ; cluster
 else ; set -gx TESTSUITE $TESTSUITE ; end
 
@@ -1519,7 +1520,7 @@ function showConfig
   printf $fmt3 'SkipGrey'       $SKIPGREY      '(skipGrey/includeGrey)'
   printf $fmt3 'OnlyGrey'       $ONLYGREY      '(onlyGreyOn/onlyGreyOff)'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'
-  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/catchtest)'
+  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/gtest)'
   printf $fmt2 'Log Levels'     (echo $LOG_LEVELS)
   echo
   echo 'Package Configuration'
@@ -1978,7 +1979,7 @@ function moveResultsToWorkspace
       mv $WORKDIR/work/coverage $WORKSPACE
     end
 
-    set -l matches $WORKDIR/work/*.{asc,deb,dmg,rpm,tar.gz,tar.bz2,zip,html,csv}
+    set -l matches $WORKDIR/work/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv}
     for f in $matches
       echo $f | grep -qv testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"
     end

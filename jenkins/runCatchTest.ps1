@@ -6,7 +6,7 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 skipPackagingOn
 staticExecutablesOn
 setAllLogsToWorkspace
-catchtest
+gtest
 releaseMode
 
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH

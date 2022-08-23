@@ -42,6 +42,7 @@ Else
         $global:TSHARK = ""
   }
 }
+$ENV:TSHARK=$global:TSHARK
 
 $global:HANDLE_EXE = $null
 If (Get-Command handle.exe -ErrorAction SilentlyContinue)
@@ -65,7 +66,7 @@ Else
 {
   Remove-Item "$global:COREDIR\*" -Recurse -Force
 }
-$global:RUBY = (Get-Command ruby.exe).Path
+$env:COREDIR=$global:COREDIR
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
@@ -582,6 +583,11 @@ Function showConfig
     Write-Host "------------------------------------------------------------------------------"
     Write-Host "Cache Statistics"
     showCacheStats
+    $ENV:SKIPNONDETERMINISTIC = $SKIPNONDETERMINISTIC
+    $ENV:SKIPTIMECRITICAL = $SKIPTIMECRITICAL
+    $ENV:SKIPGREY = $SKIPGREY
+    $ENV:ONLYGREY = $ONLYGREY
+    $ENV:BUILDMODE = $BUILDMODE
     comm
 }
 
@@ -600,7 +606,7 @@ Function resilience
 Function catchtest
 {
     $global:TESTSUITE = "catchtest"
-    $global:TESTSUITE_TIMEOUT = 1800
+    $global:TIMELIMIT = 1800
 }
 If (-Not($TESTSUITE))
 {

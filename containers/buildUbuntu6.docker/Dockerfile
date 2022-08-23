@@ -7,7 +7,7 @@ ENV COMPILER_VERSION 11
 
 ENV CLANG_VERSION 14
 
-RUN apt-get update && \
+RUN apt-get update --fix-missing && \
     apt-get install -y software-properties-common && \
     apt-get update && \
     apt-get upgrade -y
@@ -38,5 +38,7 @@ RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/fmt
 RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/iresearch
 RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/rocksdb
 RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/velocypack
+
+RUN apt-get install -y python3-pip && pip3 install py7zr psutil
 
 CMD [ "/usr/bin/fish" ]

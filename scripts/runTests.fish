@@ -6,70 +6,32 @@ source $SCRIPTS/lib/tests.fish
 ## Single tests: runtime,command
 ################################################################################
 
-set -l ST
-echo "Using test definitions from arangodb repo"
-python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f fish | source
-
-set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
-set -g STL (count $STS)
-echo $STS
-
 function launchSingleTests
-  set -g launchCount (math $launchCount + 1)
-
-  if test $launchCount -gt $STL
-    return 0
-  end
-
-  set -l test $STS[$launchCount]
-
-  if test -n "$TEST"
-    if echo $test | fgrep -q "$TEST"
-      echo "Running test '$test' (contains '$TEST')"
-    else
-      echo "Skipping test '$test' (does not contain '$TEST')"
-      return 1
-    end
-  end
-
-  eval $test
-  return 1
+  echo "Using test definitions from arangodb repo"
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch
+  and set -xg result "GOOD"
+  or set -xg result "BAD"
 end
 
 ################################################################################
 ## Catch tests
 ################################################################################
 
-function launchCatchTest
-  switch $launchCount
-    case  0 ; runCatchTest1 catch -
-    case '*' ; return 0
-  end
-  set -g launchCount (math $launchCount + 1)
-  return 1
+function launchGTest
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest
+  and set -xg result "GOOD"
+  or set -xg result "BAD"
 end
 
 ################################################################################
 ## Cluster tests: runtime,command
 ################################################################################
 
-set -l CT
-echo "Using test definitions from arangodb repo"
-python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f fish --cluster | source
-  
-set -g CTS (echo -e $CT | fgrep , | sort -rn | awk -F, '{print $2}')
-set -g CTL (count $CTS)
-echo $CTS
-
 function launchClusterTests
-  set -g launchCount (math $launchCount + 1)
-
-  if test $launchCount -gt $CTL
-    return 0
-  end
-
-  eval $CTS[$launchCount]
-  return 1
+  echo "Using test definitions from arangodb repo"
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster
+  and set -xg result "GOOD"
+  or set -xg result "BAD"
 end
 
 ################################################################################
@@ -97,19 +59,23 @@ set -g suiteRunner ""
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
-    set timeLimit 4200
+    set -xg timeLimit 4200
     set suiteRunner "launchClusterTests"
   case "single"
     resetLaunch 1
-    set timeLimit 3900
+    set -xg  timeLimit 3900
     set suiteRunner "launchSingleTests"
+  case "gtest"
+    resetLaunch 1
+    set -xg  timeLimit 1800
+    set suiteRunner "launchGTest"
   case "catchtest"
     resetLaunch 1
-    set timeLimit 1800
-    set suiteRunner "launchCatchTest"
+    set -xg  timeLimit 1800
+    set suiteRunner "launchGTest"
   case "resilience"
     resetLaunch 4
-    set timeLimit 3600
+    set -xg timeLimit 3600
     set suiteRunner "launchResilienceTests"
   case "*"
     echo Unknown test suite $TESTSUITE
@@ -130,16 +96,11 @@ if test "$SAN" = "On"
   end
 end
 
-set evalCmd "waitOrKill $timeLimit $suiteRunner"
-eval $evalCmd
-set timeout $status
-
-createReport
+eval "$suiteRunner"
 
 echo "RESULT: $result"
-echo "TIMEOUT: $timeout"
 
-if test $result = GOOD -a $timeout = 0
+if test $result = GOOD
   exit 0
 else
   exit 1

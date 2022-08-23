@@ -7,12 +7,12 @@ ENV COMPILER_VERSION 10
 
 ENV CLANG_VERSION 12
 
-RUN apt-get update && \
+RUN apt-get update --fix-missing && \
     apt-get install -y software-properties-common && \
     apt-get update && \
     apt-get upgrade -y
 
-RUN apt-get install -y build-essential gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} cmake make bison flex python ccache git libjemalloc-dev vim exuberant-ctags gdb fish ruby ruby-httparty ruby-rspec psmisc sudo debhelper debconf jq wget libdb-dev curl gnupg2 gcovr prometheus && gem install persistent_httparty && apt-get clean
+RUN apt-get install -y build-essential gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} cmake make bison flex python ccache git libjemalloc-dev vim exuberant-ctags gdb fish psmisc sudo debhelper debconf jq wget libdb-dev curl gnupg2 gcovr prometheus && apt-get clean
 
 RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl
 
@@ -36,5 +36,7 @@ RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/fmt
 RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/iresearch
 RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/rocksdb
 RUN git config --global --add safe.directory /work/ArangoDB/3rdParty/velocypack
+
+RUN apt-get install -y python3-pip && pip3 install py7zr psutil 
 
 CMD [ "/usr/bin/fish" ]
