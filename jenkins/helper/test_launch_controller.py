@@ -315,7 +315,21 @@ class SiteConfig:
             for target in ['RelWithdebInfo', 'Debug']:
                 if (bin_dir / target).exists():
                     bin_dir = bin_dir / target
-
+        self.no_threads = psutil.cpu_count()
+        self.available_slots = round(self.no_threads * 2) #logical=False)
+        if IS_WINDOWS:
+            self.max_load = 0.85
+            self.max_load1 = 0.75
+        else:
+            self.max_load = self.no_threads * 0.9
+            self.max_load1 = self.no_threads * 0.9
+        # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
+        print(f"""Machine Info:
+ - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
+ - {psutil.virtual_memory()} virtual Memory
+ - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
+ - {self.available_slots} test slots
+""")
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
@@ -396,15 +410,6 @@ class TestingRunner():
         self.cfg = cfg
         self.deadline_reached = False
         self.slot_lock = Lock()
-        self.no_threads = psutil.cpu_count()
-        self.available_slots = round(self.no_threads * 2) #logical=False)
-        if IS_WINDOWS:
-            self.max_load = 0.85
-            self.max_load1 = 0.75
-        else:
-            self.max_load = self.no_threads * 0.9
-            self.max_load1 = self.no_threads * 0.9
-        # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         self.used_slots = 0
         self.scenarios = []
         self.arangosh = ArangoshExecutor(self.cfg, self.slot_lock)
@@ -429,7 +434,7 @@ class TestingRunner():
 
     def launch_next(self, offset, counter):
         """ launch one testing job """
-        if self.scenarios[offset].parallelity > (self.available_slots - self.used_slots):
+        if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
             return False
         try:
             sock_count = get_socket_count()
@@ -439,8 +444,8 @@ class TestingRunner():
         except psutil.AccessDenied:
             pass
         load = psutil.getloadavg()
-        if ((load[0] > self.max_load) or
-            (load[1] > self.max_load1)):
+        if ((load[0] > self.cfg.max_load) or
+            (load[1] > self.cfg.max_load1)):
             print(F"Load to high: {str(load)} waiting before spawning more")
             return False
         with self.slot_lock:
@@ -536,8 +541,8 @@ class TestingRunner():
             used_slots = 0
             with self.slot_lock:
                 used_slots = self.used_slots
-            if self.available_slots > used_slots and start_offset < len(self.scenarios):
-                print(f"Launching more: {self.available_slots} > {used_slots} {counter}")
+            if self.cfg.available_slots > used_slots and start_offset < len(self.scenarios):
+                print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter}")
                 sys.stdout.flush()
                 if self.launch_next(start_offset, counter):
                     start_offset += 1
