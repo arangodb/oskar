@@ -194,6 +194,7 @@ class TestConfig():
         if not self.base_logdir.exists():
             self.base_logdir.mkdir()
         self.log_file =  cfg.run_root / f'{self.name}.log'
+        # pylint: disable=global-variable-not-assigned
         global TEST_LOG_FILES
         try:
             print(TEST_LOG_FILES.index(str(self.log_file)))
@@ -302,7 +303,7 @@ class SiteConfig:
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
         if psutil.cpu_count() <= 8:
-            print("Small machine detected, doubling deadline!")
+            print("Small machine detected, trippling deadline!")
             self.timeout *= 3
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
@@ -393,6 +394,7 @@ class TestingRunner():
     # pylint: disable=too-many-instance-attributes
     def __init__(self, cfg):
         self.cfg = cfg
+        self.deadline_reached = False
         self.slot_lock = Lock()
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
@@ -550,11 +552,11 @@ class TestingRunner():
             else:
                 self.print_active()
                 time.sleep(5)
-        deadline = datetime.now() > self.cfg.deadline
-        if deadline:
+        self.deadline_reached = datetime.now() > self.cfg.deadline
+        if self.deadline_reached:
             self.handle_deadline()
         for worker in self.workers:
-            if deadline:
+            if self.deadline_reached:
                 print("Deadline: Joining threads of " + worker.name)
             worker.join()
         if self.success:
@@ -566,6 +568,8 @@ class TestingRunner():
         """ create the summary testfailures.txt from all bits """
         print(self.scenarios)
         summary = ""
+        if self.deadline_reached:
+            summary = "Deadline reached during test execution!\n"
         for testrun in self.scenarios:
             print(testrun)
             if testrun.crashed or not testrun.success:
