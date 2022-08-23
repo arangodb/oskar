@@ -1,11 +1,10 @@
 <div>
   <p>
-    The following packages are for macOS 10.14 Mojave or higher.
+    The following packages are for macOS 11 Big Sur or higher.
   </p>
   <p>
-    The processor(s) must support the <strong>x86-64</strong> instruction set,
-    as well as the <strong>SSE 4.2</strong> and <strong>AVX</strong> instruction
-    set extensions (Intel Sandy Bridge or better, AMD Bulldozer or better, etc.).
+    The processor(s) must be 64-bit Apple silicon (<strong>M1</strong> or later)
+    based on ARM (<strong>AArch64</strong>).
   </p>
   <p>
     We provide a single package containing the server and the client
