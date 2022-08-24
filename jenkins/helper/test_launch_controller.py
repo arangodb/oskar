@@ -75,6 +75,8 @@ def get_workspace():
     return Path.cwd() / 'work'
 
 TEMP = Path("/tmp/")
+if 'TMP' in os.environ:
+    TEMP = Path(os.environ['TMP'])
 if 'TEMP' in os.environ:
     TEMP = Path(os.environ['TEMP'])
 if 'INNERWORKDIR' in os.environ:
