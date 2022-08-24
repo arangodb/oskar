@@ -333,6 +333,7 @@ class SiteConfig:
  - {psutil.virtual_memory()} virtual Memory
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.available_slots} test slots
+ - {str(TEMP)} - temporary directory
 """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
