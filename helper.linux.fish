@@ -603,12 +603,12 @@ function cppcheckPR
   checkoutIfNeeded
   pushd $WORKDIR/work/ArangoDB
   git fetch --all
-  set -l files (git --no-pager diff --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1]) -- arangod/ lib/ client-tools/ arangosh/ | grep -E '\.cp{2}?|\.hp{2}?')
+  set -l files (git --no-pager diff --diff-filter=d --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1]) -- arangod/ lib/ client-tools/ arangosh/ | grep -E '\.cp{2}?|\.hp{2}?')
   popd
 
   if test "$ENTERPRISEEDITION" = "On"
     pushd $WORKDIR/work/ArangoDB/enterprise
-      set files $files (git --no-pager diff --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1]) -- Enterprise/ | grep -E '\.cp{2}?|\.hp{2}?' | sed -e 's/^/enterprise\//')
+      set files $files (git --no-pager diff --diff-filter=d --name-only FETCH_HEAD (git merge-base FETCH_HEAD origin/$argv[1]) -- Enterprise/ | grep -E '\.cp{2}?|\.hp{2}?' | sed -e 's/^/enterprise\//')
     popd
   end
 
