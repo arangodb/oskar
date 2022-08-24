@@ -74,11 +74,12 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
+print(os.environ)
 TEMP = Path("/tmp/")
-if 'TMP' in os.environ:
-    TEMP = Path(os.environ['TMP'])
 if 'TEMP' in os.environ:
     TEMP = Path(os.environ['TEMP'])
+if 'TMP' in os.environ:
+    TEMP = Path(os.environ['TMP'])
 if 'INNERWORKDIR' in os.environ:
     TEMP = Path(os.environ['INNERWORKDIR'])
     wd = TEMP / 'ArangoDB'
@@ -299,7 +300,6 @@ class SiteConfig:
     """ this environment - adapted to oskar defaults """
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
-        print(os.environ)
         self.trace = False
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
