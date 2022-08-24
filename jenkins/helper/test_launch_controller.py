@@ -91,6 +91,7 @@ if not TEMP.exists():
     TEMP.mkdir(parents=True)
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
+os.environ['TMP'] = str(TEMP)
 
 def list_all_processes():
     """list all processes for later reference"""
