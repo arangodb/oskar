@@ -74,11 +74,14 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
+print(os.environ)
 TEMP = Path("/tmp/")
 if 'TMP' in os.environ:
     TEMP = Path(os.environ['TMP'])
 if 'TEMP' in os.environ:
     TEMP = Path(os.environ['TEMP'])
+if 'TMP' in os.environ:
+    TEMP = Path(os.environ['TMP'])
 if 'INNERWORKDIR' in os.environ:
     TEMP = Path(os.environ['INNERWORKDIR'])
     wd = TEMP / 'ArangoDB'
@@ -90,6 +93,7 @@ if not TEMP.exists():
     TEMP.mkdir(parents=True)
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
+os.environ['TMP'] = str(TEMP)
 
 def list_all_processes():
     """list all processes for later reference"""
@@ -299,7 +303,6 @@ class SiteConfig:
     """ this environment - adapted to oskar defaults """
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
-        print(os.environ)
         self.trace = False
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
@@ -333,6 +336,7 @@ class SiteConfig:
  - {psutil.virtual_memory()} virtual Memory
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.available_slots} test slots
+ - {str(TEMP)} - temporary directory
 """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
