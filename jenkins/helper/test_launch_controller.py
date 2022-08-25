@@ -76,6 +76,8 @@ def get_workspace():
 
 print(os.environ)
 TEMP = Path("/tmp/")
+if 'TMP' in os.environ:
+    TEMP = Path(os.environ['TMP'])
 if 'TEMP' in os.environ:
     TEMP = Path(os.environ['TEMP'])
 if 'TMP' in os.environ:
