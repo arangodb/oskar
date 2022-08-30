@@ -1242,6 +1242,7 @@ function buildBundleSnippet
 
   if test "$USE_ARM" = "Off"
     set snippetArch ""
+    set tarGzSuffix ""
   end
 
   if test "$ENTERPRISEEDITION" = "On"
