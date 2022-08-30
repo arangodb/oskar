@@ -192,14 +192,14 @@ Function comm
 
 Function 7zip($Path,$DestinationPath,$moreArgs)
 {
-    Write-Host "7za.exe" -argument "a -mx9 $DestinationPath $Path $moreArgs" -logfile $false -priority "Normal" 
-    proc -process "7za.exe" -argument "a -mx9 $DestinationPath $Path $moreArgs" -logfile $false -priority "Normal" 
+    Write-Host "7z.exe" -argument "a -mx9 $DestinationPath $Path $moreArgs" -logfile $false -priority "Normal" 
+    proc -process "7z.exe" -argument "a -mx9 $DestinationPath $Path $moreArgs" -logfile $false -priority "Normal" 
 }
 
 Function 7unzip($zip)
 {
-    Write-Host "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
-    proc -process "7za.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
+    Write-Host "7z.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
+    proc -process "7z.exe" -argument "x $zip -aoa" -logfile $false -priority "Normal" 
 }
 
 Function isGCE
@@ -1624,8 +1624,8 @@ Function signWindows
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     ForEach ($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
-        Write-Host "Sign: signtool.exe sign /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
-        proc -process signtool.exe -argument "sign /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
+        Write-Host "Sign: signtool.exe sign /sm /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
+        proc -process signtool.exe -argument "sign /sm /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
     }
     Pop-Location
 }
