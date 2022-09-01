@@ -37,6 +37,14 @@ if sys.version_info[0] != 3:
 
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
+if IS_MAC:
+    # Put us to the performance cores:
+    # https://apple.stackexchange.com/questions/443713
+    from os import setpriority
+    PRIO_DARWIN_THREAD  = 0b0011
+    PRIO_DARWIN_PROCESS = 0b0100
+    PRIO_DARWIN_BG      = 0x1000
+    setpriority(PRIO_DARWIN_PROCESS, 0, 0)
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -310,6 +318,18 @@ class SiteConfig:
         if psutil.cpu_count() <= 8:
             print("Small machine detected, quadrupling deadline!")
             self.timeout *= 4
+        self.no_threads = psutil.cpu_count()
+        if IS_MAC and self.no_threads == 8:
+            self.no_threads = 4 # M1 only has 4 performance cores
+        self.available_slots = round(self.no_threads * 2) #logical=False)
+        if IS_WINDOWS:
+            self.max_load = 0.85
+            self.max_load1 = 0.75
+        else:
+            self.max_load = self.no_threads * 0.9
+            self.max_load1 = self.no_threads * 0.9
+
+
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -320,14 +340,6 @@ class SiteConfig:
             for target in ['RelWithdebInfo', 'Debug']:
                 if (bin_dir / target).exists():
                     bin_dir = bin_dir / target
-        self.no_threads = psutil.cpu_count()
-        self.available_slots = round(self.no_threads * 2) #logical=False)
-        if IS_WINDOWS:
-            self.max_load = 0.85
-            self.max_load1 = 0.75
-        else:
-            self.max_load = self.no_threads * 0.9
-            self.max_load1 = self.no_threads * 0.9
         # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         print(f"""Machine Info:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
