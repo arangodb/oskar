@@ -335,6 +335,7 @@ class SiteConfig:
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.available_slots} test slots
  - {str(TEMP)} - temporary directory
+ - current Disk I/O: {str(psutil.disk_io_counters())}
 """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
@@ -430,7 +431,8 @@ class TestingRunner():
         with self.slot_lock:
             print("Running: " + str(self.running_suites) +
                   " => Active Slots: " + str(self.used_slots) +
-                  " => Load: " + str(psutil.getloadavg()))
+                  " => Load: " + str(psutil.getloadavg()) +
+                  " => Disk I/O: " + str(psutil.disk_io_counters()))
         sys.stdout.flush()
 
     def done_job(self, parallelity):
@@ -452,7 +454,8 @@ class TestingRunner():
         load = psutil.getloadavg()
         if ((load[0] > self.cfg.max_load) or
             (load[1] > self.cfg.max_load1)):
-            print(F"Load to high: {str(load)} waiting before spawning more")
+            print(F"Load to high: {str(load)} waiting before spawning more - Disk I/O: " +
+                  str(psutil.disk_io_counters()))
             return False
         with self.slot_lock:
             self.used_slots += self.scenarios[offset].parallelity
