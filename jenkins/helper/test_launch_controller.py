@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import platform
 import os
 from pathlib import Path
-import platform
 import pprint
 import signal
 import sys
@@ -633,13 +632,14 @@ class TestingRunner():
             core_max_count = 15 # 3 cluster instances
         core_dir = Path.cwd()
         core_pattern = "core*"
+        system_corefiles = []
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
         if IS_MAC:
-            core_dir = Path('/cores')
+            system_corefiles = Path('/cores').glob(core_pattern)
         if IS_WINDOWS:
             core_pattern = "*.dmp"
-        files = sorted(core_dir.glob(core_pattern))
+        files = sorted(core_dir.glob(core_pattern) + system_corefiles)
         if len(files) > core_max_count:
             count = 0
             for one_crash_file in files:
