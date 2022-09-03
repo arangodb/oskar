@@ -2,6 +2,7 @@
 """ read test definition, and generate the output for the specified target """
 import argparse
 from datetime import datetime, timedelta
+import platform
 import os
 from pathlib import Path
 import platform
@@ -343,6 +344,7 @@ class SiteConfig:
         # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         print(f"""Machine Info:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
+ - {arch = platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.available_slots} test slots
