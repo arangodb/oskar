@@ -315,7 +315,7 @@ class SiteConfig:
             self.timeout = int(os.environ['timeLimit'.upper()])
         elif 'timeLimit' in os.environ:
             self.timeout = int(os.environ['timeLimit'])
-        if psutil.cpu_count() <= 8:
+        if psutil.cpu_count(logical=False) <= 8:
             print("Small machine detected, quadrupling deadline!")
             self.timeout *= 4
         self.no_threads = psutil.cpu_count()
