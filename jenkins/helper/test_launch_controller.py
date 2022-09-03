@@ -320,9 +320,10 @@ class SiteConfig:
             print("Small machine detected, quadrupling deadline!")
             self.timeout *= 4
         self.no_threads = psutil.cpu_count()
-        if IS_MAC and self.no_threads == 8:
-            self.no_threads = 4 # M1 only has 4 performance cores
         self.available_slots = round(self.no_threads * 2) #logical=False)
+        if IS_MAC and platform.processor() == "arm" and psutil.cpu_count() == 8:
+            self.no_threads = 6 # M1 only has 4 performance cores
+            self.available_slots = 10
         if IS_WINDOWS:
             self.max_load = 0.85
             self.max_load1 = 0.75
@@ -344,7 +345,7 @@ class SiteConfig:
         # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         print(f"""Machine Info:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
- - {arch = platform.processor()} processor architecture
+ - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.available_slots} test slots
@@ -443,7 +444,7 @@ class TestingRunner():
     def print_active(self):
         """ output currently active testsuites """
         with self.slot_lock:
-            print(str(psutil.getloadavg()) "<= Load " +
+            print(str(psutil.getloadavg()) + "<= Load " +
                   "Running: " + str(self.running_suites) +
                   " => Active Slots: " + str(self.used_slots) +
                   " => Disk I/O: " + str(psutil.disk_io_counters()))
