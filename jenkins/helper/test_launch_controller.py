@@ -327,7 +327,7 @@ class SiteConfig:
             self.max_load1 = 0.75
         else:
             self.max_load = self.no_threads * 0.9
-            self.max_load1 = self.no_threads * 0.9
+            self.max_load1 = self.no_threads * 0.95
 
 
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
@@ -441,9 +441,9 @@ class TestingRunner():
     def print_active(self):
         """ output currently active testsuites """
         with self.slot_lock:
-            print("Running: " + str(self.running_suites) +
+            print(str(psutil.getloadavg()) "<= Load " +
+                  "Running: " + str(self.running_suites) +
                   " => Active Slots: " + str(self.used_slots) +
-                  " => Load: " + str(psutil.getloadavg()) +
                   " => Disk I/O: " + str(psutil.disk_io_counters()))
         sys.stdout.flush()
 
@@ -466,7 +466,7 @@ class TestingRunner():
         load = psutil.getloadavg()
         if ((load[0] > self.cfg.max_load) or
             (load[1] > self.cfg.max_load1)):
-            print(F"Load to high: {str(load)} waiting before spawning more - Disk I/O: " +
+            print(F"{str(load)} <= Load to high; waiting before spawning more - Disk I/O: " +
                   str(psutil.disk_io_counters()))
             return False
         with self.slot_lock:
