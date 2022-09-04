@@ -635,6 +635,8 @@ class TestingRunner():
         system_corefiles = []
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
+        else:
+            core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
         if IS_MAC:
             system_corefiles = sorted(Path('/cores').glob(core_pattern))
         if IS_WINDOWS:
