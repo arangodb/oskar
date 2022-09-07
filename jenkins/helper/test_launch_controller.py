@@ -2,9 +2,9 @@
 """ read test definition, and generate the output for the specified target """
 import argparse
 from datetime import datetime, timedelta
+import platform
 import os
 from pathlib import Path
-import platform
 import pprint
 import signal
 import sys
@@ -15,9 +15,10 @@ import shutil
 import psutil
 
 from async_client import (
-    CliExecutionException,
     ArangoCLIprogressiveTimeoutExecutor,
-    dummy_line_result,
+    make_logfile_params,
+    logfile_line_result,
+    delete_logfile_params
 )
 
 ZIPFORMAT="gztar"
@@ -36,6 +37,14 @@ if sys.version_info[0] != 3:
 
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
+if IS_MAC:
+    # Put us to the performance cores:
+    # https://apple.stackexchange.com/questions/443713
+    from os import setpriority
+    PRIO_DARWIN_THREAD  = 0b0011
+    PRIO_DARWIN_PROCESS = 0b0100
+    PRIO_DARWIN_BG      = 0x1000
+    setpriority(PRIO_DARWIN_PROCESS, 0, 0)
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -73,9 +82,12 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
+print(os.environ)
 TEMP = Path("/tmp/")
 if 'TEMP' in os.environ:
     TEMP = Path(os.environ['TEMP'])
+if 'TMP' in os.environ:
+    TEMP = Path(os.environ['TMP'])
 if 'INNERWORKDIR' in os.environ:
     TEMP = Path(os.environ['INNERWORKDIR'])
     wd = TEMP / 'ArangoDB'
@@ -87,6 +99,7 @@ if not TEMP.exists():
     TEMP.mkdir(parents=True)
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
+os.environ['TMP'] = str(TEMP)
 
 def list_all_processes():
     """list all processes for later reference"""
@@ -131,6 +144,8 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
         print(testing_args)
         args = [
             '-c', str(self.cfg.cfgdir / 'arangosh.conf'),
+            "--log.foreground-tty", "true",
+            "--log.force-direct", "true",
             '--log.level', 'warning',
             "--log.level", "v8=debug",
             '--server.endpoint', 'none',
@@ -141,22 +156,21 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
             '--',
             testcase,
             '--testOutput', directory ] + testing_args
-        try:
-            return self.run_arango_tool_monitored(
-                self.cfg.bin_dir / "arangosh",
-                run_cmd,
-                timeout,
-                self.cfg.deadline,
-                dummy_line_result,
-                verbose,
-                False,
-                True,
-                logfile,
-                identifier
-            )
-        except CliExecutionException as ex:
-            print(ex)
-            return False
+        params = make_logfile_params(verbose, logfile, self.cfg.trace)
+        ret = self.run_monitored(
+            self.cfg.bin_dir / "arangosh",
+            run_cmd,
+            params=params,
+            progressive_timeout=timeout,
+            deadline=self.cfg.deadline,
+            result_line_handler=logfile_line_result,
+            identifier=identifier
+        )
+        delete_logfile_params(params)
+        ret['error'] = params['error']
+        return ret
+
+TEST_LOG_FILES = []
 
 class TestConfig():
     """ setup of one test """
@@ -192,11 +206,18 @@ class TestConfig():
         if not self.base_logdir.exists():
             self.base_logdir.mkdir()
         self.log_file =  cfg.run_root / f'{self.name}.log'
+        # pylint: disable=global-variable-not-assigned
+        global TEST_LOG_FILES
+        try:
+            print(TEST_LOG_FILES.index(str(self.log_file)))
+            raise Exception(f'duplicate testfile {str(self.log_file)}')
+        except ValueError:
+            TEST_LOG_FILES.append(str(self.log_file))
         self.summary_file = self.base_logdir / 'testfailures.txt'
         self.crashed_file = self.base_logdir / 'UNITTEST_RESULT_CRASHED.json'
         self.success_file = self.base_logdir / 'UNITTEST_RESULT_EXECUTIVE_SUMMARY.json'
         self.report_file =  self.base_logdir / 'UNITTEST_RESULT.json'
-        self.base_testdir = cfg.test_data_dir/ self.name
+        self.base_testdir = cfg.test_data_dir_x / self.name
 
         self.args = []
         for param in args:
@@ -288,12 +309,30 @@ class SiteConfig:
     """ this environment - adapted to oskar defaults """
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
-        print(os.environ)
+        self.trace = False
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
+        elif 'timeLimit' in os.environ:
+            self.timeout = int(os.environ['timeLimit'])
+        if psutil.cpu_count(logical=False) <= 8:
+            print("Small machine detected, quadrupling deadline!")
+            self.timeout *= 4
+        self.no_threads = psutil.cpu_count()
+        self.available_slots = round(self.no_threads * 2) #logical=False)
+        if IS_MAC and platform.processor() == "arm" and psutil.cpu_count() == 8:
+            self.no_threads = 6 # M1 only has 4 performance cores
+            self.available_slots = 10
+        if IS_WINDOWS:
+            self.max_load = 0.85
+            self.max_load1 = 0.75
+        else:
+            self.max_load = self.no_threads * 0.9
+            self.max_load1 = self.no_threads * 0.95
+
+
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
-        self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 600)
+        self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
             definition_file = definition_file.parent
         base_source_dir = (definition_file / '..').resolve()
@@ -302,16 +341,26 @@ class SiteConfig:
             for target in ['RelWithdebInfo', 'Debug']:
                 if (bin_dir / target).exists():
                     bin_dir = bin_dir / target
-
+        # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
+        print(f"""Machine Info:
+ - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
+ - {platform.processor()} processor architecture
+ - {psutil.virtual_memory()} virtual Memory
+ - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
+ - {self.available_slots} test slots
+ - {str(TEMP)} - temporary directory
+ - current Disk I/O: {str(psutil.disk_io_counters())}
+""")
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
+        self.test_data_dir = base_source_dir
         self.passvoid = ''
         self.run_root = base_source_dir / 'testrun'
         if self.run_root.exists():
             shutil.rmtree(self.run_root)
-        self.test_data_dir = self.run_root / 'run'
-        self.test_data_dir.mkdir(parents=True)
+        self.test_data_dir_x = self.run_root / 'run'
+        self.test_data_dir_x.mkdir(parents=True)
         self.test_report_dir = self.run_root / 'report'
         self.test_report_dir.mkdir(parents=True)
         self.portbase = 7000
@@ -329,7 +378,11 @@ def testing_runner(testing_instance, this, arangosh):
                                this.log_file,
                                this.name_enum,
                                True) #verbose?
-    this.success = ret[0]
+    this.success = (
+        not ret["progressive_timeout"] or
+        not ret["have_deadline"] or
+        ret["rc_exit"] == 0
+    )
     this.finish = datetime.now(tz=None)
     this.delta = this.finish - this.start
     this.delta_seconds = this.delta.total_seconds()
@@ -337,8 +390,8 @@ def testing_runner(testing_instance, this, arangosh):
     this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
     this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
     if this.report_file.exists():
-        this.structured_results = this.report_file.read_text()
-    this.summary = ret[4]
+        this.structured_results = this.report_file.read_text(encoding="UTF-8", errors='ignore')
+    this.summary = ret['error']
     if this.summary_file.exists():
         this.summary += this.summary_file.read_text()
     with arangosh.slot_lock:
@@ -376,14 +429,8 @@ class TestingRunner():
     # pylint: disable=too-many-instance-attributes
     def __init__(self, cfg):
         self.cfg = cfg
+        self.deadline_reached = False
         self.slot_lock = Lock()
-        self.no_threads = psutil.cpu_count()
-        self.available_slots = round(self.no_threads * 2) #logical=False)
-        if IS_WINDOWS:
-            self.max_load = 0.85
-        else:
-            self.max_load = self.no_threads * 0.9
-        # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         self.used_slots = 0
         self.scenarios = []
         self.arangosh = ArangoshExecutor(self.cfg, self.slot_lock)
@@ -391,14 +438,16 @@ class TestingRunner():
         self.running_suites = []
         self.success = True
         self.crashed = False
+        self.cluster = False
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
 
     def print_active(self):
         """ output currently active testsuites """
         with self.slot_lock:
-            print("Running: " + str(self.running_suites) +
+            print(str(psutil.getloadavg()) + "<= Load " +
+                  "Running: " + str(self.running_suites) +
                   " => Active Slots: " + str(self.used_slots) +
-                  " => Load: " + str(psutil.getloadavg()))
+                  " => Disk I/O: " + str(psutil.disk_io_counters()))
         sys.stdout.flush()
 
     def done_job(self, parallelity):
@@ -408,16 +457,20 @@ class TestingRunner():
 
     def launch_next(self, offset, counter):
         """ launch one testing job """
-        if self.scenarios[offset].parallelity > (self.available_slots - self.used_slots):
+        if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
             return False
-        sock_count = get_socket_count()
-        if sock_count > 8000:
-            print(f"Socket count: {sock_count}, waiting before spawning more")
-            return False
+        try:
+            sock_count = get_socket_count()
+            if sock_count > 8000:
+                print(f"Socket count: {sock_count}, waiting before spawning more")
+                return False
+        except psutil.AccessDenied:
+            pass
         load = psutil.getloadavg()
-        if ((load[0] > self.max_load) or
-            (load[1] > self.max_load)):
-            print(F"Load to high: {str(load)} waiting before spawning more")
+        if ((load[0] > self.cfg.max_load) or
+            (load[1] > self.cfg.max_load1)):
+            print(F"{str(load)} <= Load to high; waiting before spawning more - Disk I/O: " +
+                  str(psutil.disk_io_counters()))
             return False
         with self.slot_lock:
             self.used_slots += self.scenarios[offset].parallelity
@@ -490,6 +543,7 @@ class TestingRunner():
 
     def testing_runner(self):
         """ run testing suites """
+        # pylint: disable=too-many-branches
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
@@ -511,8 +565,8 @@ class TestingRunner():
             used_slots = 0
             with self.slot_lock:
                 used_slots = self.used_slots
-            if self.available_slots > used_slots and start_offset < len(self.scenarios):
-                print(f"Launching more: {self.available_slots} > {used_slots} {counter}")
+            if self.cfg.available_slots > used_slots and start_offset < len(self.scenarios):
+                print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter}")
                 sys.stdout.flush()
                 if self.launch_next(start_offset, counter):
                     start_offset += 1
@@ -520,7 +574,7 @@ class TestingRunner():
                     counter += 1
                     self.print_active()
                 else:
-                    if used_slots == 0:
+                    if used_slots == 0 and start_offset >= len(self.scenarios):
                         print("done")
                         break
                     self.print_active()
@@ -528,22 +582,30 @@ class TestingRunner():
             else:
                 self.print_active()
                 time.sleep(5)
-        deadline = datetime.now() > self.cfg.deadline
-        if deadline:
+        self.deadline_reached = datetime.now() > self.cfg.deadline
+        if self.deadline_reached:
             self.handle_deadline()
         for worker in self.workers:
-            if deadline:
+            if self.deadline_reached:
                 print("Deadline: Joining threads of " + worker.name)
             worker.join()
+        if self.success:
+            for scenario in self.scenarios:
+                if not scenario.success:
+                    self.success = False
 
     def generate_report_txt(self):
         """ create the summary testfailures.txt from all bits """
         print(self.scenarios)
         summary = ""
+        if self.deadline_reached:
+            summary = "Deadline reached during test execution!\n"
         for testrun in self.scenarios:
             print(testrun)
             if testrun.crashed or not testrun.success:
-                summary += testrun.summary
+                summary += f"\n=== {testrun.name} ===\n{testrun.summary}"
+            if testrun.finish is None:
+                summary += f"\n=== {testrun.name} ===\nhasn't been launched at all!"
         print(summary)
         (get_workspace() / 'testfailures.txt').write_text(summary)
 
@@ -566,16 +628,29 @@ class TestingRunner():
 
     def generate_crash_report(self):
         """ crash report zips """
+        core_max_count = 4 # single server crashdumps...
+        if self.cluster:
+            core_max_count = 15 # 3 cluster instances
         core_dir = Path.cwd()
         core_pattern = "core*"
+        system_corefiles = []
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
+        else:
+            core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
         if IS_MAC:
-            core_dir = Path('/cores')
+            system_corefiles = sorted(Path('/cores').glob(core_pattern))
         if IS_WINDOWS:
             core_pattern = "*.dmp"
-        is_empty = not bool(sorted(core_dir.glob(core_pattern)))
-        print(core_dir)
+        files = sorted(core_dir.glob(core_pattern)) + system_corefiles
+        if len(files) > core_max_count:
+            count = 0
+            for one_crash_file in files:
+                count += 1
+                if count > core_max_count:
+                    print(f'{core_max_count} reached. will not archive {one_crash_file}')
+                    one_crash_file.unlink(missing_ok=True)
+        is_empty = len(files) == 0
         if self.crashed or not is_empty:
             crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.datetime_format}")
             print("creating crashreport: " + str(crash_report_file))
@@ -662,6 +737,7 @@ class TestingRunner():
         if 'cluster' in test['flags'] and not cluster:
             return
         if cluster:
+            self.cluster = True
             if parallelity == 1:
                 parallelity = 4
             args += ['--cluster', 'true',

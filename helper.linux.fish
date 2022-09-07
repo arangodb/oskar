@@ -15,15 +15,15 @@ set -gx ARCH (uname -m)
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 18
+set -gx UBUNTUBUILDIMAGE3_TAG 17
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 19
+set -gx UBUNTUBUILDIMAGE4_TAG 18
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 12
+set -gx UBUNTUBUILDIMAGE5_TAG 11
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
@@ -282,11 +282,6 @@ function checkoutMirror
   end
 
   runInContainer -v $argv[1]:/mirror $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMirror.fish
-  or return $status
-end
-
-function checkoutUpgradeDataTests
-  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutUpgradeDataTests.fish
   or return $status
 end
 
@@ -1352,11 +1347,14 @@ function pushDockerManifest
 
   set manifestname $argv[1]
 
+  docker manifest inspect $manifestname
+  and docker manifest rm $manifestname
+
   docker manifest create \
   $manifestname \
   --amend $manifestname-amd64 \
   --amend $manifestname-arm64v8
-  and docker manifest push $manifestname
+  and docker manifest push --purge $manifestname
   and return 0
   or return 1
 end

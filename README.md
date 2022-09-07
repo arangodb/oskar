@@ -237,10 +237,10 @@ if supported, set number of concurrent builds to `PARALLELISM`
 `jenkins/helper/test_launch_controller.py` is used to control multiple test executions.
 
 ### Its dependencies over stock python3 are:
- - psutil to controll subprocesses
+ - psutil to control subprocesses
  - py7zr (optional) to build 7z reports instead of tar.bz2
 
-### Its reading these environment variables:
+### It's reading these environment variables:
 - `INNERWORKDIR` - as the directory to place the report files
 - `WORKDIR` - used instead if `INNERWORKDIR` hasn't been set.
 - `TEMP` - temporary directory if not `INNERWORKDIR`/ArangoDB
@@ -269,13 +269,13 @@ if supported, set number of concurrent builds to `PARALLELISM`
     - `single`: this test requires a single server
     - `full`: this test is only executed in full tests
     - `!full`: this test is only executed in non-full tests
-    - `gtest`: only the gtest are to be executed
+    - `gtest`: only the gtests are to be executed
     - `ldap`: ldap
-    - `enterprise`: this tests is only executed with the enterprise version
+    - `enterprise`: this test is only executed with the enterprise version
     - `!windows`: test is excluded from ps1 output
  - `--cluster` filter `test-definition.txt` for all tests flagged as `cluster`
  - `--full` - all tests including those flagged as `full` are executed.
- - `--gtest` - only gtest are executed
+ - `--gtest` - only gtests are executed
  - `--all` - output unfiltered
  
 ### Syntax in `test-definition.txt`
@@ -305,7 +305,7 @@ themselves will spawn a set of I/O threads to capture the output of testing.js i
 
 The life cycle of a testrun will be as follows:
 
- - the environment variable `TESTSUITE_TIMEOUT` defines a *deadline* to all the tests, how much seconds should be allowed.
+ - the environment variable `TIMELIMIT` defines a *deadline* to all the tests, how much seconds should be allowed.
  - tests are running in worker threads.
  - main thread keeps control, launches more worker threads, once machine bandwith permits, but only every 5s as closest to not overwhelm the machine while launching arangods.
  - tests themselves have their timeouts; `testing.js` will abort if they are reached.
@@ -320,7 +320,7 @@ The life cycle of a testrun will be as follows:
  - this should unblock the workers I/O threads, and they should exit.
  - the `waitpid()` on `testing.js` should exit, I/O threads should be joined, results should be passed up to the main thread.
  - so the workers still have a slugish interpretation of the *deadline*, giving them the chance to collect as much knowledge about the test execution as posible.
- - meanwhile the main thread has a *fixed* deadline: 5 minutes after the `TESTSUITE_TIMEOUT` is reached.
+ - meanwhile the main thread has a *fixed* deadline: 5 minutes after the `TIMELIMIT` is reached.
  - if not all workers have indicated their exit before this final deadline:
    - the main thread will start killing any subprocesses of itself which it finds.
    - after this wait another 20s, to see whether the workers may have been unblocked by the killing

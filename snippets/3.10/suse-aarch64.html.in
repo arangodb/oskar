@@ -1,11 +1,11 @@
-<div>@ARANGODB_DOWNLOAD_WARNING@
+<div>
   <p>
-    The following packages are for Red Hat-based Linux distributions.
+    The following packages are for openSUSE and SUSE Enterprise Linux (SLE).
   </p>
   <p>
-    The processor(s) must support the <strong>x86-64</strong> instruction set,
-    as well as the <strong>SSE 4.2</strong> instruction set extension
-    (Intel Westmere or better, AMD Bulldozer or better, etc.).
+    The processor(s) must be 64-bit ARM chips (<strong>AArch64</strong>).
+    The minimum requirement is <strong>ARMv8</strong> with <strong>Neon</strong>
+    (SIMD extension).
   </p>
   <p>
     We provide a single package containing the server and the client tools. For
@@ -61,13 +61,10 @@
     Installation via <strong>Package Manager</strong>
   </p>
   <p>
-    Run the following as root in a terminal:
-  <pre>cd /etc/yum.repos.d/
-curl -OL https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/RPM/arangodb.repo
-yum -y install @ARANGODB_PKG_NAME@-@ARANGODB_RPM_UPSTREAM@-@ARANGODB_RPM_REVISION@</pre>
-  </p>
-  <p>
-    To install the debug symbols package (not required by default), run:
-    <pre>yum -y install @ARANGODB_PKG_NAME@-debuginfo-@ARANGODB_RPM_UPSTREAM@-@ARANGODB_RPM_REVISION@</pre>
+    Run the following as root:
+    <pre>zypper --no-gpg-checks --gpg-auto-import-keys addrepo https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/RPM/arangodb.repo
+
+zypper --no-gpg-checks --gpg-auto-import-keys refresh
+zypper -n install @ARANGODB_PKG_NAME@=@ARANGODB_VERSION@</pre>
   </p>
 </div>
