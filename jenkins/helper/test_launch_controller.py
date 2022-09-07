@@ -391,6 +391,7 @@ class TestingRunner():
         self.running_suites = []
         self.success = True
         self.crashed = False
+        self.datetime_format = "%Y-%m-%dT%H%M%SZ"
 
     def print_active(self):
         """ output currently active testsuites """
@@ -576,7 +577,7 @@ class TestingRunner():
         is_empty = not bool(sorted(core_dir.glob(core_pattern)))
         print(core_dir)
         if self.crashed or not is_empty:
-            crash_report_file = get_workspace() / datetime.now(tz=None).strftime("crashreport-%d-%b-%YT%H.%M.%SZ")
+            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.datetime_format}")
             print("creating crashreport: " + str(crash_report_file))
             sys.stdout.flush()
             shutil.make_archive(str(crash_report_file),
@@ -585,7 +586,7 @@ class TestingRunner():
                                 core_dir.name,
                                 True)
             self.cleanup_unneeded_binary_files()
-            binary_report_file = get_workspace() / datetime.now(tz=None).strftime("binaries-%d-%b-%YT%H.%M.%SZ")
+            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.datetime_format}")
             print("creating crashreport binary support zip: " + str(binary_report_file))
             sys.stdout.flush()
             shutil.make_archive(str(binary_report_file),
@@ -600,7 +601,7 @@ class TestingRunner():
 
     def generate_test_report(self):
         """ regular testresults zip """
-        tarfile = get_workspace() / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
+        tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
         print("Creating " + str(tarfile))
         sys.stdout.flush()
         shutil.make_archive(self.cfg.run_root / 'innerlogs',
