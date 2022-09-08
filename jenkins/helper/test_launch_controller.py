@@ -634,6 +634,8 @@ class TestingRunner():
             core_max_count = 15 # 3 cluster instances
         core_dir = Path.cwd()
         core_pattern = "core*"
+        if IS_WINDOWS:
+            core_pattern = "*.dmp"
         system_corefiles = []
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
@@ -641,8 +643,6 @@ class TestingRunner():
             core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
         if IS_MAC:
             system_corefiles = sorted(Path('/cores').glob(core_pattern))
-        if IS_WINDOWS:
-            core_pattern = "*.dmp"
         files = sorted(core_dir.glob(core_pattern)) + system_corefiles
         if len(files) > core_max_count:
             count = 0
