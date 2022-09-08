@@ -1,3 +1,4 @@
+
 FROM ubuntu:20.04
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
@@ -7,12 +8,12 @@ ENV COMPILER_VERSION 9
 
 ENV CLANG_VERSION 12
 
-RUN apt-get update && \
+RUN apt-get update --fix-missing && \
     apt-get install -y software-properties-common && \
     apt-get update && \
     apt-get upgrade -y
 
-RUN apt-get install -y build-essential gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} cmake make bison flex python ccache git libjemalloc-dev vim exuberant-ctags gdb fish ruby ruby-httparty ruby-rspec psmisc sudo debhelper debconf jq wget libdb-dev curl gnupg2 gcovr prometheus && gem install persistent_httparty && apt-get clean
+RUN apt-get install -y build-essential gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} cmake make bison flex python ccache git libjemalloc-dev vim exuberant-ctags gdb fish psmisc sudo debhelper debconf jq wget libdb-dev curl gnupg2 gcovr prometheus && apt-get clean
 
 RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl
 
@@ -31,5 +32,7 @@ RUN LC_ALL="C" update-ccache-symlinks
 RUN git config --global --add safe.directory /work/ArangoDB
 RUN git config --global --add safe.directory /work/ArangoDB/enterprise
 RUN git config --global --add safe.directory /work/ArangoDB/docs
+
+RUN apt-get install -y python3-pip && pip3 install py7zr psutil 
 
 CMD [ "/usr/bin/fish" ]

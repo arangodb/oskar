@@ -10,27 +10,11 @@ Function global:registerSingleTests()
 
     Write-Host "Registering tests..."
 
-    $global:TESTSUITE_TIMEOUT = 3900
+    $env:TIMELIMIT = 3900
 
     Write-Host "Using test definitions from repo..."
-    Try
-    {
-        $out = python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f ps1
-        If ($LASTEXITCODE -eq 0)
-        {
-            echo $out | Invoke-Expression -ErrorAction Stop
-        }
-        Else
-        {
-            throw "$out"
-        }
-        Set-Variable -Name "ok" -Value $true -Scope global
-    }
-    Catch
-    {
-        Write-Host "Error: $_"
-        Set-Variable -Name "ok" -Value $false -Scope global
-    }
+    pip install py7zr
+    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -logfile $false -priority "Normal"
 }
 
 Function global:registerClusterTests()
@@ -38,27 +22,11 @@ Function global:registerClusterTests()
     noteStartAndRepoState
     Write-Host "Registering tests..."
 
-    $global:TESTSUITE_TIMEOUT = 6000
+    $env:TIMELIMIT = 6600
 
     Write-Host "Using test definitions from repo..."
-    Try
-    {
-        $out = python "$env:WORKSPACE\jenkins\helper\generate_jenkins_scripts.py" "$INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -f ps1 --cluster
-        If ($LASTEXITCODE -eq 0)
-        {
-            echo $out | Invoke-Expression -ErrorAction Stop
-        }
-        Else
-        {
-            throw "$out"
-        }
-        Set-Variable -Name "ok" -Value $true -Scope global
-    }
-    Catch
-    {
-        Write-Host "Error: $_"
-        Set-Variable -Name "ok" -Value $false -Scope global
-    }
+    pip install py7zr
+    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt --cluster" -logfile $false -priority "Normal"
 }
 
 runTests

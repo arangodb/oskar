@@ -15,19 +15,19 @@ set -gx ARCH (uname -m)
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
 set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 16
+set -gx UBUNTUBUILDIMAGE3_TAG 17
 set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 17
+set -gx UBUNTUBUILDIMAGE4_TAG 18
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 10
+set -gx UBUNTUBUILDIMAGE5_TAG 11
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
-set -gx UBUNTUBUILDIMAGE6_TAG 2
+set -gx UBUNTUBUILDIMAGE6_TAG 3
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
@@ -453,11 +453,11 @@ function oskar
   and if test "$SAN" = "On"
     parallelism 2
     clearSanStatus
-    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    runInContainer --security-opt seccomp=unconfined --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
     set s (math $s + (getSanStatus))
   else
-    runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    runInContainer --security-opt seccomp=unconfined --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
   end
 
