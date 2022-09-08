@@ -84,6 +84,8 @@ def get_workspace():
 
 print(os.environ)
 TEMP = Path("/tmp/")
+if 'TMP' in os.environ:
+    TEMP = Path(os.environ['TMP'])
 if 'TEMP' in os.environ:
     TEMP = Path(os.environ['TEMP'])
 if 'TMP' in os.environ:
@@ -315,6 +317,7 @@ class SiteConfig:
             self.timeout = int(os.environ['timeLimit'.upper()])
         elif 'timeLimit' in os.environ:
             self.timeout = int(os.environ['timeLimit'])
+
         if psutil.cpu_count(logical=False) <= 8:
             print("Small machine detected, quadrupling deadline!")
             self.timeout *= 4
@@ -330,7 +333,6 @@ class SiteConfig:
             self.max_load = self.no_threads * 0.9
             self.max_load1 = self.no_threads * 0.95
 
-
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -341,7 +343,6 @@ class SiteConfig:
             for target in ['RelWithdebInfo', 'Debug']:
                 if (bin_dir / target).exists():
                     bin_dir = bin_dir / target
-        # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         print(f"""Machine Info:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
