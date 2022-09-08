@@ -2,9 +2,9 @@
 """ read test definition, and generate the output for the specified target """
 import argparse
 from datetime import datetime, timedelta
+import platform
 import os
 from pathlib import Path
-import platform
 import pprint
 import signal
 import sys
@@ -37,6 +37,14 @@ if sys.version_info[0] != 3:
 
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
+if IS_MAC:
+    # Put us to the performance cores:
+    # https://apple.stackexchange.com/questions/443713
+    from os import setpriority
+    PRIO_DARWIN_THREAD  = 0b0011
+    PRIO_DARWIN_PROCESS = 0b0100
+    PRIO_DARWIN_BG      = 0x1000
+    setpriority(PRIO_DARWIN_PROCESS, 0, 0)
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -309,9 +317,22 @@ class SiteConfig:
             self.timeout = int(os.environ['timeLimit'.upper()])
         elif 'timeLimit' in os.environ:
             self.timeout = int(os.environ['timeLimit'])
-        if psutil.cpu_count() <= 8:
+
+        if psutil.cpu_count(logical=False) <= 8:
             print("Small machine detected, quadrupling deadline!")
             self.timeout *= 4
+        self.no_threads = psutil.cpu_count()
+        self.available_slots = round(self.no_threads * 2) #logical=False)
+        if IS_MAC and platform.processor() == "arm" and psutil.cpu_count() == 8:
+            self.no_threads = 6 # M1 only has 4 performance cores
+            self.available_slots = 10
+        if IS_WINDOWS:
+            self.max_load = 0.85
+            self.max_load1 = 0.75
+        else:
+            self.max_load = self.no_threads * 0.9
+            self.max_load1 = self.no_threads * 0.95
+
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -322,21 +343,14 @@ class SiteConfig:
             for target in ['RelWithdebInfo', 'Debug']:
                 if (bin_dir / target).exists():
                     bin_dir = bin_dir / target
-        self.no_threads = psutil.cpu_count()
-        self.available_slots = round(self.no_threads * 2) #logical=False)
-        if IS_WINDOWS:
-            self.max_load = 0.85
-            self.max_load1 = 0.75
-        else:
-            self.max_load = self.no_threads * 0.9
-            self.max_load1 = self.no_threads * 0.9
-        # self.available_slots += (psutil.cpu_count(logical=True) - self.available_slots) / 2
         print(f"""Machine Info:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
+ - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.available_slots} test slots
  - {str(TEMP)} - temporary directory
+ - current Disk I/O: {str(psutil.disk_io_counters())}
 """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
@@ -426,13 +440,15 @@ class TestingRunner():
         self.success = True
         self.crashed = False
         self.cluster = False
+        self.datetime_format = "%Y-%m-%dT%H%M%SZ"
 
     def print_active(self):
         """ output currently active testsuites """
         with self.slot_lock:
-            print("Running: " + str(self.running_suites) +
+            print(str(psutil.getloadavg()) + "<= Load " +
+                  "Running: " + str(self.running_suites) +
                   " => Active Slots: " + str(self.used_slots) +
-                  " => Load: " + str(psutil.getloadavg()))
+                  " => Disk I/O: " + str(psutil.disk_io_counters()))
         sys.stdout.flush()
 
     def done_job(self, parallelity):
@@ -454,7 +470,8 @@ class TestingRunner():
         load = psutil.getloadavg()
         if ((load[0] > self.cfg.max_load) or
             (load[1] > self.cfg.max_load1)):
-            print(F"Load to high: {str(load)} waiting before spawning more")
+            print(F"{str(load)} <= Load to high; waiting before spawning more - Disk I/O: " +
+                  str(psutil.disk_io_counters()))
             return False
         with self.slot_lock:
             self.used_slots += self.scenarios[offset].parallelity
@@ -617,13 +634,16 @@ class TestingRunner():
             core_max_count = 15 # 3 cluster instances
         core_dir = Path.cwd()
         core_pattern = "core*"
-        if 'COREDIR' in os.environ:
-            core_dir = Path(os.environ['COREDIR'])
-        if IS_MAC:
-            core_dir = Path('/cores')
         if IS_WINDOWS:
             core_pattern = "*.dmp"
-        files = sorted(core_dir.glob(core_pattern))
+        system_corefiles = []
+        if 'COREDIR' in os.environ:
+            core_dir = Path(os.environ['COREDIR'])
+        else:
+            core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
+        if IS_MAC:
+            system_corefiles = sorted(Path('/cores').glob(core_pattern))
+        files = sorted(core_dir.glob(core_pattern)) + system_corefiles
         if len(files) > core_max_count:
             count = 0
             for one_crash_file in files:
@@ -633,7 +653,7 @@ class TestingRunner():
                     one_crash_file.unlink(missing_ok=True)
         is_empty = len(files) == 0
         if self.crashed or not is_empty:
-            crash_report_file = get_workspace() / datetime.now(tz=None).strftime("crashreport-%d-%b-%YT%H.%M.%SZ")
+            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.datetime_format}")
             print("creating crashreport: " + str(crash_report_file))
             sys.stdout.flush()
             shutil.make_archive(str(crash_report_file),
@@ -642,7 +662,7 @@ class TestingRunner():
                                 core_dir.name,
                                 True)
             self.cleanup_unneeded_binary_files()
-            binary_report_file = get_workspace() / datetime.now(tz=None).strftime("binaries-%d-%b-%YT%H.%M.%SZ")
+            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.datetime_format}")
             print("creating crashreport binary support zip: " + str(binary_report_file))
             sys.stdout.flush()
             shutil.make_archive(str(binary_report_file),
@@ -657,7 +677,7 @@ class TestingRunner():
 
     def generate_test_report(self):
         """ regular testresults zip """
-        tarfile = get_workspace() / datetime.now(tz=None).strftime("testreport-%d-%b-%YT%H.%M.%SZ")
+        tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
         print("Creating " + str(tarfile))
         sys.stdout.flush()
         shutil.make_archive(self.cfg.run_root / 'innerlogs',
