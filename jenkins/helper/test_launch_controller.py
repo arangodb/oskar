@@ -846,7 +846,7 @@ def generate_dump_output(_, tests):
     for test in tests:
         params = " ".join(f"{key}={value}" for key, value in test['params'].items())
         output(f"{test['name']}")
-        output(f"\priority: {test['priority']}")
+        output(f"\tpriority: {test['priority']}")
         output(f"\tparallelity: {test['parallelity']}")
         output(f"\tflags: {' '.join(test['flags'])}")
         output(f"\tparams: {params}")
@@ -864,6 +864,7 @@ known_flags = {
     "full": "this test is only executed in full tests",
     "!full": "this test is only executed in non-full tests",
     "gtest": "only the gtest are to be executed",
+    "sniff": "whether tcpdump / ngrep should be used",
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
     "!windows": "test is excluded from ps1 output"
