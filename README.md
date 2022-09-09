@@ -286,8 +286,8 @@ testingJsSuiteName flags params suffix -- args to testing.js
 where 
 - `flags` are listed above in `--help-flags`
 - params are:
-  - weight - sequence priority of test, 250 is the default.
-  - wweight - execution slots to book. defaults to 1, if cluster 4.
+  - priority - sequence priority of test, 250 is the default.
+  - parallelity - execution slots to book. defaults to 1, if cluster 4.
   - buckets - split testcases to be launched in concurent chunks
   Specifying a `*` in front of the number takes the default and multiplies it by the value.
 - suffix - if a testsuite is launched several times, make it distinguishable
@@ -298,7 +298,7 @@ where
 ### job scheduling
 To utilize all of the machines resources, tests can be run in parallel. The `execution_slots` are 
 set to the number of the physical cores of the machine (not threads).
-`wweight` is used to add the currently expected load by the tests to be no more than `execution_slots`.
+`parallelity` is used to add the currently expected load by the tests to be no more than `execution_slots`.
 
 For managing each of these parallel executions of testing.js, worker threads are used. The workers
 themselves will spawn a set of I/O threads to capture the output of testing.js into a report file.

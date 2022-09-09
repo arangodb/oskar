@@ -731,8 +731,8 @@ class TestingRunner():
         if suffix:
             name += f"_{suffix}"
 
-        if test["wweight"] :
-            parallelity = test["wweight"]
+        if test["parallelity"] :
+            parallelity = test["parallelity"]
         if 'single' in test['flags'] and cluster:
             return
         if 'cluster' in test['flags'] and not cluster:
@@ -758,7 +758,7 @@ class TestingRunner():
                                [ *args,
                                  '--index', f"{i}",
                                  '--testBuckets', f'{num_buckets}/{i}'],
-                               test['weight'],
+                               test['priority'],
                                parallelity,
                                test['flags']))
         else:
@@ -767,7 +767,7 @@ class TestingRunner():
                            name,
                            test["name"],
                            [ *args],
-                           test['weight'],
+                           test['priority'],
                            parallelity,
                            test['flags']))
 
@@ -846,8 +846,8 @@ def generate_dump_output(_, tests):
     for test in tests:
         params = " ".join(f"{key}={value}" for key, value in test['params'].items())
         output(f"{test['name']}")
-        output(f"\tweight: {test['weight']}")
-        output(f"\tweight: {test['wweight']}")
+        output(f"\priority: {test['priority']}")
+        output(f"\tparallelity: {test['parallelity']}")
         output(f"\tflags: {' '.join(test['flags'])}")
         output(f"\tparams: {params}")
         output(f"\targs: {' '.join(test['args'])}")
@@ -872,8 +872,8 @@ known_flags = {
 known_parameter = {
     "buckets": "number of buckets to use for this test",
     "suffix": "suffix that is appended to the tests folder name",
-    "weight": "weight that controls execution order on Linux / Mac. Lower weights are executed later",
-    "wweight": "windows weight how many resources will the job use in the SUT? Default: 1 in Single server, 4 in Clusters"
+    "priority": "priority that controls execution order. Testsuites with lower priority are executed later",
+    "parallelity": "parallelity how many resources will the job use in the SUT? Default: 1 in Single server, 4 in Clusters"
 }
 
 
@@ -928,8 +928,8 @@ def validate_params(params, is_cluster):
         elif default_value is not None:
             params[key] = default_value
 
-    parse_number_or_default("weight", 250)
-    parse_number_or_default("wweight", 4 if is_cluster else 1)
+    parse_number_or_default("priority", 250)
+    parse_number_or_default("parallelity", 4 if is_cluster else 1)
     parse_number_or_default("buckets")
 
     return params
@@ -980,8 +980,8 @@ def read_definition_line(line):
 
     return {
         "name": name,
-        "weight": params["weight"],
-        "wweight": params["wweight"],
+        "priority": params["priority"],
+        "parallelity": params["parallelity"],
         "flags": flags,
         "args": args,
         "params": params
