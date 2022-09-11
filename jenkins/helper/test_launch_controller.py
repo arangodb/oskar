@@ -45,6 +45,7 @@ if IS_MAC:
     PRIO_DARWIN_PROCESS = 0b0100
     PRIO_DARWIN_BG      = 0x1000
     setpriority(PRIO_DARWIN_PROCESS, 0, 0)
+    import monkeypatch_psutil
 
 pp = pprint.PrettyPrinter(indent=4)
 
