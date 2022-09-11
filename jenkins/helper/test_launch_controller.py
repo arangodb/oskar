@@ -45,6 +45,7 @@ if IS_MAC:
     PRIO_DARWIN_PROCESS = 0b0100
     PRIO_DARWIN_BG      = 0x1000
     setpriority(PRIO_DARWIN_PROCESS, 0, 0)
+    import monkeypatch_psutil
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -351,6 +352,7 @@ class SiteConfig:
  - {self.available_slots} test slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
+ - temperatures: {str(psutil.sensors_temperatures())}
 """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
@@ -448,7 +450,8 @@ class TestingRunner():
             print(str(psutil.getloadavg()) + "<= Load " +
                   "Running: " + str(self.running_suites) +
                   " => Active Slots: " + str(self.used_slots) +
-                  " => Disk I/O: " + str(psutil.disk_io_counters()))
+                  " => Disk I/O: " + str(psutil.disk_io_counters()) +
+                  " => Temperatures: " + str(psutil.sensors_temperatures()))
         sys.stdout.flush()
 
     def done_job(self, parallelity):
@@ -471,7 +474,8 @@ class TestingRunner():
         if ((load[0] > self.cfg.max_load) or
             (load[1] > self.cfg.max_load1)):
             print(F"{str(load)} <= Load to high; waiting before spawning more - Disk I/O: " +
-                  str(psutil.disk_io_counters()))
+                  str(psutil.disk_io_counters()) +
+                  "Temperatures: " + str(psutil.sensors_temperatures()))
             return False
         with self.slot_lock:
             self.used_slots += self.scenarios[offset].parallelity
@@ -731,8 +735,8 @@ class TestingRunner():
         if suffix:
             name += f"_{suffix}"
 
-        if test["wweight"] :
-            parallelity = test["wweight"]
+        if test["parallelity"] :
+            parallelity = test["parallelity"]
         if 'single' in test['flags'] and cluster:
             return
         if 'cluster' in test['flags'] and not cluster:
@@ -758,7 +762,7 @@ class TestingRunner():
                                [ *args,
                                  '--index', f"{i}",
                                  '--testBuckets', f'{num_buckets}/{i}'],
-                               test['weight'],
+                               test['priority'],
                                parallelity,
                                test['flags']))
         else:
@@ -767,7 +771,7 @@ class TestingRunner():
                            name,
                            test["name"],
                            [ *args],
-                           test['weight'],
+                           test['priority'],
                            parallelity,
                            test['flags']))
 
@@ -846,8 +850,8 @@ def generate_dump_output(_, tests):
     for test in tests:
         params = " ".join(f"{key}={value}" for key, value in test['params'].items())
         output(f"{test['name']}")
-        output(f"\tweight: {test['weight']}")
-        output(f"\tweight: {test['wweight']}")
+        output(f"\tpriority: {test['priority']}")
+        output(f"\tparallelity: {test['parallelity']}")
         output(f"\tflags: {' '.join(test['flags'])}")
         output(f"\tparams: {params}")
         output(f"\targs: {' '.join(test['args'])}")
@@ -864,6 +868,7 @@ known_flags = {
     "full": "this test is only executed in full tests",
     "!full": "this test is only executed in non-full tests",
     "gtest": "only the gtest are to be executed",
+    "sniff": "whether tcpdump / ngrep should be used",
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
     "!windows": "test is excluded from ps1 output"
@@ -872,8 +877,8 @@ known_flags = {
 known_parameter = {
     "buckets": "number of buckets to use for this test",
     "suffix": "suffix that is appended to the tests folder name",
-    "weight": "weight that controls execution order on Linux / Mac. Lower weights are executed later",
-    "wweight": "windows weight how many resources will the job use in the SUT? Default: 1 in Single server, 4 in Clusters"
+    "priority": "priority that controls execution order. Testsuites with lower priority are executed later",
+    "parallelity": "parallelity how many resources will the job use in the SUT? Default: 1 in Single server, 4 in Clusters"
 }
 
 
@@ -928,8 +933,8 @@ def validate_params(params, is_cluster):
         elif default_value is not None:
             params[key] = default_value
 
-    parse_number_or_default("weight", 250)
-    parse_number_or_default("wweight", 4 if is_cluster else 1)
+    parse_number_or_default("priority", 250)
+    parse_number_or_default("parallelity", 4 if is_cluster else 1)
     parse_number_or_default("buckets")
 
     return params
@@ -980,8 +985,8 @@ def read_definition_line(line):
 
     return {
         "name": name,
-        "weight": params["weight"],
-        "wweight": params["wweight"],
+        "priority": params["priority"],
+        "parallelity": params["parallelity"],
         "flags": flags,
         "args": args,
         "params": params
