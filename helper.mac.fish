@@ -10,6 +10,7 @@ set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
 set -gx CURRENT_PATH $PATH
 set -xg IONICE ""
 set -gx ARCH (uname -m)
+set -gx DUMPDEVICE "lo0"
 
 if test "$ARCH" = "arm64"
   set CCACHEBINPATH /opt/homebrew/opt/ccache/libexec
