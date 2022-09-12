@@ -1,4 +1,7 @@
 #!/usr/bin/env fish
+
+python3 jenkins/helper/clear_machine.py
+
 set -l date (date +%Y%m%d)
 set -l t1 (date +%s)
 set -l filename work/totalTimes.csv

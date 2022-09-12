@@ -1,4 +1,7 @@
 #!/usr/bin/env fish
+
+python3 jenkins/helper/clear_machine.py
+
 source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear2
