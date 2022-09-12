@@ -43,6 +43,7 @@ Else
   }
 }
 $ENV:TSHARK=$global:TSHARK
+$ENV:DUMPDEVICE=$global:TSHARK
 
 $global:HANDLE_EXE = $null
 If (Get-Command handle.exe -ErrorAction SilentlyContinue)

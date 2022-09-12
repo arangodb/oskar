@@ -11,6 +11,7 @@ set -gx THIRDPARTY_SBIN ArangoDB/build/install/usr/sbin
 set -gx SCRIPTSDIR /scripts
 set -gx PLATFORM linux
 set -gx ARCH (uname -m)
+set -gx DUMPDEVICE "lo"
 
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
