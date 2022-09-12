@@ -9,19 +9,6 @@ import subprocess
 import time
 import sys
 
-IS_MAC = platform.mac_ver()[0] != ""
-if IS_MAC:
-    import os
-    def CPU_Temp():
-        cpu_temp = [each.strip() for each in (os.popen('sudo powermetrics --samplers smc -i1 -n1')).read().split('\n') if each != '']
-        for line in cpu_temp:
-            if 'CPU die temperature' in line:
-                return line.strip('CPU die temperature: ').rstrip(' C')
-        return 'CPU Temperature not found'
-    import psutil
-
-    psutil.sensors_temperatures = CPU_Temp
-
 winver = platform.win32_ver()
 if winver[0]:
     WINDOWS = True
