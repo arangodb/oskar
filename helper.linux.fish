@@ -1703,6 +1703,7 @@ function runInContainer
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+             -e DUMPDEVICE=$DUMPDEVICE \
              -e ARCH="$ARCH" \
              -e SAN="$SAN" \
              -e SAN_MODE="$SAN_MODE" \
@@ -1814,6 +1815,7 @@ function interactiveContainer
     -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
     -e ARANGODB_REPO="$ARANGODB_REPO" \
     -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+    -e DUMPDEVICE=$DUMPDEVICE \
     -e ARCH="ARCH" \
     -e SAN="$SAN" \
     -e SAN_MODE="$SAN_MODE" \
