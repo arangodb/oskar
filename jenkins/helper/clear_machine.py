@@ -58,7 +58,6 @@ def get_and_kill_all_processes():
 def main():
     # construct a dict where 'values' are all the processes
     # having 'key' as their parent
-    print('saontueh')
     tree = collections.defaultdict(list)
     for process in psutil.process_iter():
         try:
