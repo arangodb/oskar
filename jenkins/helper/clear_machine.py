@@ -32,7 +32,7 @@ def print_tree(parent, tree, indent=''):
 def get_and_kill_all_processes():
     """fetch all possible running processes that we may have spawned"""
     print("searching for leftover processes")
-    processes = psutil.process_iter()
+    processes = psutil.process_iter(['pid', 'name', 'username'])
     interresting_processes = []
     pid = -1
     if 'SSH_AGENT_PID' in os.environ:
@@ -45,7 +45,7 @@ def get_and_kill_all_processes():
                     interresting_processes.append(process)
             if pid >= 0:
                 if (name == 'ssh-agent' and
-                    process.user == 'jenkins' and
+                    process.username() == 'jenkins' and
                     process.pid != pid):
                     interresting_processes.append(process)
         except:
