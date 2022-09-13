@@ -101,18 +101,19 @@ Function findCompilerVersion
         $MSVC_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "MSVC_WINDOWS" | Select Line
         If ($MSVC_WINDOWS)
         {
-            $MSVC_WINDOWS -match "`"(?<version>[0-9]*)`"" | Out-Null
+            $MSVC_WINDOWS -match "`"(?<version>[0-9\.]*)`"" | Out-Null
 
-                switch ($Matches['version'])
-                {
-                    2019    { VS2019 ; $global:MSVS_COMPILER = "" }
-                    2022    { VS2022 ; $global:MSVS_COMPILER = "" }
-		    "17.0"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.30.30705" }
-		    "17.1"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.31.31103" }
-		    "17.2"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.32.31326" }
-		    "17.3"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.33.31629" }
-                    default { VS2019 ; $global:MSVS_COMPILER = "" }
-                }
+	    switch ($Matches['version'])
+	    {
+		2019    { VS2019 ; $global:MSVS_COMPILER = "" }
+		2022    { VS2022 ; $global:MSVS_COMPILER = "" }
+		"17.0"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.30.30705" }
+		"17.1"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.31.31103" }
+		"17.2"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.32.31326" }
+		"17.3"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.33.31629" }
+		default { VS2019 ; $global:MSVS_COMPILER = "" }
+	    }
+
             return
         }
     }
