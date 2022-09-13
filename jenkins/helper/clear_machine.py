@@ -1,5 +1,7 @@
 #!/usr/bin/python3
+""" aimns to purge all resources that are stray and hinder ci work by blocking resources """
 import collections
+import os
 import sys
 import psutil
 # pylint: disable=bare-except disable=broad-except
@@ -31,14 +33,38 @@ def print_tree(parent, tree, indent=''):
 def get_and_kill_all_processes():
     """fetch all possible running processes that we may have spawned"""
     print("searching for leftover processes")
-    processes = psutil.process_iter()
+    processes = psutil.process_iter(['pid', 'name', 'username'])
     interresting_processes = []
+    pid = -1
+    myself = psutil.Process(os.getpid())
+    try:
+        while True:
+            print(str(myself))
+            myself = myself.parent()
+            if myself.name().startswith("java"):
+                print(f"Found my parent java: {str(myself)}")
+                break
+    except:
+        print("no parent java process found")
+        myself = None
+    # print(os.environ)
+    if 'SSH_AGENT_PID' in os.environ:
+        pid = int(os.environ['SSH_AGENT_PID'])
+        print("having agent PID: " + str(pid))
     for process in processes:
         try:
             name = process.name()
+            # print(f"{name} - {process.username()} {process.pid}")
             for match_process in arango_processes:
                 if name.startswith(match_process):
                     interresting_processes.append(process)
+            if (name.startswith('ssh-agent') and
+                (process.username() == 'jenkins') and
+                int(process.pid) != pid):
+                interresting_processes.append(process)
+            if myself and name.startswith('java') and process.pid != myself.pid:
+                print(f"found a java process which is not my parent, adding to list: {str(process)}")
+                interresting_processes.append(process)
         except:
             pass
 
@@ -56,8 +82,10 @@ def get_and_kill_all_processes():
                 print("failed to kill process!" + str(ex))
 
 def main():
-    # construct a dict where 'values' are all the processes
-    # having 'key' as their parent
+    """
+    construct a dict where 'values' are all the processes
+    having 'key' as their parent
+    """
     tree = collections.defaultdict(list)
     for process in psutil.process_iter():
         try:
