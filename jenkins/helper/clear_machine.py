@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import collections
+import os
 import sys
 import psutil
 # pylint: disable=bare-except disable=broad-except
@@ -33,11 +34,19 @@ def get_and_kill_all_processes():
     print("searching for leftover processes")
     processes = psutil.process_iter()
     interresting_processes = []
+    pid = -1
+    if 'SSH_AGENT_PID' in os.environ:
+        pid = int(os.environ['SSH_AGENT_PID'])
     for process in processes:
         try:
             name = process.name()
             for match_process in arango_processes:
                 if name.startswith(match_process):
+                    interresting_processes.append(process)
+            if pid >= 0:
+                if (name == 'ssh-agent' and
+                    process.user == 'jenkins' and
+                    process.pid != pid):
                     interresting_processes.append(process)
         except:
             pass
