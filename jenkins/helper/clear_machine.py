@@ -39,10 +39,13 @@ def get_and_kill_all_processes():
     myself = psutil.Process(os.getpid())
     try:
         while True:
+            print(str(myself))
             myself = myself.parent()
             if myself.name().startswith("java"):
+                print(f"Found my parent java: {str(myself)}")
                 break
     except:
+        print("no parent java process found")
         myself = None
     # print(os.environ)
     if 'SSH_AGENT_PID' in os.environ:
