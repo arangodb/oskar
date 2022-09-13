@@ -658,7 +658,7 @@ class TestingRunner():
         is_empty = len(files) == 0
         if not is_empty and move_files:
             core_dir = core_dir / 'coredumps'
-            core_dir.mkdir(parents=True, exists_ok=True)
+            core_dir.mkdir(parents=True, exist_ok=True)
             for one_file in files:
                 if one_file.exists():
                     try:
