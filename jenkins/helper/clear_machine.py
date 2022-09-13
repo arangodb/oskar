@@ -36,6 +36,15 @@ def get_and_kill_all_processes():
     processes = psutil.process_iter(['pid', 'name', 'username'])
     interresting_processes = []
     pid = -1
+    myself = psutil.Process(os.getpid())
+    try:
+        while True:
+            myself = myself.parent()
+            if myself.name().startswith("java"):
+                break
+    except:
+        myself = None
+        pass
     # print(os.environ)
     if 'SSH_AGENT_PID' in os.environ:
         pid = int(os.environ['SSH_AGENT_PID'])
@@ -50,6 +59,9 @@ def get_and_kill_all_processes():
             if (name.startswith('ssh-agent') and
                 (process.username() == 'jenkins') and
                 int(process.pid) != pid):
+                interresting_processes.append(process)
+            if myself and name.startswith('java') and process.pid != myself.pid:
+                print(f"found a java process which is not my parent, adding to list: {str(process)}")
                 interresting_processes.append(process)
         except:
             pass
