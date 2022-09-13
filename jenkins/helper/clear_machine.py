@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+""" aimns to purge all resources that are stray and hinder ci work by blocking resources """
 import collections
 import os
 import sys
@@ -41,7 +42,7 @@ def get_and_kill_all_processes():
     for process in processes:
         try:
             name = process.name()
-            print(f"{name} - {process.username()} {process.pid}"
+            print(f"{name} - {process.username()} {process.pid}")
             for match_process in arango_processes:
                 if name.startswith(match_process):
                     interresting_processes.append(process)
@@ -67,8 +68,10 @@ def get_and_kill_all_processes():
                 print("failed to kill process!" + str(ex))
 
 def main():
-    # construct a dict where 'values' are all the processes
-    # having 'key' as their parent
+    """
+    construct a dict where 'values' are all the processes
+    having 'key' as their parent
+    """
     tree = collections.defaultdict(list)
     for process in psutil.process_iter():
         try:
