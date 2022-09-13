@@ -37,16 +37,18 @@ def get_and_kill_all_processes():
     pid = -1
     if 'SSH_AGENT_PID' in os.environ:
         pid = int(os.environ['SSH_AGENT_PID'])
+        print("having agent PID: " + str(pid))
     for process in processes:
         try:
             name = process.name()
+            print(f"{name} - {process.username()} {process.pid}"
             for match_process in arango_processes:
                 if name.startswith(match_process):
                     interresting_processes.append(process)
             if pid >= 0:
-                if (name == 'ssh-agent' and
-                    process.username() == 'jenkins' and
-                    process.pid != pid):
+                if (name.startswith('ssh-agent') and
+                    (process.username() == 'jenkins') and
+                    int(process.pid) != pid):
                     interresting_processes.append(process)
         except:
             pass
