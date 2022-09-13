@@ -36,6 +36,7 @@ def get_and_kill_all_processes():
     processes = psutil.process_iter(['pid', 'name', 'username'])
     interresting_processes = []
     pid = -1
+    print(os.environ)
     if 'SSH_AGENT_PID' in os.environ:
         pid = int(os.environ['SSH_AGENT_PID'])
         print("having agent PID: " + str(pid))
