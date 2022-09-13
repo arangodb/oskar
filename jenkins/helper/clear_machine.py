@@ -47,11 +47,10 @@ def get_and_kill_all_processes():
             for match_process in arango_processes:
                 if name.startswith(match_process):
                     interresting_processes.append(process)
-            if pid >= 0:
-                if (name.startswith('ssh-agent') and
-                    (process.username() == 'jenkins') and
-                    int(process.pid) != pid):
-                    interresting_processes.append(process)
+            if (name.startswith('ssh-agent') and
+                (process.username() == 'jenkins') and
+                int(process.pid) != pid):
+                interresting_processes.append(process)
         except:
             pass
 
