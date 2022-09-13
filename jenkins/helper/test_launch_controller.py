@@ -45,7 +45,6 @@ if IS_MAC:
     PRIO_DARWIN_PROCESS = 0b0100
     PRIO_DARWIN_BG      = 0x1000
     setpriority(PRIO_DARWIN_PROCESS, 0, 0)
-    import monkeypatch_psutil
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -635,14 +634,17 @@ class TestingRunner():
             core_max_count = 15 # 3 cluster instances
         core_dir = Path.cwd()
         core_pattern = "core*"
+        move_files = False
         if IS_WINDOWS:
             core_pattern = "*.dmp"
         system_corefiles = []
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
         else:
+            move_files = True
             core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
         if IS_MAC:
+            move_files = True
             system_corefiles = sorted(Path('/cores').glob(core_pattern))
         files = sorted(core_dir.glob(core_pattern)) + system_corefiles
         if len(files) > core_max_count:
@@ -652,7 +654,18 @@ class TestingRunner():
                 if count > core_max_count:
                     print(f'{core_max_count} reached. will not archive {one_crash_file}')
                     one_crash_file.unlink(missing_ok=True)
+
         is_empty = len(files) == 0
+        if not is_empty and move_files:
+            core_dir = core_dir / 'coredumps'
+            core_dir.mkdir(parents=True, exists_ok=True)
+            for one_file in files:
+                if one_file.exists():
+                    try:
+                        shutil.move(one_file, core_dir)
+                    except PermissionError as ex:
+                        print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
+
         if self.crashed or not is_empty:
             crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.datetime_format}")
             print("creating crashreport: " + str(crash_report_file))
@@ -675,6 +688,8 @@ class TestingRunner():
                 print("Deleting corefile " + str(corefile))
                 sys.stdout.flush()
                 corefile.unlink()
+            if move_files:
+                core_dir.rmdir()
 
     def generate_test_report(self):
         """ regular testresults zip """
