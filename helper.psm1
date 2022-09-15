@@ -106,7 +106,7 @@ Function findCompilerVersion
 	    switch ($Matches['version'])
 	    {
 		2019    { VS2019 ; $global:MSVS_COMPILER = "" }
-		2022    { VS2022 ; $global:MSVS_COMPILER = "" }
+		2022    { VS2022 ; $global:MSVS_COMPILER = ",version=14.32.31326" }
 		"17.0"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.30.30705" }
 		"17.1"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.31.31103" }
 		"17.2"  { VS2022 ; $global:MSVS_COMPILER = ",version=14.32.31326" }
