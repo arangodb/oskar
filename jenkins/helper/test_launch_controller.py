@@ -530,6 +530,7 @@ class TestingRunner():
         else:
             print("Main: workers terminated on time")
         if more_running:
+            self.generate_report_txt()
             print("Main: force-terminates the python process due to overall unresponsiveness! Geronimoooo!")
             list_all_processes()
             sys.stdout.flush()
