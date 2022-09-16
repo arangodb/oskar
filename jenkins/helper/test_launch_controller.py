@@ -256,8 +256,8 @@ class TestConfig():
             self.args += [ '--dumpAgencyOnError', os.environ['DUMPAGENCYONERROR']]
 
         myport = cfg.portbase
-        cfg.portbase += 100
-        self.args += [ '--minPort', str(myport), '--maxPort', str(myport + 99)]
+        cfg.portbase += cfg.port_offset
+        self.args += [ '--minPort', str(myport), '--maxPort', str(myport + cfg.port_offset - 1)]
         if 'SKIPGREY' in os.environ:
             self.args += [ '--skipGrey', os.environ['SKIPGREY']]
         if 'ONLYGREY' in os.environ:
@@ -312,6 +312,10 @@ class SiteConfig:
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
         self.trace = False
+        self.portbase = 7000
+        if 'PORTBASE' in os.environ:
+            self.portbase = int(os.environ['PORTBASE'])
+        self.port_offset = 100
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
@@ -319,8 +323,9 @@ class SiteConfig:
             self.timeout = int(os.environ['timeLimit'])
         self.small_machine = False
         if psutil.cpu_count(logical=False) <= 8:
-            self.small_machine = True
             print("Small machine detected, quadrupling deadline, disabling buckets!")
+            self.small_machine = True
+            self.port_offset = 400
             self.timeout *= 4
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
