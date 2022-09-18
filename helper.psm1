@@ -1052,7 +1052,7 @@ Function downloadSyncer
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     If (-Not($env:DOWNLOAD_SYNC_USER))
     {
-        Write-Host "Need  environment variable set!"
+        Write-Host "Need environment variable set!"
     }
     (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+(-preview-[0-9]+)?)|latest' | Out-Null
     $SYNCER_REV = $Matches[0]
