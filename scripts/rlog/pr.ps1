@@ -1,4 +1,4 @@
-Import-Module "$PSScriptRoot\lib\Utils.psm1"
+Import-Module "$PSScriptRoot\..\lib\Utils.psm1"
 
 ################################################################################
 # Test control
