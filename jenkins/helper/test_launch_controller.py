@@ -856,12 +856,17 @@ def launch(args, tests):
         runner.register_test_func(args.cluster, test)
     runner.sort_by_priority()
     print(runner.scenarios)
+    create_report = True
+    if args.no_report:
+        print("won't generate report as you demanded!")
+        create_report = False
     try:
         runner.testing_runner()
         runner.overload_report_fh.close()
-        runner.generate_report_txt()
-        runner.generate_crash_report()
-        runner.generate_test_report()
+        if create_report:
+            runner.generate_report_txt()
+            runner.generate_crash_report()
+            runner.generate_test_report()
     except Exception as exc:
         print()
         sys.stderr.flush()
@@ -932,7 +937,8 @@ known_flags = {
     "sniff": "whether tcpdump / ngrep should be used",
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
-    "!windows": "test is excluded from ps1 output"
+    "!windows": "test is excluded from ps1 output",
+    "no_report": "disable reporting"
 }
 
 known_parameter = {
@@ -970,6 +976,7 @@ def parse_arguments():
     parser.add_argument("--full", help="output full test set", action="store_true")
     parser.add_argument("--gtest", help="only runt gtest", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")
+    parser.add_argument("--no_report", help="disable report generation except for testfailures.txt", action="store_true")
     args = parser.parse_args()
 
     return args
