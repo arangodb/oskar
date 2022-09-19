@@ -322,7 +322,7 @@ class SiteConfig:
         elif 'timeLimit' in os.environ:
             self.timeout = int(os.environ['timeLimit'])
         self.small_machine = False
-        if psutil.cpu_count(logical=False) <= 8:
+        if psutil.cpu_count(logical=False) <= 12:
             print("Small machine detected, quadrupling deadline, disabling buckets!")
             self.small_machine = True
             self.port_offset = 400
