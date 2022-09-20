@@ -5,11 +5,11 @@ source $SCRIPTS/lib/tests.fish
 set -xg ADDITIONAL_OPTIONS $argv
 
 ################################################################################
-## Cluster tests: runtime,command
+## Cluster tests
 ################################################################################
 
 function launchClusterTests
-  echo "Using test definitions from arangodb repo"
+  echo "Using rlog test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions-rlog.txt" -f launch --cluster --full
   and set -xg result "GOOD"
   or set -xg result "BAD"
