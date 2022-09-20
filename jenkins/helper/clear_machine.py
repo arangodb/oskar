@@ -99,9 +99,14 @@ def clean_docker_containers():
         started_at = ""
         if 'StartedAt' in container.attrs:
             started_at = container.attrs['StartedAt']
-        print(f"{container.id} {container.attrs['Path']} {started_at} - {container.attrs['Created']} - {workspace} ")
+        labels = ""
+        if 'Labels' in container.attrs['Config']:
+            labels = container.attrs['Config']['Labels']
+
+        print(f"{container.id} {container.attrs['Path']} {started_at} - {container.attrs['Created']} - {str(labels)} {workspace} ")
         if not container.attrs['Path'].startswith('/scripts/'):
             print('killing')
+            container.stop()
             container.kill()
         
 
@@ -121,7 +126,7 @@ def main():
     if 0 in tree and 0 in tree[0]:
         tree[0].remove(0)
     print_tree(min(tree), tree)
-    # get_and_kill_all_processes()
+    get_and_kill_all_processes()
     if IS_LINUX:
         clean_docker_containers()
 main()
