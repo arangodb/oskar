@@ -5,6 +5,7 @@ import os
 import sys
 import platform
 import psutil
+from datetime import datetime, timedelta
 # pylint: disable=bare-except disable=broad-except
 arango_processes = [
     "arangod",
@@ -17,7 +18,7 @@ arango_processes = [
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
 IS_LINUX = not IS_WINDOWS and not IS_MAC
-
+print(IS_LINUX)
 def print_tree(parent, tree, indent=''):
     """ print the process tree """
     try:
@@ -93,19 +94,34 @@ def clean_docker_containers():
     client = docker.from_env()
     kill_first = []
     kill_then = []
-    for container in client.containers.list():
+    remove_them = []
+    now = datetime.now()
+    print("Searching for volatile running docker containers")
+    for container in client.containers.list(all=True):
+        is_running = container.status != 'exited' and container.status != 'created'
+        is_old = False
         workspace = ""
-        for var in container.attrs['Config']['Env']:
-            if var.startswith('WORKSPACE'):
-                workspace = var
+        if not container.attrs['Config']['Env'] is None:
+            for var in container.attrs['Config']['Env']:
+                if var.startswith('WORKSPACE'):
+                    workspace = var
+        else:
+            print('no env')
         started_at = ""
         if 'StartedAt' in container.attrs:
+            print('have started at')
             started_at = container.attrs['StartedAt']
+
+        if 'Created' in container.attrs:
+            created_at = datetime.strptime(container.attrs['Created'].split('.')[0], "%Y-%m-%dT%H:%M:%S")
+            is_old = now - created_at > timedelta(days=14)
         labels = ""
         if 'Labels' in container.attrs['Config']:
             labels = container.attrs['Config']['Labels']
 
-        print(f"{container.id} {container.attrs['Path']} {started_at} - {container.attrs['Created']} - {str(labels)} {workspace} ")
+        print(f"{container.id} {container.attrs['Path']} {started_at} - {container.attrs['Created']} - {str(labels)} {workspace} {is_running} {is_old}")
+        if not is_running and is_old:
+            remove_them.append(container)
         if not container.attrs['Path'].startswith('/scripts/'):
             if container.attrs['Path'].startswith('/app/arangodb'):
                 kill_first.append(container)
@@ -113,15 +129,95 @@ def clean_docker_containers():
                 kill_first.append(container)
             else:
                 kill_then.append(container)
-    for container in (kill_first + kill_then):
-        try:
-            print(f"Stopping {container.id} {container.attrs['Path']}")
-            container.stop()
-            #container.kill()
-        except Exception as ex:
-            print(ex)
-            print('next to come')
-
+    if len(kill_first) + len(kill_then) == 0:
+        print("no containers to terminate found")
+    else:
+        for container in (kill_first + kill_then):
+            try:
+                print(f"Stopping {container.id} {container.attrs['Path']}")
+                container.stop()
+                container.kill()
+            except Exception as ex:
+                print(ex)
+                print('next to come')
+    if len(remove_them) == 0:
+        print("No containers to remove")
+    else:
+        for container in remove_them:
+            print(f'removing: {container.id} {container.remove()}')
+    green_tags = [
+        'centos',
+        'ubuntu',
+        'alpine',
+        'debian',
+        'minio',
+        'arangodb/release-test-automation',
+        'arangodb/ubuntubuildarangodb'
+        ]
+    stable_versions = []
+    for k, v in os.environ.items():
+        if k.find('IMAGE') > 0 and k.endswith('_NAME'):
+            green_tags.append(v)
+            bare_k = k[:-5]
+            if bare_k in os.environ:
+                stable_versions.append(os.environ[bare_k])
+    print('pruning: ')
+    print(client.images.prune())
+    images_tags = {}
+    delete_images = []
+    for image in client.images.list():
+        if len(image.tags) == 0:
+            print(f'will delete tagless {image.id}')
+            delete_images.append(image)
+            continue
+        datestr = image.attrs['Metadata']['LastTagTime']
+        is_old = True
+        legacy_timestamp = True
+        if datestr.find('T'):
+            # chop off sh* we don't want to parse:
+            created_at = datetime.strptime(datestr.split('.')[0].split('Z')[0], "%Y-%m-%dT%H:%M:%S")
+            is_old = now - created_at > timedelta(days=64)
+            legacy_timestamp = False
+        if legacy_timestamp:
+            print('legacy timestamp - deleting: ')
+            delete_images.append(image)
+            continue
+        is_latest = False
+        green_tag_found = False
+        for tag in image.tags:
+            for stable in stable_versions:
+                if tag.startswith(stable):
+                    print(f"{tag} is a stable oskar one - skipping")
+                    break
+            for gtag in green_tags:
+                if tag.find(gtag) == 0:
+                    green_tag_found = True
+                    print(f'tag found: {gtag} in {tag}')
+                    if tag.find('latest') > 0:
+                        is_latest = True
+                    else:
+                        struct = {
+                            'tag': tag,
+                            'image_object': image
+                            }
+                        if gtag not in images_tags:
+                            images_tags[gtag] = struct
+                        else:
+                            if images_tags[gtag]['tag'] > tag:
+                                delete_images.append(image)
+                            else:
+                                delete_images.append(images_tags[gtag]['image_object'])
+                                images_tags[gtag] = struct
+        if not green_tag_found:
+            delete_images.append(image)
+    if len(delete_images) == 0:
+        print('no images to delete found!')
+    else:
+        for image in delete_images:
+            try:
+                print(f'deleting {image} {client.images.remove(image=image.id)}')
+            except:
+                pass
 def main():
     """
     construct a dict where 'values' are all the processes
