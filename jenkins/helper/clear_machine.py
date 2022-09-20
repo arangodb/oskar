@@ -91,6 +91,8 @@ def clean_docker_containers():
     #pylint: disable=import-outside-toplevel
     import docker
     client = docker.from_env()
+    kill_first = []
+    kill_then = []
     for container in client.containers.list():
         workspace = ""
         for var in container.attrs['Config']['Env']:
@@ -105,11 +107,20 @@ def clean_docker_containers():
 
         print(f"{container.id} {container.attrs['Path']} {started_at} - {container.attrs['Created']} - {str(labels)} {workspace} ")
         if not container.attrs['Path'].startswith('/scripts/'):
-            print('killing')
+            if container.attrs['Path'].startswith('/app/arangodb'):
+                kill_first.append(container)
+            elif container.attrs['Path'].startswith('sleep'):
+                kill_first.append(container)
+            else:
+                kill_then.append(container)
+    for container in (kill_first + kill_then):
+        try:
+            print(f"Stopping {container.id} {container.attrs['Path']}")
             container.stop()
-            container.kill()
-        
-
+            #container.kill()
+        except Exception as ex:
+            print(ex)
+            print('next to come')
 
 def main():
     """
