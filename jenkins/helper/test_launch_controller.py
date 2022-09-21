@@ -384,7 +384,6 @@ class SiteConfig:
         load = psutil.getloadavg()
         if load[0] > self.overload:
             return(f"HIGH SYSTEM LOAD! {load[0]}")
-        return None
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
@@ -697,6 +696,8 @@ class TestingRunner():
         if len(files) > core_max_count:
             count = 0
             for one_crash_file in files:
+                if not one_crash_file.is_file():
+                    continue
                 count += 1
                 if count > core_max_count:
                     print(f'{core_max_count} reached. will not archive {one_crash_file}')
