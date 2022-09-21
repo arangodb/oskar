@@ -340,6 +340,7 @@ class SiteConfig:
             self.max_load = self.no_threads * 0.9
             self.max_load1 = self.no_threads * 1.1
         self.overload = self.max_load * 1.4
+        self.slots_to_parallelity_factor = self.max_load / self.available_slots
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -355,6 +356,7 @@ class SiteConfig:
  - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
+ - {self.slots_to_parallelity_factor} parallelity to load estimate factor
  - {self.overload} load1 threshhold for overload logging
  - {self.available_slots} test slots
  - {str(TEMP)} - temporary directory
@@ -378,9 +380,9 @@ class SiteConfig:
             self.portbase = int(os.environ['PORTBASE'])
 
     def get_overload(self):
+        """ estimate whether the system is overloaded """
         load = psutil.getloadavg()
         if load[0] > self.overload:
-            now = datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
             return(f"HIGH SYSTEM LOAD! {load[0]}")
         return None
 
@@ -483,9 +485,9 @@ class TestingRunner():
         with self.slot_lock:
             self.used_slots -= parallelity
 
-    def launch_next(self, offset, counter, skip_loadcheck):
+    def launch_next(self, offset, counter, do_loadcheck):
         """ launch one testing job """
-        if skip_loadcheck:
+        if do_loadcheck:
             if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
                 return False
             try:
@@ -495,10 +497,12 @@ class TestingRunner():
                     return False
             except psutil.AccessDenied:
                 pass
+            load_estimate = self.cfg.slots_to_parallelity_factor * self.scenarios[offset].parallelity
             load = psutil.getloadavg()
             if ((load[0] > self.cfg.max_load) or
-                (load[1] > self.cfg.max_load1)):
-                print(F"{str(load)} <= Load to high; waiting before spawning more - Disk I/O: " +
+                (load[1] > self.cfg.max_load1) or
+                (load[0] + load_estimate > self.cfg.overload)):
+                print(F"{str(load)} <= {load_estimate} Load to high; waiting before spawning more - Disk I/O: " +
                       str(psutil.swap_memory()))
                 return False
         with self.slot_lock:
@@ -588,7 +592,7 @@ class TestingRunner():
         if not some_scenario.base_testdir.exists():
             some_scenario.base_testdir.mkdir()
         print(self.cfg.deadline)
-        sleep_count = 0;
+        sleep_count = 0
         last_started_count = -1
         if datetime.now() > self.cfg.deadline:
             raise ValueError("test already timed out before started?")
@@ -601,12 +605,11 @@ class TestingRunner():
                 (start_offset < len(self.scenarios)) and
                  ((last_started_count < 0) or
                   (sleep_count - last_started_count > 5)) ):
-                print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter}")
+                print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter} {last_started_count} ")
                 sys.stdout.flush()
-                if self.launch_next(start_offset, counter, last_started_count == -1):
+                if self.launch_next(start_offset, counter, last_started_count != -1):
                     last_started_count = sleep_count
                     start_offset += 1
-                    last_started_count
                     sleep_count += 1
                     time.sleep(5)
                     counter += 1

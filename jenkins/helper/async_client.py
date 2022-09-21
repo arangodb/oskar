@@ -118,9 +118,10 @@ def convert_result(result_array):
             result += "\n" + one_line.decode("utf-8").rstrip()
     return result
 
-def add_message_to_report(params, string):
+def add_message_to_report(params, string, print_it = True):
     """ add a message from python to the report strings/files + print it """
-    print(string)
+    if print_it:
+        print(string)
     if isinstance(params['output'], list):
         params['output'] += f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n"
     else:
@@ -361,7 +362,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     if overload:
                         add_message_to_report(
                             params,
-                            overload)
+                            overload,
+                            False)
                     line = queue.get(timeout=1)
                     ret = result_line_handler(0, line, params)
                     line_filter = line_filter or ret
