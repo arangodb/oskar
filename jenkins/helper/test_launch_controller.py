@@ -600,7 +600,7 @@ class TestingRunner():
             if ((self.cfg.available_slots > used_slots) and
                 (start_offset < len(self.scenarios)) and
                  ((last_started_count < 0) or
-                  (last_started_count - sleep_count > 5)) ):
+                  (sleep_count - last_started_count > 5)) ):
                 print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter}")
                 sys.stdout.flush()
                 if self.launch_next(start_offset, counter, last_started_count == -1):
@@ -621,6 +621,7 @@ class TestingRunner():
             else:
                 self.print_active()
                 time.sleep(5)
+                sleep_count += 1
         self.deadline_reached = datetime.now() > self.cfg.deadline
         if self.deadline_reached:
             self.handle_deadline()
