@@ -381,7 +381,7 @@ class SiteConfig:
         load = psutil.getloadavg()
         if load[0] > self.overload:
             now = datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
-            return(f"VVV\n{now} HIGH SYSTEM LOAD! {load[0]}\n^^^")
+            return(f"HIGH SYSTEM LOAD! {load[0]}")
         return None
 
 def testing_runner(testing_instance, this, arangosh):
