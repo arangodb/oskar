@@ -237,7 +237,7 @@ class TestConfig():
         if 'filter' in os.environ:
             self.args += ['--test', os.environ['filter']]
         if 'sniff' in flags:
-            if IS_WINDOWS:
+            if IS_WINDOWS and 'TSHARK' in os.environ:
                 self.args += ['--sniff', 'true',
                              '--sniffProgram',  os.environ['TSHARK'],
                              '--sniffDevice', os.environ['DUMPDEVICE']]
