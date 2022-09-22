@@ -221,7 +221,7 @@ class TestConfig():
         self.report_file =  self.base_logdir / 'UNITTEST_RESULT.json'
         self.base_testdir = cfg.test_data_dir_x / self.name
 
-        self.args = []
+        self.args = cfg.extra_args
         for param in args:
             if param.startswith('$'):
                 paramname = param[1:].upper()
@@ -323,11 +323,13 @@ class SiteConfig:
         elif 'timeLimit' in os.environ:
             self.timeout = int(os.environ['timeLimit'])
         self.small_machine = False
+        self.extra_args = []
         if psutil.cpu_count(logical=False) <= 12:
             print("Small machine detected, quadrupling deadline, disabling buckets!")
             self.small_machine = True
             self.port_offset = 400
             self.timeout *= 4
+            self.extra_args = ['--extraArgs:rocksdb.compression-type', 'none']
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
         if IS_MAC and platform.processor() == "arm" and psutil.cpu_count() == 8:
