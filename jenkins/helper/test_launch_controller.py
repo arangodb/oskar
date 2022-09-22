@@ -1065,12 +1065,12 @@ def read_definition_line(line):
     # check all flags
     for flag in flags:
         if flag not in known_flags:
-            raise Exception(f"Unknown flag `{flag}`")
+            raise Exception(f"Unknown flag `{flag}` in `{line}`")
 
     # check all params
     for param in params:
         if param not in known_parameter:
-            raise Exception(f"Unknown parameter `{param}`")
+            raise Exception(f"Unknown parameter `{param}` in `{line}`")
 
     validate_flags(flags)
     params = validate_params(params, 'cluster' in flags)
@@ -1098,7 +1098,7 @@ def read_definitions(filename):
                 test = read_definition_line(line)
                 tests.append(test)
             except Exception as exc:
-                print(f"{filename}:{line_no + 1}: {exc}", file=sys.stderr)
+                print(f"{filename}:{line_no + 1}: \n`{line}`\n {exc}", file=sys.stderr)
                 has_error = True
     if has_error:
         raise Exception("abort due to errors")
