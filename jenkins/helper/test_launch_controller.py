@@ -1,6 +1,7 @@
 #!/bin/env python3
 """ read test definition, and generate the output for the specified target """
 import argparse
+import copy
 from datetime import datetime, timedelta
 import platform
 import os
@@ -221,7 +222,7 @@ class TestConfig():
         self.report_file =  self.base_logdir / 'UNITTEST_RESULT.json'
         self.base_testdir = cfg.test_data_dir_x / self.name
 
-        self.args = cfg.extra_args
+        self.args = copy.deepcopy(cfg.extra_args)
         for param in args:
             if param.startswith('$'):
                 paramname = param[1:].upper()
