@@ -1,6 +1,7 @@
 $global:WORKDIR = $pwd
 $global:SCRIPTSDIR = Join-Path -Path $global:WORKDIR -ChildPath scripts
 
+$ENV:EncryptionAtRest = ""
 If (-Not($ENV:WORKSPACE))
 {
     $ENV:WORKSPACE = Join-Path -Path $global:WORKDIR -ChildPath work
