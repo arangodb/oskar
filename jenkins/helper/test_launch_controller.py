@@ -441,6 +441,7 @@ class TestingRunner():
         self.crashed = False
         self.cluster = False
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
+        self.more_errors = ""
 
     def print_active(self):
         """ output currently active testsuites """
@@ -599,7 +600,7 @@ class TestingRunner():
     def generate_report_txt(self):
         """ create the summary testfailures.txt from all bits """
         print(self.scenarios)
-        summary = ""
+        summary = self.more_errors
         if self.deadline_reached:
             summary = "Deadline reached during test execution!\n"
         for testrun in self.scenarios:
@@ -666,25 +667,34 @@ class TestingRunner():
                         shutil.move(one_file, core_dir)
                     except PermissionError as ex:
                         print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
+                        self.more_errors += f"won't move {str(one_file)} - not an owner! {str(ex)}"
 
         if self.crashed or not is_empty:
             crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.datetime_format}")
             print("creating crashreport: " + str(crash_report_file))
             sys.stdout.flush()
-            shutil.make_archive(str(crash_report_file),
-                                ZIPFORMAT,
-                                (core_dir / '..').resolve(),
-                                core_dir.name,
-                                True)
+            try:
+                shutil.make_archive(str(crash_report_file),
+                                    ZIPFORMAT,
+                                    (core_dir / '..').resolve(),
+                                    core_dir.name,
+                                    True)
+            except Exeption as ex:
+                print("Failed to create binaries zip: " + ex.message)
+                self.more_errors += "Failed to create binaries zip: " + ex.message
             self.cleanup_unneeded_binary_files()
             binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.datetime_format}")
             print("creating crashreport binary support zip: " + str(binary_report_file))
             sys.stdout.flush()
-            shutil.make_archive(str(binary_report_file),
-                                ZIPFORMAT,
-                                (self.cfg.bin_dir / '..').resolve(),
-                                self.cfg.bin_dir.name,
-                                True)
+            try:
+                shutil.make_archive(str(binary_report_file),
+                                    ZIPFORMAT,
+                                    (self.cfg.bin_dir / '..').resolve(),
+                                    self.cfg.bin_dir.name,
+                                    True)
+            except Exeption as ex:
+                print("Failed to create crashdump zip: " + ex.message)
+                self.more_errors += "Failed to create crashdump zip: " + ex.message
             for corefile in core_dir.glob(core_pattern):
                 print("Deleting corefile " + str(corefile))
                 sys.stdout.flush()
@@ -697,18 +707,28 @@ class TestingRunner():
         tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
         print("Creating " + str(tarfile))
         sys.stdout.flush()
-        shutil.make_archive(self.cfg.run_root / 'innerlogs',
-                            ZIPFORMAT,
-                            (TEMP / '..').resolve(),
-                            TEMP.name)
+        try:
+            shutil.make_archive(self.cfg.run_root / 'innerlogs',
+                                ZIPFORMAT,
+                                (TEMP / '..').resolve(),
+                                TEMP.name)
+        except Exeption as ex:
+            print("Failed to create inner zip: " + ex.message)
+            self.more_errors += "Failed to create inner zip: " + ex.message
+            self.success = False
 
-        shutil.rmtree(TEMP, ignore_errors=False)
-        shutil.make_archive(tarfile,
-                            ZIPFORMAT,
-                            self.cfg.run_root,
-                            '.',
-                            True)
-        shutil.rmtree(self.cfg.run_root, ignore_errors=False)
+        try:
+            shutil.rmtree(TEMP, ignore_errors=False)
+            shutil.make_archive(tarfile,
+                                ZIPFORMAT,
+                                self.cfg.run_root,
+                                '.',
+                                True)
+            shutil.rmtree(self.cfg.run_root, ignore_errors=False)
+        except Exeption as ex:
+            print("Failed to create testreport zip: " + ex.message)
+            self.more_errors += "Failed to create testreport zip: " + ex.message
+            self.success = False
 
     def create_log_file(self):
         """ create the log file with the stati """
