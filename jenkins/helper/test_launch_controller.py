@@ -724,10 +724,15 @@ class TestingRunner():
                                 self.cfg.run_root,
                                 '.',
                                 True)
-            shutil.rmtree(self.cfg.run_root, ignore_errors=False)
         except Exeption as ex:
             print("Failed to create testreport zip: " + ex.message)
             self.more_errors += "Failed to create testreport zip: " + ex.message
+            self.success = False
+        try:
+            shutil.rmtree(self.cfg.run_root, ignore_errors=False)
+        except Exeption as ex:
+            print("Failed to clean up: " + ex.message)
+            self.more_errors += "Failed to clean up: " + ex.message
             self.success = False
 
     def create_log_file(self):
