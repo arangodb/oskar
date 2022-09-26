@@ -441,7 +441,7 @@ class TestingRunner():
         self.crashed = False
         self.cluster = False
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
-        self.more_errors = ""
+        self.testfailures_file = get_workspace() / 'testfailures.txt'
 
     def print_active(self):
         """ output currently active testsuites """
@@ -600,7 +600,7 @@ class TestingRunner():
     def generate_report_txt(self):
         """ create the summary testfailures.txt from all bits """
         print(self.scenarios)
-        summary = self.more_errors
+        summary = ""
         if self.deadline_reached:
             summary = "Deadline reached during test execution!\n"
         for testrun in self.scenarios:
@@ -610,7 +610,12 @@ class TestingRunner():
             if testrun.finish is None:
                 summary += f"\n=== {testrun.name} ===\nhasn't been launched at all!"
         print(summary)
-        (get_workspace() / 'testfailures.txt').write_text(summary)
+        self.testfailures_file.write_text(summary)
+
+    def append_report_txt(self, text):
+        """ if the file has already been written, but we have more to say: """
+        with self.testfailures_file.open("a") as filep:
+            filep.write(text + '\n')
 
     def cleanup_unneeded_binary_files(self):
         """ delete all files not needed for the crashreport binaries """
@@ -667,7 +672,7 @@ class TestingRunner():
                         shutil.move(one_file, core_dir)
                     except PermissionError as ex:
                         print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
-                        self.more_errors += f"won't move {str(one_file)} - not an owner! {str(ex)}"
+                        self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
 
         if self.crashed or not is_empty:
             crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.datetime_format}")
@@ -679,9 +684,9 @@ class TestingRunner():
                                     (core_dir / '..').resolve(),
                                     core_dir.name,
                                     True)
-            except Exeption as ex:
-                print("Failed to create binaries zip: " + ex.message)
-                self.more_errors += "Failed to create binaries zip: " + ex.message
+            except Exception as ex:
+                print("Failed to create binaries zip: " + str(ex))
+                self.append_report_txt("Failed to create binaries zip: " + str(ex))
             self.cleanup_unneeded_binary_files()
             binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.datetime_format}")
             print("creating crashreport binary support zip: " + str(binary_report_file))
@@ -692,9 +697,9 @@ class TestingRunner():
                                     (self.cfg.bin_dir / '..').resolve(),
                                     self.cfg.bin_dir.name,
                                     True)
-            except Exeption as ex:
-                print("Failed to create crashdump zip: " + ex.message)
-                self.more_errors += "Failed to create crashdump zip: " + ex.message
+            except Exception as ex:
+                print("Failed to create crashdump zip: " + str(ex))
+                self.append_report_txt("Failed to create crashdump zip: " + str(ex))
             for corefile in core_dir.glob(core_pattern):
                 print("Deleting corefile " + str(corefile))
                 sys.stdout.flush()
@@ -712,9 +717,9 @@ class TestingRunner():
                                 ZIPFORMAT,
                                 (TEMP / '..').resolve(),
                                 TEMP.name)
-        except Exeption as ex:
-            print("Failed to create inner zip: " + ex.message)
-            self.more_errors += "Failed to create inner zip: " + ex.message
+        except Exception as ex:
+            print("Failed to create inner zip: " + str(ex))
+            self.append_report_txt("Failed to create inner zip: " + str(ex))
             self.success = False
 
         try:
@@ -724,15 +729,15 @@ class TestingRunner():
                                 self.cfg.run_root,
                                 '.',
                                 True)
-        except Exeption as ex:
-            print("Failed to create testreport zip: " + ex.message)
-            self.more_errors += "Failed to create testreport zip: " + ex.message
+        except Exception as ex:
+            print("Failed to create testreport zip: " + str(ex))
+            self.append_report_txt("Failed to create testreport zip: " + str(ex))
             self.success = False
         try:
             shutil.rmtree(self.cfg.run_root, ignore_errors=False)
-        except Exeption as ex:
-            print("Failed to clean up: " + ex.message)
-            self.more_errors += "Failed to clean up: " + ex.message
+        except Exception as ex:
+            print("Failed to clean up: " + str(ex))
+            self.append_report_txt("Failed to clean up: " + str(ex))
             self.success = False
 
     def create_log_file(self):
