@@ -330,7 +330,8 @@ class SiteConfig:
             self.small_machine = True
             self.port_offset = 400
             self.timeout *= 4
-            self.extra_args = ['--extraArgs:rocksdb.compression-type', 'none']
+            self.extra_args = ['--extraArgs:rocksdb.compression-type', 'none',
+                               '--extraArgs:rocksdb.sync-interval', '0']
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
         if IS_MAC and platform.processor() == "arm":
@@ -341,6 +342,8 @@ class SiteConfig:
                 self.no_threads = 16 # M2 mac studio only has 16 performance cores
                 self.available_slots = 14
                 self.timeout *= 2
+                self.extra_args = ['--extraArgs:rocksdb.compression-type', 'none',
+                                   '--extraArgs:rocksdb.sync-interval', '0']
         if IS_WINDOWS:
             self.max_load = 0.85
             self.max_load1 = 0.75
