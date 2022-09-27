@@ -333,9 +333,14 @@ class SiteConfig:
             self.extra_args = ['--extraArgs:rocksdb.compression-type', 'none']
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
-        if IS_MAC and platform.processor() == "arm" and psutil.cpu_count() == 8:
-            self.no_threads = 6 # M1 only has 4 performance cores
-            self.available_slots = 10
+        if IS_MAC and platform.processor() == "arm":
+            if psutil.cpu_count() == 8:
+                self.no_threads = 6 # M1 mac mini only has 4 performance cores
+                self.available_slots = 10
+            if psutil.cpu_count() == 20:
+                self.no_threads = 16 # M2 mac studio only has 16 performance cores
+                self.available_slots = 14
+                self.timeout *= 2
         if IS_WINDOWS:
             self.max_load = 0.85
             self.max_load1 = 0.75
