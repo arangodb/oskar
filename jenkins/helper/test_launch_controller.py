@@ -317,9 +317,10 @@ class SiteConfig:
             self.timeout = int(os.environ['timeLimit'.upper()])
         elif 'timeLimit' in os.environ:
             self.timeout = int(os.environ['timeLimit'])
-
+        self.small_machine = False
         if psutil.cpu_count(logical=False) <= 8:
-            print("Small machine detected, quadrupling deadline!")
+            self.small_machine = True
+            print("Small machine detected, quadrupling deadline, disabling buckets!")
             self.timeout *= 4
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
@@ -331,8 +332,8 @@ class SiteConfig:
             self.max_load1 = 0.75
         else:
             self.max_load = self.no_threads * 0.9
-            self.max_load1 = self.no_threads * 0.95
-
+            self.max_load1 = self.no_threads * 1.1
+        self.overload = self.max_load * 1.4
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -348,6 +349,7 @@ class SiteConfig:
  - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
+ - {self.overload} load1 threshhold for overload logging
  - {self.available_slots} test slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
@@ -442,15 +444,25 @@ class TestingRunner():
         self.cluster = False
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
         self.testfailures_file = get_workspace() / 'testfailures.txt'
+        self.overload_report_file = self.cfg.test_report_dir / 'overload.txt'
+        self.overload_report_fh = self.overload_report_file.open('w', encoding='utf-8')
 
     def print_active(self):
         """ output currently active testsuites """
+        now = datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
+        load = psutil.getloadavg()
+        used_slots = ""
+        running_slots = ""
         with self.slot_lock:
-            print(str(psutil.getloadavg()) + "<= Load " +
-                  "Running: " + str(self.running_suites) +
-                  " => Active Slots: " + str(self.used_slots) +
-                  " => Disk I/O: " + str(psutil.disk_io_counters()))
+            used_slots = str(self.used_slots)
+            running_slots = str(self.running_suites)
+        print(str(load) + "<= Load " +
+              "Running: " + str(self.running_suites) +
+              " => Active Slots: " + used_slots +
+              " => Disk I/O: " + str(psutil.disk_io_counters()))
         sys.stdout.flush()
+        if load[0] > self.cfg.overload:
+            print(f"{now} {load[0]} | {used_slots} | {running_slots}", file=self.overload_report_fh)
 
     def done_job(self, parallelity):
         """ if one job is finished... """
@@ -795,7 +807,7 @@ class TestingRunner():
         if "ldap" in test["flags"] and not 'LDAPHOST' in os.environ:
             return
 
-        if "buckets" in params:
+        if "buckets" in params and not self.cfg.small_machine:
             num_buckets = int(params["buckets"])
             for i in range(num_buckets):
                 self.scenarios.append(
@@ -841,6 +853,7 @@ def launch(args, tests):
     print(runner.scenarios)
     try:
         runner.testing_runner()
+        runner.overload_report_fh.close()
         runner.generate_report_txt()
         runner.generate_crash_report()
         runner.generate_test_report()
