@@ -311,6 +311,7 @@ class SiteConfig:
     """ this environment - adapted to oskar defaults """
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
+        self.datetime_format = "%Y-%m-%dT%H%M%SZ"
         self.trace = False
         self.portbase = 7000
         if 'PORTBASE' in os.environ:
@@ -358,6 +359,7 @@ class SiteConfig:
  - {self.available_slots} test slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
+ - current Swap: {str(psutil.swap_memory())}
 """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
@@ -375,6 +377,12 @@ class SiteConfig:
         if 'PORTBASE' in os.environ:
             self.portbase = int(os.environ['PORTBASE'])
 
+    def get_overload(self):
+        load = psutil.getloadavg()
+        if load[0] > self.overload:
+            now = datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
+            return(f"VVV\n{now} HIGH SYSTEM LOAD! {load[0]}\n^^^")
+        return None
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
@@ -454,7 +462,7 @@ class TestingRunner():
 
     def print_active(self):
         """ output currently active testsuites """
-        now = datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
+        now = datetime.now(tz=None).strftime(f"testreport-{self.cfg.datetime_format}")
         load = psutil.getloadavg()
         used_slots = ""
         running_slots = ""
@@ -464,6 +472,7 @@ class TestingRunner():
         print(str(load) + "<= Load " +
               "Running: " + str(self.running_suites) +
               " => Active Slots: " + used_slots +
+              " => Swap: " + str(psutil.swap_memory()) +
               " => Disk I/O: " + str(psutil.disk_io_counters()))
         sys.stdout.flush()
         if load[0] > self.cfg.overload:
@@ -474,23 +483,24 @@ class TestingRunner():
         with self.slot_lock:
             self.used_slots -= parallelity
 
-    def launch_next(self, offset, counter):
+    def launch_next(self, offset, counter, skip_loadcheck):
         """ launch one testing job """
-        if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
-            return False
-        try:
-            sock_count = get_socket_count()
-            if sock_count > 8000:
-                print(f"Socket count: {sock_count}, waiting before spawning more")
+        if skip_loadcheck:
+            if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
                 return False
-        except psutil.AccessDenied:
-            pass
-        load = psutil.getloadavg()
-        if ((load[0] > self.cfg.max_load) or
-            (load[1] > self.cfg.max_load1)):
-            print(F"{str(load)} <= Load to high; waiting before spawning more - Disk I/O: " +
-                  str(psutil.disk_io_counters()))
-            return False
+            try:
+                sock_count = get_socket_count()
+                if sock_count > 8000:
+                    print(f"Socket count: {sock_count}, waiting before spawning more")
+                    return False
+            except psutil.AccessDenied:
+                pass
+            load = psutil.getloadavg()
+            if ((load[0] > self.cfg.max_load) or
+                (load[1] > self.cfg.max_load1)):
+                print(F"{str(load)} <= Load to high; waiting before spawning more - Disk I/O: " +
+                      str(psutil.swap_memory()))
+                return False
         with self.slot_lock:
             self.used_slots += self.scenarios[offset].parallelity
         this = self.scenarios[offset]
@@ -578,6 +588,8 @@ class TestingRunner():
         if not some_scenario.base_testdir.exists():
             some_scenario.base_testdir.mkdir()
         print(self.cfg.deadline)
+        sleep_count = 0;
+        last_started_count = -1
         if datetime.now() > self.cfg.deadline:
             raise ValueError("test already timed out before started?")
         print(f"Main: Starting {str(datetime.now())} soft deadline will be: {str(self.cfg.deadline)} hard deadline will be: {str(self.cfg.hard_deadline)}")
@@ -585,11 +597,17 @@ class TestingRunner():
             used_slots = 0
             with self.slot_lock:
                 used_slots = self.used_slots
-            if self.cfg.available_slots > used_slots and start_offset < len(self.scenarios):
+            if ((self.cfg.available_slots > used_slots) and
+                (start_offset < len(self.scenarios)) and
+                 ((last_started_count < 0) or
+                  (last_started_count - sleep_count > 5)) ):
                 print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter}")
                 sys.stdout.flush()
-                if self.launch_next(start_offset, counter):
+                if self.launch_next(start_offset, counter, last_started_count == -1):
+                    last_started_count = sleep_count
                     start_offset += 1
+                    last_started_count
+                    sleep_count += 1
                     time.sleep(5)
                     counter += 1
                     self.print_active()
@@ -598,6 +616,7 @@ class TestingRunner():
                         print("done")
                         break
                     self.print_active()
+                    sleep_count += 1
                     time.sleep(5)
             else:
                 self.print_active()
@@ -692,7 +711,7 @@ class TestingRunner():
                         self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
 
         if self.crashed or not is_empty:
-            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.datetime_format}")
+            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
             print("creating crashreport: " + str(crash_report_file))
             sys.stdout.flush()
             try:
@@ -705,7 +724,7 @@ class TestingRunner():
                 print("Failed to create binaries zip: " + str(ex))
                 self.append_report_txt("Failed to create binaries zip: " + str(ex))
             self.cleanup_unneeded_binary_files()
-            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.datetime_format}")
+            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
             print("creating crashreport binary support zip: " + str(binary_report_file))
             sys.stdout.flush()
             try:
@@ -726,7 +745,7 @@ class TestingRunner():
 
     def generate_test_report(self):
         """ regular testresults zip """
-        tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
+        tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.cfg.datetime_format}")
         print("Creating " + str(tarfile))
         sys.stdout.flush()
         try:

@@ -357,6 +357,11 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 result_line_handler(tcount, None, params)
                 line = ""
                 try:
+                    overload = self.cfg.get_overload()
+                    if overload:
+                        add_message_to_report(
+                            params,
+                            overload)
                     line = queue.get(timeout=1)
                     ret = result_line_handler(0, line, params)
                     line_filter = line_filter or ret
