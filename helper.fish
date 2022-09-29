@@ -1000,7 +1000,7 @@ function buildDebianSnippet
   set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER) / 1024 / 1024)
   set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
 
-  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAMtarGzSuffix.tar.gz"
+  set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-linux-$ARANGODB_TGZ_UPSTREAM$tarGzSuffix.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
   set -l TARGZ_SHA256_CLIENT ""
 
