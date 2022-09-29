@@ -25,7 +25,7 @@ set -xg CC $CC_NAME
 set -xg CXX $CXX_NAME
 
 set -xg LDFLAGS "-L$BASE_NAME/llvm@$COMPILER_VERSION/lib -Wl,-rpath,$BASE_NAME/llvm@$COMPILER_VERSION/lib"
-set -xg CPPFLAGS "-I$BASE_NAME/llvm@$COMPILER_VERSION/include"
+set -xg CPPFLAGS "-I$BASE_NAME/llvm@$COMPILER_VERSION/include -stdlib=libc++ -static"
 
 if test "$SAN" = "On"
   echo "SAN is not support in this environment"
