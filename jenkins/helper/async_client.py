@@ -52,6 +52,34 @@ def make_default_params(verbose):
         "identifier": ""
     }
 
+def tail_line_result(wait, line, params):
+    """
+    Keep the line, filter it for leading #,
+    if verbose print the line. else print progress.
+    """
+    # pylint: disable=pointless-statement
+    if params['skip_done']:
+        if not line is None:
+            print(params['prefix'] + str(line[0], 'utf-8').rstrip())
+        return True
+    now = datetime.now()
+    if now - params['last_read'] > timedelta(seconds=1):
+        params['skip_done'] = True
+        print(params['prefix'] + 'initial tail done, starting to output')
+    return True
+def make_tail_params(verbose, prefix):
+    """ create the structure to work with arrays to output the strings to """
+    return {
+        "trace_io": False,
+        "error": "",
+        "verbose": verbose,
+        "output": [],
+        "identifier": "",
+        "skip_done": False,
+        "prefix": prefix,
+        "last_read": datetime.now()
+    }
+
 def make_logfile_params(verbose, logfile, trace):
     """ create the structure to work with logfiles """
     return {
@@ -214,6 +242,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         self.connect_instance = connect_instance
         self.cfg = config
         self.deadline_signal = deadline_signal
+        self.pid = None
         if self.deadline_signal == -1:
             # pylint: disable=no-member
             # yes, one is only there on the wintendo, the other one elsewhere.
@@ -315,6 +344,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             close_fds=ON_POSIX,
             cwd=self.cfg.test_data_dir.resolve(),
         ) as process:
+            self.pid = process.pid
             queue = Queue()
             thread1 = Thread(
                 name=f"readIO {identifier}",

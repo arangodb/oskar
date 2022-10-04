@@ -18,6 +18,8 @@ from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
     make_logfile_params,
     logfile_line_result,
+    make_tail_params,
+    tail_line_result,
     delete_logfile_params
 )
 
@@ -37,6 +39,7 @@ if sys.version_info[0] != 3:
 
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
+IS_LINUX = not IS_MAC and not IS_WINDOWS
 if IS_MAC:
     # Put us to the performance cores:
     # https://apple.stackexchange.com/questions/443713
@@ -171,6 +174,38 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
         delete_logfile_params(params)
         ret['error'] = params['error']
         return ret
+
+class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
+    """configuration"""
+
+    def __init__(self, site_config):
+        self.params = None
+        super().__init__(site_config, None)
+
+    def launch(self):
+       # pylint: disable=R0913 disable=R0902
+        """ dmesg wrapper """
+        print('------')
+        args = ['-wT']
+        verbose = False
+        self.params = make_tail_params(verbose, 'dmesg ')
+        ret = self.run_monitored(
+            "dmesg",
+            args,
+            params=self.params,
+            progressive_timeout=9999999,
+            deadline=self.cfg.deadline,
+            result_line_handler=tail_line_result,
+            identifier='0_dmesg'
+        )
+        #delete_logfile_params(params)
+        ret = {}
+        ret['error'] = self.params['error']
+        return ret
+
+    def end_run(self):
+        """ terminate dmesg again """
+        psutil.Process(self.pid).kill()
 
 TEST_LOG_FILES = []
 
@@ -368,6 +403,9 @@ class SiteConfig:
         if 'PORTBASE' in os.environ:
             self.portbase = int(os.environ['PORTBASE'])
 
+def dmesg_runner(dmesg):
+    """ thread to run dmesg in """
+    dmesg.launch()
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
@@ -835,11 +873,17 @@ class TestingRunner():
 def launch(args, tests):
     """ Manage test execution on our own """
     runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
+    dmesg = DmesgWatcher(runner.cfg)
+    if IS_LINUX:
+        dmesg_thread = Thread(target=dmesg_runner, args=[dmesg])
+        dmesg_thread.start()
+        time.sleep(3)
     for test in tests:
         runner.register_test_func(args.cluster, test)
     runner.sort_by_priority()
     print(runner.scenarios)
     try:
+        
         runner.testing_runner()
         runner.generate_report_txt()
         runner.generate_crash_report()
@@ -856,6 +900,9 @@ def launch(args, tests):
         runner.create_log_file()
         runner.create_testruns_file()
         runner.print_and_exit_closing_stance()
+        if IS_LINUX:
+            dmesg.end_run()
+            dmesg_thread.join()
 
 def filter_tests(args, tests):
     """ filter testcase by operations target Single/Cluster/full """
