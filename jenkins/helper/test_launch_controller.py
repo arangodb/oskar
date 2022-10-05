@@ -368,6 +368,9 @@ class SiteConfig:
             self.max_load = self.no_threads * 0.9
             self.max_load1 = self.no_threads * 0.95
 
+        if 'SAN' in os.environ and os.environ['SAN'] == 'On':
+            self.available_slots /= 2
+            self.timeout *= 1.5
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
