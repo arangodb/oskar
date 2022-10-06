@@ -1694,6 +1694,7 @@ function runInContainer
   # if we receive a TERM outside the container. Note that this does not
   # cover SIGINT, since this will directly abort the whole function.
   set c (docker run -d --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+             --user="$(id --user):$(id --group)" \
              -v $WORKDIR/work/:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
