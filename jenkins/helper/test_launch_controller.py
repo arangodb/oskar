@@ -373,7 +373,8 @@ class SiteConfig:
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
  - current Swap: {str(psutil.swap_memory())}
-""")
+ - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
+ """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
@@ -499,7 +500,7 @@ class TestingRunner():
         """ launch one testing job """
         if do_loadcheck:
             if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
-                return False
+                return -1
             try:
                 sock_count = get_socket_count()
                 if sock_count > 8000:
@@ -514,9 +515,11 @@ class TestingRunner():
                 (load[0] + load_estimate > self.cfg.overload)):
                 print(F"{str(load)} <= {load_estimate} Load to high; waiting before spawning more - Disk I/O: " +
                       str(psutil.swap_memory()))
-                return False
+                return -1
+        parallelity = 0;
         with self.slot_lock:
-            self.used_slots += self.scenarios[offset].parallelity
+            parallelity = self.scenarios[offset].parallelity
+        self.used_slots += parallelity
         this = self.scenarios[offset]
         this.name_enum = f"{this.name} {str(counter)}"
         print(f"launching {this.name_enum}")
@@ -532,7 +535,7 @@ class TestingRunner():
         worker.name = this.name
         worker.start()
         self.workers.append(worker)
-        return True
+        return parallelity
 
     def handle_deadline(self):
         """ here we make sure no worker thread is stuck during its extraordinary shutdown """
@@ -602,11 +605,11 @@ class TestingRunner():
         if not some_scenario.base_testdir.exists():
             some_scenario.base_testdir.mkdir()
         print(self.cfg.deadline)
+        parallelity = 0
         sleep_count = 0
         last_started_count = -1
         if datetime.now() > self.cfg.deadline:
             raise ValueError("test already timed out before started?")
-        print(f"Main: Starting {str(datetime.now())} soft deadline will be: {str(self.cfg.deadline)} hard deadline will be: {str(self.cfg.hard_deadline)}")
         while (datetime.now() < self.cfg.deadline) and (start_offset < len(self.scenarios) or used_slots > 0):
             used_slots = 0
             with self.slot_lock:
@@ -614,10 +617,12 @@ class TestingRunner():
             if ((self.cfg.available_slots > used_slots) and
                 (start_offset < len(self.scenarios)) and
                  ((last_started_count < 0) or
-                  (sleep_count - last_started_count > 5)) ):
+                  (sleep_count - last_started_count > parallelity)) ):
                 print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter} {last_started_count} ")
                 sys.stdout.flush()
-                if self.launch_next(start_offset, counter, last_started_count != -1):
+                par = self.launch_next(start_offset, counter, last_started_count != -1)
+                if par > 0:
+                    parallelity = par
                     last_started_count = sleep_count
                     start_offset += 1
                     sleep_count += 1
@@ -697,6 +702,9 @@ class TestingRunner():
         system_corefiles = []
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
+        elif IS_LINUX:
+            core_dir = Path(Path('/proc/sys/kernel/core_pattern').read_text().strip()).parent
+            move_files = True
         else:
             move_files = True
             core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
