@@ -11,3 +11,5 @@ release
 .config
 .local
 .idea
+__pycache__
+
