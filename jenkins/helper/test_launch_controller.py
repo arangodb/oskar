@@ -23,6 +23,8 @@ from async_client import (
     delete_logfile_params
 )
 
+CREATE_REPORT=True
+
 ZIPFORMAT="gztar"
 try:
     import py7zr
@@ -910,11 +912,11 @@ def launch(args, tests):
     runner.sort_by_priority()
     print(runner.scenarios)
     try:
-        
         runner.testing_runner()
         runner.generate_report_txt()
-        runner.generate_crash_report()
-        runner.generate_test_report()
+        if CREATE_REPORT:
+            runner.generate_crash_report()
+            runner.generate_test_report()
     except Exception as exc:
         print()
         sys.stderr.flush()
@@ -952,6 +954,11 @@ def filter_tests(args, tests):
 
     if args.format == "ps1" or IS_WINDOWS:
         filters.append(lambda test: "!windows" not in test["flags"])
+
+    if args.no_report:
+        global CREATE_REPORT
+        print("Disabling report generation")
+        CREATE_REPORT = False
 
     for one_filter in filters:
         tests = filter(one_filter, tests)
@@ -1024,8 +1031,9 @@ def parse_arguments():
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
-    parser.add_argument("--gtest", help="only runt gtest", action="store_true")
+    parser.add_argument("--gtest", help="only run gtest", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")
+    parser.add_argument("--no-report", help="don't create testreport and crash tarballs", type=bool)
     args = parser.parse_args()
 
     return args
