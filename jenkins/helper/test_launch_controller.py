@@ -16,11 +16,14 @@ import psutil
 
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
+
     make_logfile_params,
     logfile_line_result,
+    delete_logfile_params,
+
     make_tail_params,
     tail_line_result,
-    delete_logfile_params
+    delete_tail_params
 )
 
 CREATE_REPORT=True
@@ -190,7 +193,7 @@ class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
         print('------')
         args = ['-wT']
         verbose = False
-        self.params = make_tail_params(verbose, 'dmesg ')
+        self.params = make_tail_params(verbose, 'dmesg ', self.cfg.test_report_dir / 'dmesg_log.txt')
         ret = self.run_monitored(
             "dmesg",
             args,
@@ -203,10 +206,12 @@ class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
         #delete_logfile_params(params)
         ret = {}
         ret['error'] = self.params['error']
+        delete_tail_params(self.params)
         return ret
 
     def end_run(self):
         """ terminate dmesg again """
+        print(f'killing dmesg ${self.pid}')
         psutil.Process(self.pid).kill()
 
 TEST_LOG_FILES = []
@@ -348,6 +353,7 @@ class SiteConfig:
     """ this environment - adapted to oskar defaults """
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
+        # pylint: disable=too-many-statements disable=too-many-branches
         self.trace = False
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
@@ -526,7 +532,7 @@ class TestingRunner():
                 print(F"{str(load)} <= {load_estimate} Load to high; waiting before spawning more - Disk I/O: " +
                       str(psutil.swap_memory()))
                 return -1
-        parallelity = 0;
+        parallelity = 0
         with self.slot_lock:
             parallelity = self.scenarios[offset].parallelity
         self.used_slots += parallelity
@@ -600,7 +606,7 @@ class TestingRunner():
 
     def testing_runner(self):
         """ run testing suites """
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches disable=too-many-statements
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
@@ -700,6 +706,7 @@ class TestingRunner():
 
     def generate_crash_report(self):
         """ crash report zips """
+        # pylint: disable=too-many-statements disable=too-many-branches
         core_max_count = 4 # single server crashdumps...
         if self.cluster:
             core_max_count = 15 # 3 cluster instances
@@ -712,7 +719,7 @@ class TestingRunner():
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
         elif IS_LINUX:
-            core_dir = Path(Path('/proc/sys/kernel/core_pattern').read_text().strip()).parent
+            core_dir = Path(Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()).parent
             move_files = True
         else:
             move_files = True
@@ -918,7 +925,6 @@ def launch(args, tests):
             runner.generate_crash_report()
             runner.generate_test_report()
     except Exception as exc:
-        print()
         sys.stderr.flush()
         sys.stdout.flush()
         print(exc, file=sys.stderr)
@@ -928,10 +934,11 @@ def launch(args, tests):
         sys.stdout.flush()
         runner.create_log_file()
         runner.create_testruns_file()
-        runner.print_and_exit_closing_stance()
         if IS_LINUX:
             dmesg.end_run()
+            print('joining dmesg threads')
             dmesg_thread.join()
+        runner.print_and_exit_closing_stance()
 
 def filter_tests(args, tests):
     """ filter testcase by operations target Single/Cluster/full """
