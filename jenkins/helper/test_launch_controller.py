@@ -367,7 +367,8 @@ class SiteConfig:
         else:
             self.max_load = self.no_threads * 0.9
             self.max_load1 = self.no_threads * 0.95
-
+        self.overload = self.max_load * 1.4
+        self.slots_to_parallelity_factor = self.max_load / self.available_slots
         if 'SAN' in os.environ and os.environ['SAN'] == 'On':
             self.available_slots /= 2
             self.timeout *= 1.5
@@ -385,6 +386,8 @@ class SiteConfig:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
+ - {self.slots_to_parallelity_factor} parallelity to load estimate factor
+ - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.available_slots} test slots
  - {str(TEMP)} - temporary directory
@@ -500,16 +503,17 @@ class TestingRunner():
         with self.slot_lock:
             self.used_slots -= parallelity
 
-    def launch_next(self, offset, counter):
+    def launch_next(self, offset, counter, do_loadcheck):
         """ launch one testing job """
         if do_loadcheck:
             if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
+                print("no more slots available")
                 return -1
             try:
                 sock_count = get_socket_count()
                 if sock_count > 8000:
                     print(f"Socket count: {sock_count}, waiting before spawning more")
-                    return False
+                    return -1
             except psutil.AccessDenied:
                 pass
             load_estimate = self.cfg.slots_to_parallelity_factor * self.scenarios[offset].parallelity
@@ -638,9 +642,11 @@ class TestingRunner():
                         break
                     self.print_active()
                     time.sleep(5)
+                    sleep_count += 1
             else:
                 self.print_active()
                 time.sleep(5)
+                sleep_count += 1
         self.deadline_reached = datetime.now() > self.cfg.deadline
         if self.deadline_reached:
             self.handle_deadline()

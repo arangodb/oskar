@@ -59,7 +59,7 @@ def tail_line_result(wait, line, params):
     """
     # pylint: disable=pointless-statement
     if params['skip_done']:
-        if not line is None:
+        if isinstance(line, tuple):
             print(params['prefix'] + str(line[0], 'utf-8').rstrip())
         return True
     now = datetime.now()
