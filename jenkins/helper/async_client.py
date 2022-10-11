@@ -52,6 +52,42 @@ def make_default_params(verbose):
         "identifier": ""
     }
 
+def tail_line_result(wait, line, params):
+    """
+    Keep the line, filter it for leading #,
+    if verbose print the line. else print progress.
+    """
+    # pylint: disable=pointless-statement
+    if params['skip_done']:
+        if isinstance(line, tuple):
+            print(params['prefix'] + str(line[0], 'utf-8').rstrip())
+            params['output'].write(line[0])
+        return True
+    now = datetime.now()
+    if now - params['last_read'] > timedelta(seconds=1):
+        params['skip_done'] = True
+        print(params['prefix'] + 'initial tail done, starting to output')
+    return True
+def make_tail_params(verbose, prefix, logfile):
+    """ create the structure to work with arrays to output the strings to """
+    return {
+        "trace_io": False,
+        "error": "",
+        "verbose": verbose,
+        "output": logfile.open("wb"),
+        "lfn": str(logfile),
+        "identifier": "",
+        "skip_done": False,
+        "prefix": prefix,
+        "last_read": datetime.now()
+    }
+def delete_tail_params(params):
+    """ teardown the structure to work with logfiles """
+    print(f"{params['identifier']} closing {params['lfn']}")
+    params['output'].flush()
+    params['output'].close()
+    print(f"{params['identifier']} {params['lfn']} closed")
+
 def make_logfile_params(verbose, logfile, trace):
     """ create the structure to work with logfiles """
     return {
@@ -215,6 +251,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         self.connect_instance = connect_instance
         self.cfg = config
         self.deadline_signal = deadline_signal
+        self.pid = None
         if self.deadline_signal == -1:
             # pylint: disable=no-member
             # yes, one is only there on the wintendo, the other one elsewhere.
@@ -316,6 +353,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
             close_fds=ON_POSIX,
             cwd=self.cfg.test_data_dir.resolve(),
         ) as process:
+            # pylint: disable=consider-using-f-string
+            self.pid = process.pid
             queue = Queue()
             thread1 = Thread(
                 name=f"readIO {identifier}",
@@ -388,6 +427,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 if datetime.now() > deadline:
                     have_deadline += 1
                 if have_deadline == 1:
+                    # pylint: disable=line-too-long
                     add_message_to_report(
                         params,
                         f"{identifier} Execution Deadline reached - will trigger signal {self.deadline_signal}!")
@@ -413,6 +453,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         process.stdout.close()
                         break
                     except psutil.TimeoutExpired:
+                        # pylint: disable=line-too-long
                         deadline_grace_count += 1
                         print_log(f"{identifier} timeout waiting for exit {str(deadline_grace_count)}", params)
                         # if its not willing, use force:

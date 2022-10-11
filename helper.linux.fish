@@ -1693,7 +1693,7 @@ function runInContainer
   # from a regular user. Therefore we have to do some Eiertanz to stop it
   # if we receive a TERM outside the container. Note that this does not
   # cover SIGINT, since this will directly abort the whole function.
-  set c (docker run -d --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+  set c (docker run -d --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
              -v $WORKDIR/work/:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
@@ -1806,7 +1806,7 @@ function interactiveContainer
     set -l agentstarted ""
   end
 
-  docker run -it --rm --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+  docker run -it --rm --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
     -v $WORKDIR/work:$INNERWORKDIR \
     -v $SSH_AUTH_SOCK:/ssh-agent \
     -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \

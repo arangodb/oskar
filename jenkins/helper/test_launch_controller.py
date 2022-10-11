@@ -17,9 +17,14 @@ import psutil
 
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
+
     make_logfile_params,
     logfile_line_result,
-    delete_logfile_params
+    delete_logfile_params,
+
+    make_tail_params,
+    tail_line_result,
+    delete_tail_params
 )
 
 ZIPFORMAT="gztar"
@@ -38,6 +43,7 @@ if sys.version_info[0] != 3:
 
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
+IS_LINUX = not IS_MAC and not IS_WINDOWS
 if IS_MAC:
     # Put us to the performance cores:
     # https://apple.stackexchange.com/questions/443713
@@ -172,6 +178,40 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
         delete_logfile_params(params)
         ret['error'] = params['error']
         return ret
+
+class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
+    """configuration"""
+
+    def __init__(self, site_config):
+        self.params = None
+        super().__init__(site_config, None)
+
+    def launch(self):
+       # pylint: disable=R0913 disable=R0902
+        """ dmesg wrapper """
+        print('------')
+        args = ['-wT']
+        verbose = False
+        self.params = make_tail_params(verbose, 'dmesg ', self.cfg.test_report_dir / 'dmesg_log.txt')
+        ret = self.run_monitored(
+            "dmesg",
+            args,
+            params=self.params,
+            progressive_timeout=9999999,
+            deadline=self.cfg.deadline,
+            result_line_handler=tail_line_result,
+            identifier='0_dmesg'
+        )
+        #delete_logfile_params(params)
+        ret = {}
+        ret['error'] = self.params['error']
+        delete_tail_params(self.params)
+        return ret
+
+    def end_run(self):
+        """ terminate dmesg again """
+        print(f'killing dmesg {self.pid}')
+        psutil.Process(self.pid).kill()
 
 TEST_LOG_FILES = []
 
@@ -312,6 +352,7 @@ class SiteConfig:
     """ this environment - adapted to oskar defaults """
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
+        # pylint: disable=too-many-statements disable=too-many-branches
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
         self.trace = False
         self.portbase = 7000
@@ -352,6 +393,9 @@ class SiteConfig:
             self.max_load1 = self.no_threads * 1.1
         self.overload = self.max_load * 1.4
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
+        if 'SAN' in os.environ and os.environ['SAN'] == 'On':
+            self.available_slots /= 2
+            self.timeout *= 1.5
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -366,6 +410,8 @@ class SiteConfig:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
+ - {self.slots_to_parallelity_factor} parallelity to load estimate factor
+ - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.slots_to_parallelity_factor} parallelity to load estimate factor
  - {self.overload} load1 threshhold for overload logging
@@ -396,6 +442,10 @@ class SiteConfig:
         load = psutil.getloadavg()
         if load[0] > self.overload:
             return(f"HIGH SYSTEM LOAD! {load[0]}")
+
+def dmesg_runner(dmesg):
+    """ thread to run dmesg in """
+    dmesg.launch()
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
@@ -500,12 +550,13 @@ class TestingRunner():
         """ launch one testing job """
         if do_loadcheck:
             if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
+                print("no more slots available")
                 return -1
             try:
                 sock_count = get_socket_count()
                 if sock_count > 8000:
                     print(f"Socket count: {sock_count}, waiting before spawning more")
-                    return False
+                    return -1
             except psutil.AccessDenied:
                 pass
             load_estimate = self.cfg.slots_to_parallelity_factor * self.scenarios[offset].parallelity
@@ -516,7 +567,7 @@ class TestingRunner():
                 print(F"{str(load)} <= {load_estimate} Load to high; waiting before spawning more - Disk I/O: " +
                       str(psutil.swap_memory()))
                 return -1
-        parallelity = 0;
+        parallelity = 0
         with self.slot_lock:
             parallelity = self.scenarios[offset].parallelity
         self.used_slots += parallelity
@@ -590,7 +641,7 @@ class TestingRunner():
 
     def testing_runner(self):
         """ run testing suites """
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches disable=too-many-statements
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
@@ -636,6 +687,7 @@ class TestingRunner():
                     self.print_active()
                     sleep_count += 1
                     time.sleep(5)
+                    sleep_count += 1
             else:
                 self.print_active()
                 time.sleep(5)
@@ -691,6 +743,7 @@ class TestingRunner():
 
     def generate_crash_report(self):
         """ crash report zips """
+        # pylint: disable=too-many-statements disable=too-many-branches
         core_max_count = 4 # single server crashdumps...
         if self.cluster:
             core_max_count = 15 # 3 cluster instances
@@ -703,7 +756,7 @@ class TestingRunner():
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
         elif IS_LINUX:
-            core_dir = Path(Path('/proc/sys/kernel/core_pattern').read_text().strip()).parent
+            core_dir = Path(Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()).parent
             move_files = True
         else:
             move_files = True
@@ -895,6 +948,11 @@ class TestingRunner():
 def launch(args, tests):
     """ Manage test execution on our own """
     runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
+    dmesg = DmesgWatcher(runner.cfg)
+    if IS_LINUX:
+        dmesg_thread = Thread(target=dmesg_runner, args=[dmesg])
+        dmesg_thread.start()
+        time.sleep(3)
     for test in tests:
         runner.register_test_func(args.cluster, test)
     runner.sort_by_priority()
@@ -906,12 +964,11 @@ def launch(args, tests):
     try:
         runner.testing_runner()
         runner.overload_report_fh.close()
+        runner.generate_report_txt()
         if create_report:
-            runner.generate_report_txt()
             runner.generate_crash_report()
             runner.generate_test_report()
     except Exception as exc:
-        print()
         sys.stderr.flush()
         sys.stdout.flush()
         print(exc, file=sys.stderr)
@@ -921,6 +978,10 @@ def launch(args, tests):
         sys.stdout.flush()
         runner.create_log_file()
         runner.create_testruns_file()
+        if IS_LINUX:
+            dmesg.end_run()
+            print('joining dmesg threads')
+            dmesg_thread.join()
         runner.print_and_exit_closing_stance()
 
 def filter_tests(args, tests):
@@ -944,6 +1005,10 @@ def filter_tests(args, tests):
 
     if args.format == "ps1" or IS_WINDOWS:
         filters.append(lambda test: "!windows" not in test["flags"])
+
+    if args.no_report:
+        print("Disabling report generation")
+        args.create_report = False
 
     for one_filter in filters:
         tests = filter(one_filter, tests)
@@ -1017,9 +1082,9 @@ def parse_arguments():
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
-    parser.add_argument("--gtest", help="only runt gtest", action="store_true")
+    parser.add_argument("--gtest", help="only run gtest", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")
-    parser.add_argument("--no_report", help="disable report generation except for testfailures.txt", action="store_true")
+    parser.add_argument("--no-report", help="don't create testreport and crash tarballs", type=bool)
     args = parser.parse_args()
 
     return args
