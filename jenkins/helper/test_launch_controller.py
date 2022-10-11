@@ -414,7 +414,6 @@ class SiteConfig:
  - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.slots_to_parallelity_factor} parallelity to load estimate factor
- - {self.overload} load1 threshhold for overload logging
  - {self.available_slots} test slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
