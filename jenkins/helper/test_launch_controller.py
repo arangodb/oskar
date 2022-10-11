@@ -816,7 +816,7 @@ class TestingRunner():
                 print("Deleting corefile " + str(corefile))
                 sys.stdout.flush()
                 corefile.unlink()
-            if move_files:
+            if not is_empty and move_files:
                 core_dir.rmdir()
 
     def generate_test_report(self):
