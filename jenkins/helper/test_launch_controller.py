@@ -768,10 +768,10 @@ class TestingRunner():
                 print(f'coredump {str(one_file)} is to big, deleting: {str(one_file.stat().st_size)}')
                 try:
                     one_file.unlink()
-                except PermissionError as ex:
+                except PermissionError:
                     print('access denied... skipping')
                 files.remove(one_file)
-                
+
         if len(files) > core_max_count:
             count = 0
             for one_crash_file in files:
