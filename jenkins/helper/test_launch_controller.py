@@ -763,6 +763,15 @@ class TestingRunner():
             move_files = True
             system_corefiles = sorted(Path('/cores').glob(core_pattern))
         files = sorted(core_dir.glob(core_pattern)) + system_corefiles
+        for one_file in files:
+            if one_file.is_file() and one_file.stat().st_size > (750 * 1024 * 1024):
+                print(f'coredump {str(one_file)} is to big, deleting: {str(one_file.stat().st_size)}')
+                try:
+                    one_file.unlink()
+                except PermissionError as ex:
+                    print('access denied... skipping')
+                files.remove(one_file)
+                
         if len(files) > core_max_count:
             count = 0
             for one_crash_file in files:
