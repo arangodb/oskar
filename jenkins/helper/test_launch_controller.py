@@ -90,7 +90,8 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
-print(os.environ)
+for env in os.environ:
+    print(f'{env}={os.environ[env]}')
 TEMP = Path("/tmp/")
 if 'TMP' in os.environ:
     TEMP = Path(os.environ['TMP'])
@@ -110,6 +111,22 @@ if not TEMP.exists():
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
 os.environ['TMP'] = str(TEMP)
+
+MAX_COREFILES_SINGLE=4
+MAX_COREFILES_CLUSTER=15
+if 'MAX_CORECOUNT' in os.environ:
+    MAX_COREFILES_SINGLE=int(os.environ['MAX_CORECOUNT'])
+    MAX_COREFILES_CLUSTER=int(os.environ['MAX_CORECOUNT'])
+MAX_TOTAL_CORESIZE_MB=1500
+if 'MAX_TOTAL_CORESIZE' in os.environ:
+    MAX_TOTAL_CORESIZE_MB=int(os.environ['MAX_TOTAL_CORESIZE'])
+MAX_COREFILE_SIZE_MB=750
+if 'MAX_CORESIZE' in os.environ:
+    MAX_COREFILE_SIZE_MB=int(os.environ['MAX_CORESIZE'])
+
+def get_file_size(elem):
+    """ get the size of a file for sorting """
+    return elem.stat().st_size
 
 def list_all_processes():
     """list all processes for later reference"""
@@ -706,10 +723,10 @@ class TestingRunner():
 
     def generate_crash_report(self):
         """ crash report zips """
-        # pylint: disable=too-many-statements disable=too-many-branches
-        core_max_count = 4 # single server crashdumps...
+        # pylint: disable=too-many-statements disable=too-many-branches disable=too-many-locals
+        core_max_count = MAX_COREFILES_SINGLE
         if self.cluster:
-            core_max_count = 15 # 3 cluster instances
+            core_max_count = MAX_COREFILES_CLUSTER
         core_dir = Path.cwd()
         core_pattern = "core*"
         move_files = False
@@ -726,20 +743,40 @@ class TestingRunner():
             core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
         if IS_MAC:
             move_files = True
-            system_corefiles = sorted(Path('/cores').glob(core_pattern))
-        files = sorted(core_dir.glob(core_pattern)) + system_corefiles
+            system_corefiles = Path('/cores').glob(core_pattern)
+        files_unsorted = core_dir.glob(core_pattern) + system_corefiles
+        files = files_unsorted.copy()
+        files.sort(key=get_file_size, reverse=True)
+        size_count = 0;
+        have_to_big_files = False
         for one_file in files:
-            if one_file.is_file() and one_file.stat().st_size > (750 * 1024 * 1024):
-                print(f'coredump {str(one_file)} is to big, deleting: {str(one_file.stat().st_size)}')
-                try:
-                    one_file.unlink()
-                except PermissionError:
-                    print('access denied... skipping')
-                files.remove(one_file)
+            if one_file.is_file():
+                size = (one_file.stat().st_size / (1024 * 1024))
+                to_big = False
+                if 0 < MAX_COREFILE_SIZE_MB < size:
+                    have_to_big_files = True
+                    to_big = True
+                size_count += size
+                print(f'Coredump: {str(one_file)} {str(size)}MB {to_big}')
+        total_files_to_big = 0 < MAX_TOTAL_CORESIZE_MB < size_count
+        if total_files_to_big or have_to_big_files:
+            for one_file in files:
+                if one_file.is_file():
+                    size = (one_file.stat().st_size / (1024 * 1024))
+                    delete_it = False
+                    if 0 < MAX_COREFILE_SIZE_MB < size:
+                        delete_it = True
+                    if 0 < MAX_TOTAL_CORESIZE_MB < size_count:
+                        delete_it = True
+                    if delete_it:
+                        size_count -= size
+                        print(f'deleting coredump {str(one_file)}')
+                        files.remove(one_file)
+                        files_unsorted.remove(one_file)
 
-        if len(files) > core_max_count:
+        if len(files_unsorted) > core_max_count:
             count = 0
-            for one_crash_file in files:
+            for one_crash_file in files_unsorted:
                 count += 1
                 if count > core_max_count:
                     print(f'{core_max_count} reached. will not archive {one_crash_file}')
