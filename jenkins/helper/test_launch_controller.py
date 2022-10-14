@@ -779,23 +779,23 @@ class TestingRunner():
             core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
         if IS_MAC:
             move_files = True
-            system_corefiles = Path('/cores').glob(core_pattern)
-        files_unsorted = core_dir.glob(core_pattern) + system_corefiles
+            system_corefiles = list(Path('/cores').glob(core_pattern))
+        files_unsorted = list(core_dir.glob(core_pattern)) + system_corefiles
         files = files_unsorted.copy()
         files.sort(key=get_file_size, reverse=True)
         size_count = 0;
-        have_to_big_files = False
+        have_too_big_files = False
         for one_file in files:
             if one_file.is_file():
                 size = (one_file.stat().st_size / (1024 * 1024))
-                to_big = False
+                too_big = False
                 if 0 < MAX_COREFILE_SIZE_MB < size:
                     have_to_big_files = True
-                    to_big = True
+                    too_big = True
                 size_count += size
-                print(f'Coredump: {str(one_file)} {str(size)}MB {to_big}')
-        total_files_to_big = 0 < MAX_TOTAL_CORESIZE_MB < size_count
-        if total_files_to_big or have_to_big_files:
+                print(f'Coredump: {str(one_file)} {str(size)}MB {too_big}')
+        total_files_too_big = 0 < MAX_TOTAL_CORESIZE_MB < size_count
+        if total_files_too_big or have_to_big_files:
             for one_file in files:
                 if one_file.is_file():
                     size = (one_file.stat().st_size / (1024 * 1024))
