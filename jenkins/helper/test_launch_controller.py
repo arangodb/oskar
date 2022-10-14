@@ -804,7 +804,7 @@ class TestingRunner():
                 size_count += size
                 print(f'Coredump: {str(one_file)} {str(size)}MB {too_big}')
         total_files_too_big = 0 < MAX_TOTAL_CORESIZE_MB < size_count
-        if total_files_too_big or have_to_big_files:
+        if total_files_too_big or have_too_big_files:
             for one_file in files:
                 if one_file.is_file():
                     size = (one_file.stat().st_size / (1024 * 1024))
