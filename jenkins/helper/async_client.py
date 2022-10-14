@@ -424,6 +424,24 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         process.kill()
                         kill_children(identifier, params, children)
                         rc_exit = process.wait()
+                except OSError as error:
+                    print(f"Got an OS-Error, will abort all! {error.strerror}")
+                    try:
+                        # get ALL subprocesses!
+                        children = psutil.Process().children(recursive=True)
+                    except psutil.NoSuchProcess:
+                        pass
+                    process.kill()
+                    kill_children(identifier, params, children)
+                    thread1.join()
+                    thread2.join()
+                    return {
+                        "progressive_timeout": True,
+                        "have_deadline": True,
+                        "rc_exit": -99,
+                        "line_filter": -99,
+                    }
+
                 if datetime.now() > deadline:
                     have_deadline += 1
                 if have_deadline == 1:
