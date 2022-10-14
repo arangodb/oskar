@@ -799,13 +799,15 @@ class TestingRunner():
                 if one_file.is_file():
                     size = (one_file.stat().st_size / (1024 * 1024))
                     delete_it = False
+                    too_big = False
                     if 0 < MAX_COREFILE_SIZE_MB < size:
                         delete_it = True
                     if 0 < MAX_TOTAL_CORESIZE_MB < size_count:
+                        too_big = True
                         delete_it = True
                     if delete_it:
                         size_count -= size
-                        print(f'deleting coredump {str(one_file)}')
+                        print(f'deleting coredump {str(one_file)} {"its too big" if too_big else "exceeds sum"}')
                         files.remove(one_file)
                         files_unsorted.remove(one_file)
 
