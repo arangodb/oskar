@@ -228,7 +228,11 @@ class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
     def end_run(self):
         """ terminate dmesg again """
         print(f'killing dmesg {self.pid}')
-        psutil.Process(self.pid).kill()
+        try:
+            psutil.Process(self.pid).kill()
+        except psutil.NoSuchProcess:
+            print('dmesg already gone?')
+            pass
 
 TEST_LOG_FILES = []
 
