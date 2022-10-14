@@ -371,7 +371,7 @@ class SiteConfig:
             self.available_slots = 10
         if IS_WINDOWS:
             self.max_load = 0.85
-            self.max_load1 = 0.75
+            self.max_load1 = 3.5
         else:
             self.max_load = self.no_threads * 0.9
             self.max_load1 = self.no_threads * 0.95
