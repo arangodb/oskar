@@ -375,6 +375,11 @@ class SiteConfig:
         else:
             self.max_load = self.no_threads * 0.9
             self.max_load1 = self.no_threads * 0.95
+        # roughly increase 1 per ten cores
+        self.core_dozend = int(self.no_threads / 10)
+        if self.core_dozend == 0:
+            self.core_dozend = 1
+        self.loop_sleep = 8 / self.core_dozend
         self.overload = self.max_load * 1.4
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
         if 'SAN' in os.environ and os.environ['SAN'] == 'On':
@@ -402,6 +407,7 @@ class SiteConfig:
  - current Disk I/O: {str(psutil.disk_io_counters())}
  - current Swap: {str(psutil.swap_memory())}
  - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
+ - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
  """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
@@ -641,7 +647,7 @@ class TestingRunner():
                     parallelity = par
                     last_started_count = sleep_count
                     start_offset += 1
-                    time.sleep(5)
+                    time.sleep(self.cfg.loop_sleep)
                     counter += 1
                     self.print_active()
                 else:
@@ -649,11 +655,11 @@ class TestingRunner():
                         print("done")
                         break
                     self.print_active()
-                    time.sleep(5)
+                    time.sleep(self.cfg.loop_sleep)
                     sleep_count += 1
             else:
                 self.print_active()
-                time.sleep(5)
+                time.sleep(self.cfg.loop_sleep)
                 sleep_count += 1
         self.deadline_reached = datetime.now() > self.cfg.deadline
         if self.deadline_reached:
