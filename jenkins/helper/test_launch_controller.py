@@ -411,8 +411,13 @@ class SiteConfig:
         self.overload = self.max_load * 1.4
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
         if 'SAN' in os.environ and os.environ['SAN'] == 'On':
+            print('SAN enabled, reducing possible system capacity')
             self.available_slots /= 2
             self.timeout *= 1.5
+            if os.environ['SAN_MODE'] == 'AULSan':
+                print('Aulsan must reduce even more!')
+                self.available_slots /= 2
+                self.max_load /= 2
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
