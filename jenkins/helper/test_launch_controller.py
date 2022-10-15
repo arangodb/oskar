@@ -382,6 +382,7 @@ class SiteConfig:
         self.loop_sleep = round(5 / self.core_dozend)
         self.overload = self.max_load * 1.4
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
+        self.rapidfire = round(self.slots / 10)
         if 'SAN' in os.environ and os.environ['SAN'] == 'On':
             self.available_slots /= 2
             self.timeout *= 1.5
@@ -402,7 +403,7 @@ class SiteConfig:
  - {self.slots_to_parallelity_factor} parallelity to load estimate factor
  - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
- - {self.available_slots} test slots
+ - {self.available_slots} test slots {self.rapidfire} rapid fire slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
  - current Swap: {str(psutil.swap_memory())}
@@ -642,7 +643,11 @@ class TestingRunner():
                   (sleep_count - last_started_count > parallelity)) ):
                 print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter} {last_started_count} ")
                 sys.stdout.flush()
-                par = self.launch_next(start_offset, counter, last_started_count != -1)
+                rapidfire = 0
+                par = 1
+                while self.rapidfire > rapidfire and par > 0 and self.cfg.available_slots > used_slots:
+                    par =  self.launch_next(start_offset, counter, last_started_count != -1)
+                    rapidfire += par
                 if par > 0:
                     parallelity = par
                     last_started_count = sleep_count
