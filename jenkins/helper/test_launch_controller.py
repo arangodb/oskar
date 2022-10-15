@@ -376,10 +376,10 @@ class SiteConfig:
             self.max_load = self.no_threads * 0.9
             self.max_load1 = self.no_threads * 0.95
         # roughly increase 1 per ten cores
-        self.core_dozend = int(self.no_threads / 10)
+        self.core_dozend = round(self.no_threads / 10)
         if self.core_dozend == 0:
             self.core_dozend = 1
-        self.loop_sleep = 8 / self.core_dozend
+        self.loop_sleep = round(5 / self.core_dozend)
         self.overload = self.max_load * 1.4
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
         if 'SAN' in os.environ and os.environ['SAN'] == 'On':
