@@ -648,12 +648,13 @@ class TestingRunner():
                 while self.cfg.rapid_fire > rapid_fire and par > 0 and self.cfg.available_slots > used_slots:
                     par =  self.launch_next(start_offset, counter, last_started_count != -1)
                     rapid_fire += par
+                    if par > 0:
+                        counter += 1
+                        time.sleep(0.1)
                 if par > 0:
                     parallelity = par
                     last_started_count = sleep_count
-                    start_offset += 1
                     time.sleep(self.cfg.loop_sleep)
-                    counter += 1
                     self.print_active()
                 else:
                     if used_slots == 0 and start_offset >= len(self.scenarios):
