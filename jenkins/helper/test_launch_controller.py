@@ -396,6 +396,12 @@ class SiteConfig:
             for target in ['RelWithdebInfo', 'Debug']:
                 if (bin_dir / target).exists():
                     bin_dir = bin_dir / target
+        socket_count = "was not allowed to see socket counts!"
+        try:
+            socket_count = str(get_socket_count())
+        except psutil.AccessDenied:
+            pass
+
         print(f"""Machine Info:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
@@ -409,6 +415,7 @@ class SiteConfig:
  - current Swap: {str(psutil.swap_memory())}
  - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
  - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
+ - {socket_count} number of currently active tcp sockets
  """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
@@ -484,8 +491,17 @@ def get_socket_count():
     for socket in psutil.net_connections(kind='inet'):
         if socket.status in [
                 psutil.CONN_FIN_WAIT1,
-                psutil.CONN_FIN_WAIT1,
-                psutil.CONN_CLOSE_WAIT]:
+                psutil.CONN_FIN_WAIT2,
+                psutil.CONN_CLOSE_WAIT,
+                psutil.CONN_ESTABLISHED,
+                psutil.CONN_SYN_SENT,
+                psutil.CONN_SYN_RECV,
+                psutil.CONN_TIME_WAIT,
+                psutil.CONN_CLOSE,
+                psutil.CONN_LAST_ACK,
+                psutil.CONN_LISTEN,
+                psutil.CONN_CLOSING
+        ]:
             counter += 1
     return counter
 
@@ -652,7 +668,6 @@ class TestingRunner():
                        self.cfg.available_slots > used_slots and
                        len(self.scenarios) > start_offset and
                        par > 0):
-                    
                     par =  self.launch_next(start_offset, counter, last_started_count != -1)
                     rapid_fire += par
                     if par > 0:
