@@ -456,6 +456,9 @@ def testing_runner(testing_instance, this, arangosh):
     this.summary = ret['error']
     if this.summary_file.exists():
         this.summary += this.summary_file.read_text()
+    else:
+        print(f'{this.name_enum} no testreport!')
+
     with arangosh.slot_lock:
         testing_instance.running_suites.remove(this.name_enum)
 
@@ -645,7 +648,10 @@ class TestingRunner():
                 sys.stdout.flush()
                 rapid_fire = 0
                 par = 1
-                while self.cfg.rapid_fire > rapid_fire and par > 0 and self.cfg.available_slots > used_slots:
+                while (self.cfg.rapid_fire > rapid_fire and
+                       self.cfg.available_slots > used_slots and
+                       len(self.scenarios) > start_offset and
+                       par > 0):
                     
                     par =  self.launch_next(start_offset, counter, last_started_count != -1)
                     rapid_fire += par
