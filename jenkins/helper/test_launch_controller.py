@@ -1059,7 +1059,7 @@ def launch(args, tests):
         runner.overload_report_fh.close()
         runner.generate_report_txt()
         if create_report:
-            runner.generate_crash_report()
+            # runner.generate_crash_report()
             runner.generate_test_report()
     except Exception as exc:
         sys.stderr.flush()
