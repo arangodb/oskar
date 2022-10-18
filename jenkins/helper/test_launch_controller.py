@@ -407,17 +407,25 @@ class SiteConfig:
                 self.extra_args = ['--extraArgs:rocksdb.compression-type', 'none',
                                    '--extraArgs:rocksdb.sync-interval', '0']
         if IS_WINDOWS:
-            self.max_load = 0.85
-            self.max_load1 = 0.75
+            self.max_load = self.no_threads * 0.5
+            self.max_load1 = self.no_threads * 0.6
         else:
             self.max_load = self.no_threads * 0.9
             self.max_load1 = self.no_threads * 1.1
+        # roughly increase 1 per ten cores
+        self.core_dozend = round(self.no_threads / 10)
+        if self.core_dozend == 0:
+            self.core_dozend = 1
+        self.loop_sleep = round(5 / self.core_dozend)
         self.overload = self.max_load * 1.4
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
+        self.rapid_fire = round(self.available_slots / 10)
         if 'SAN' in os.environ and os.environ['SAN'] == 'On':
             print('SAN enabled, reducing possible system capacity')
+            self.rapid_fire = 1
             self.available_slots /= 2
             self.timeout *= 1.5
+            self.loop_sleep *= 2
             if os.environ['SAN_MODE'] == 'AULSan':
                 print('Aulsan must reduce even more!')
                 self.available_slots /= 2
@@ -432,6 +440,12 @@ class SiteConfig:
             for target in ['RelWithdebInfo', 'Debug']:
                 if (bin_dir / target).exists():
                     bin_dir = bin_dir / target
+        socket_count = "was not allowed to see socket counts!"
+        try:
+            socket_count = str(get_socket_count())
+        except psutil.AccessDenied:
+            pass
+
         print(f"""Machine Info:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
@@ -440,11 +454,13 @@ class SiteConfig:
  - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
  - {self.slots_to_parallelity_factor} parallelity to load estimate factor
- - {self.available_slots} test slots
+ - {self.available_slots} test slots {self.rapid_fire} rapid fire slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
  - current Swap: {str(psutil.swap_memory())}
  - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
+ - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
+ - {socket_count} number of currently active tcp sockets
  """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
@@ -498,6 +514,9 @@ def testing_runner(testing_instance, this, arangosh):
     this.summary = ret['error']
     if this.summary_file.exists():
         this.summary += this.summary_file.read_text()
+    else:
+        print(f'{this.name_enum} no testreport!')
+
     with arangosh.slot_lock:
         testing_instance.running_suites.remove(this.name_enum)
 
@@ -523,8 +542,17 @@ def get_socket_count():
     for socket in psutil.net_connections(kind='inet'):
         if socket.status in [
                 psutil.CONN_FIN_WAIT1,
-                psutil.CONN_FIN_WAIT1,
-                psutil.CONN_CLOSE_WAIT]:
+                psutil.CONN_FIN_WAIT2,
+                psutil.CONN_CLOSE_WAIT,
+                psutil.CONN_ESTABLISHED,
+                psutil.CONN_SYN_SENT,
+                psutil.CONN_SYN_RECV,
+                psutil.CONN_TIME_WAIT,
+                psutil.CONN_CLOSE,
+                psutil.CONN_LAST_ACK,
+                psutil.CONN_LISTEN,
+                psutil.CONN_CLOSING
+        ]:
             counter += 1
     return counter
 
@@ -696,14 +724,23 @@ class TestingRunner():
                   (sleep_count - last_started_count > parallelity)) ):
                 print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter} {last_started_count} ")
                 sys.stdout.flush()
-                par = self.launch_next(start_offset, counter, last_started_count != -1)
+                rapid_fire = 0
+                par = 1
+                while (self.cfg.rapid_fire > rapid_fire and
+                       self.cfg.available_slots > used_slots and
+                       len(self.scenarios) > start_offset and
+                       par > 0):
+                    par =  self.launch_next(start_offset, counter, last_started_count != -1)
+                    rapid_fire += par
+                    if par > 0:
+                        counter += 1
+                        time.sleep(0.1)
+                        start_offset += 1
                 if par > 0:
                     parallelity = par
                     last_started_count = sleep_count
-                    start_offset += 1
                     sleep_count += 1
-                    time.sleep(5)
-                    counter += 1
+                    time.sleep(self.cfg.loop_sleep)
                     self.print_active()
                 else:
                     if used_slots == 0 and start_offset >= len(self.scenarios):
@@ -711,11 +748,11 @@ class TestingRunner():
                         break
                     self.print_active()
                     sleep_count += 1
-                    time.sleep(5)
+                    time.sleep(self.cfg.loop_sleep)
                     sleep_count += 1
             else:
                 self.print_active()
-                time.sleep(5)
+                time.sleep(self.cfg.loop_sleep)
                 sleep_count += 1
         self.deadline_reached = datetime.now() > self.cfg.deadline
         if self.deadline_reached:
