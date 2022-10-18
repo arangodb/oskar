@@ -3,6 +3,7 @@
 import collections
 import os
 import sys
+import platform
 import psutil
 # pylint: disable=bare-except disable=broad-except
 arango_processes = [
@@ -12,6 +13,10 @@ arango_processes = [
     "arangosh",
     "arangodbtests"
 ]
+
+IS_WINDOWS = platform.win32_ver()[0] != ""
+IS_MAC = platform.mac_ver()[0] != ""
+IS_LINUX = not IS_WINDOWS and not IS_MAC
 
 def print_tree(parent, tree, indent=''):
     """ print the process tree """
@@ -81,6 +86,42 @@ def get_and_kill_all_processes():
             except Exception as ex:
                 print("failed to kill process!" + str(ex))
 
+def clean_docker_containers():
+    """ hunt and kill stray docker containers """
+    #pylint: disable=import-outside-toplevel
+    import docker
+    client = docker.from_env()
+    kill_first = []
+    kill_then = []
+    for container in client.containers.list():
+        workspace = ""
+        for var in container.attrs['Config']['Env']:
+            if var.startswith('WORKSPACE'):
+                workspace = var
+        started_at = ""
+        if 'StartedAt' in container.attrs:
+            started_at = container.attrs['StartedAt']
+        labels = ""
+        if 'Labels' in container.attrs['Config']:
+            labels = container.attrs['Config']['Labels']
+
+        print(f"{container.id} {container.attrs['Path']} {started_at} - {container.attrs['Created']} - {str(labels)} {workspace} ")
+        if not container.attrs['Path'].startswith('/scripts/'):
+            if container.attrs['Path'].startswith('/app/arangodb'):
+                kill_first.append(container)
+            elif container.attrs['Path'].startswith('sleep'):
+                kill_first.append(container)
+            else:
+                kill_then.append(container)
+    for container in (kill_first + kill_then):
+        try:
+            print(f"Stopping {container.id} {container.attrs['Path']}")
+            container.stop()
+            #container.kill()
+        except Exception as ex:
+            print(ex)
+            print('next to come')
+
 def main():
     """
     construct a dict where 'values' are all the processes
@@ -97,4 +138,6 @@ def main():
         tree[0].remove(0)
     print_tree(min(tree), tree)
     get_and_kill_all_processes()
+    if IS_LINUX:
+        clean_docker_containers()
 main()
