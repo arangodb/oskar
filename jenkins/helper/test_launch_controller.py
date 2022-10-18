@@ -16,10 +16,17 @@ import psutil
 
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
+
     make_logfile_params,
     logfile_line_result,
-    delete_logfile_params
+    delete_logfile_params,
+
+    make_tail_params,
+    tail_line_result,
+    delete_tail_params
 )
+
+CREATE_REPORT=True
 
 ZIPFORMAT="gztar"
 try:
@@ -37,6 +44,7 @@ if sys.version_info[0] != 3:
 
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
+IS_LINUX = not IS_MAC and not IS_WINDOWS
 if IS_MAC:
     # Put us to the performance cores:
     # https://apple.stackexchange.com/questions/443713
@@ -172,6 +180,40 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
         ret['error'] = params['error']
         return ret
 
+class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
+    """configuration"""
+
+    def __init__(self, site_config):
+        self.params = None
+        super().__init__(site_config, None)
+
+    def launch(self):
+       # pylint: disable=R0913 disable=R0902
+        """ dmesg wrapper """
+        print('------')
+        args = ['-wT']
+        verbose = False
+        self.params = make_tail_params(verbose, 'dmesg ', self.cfg.test_report_dir / 'dmesg_log.txt')
+        ret = self.run_monitored(
+            "dmesg",
+            args,
+            params=self.params,
+            progressive_timeout=9999999,
+            deadline=self.cfg.deadline,
+            result_line_handler=tail_line_result,
+            identifier='0_dmesg'
+        )
+        #delete_logfile_params(params)
+        ret = {}
+        ret['error'] = self.params['error']
+        delete_tail_params(self.params)
+        return ret
+
+    def end_run(self):
+        """ terminate dmesg again """
+        print(f'killing dmesg {self.pid}')
+        psutil.Process(self.pid).kill()
+
 TEST_LOG_FILES = []
 
 class TestConfig():
@@ -237,7 +279,7 @@ class TestConfig():
         if 'filter' in os.environ:
             self.args += ['--test', os.environ['filter']]
         if 'sniff' in flags:
-            if IS_WINDOWS:
+            if IS_WINDOWS and 'TSHARK' in os.environ:
                 self.args += ['--sniff', 'true',
                              '--sniffProgram',  os.environ['TSHARK'],
                              '--sniffDevice', os.environ['DUMPDEVICE']]
@@ -311,6 +353,7 @@ class SiteConfig:
     """ this environment - adapted to oskar defaults """
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
+        # pylint: disable=too-many-statements disable=too-many-branches
         self.trace = False
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
@@ -327,12 +370,22 @@ class SiteConfig:
             self.no_threads = 6 # M1 only has 4 performance cores
             self.available_slots = 10
         if IS_WINDOWS:
-            self.max_load = 0.85
-            self.max_load1 = 0.75
+            self.max_load = self.no_threads * 0.5
+            self.max_load1 = self.no_threads * 0.6
         else:
             self.max_load = self.no_threads * 0.9
             self.max_load1 = self.no_threads * 0.95
-
+        # roughly increase 1 per ten cores
+        self.core_dozend = round(self.no_threads / 10)
+        if self.core_dozend == 0:
+            self.core_dozend = 1
+        self.loop_sleep = round(5 / self.core_dozend)
+        self.overload = self.max_load * 1.4
+        self.slots_to_parallelity_factor = self.max_load / self.available_slots
+        self.rapid_fire = round(self.available_slots / 10)
+        if 'SAN' in os.environ and os.environ['SAN'] == 'On':
+            self.available_slots /= 2
+            self.timeout *= 1.5
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -343,15 +396,27 @@ class SiteConfig:
             for target in ['RelWithdebInfo', 'Debug']:
                 if (bin_dir / target).exists():
                     bin_dir = bin_dir / target
+        socket_count = "was not allowed to see socket counts!"
+        try:
+            socket_count = str(get_socket_count())
+        except psutil.AccessDenied:
+            pass
+
         print(f"""Machine Info:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
+ - {self.slots_to_parallelity_factor} parallelity to load estimate factor
+ - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
- - {self.available_slots} test slots
+ - {self.available_slots} test slots {self.rapid_fire} rapid fire slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
-""")
+ - current Swap: {str(psutil.swap_memory())}
+ - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
+ - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
+ - {socket_count} number of currently active tcp sockets
+ """)
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
@@ -368,6 +433,9 @@ class SiteConfig:
         if 'PORTBASE' in os.environ:
             self.portbase = int(os.environ['PORTBASE'])
 
+def dmesg_runner(dmesg):
+    """ thread to run dmesg in """
+    dmesg.launch()
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
@@ -395,6 +463,9 @@ def testing_runner(testing_instance, this, arangosh):
     this.summary = ret['error']
     if this.summary_file.exists():
         this.summary += this.summary_file.read_text()
+    else:
+        print(f'{this.name_enum} no testreport!')
+
     with arangosh.slot_lock:
         testing_instance.running_suites.remove(this.name_enum)
 
@@ -420,8 +491,17 @@ def get_socket_count():
     for socket in psutil.net_connections(kind='inet'):
         if socket.status in [
                 psutil.CONN_FIN_WAIT1,
-                psutil.CONN_FIN_WAIT1,
-                psutil.CONN_CLOSE_WAIT]:
+                psutil.CONN_FIN_WAIT2,
+                psutil.CONN_CLOSE_WAIT,
+                psutil.CONN_ESTABLISHED,
+                psutil.CONN_SYN_SENT,
+                psutil.CONN_SYN_RECV,
+                psutil.CONN_TIME_WAIT,
+                psutil.CONN_CLOSE,
+                psutil.CONN_LAST_ACK,
+                psutil.CONN_LISTEN,
+                psutil.CONN_CLOSING
+        ]:
             counter += 1
     return counter
 
@@ -441,6 +521,7 @@ class TestingRunner():
         self.crashed = False
         self.cluster = False
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
+        self.testfailures_file = get_workspace() / 'testfailures.txt'
 
     def print_active(self):
         """ output currently active testsuites """
@@ -456,25 +537,31 @@ class TestingRunner():
         with self.slot_lock:
             self.used_slots -= parallelity
 
-    def launch_next(self, offset, counter):
+    def launch_next(self, offset, counter, do_loadcheck):
         """ launch one testing job """
-        if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
-            return False
-        try:
-            sock_count = get_socket_count()
-            if sock_count > 8000:
-                print(f"Socket count: {sock_count}, waiting before spawning more")
-                return False
-        except psutil.AccessDenied:
-            pass
-        load = psutil.getloadavg()
-        if ((load[0] > self.cfg.max_load) or
-            (load[1] > self.cfg.max_load1)):
-            print(F"{str(load)} <= Load to high; waiting before spawning more - Disk I/O: " +
-                  str(psutil.disk_io_counters()))
-            return False
+        if do_loadcheck:
+            if self.scenarios[offset].parallelity > (self.cfg.available_slots - self.used_slots):
+                print("no more slots available")
+                return -1
+            try:
+                sock_count = get_socket_count()
+                if sock_count > 8000:
+                    print(f"Socket count: {sock_count}, waiting before spawning more")
+                    return -1
+            except psutil.AccessDenied:
+                pass
+            load_estimate = self.cfg.slots_to_parallelity_factor * self.scenarios[offset].parallelity
+            load = psutil.getloadavg()
+            if ((load[0] > self.cfg.max_load) or
+                (load[1] > self.cfg.max_load1) or
+                (load[0] + load_estimate > self.cfg.overload)):
+                print(F"{str(load)} <= {load_estimate} Load to high; waiting before spawning more - Disk I/O: " +
+                      str(psutil.swap_memory()))
+                return -1
+        parallelity = 0
         with self.slot_lock:
-            self.used_slots += self.scenarios[offset].parallelity
+            parallelity = self.scenarios[offset].parallelity
+        self.used_slots += parallelity
         this = self.scenarios[offset]
         this.name_enum = f"{this.name} {str(counter)}"
         print(f"launching {this.name_enum}")
@@ -490,7 +577,7 @@ class TestingRunner():
         worker.name = this.name
         worker.start()
         self.workers.append(worker)
-        return True
+        return parallelity
 
     def handle_deadline(self):
         """ here we make sure no worker thread is stuck during its extraordinary shutdown """
@@ -545,7 +632,7 @@ class TestingRunner():
 
     def testing_runner(self):
         """ run testing suites """
-        # pylint: disable=too-many-branches
+        # pylint: disable=too-many-branches disable=too-many-statements
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
@@ -560,30 +647,49 @@ class TestingRunner():
         if not some_scenario.base_testdir.exists():
             some_scenario.base_testdir.mkdir()
         print(self.cfg.deadline)
+        parallelity = 0
+        sleep_count = 0
+        last_started_count = -1
         if datetime.now() > self.cfg.deadline:
             raise ValueError("test already timed out before started?")
-        print(f"Main: Starting {str(datetime.now())} soft deadline will be: {str(self.cfg.deadline)} hard deadline will be: {str(self.cfg.hard_deadline)}")
         while (datetime.now() < self.cfg.deadline) and (start_offset < len(self.scenarios) or used_slots > 0):
             used_slots = 0
             with self.slot_lock:
                 used_slots = self.used_slots
-            if self.cfg.available_slots > used_slots and start_offset < len(self.scenarios):
-                print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter}")
+            if ((self.cfg.available_slots > used_slots) and
+                (start_offset < len(self.scenarios)) and
+                 ((last_started_count < 0) or
+                  (sleep_count - last_started_count > parallelity)) ):
+                print(f"Launching more: {self.cfg.available_slots} > {used_slots} {counter} {last_started_count} ")
                 sys.stdout.flush()
-                if self.launch_next(start_offset, counter):
-                    start_offset += 1
-                    time.sleep(5)
-                    counter += 1
+                rapid_fire = 0
+                par = 1
+                while (self.cfg.rapid_fire > rapid_fire and
+                       self.cfg.available_slots > used_slots and
+                       len(self.scenarios) > start_offset and
+                       par > 0):
+                    par =  self.launch_next(start_offset, counter, last_started_count != -1)
+                    rapid_fire += par
+                    if par > 0:
+                        counter += 1
+                        time.sleep(0.1)
+                        start_offset += 1
+                if par > 0:
+                    parallelity = par
+                    last_started_count = sleep_count
+                    time.sleep(self.cfg.loop_sleep)
                     self.print_active()
                 else:
                     if used_slots == 0 and start_offset >= len(self.scenarios):
                         print("done")
                         break
                     self.print_active()
-                    time.sleep(5)
+                    time.sleep(self.cfg.loop_sleep)
+                    sleep_count += 1
             else:
                 self.print_active()
-                time.sleep(5)
+                time.sleep(self.cfg.loop_sleep)
+                sleep_count += 1
         self.deadline_reached = datetime.now() > self.cfg.deadline
         if self.deadline_reached:
             self.handle_deadline()
@@ -609,7 +715,12 @@ class TestingRunner():
             if testrun.finish is None:
                 summary += f"\n=== {testrun.name} ===\nhasn't been launched at all!"
         print(summary)
-        (get_workspace() / 'testfailures.txt').write_text(summary)
+        self.testfailures_file.write_text(summary)
+
+    def append_report_txt(self, text):
+        """ if the file has already been written, but we have more to say: """
+        with self.testfailures_file.open("a") as filep:
+            filep.write(text + '\n')
 
     def cleanup_unneeded_binary_files(self):
         """ delete all files not needed for the crashreport binaries """
@@ -630,6 +741,7 @@ class TestingRunner():
 
     def generate_crash_report(self):
         """ crash report zips """
+        # pylint: disable=too-many-statements disable=too-many-branches
         core_max_count = 4 # single server crashdumps...
         if self.cluster:
             core_max_count = 15 # 3 cluster instances
@@ -641,6 +753,9 @@ class TestingRunner():
         system_corefiles = []
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
+        elif IS_LINUX:
+            core_dir = Path(Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()).parent
+            move_files = True
         else:
             move_files = True
             core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
@@ -666,25 +781,34 @@ class TestingRunner():
                         shutil.move(one_file, core_dir)
                     except PermissionError as ex:
                         print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
+                        self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
 
         if self.crashed or not is_empty:
             crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.datetime_format}")
             print("creating crashreport: " + str(crash_report_file))
             sys.stdout.flush()
-            shutil.make_archive(str(crash_report_file),
-                                ZIPFORMAT,
-                                (core_dir / '..').resolve(),
-                                core_dir.name,
-                                True)
+            try:
+                shutil.make_archive(str(crash_report_file),
+                                    ZIPFORMAT,
+                                    (core_dir / '..').resolve(),
+                                    core_dir.name,
+                                    True)
+            except Exception as ex:
+                print("Failed to create binaries zip: " + str(ex))
+                self.append_report_txt("Failed to create binaries zip: " + str(ex))
             self.cleanup_unneeded_binary_files()
             binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.datetime_format}")
             print("creating crashreport binary support zip: " + str(binary_report_file))
             sys.stdout.flush()
-            shutil.make_archive(str(binary_report_file),
-                                ZIPFORMAT,
-                                (self.cfg.bin_dir / '..').resolve(),
-                                self.cfg.bin_dir.name,
-                                True)
+            try:
+                shutil.make_archive(str(binary_report_file),
+                                    ZIPFORMAT,
+                                    (self.cfg.bin_dir / '..').resolve(),
+                                    self.cfg.bin_dir.name,
+                                    True)
+            except Exception as ex:
+                print("Failed to create crashdump zip: " + str(ex))
+                self.append_report_txt("Failed to create crashdump zip: " + str(ex))
             for corefile in core_dir.glob(core_pattern):
                 print("Deleting corefile " + str(corefile))
                 sys.stdout.flush()
@@ -697,18 +821,33 @@ class TestingRunner():
         tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
         print("Creating " + str(tarfile))
         sys.stdout.flush()
-        shutil.make_archive(self.cfg.run_root / 'innerlogs',
-                            ZIPFORMAT,
-                            (TEMP / '..').resolve(),
-                            TEMP.name)
+        try:
+            shutil.make_archive(self.cfg.run_root / 'innerlogs',
+                                ZIPFORMAT,
+                                (TEMP / '..').resolve(),
+                                TEMP.name)
+        except Exception as ex:
+            print("Failed to create inner zip: " + str(ex))
+            self.append_report_txt("Failed to create inner zip: " + str(ex))
+            self.success = False
 
-        shutil.rmtree(TEMP, ignore_errors=False)
-        shutil.make_archive(tarfile,
-                            ZIPFORMAT,
-                            self.cfg.run_root,
-                            '.',
-                            True)
-        shutil.rmtree(self.cfg.run_root, ignore_errors=False)
+        try:
+            shutil.rmtree(TEMP, ignore_errors=False)
+            shutil.make_archive(tarfile,
+                                ZIPFORMAT,
+                                self.cfg.run_root,
+                                '.',
+                                True)
+        except Exception as ex:
+            print("Failed to create testreport zip: " + str(ex))
+            self.append_report_txt("Failed to create testreport zip: " + str(ex))
+            self.success = False
+        try:
+            shutil.rmtree(self.cfg.run_root, ignore_errors=False)
+        except Exception as ex:
+            print("Failed to clean up: " + str(ex))
+            self.append_report_txt("Failed to clean up: " + str(ex))
+            self.success = False
 
     def create_log_file(self):
         """ create the log file with the stati """
@@ -805,6 +944,11 @@ class TestingRunner():
 def launch(args, tests):
     """ Manage test execution on our own """
     runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
+    dmesg = DmesgWatcher(runner.cfg)
+    if IS_LINUX:
+        dmesg_thread = Thread(target=dmesg_runner, args=[dmesg])
+        dmesg_thread.start()
+        time.sleep(3)
     for test in tests:
         runner.register_test_func(args.cluster, test)
     runner.sort_by_priority()
@@ -812,10 +956,10 @@ def launch(args, tests):
     try:
         runner.testing_runner()
         runner.generate_report_txt()
-        runner.generate_crash_report()
-        runner.generate_test_report()
+        if CREATE_REPORT:
+            runner.generate_crash_report()
+            runner.generate_test_report()
     except Exception as exc:
-        print()
         sys.stderr.flush()
         sys.stdout.flush()
         print(exc, file=sys.stderr)
@@ -825,6 +969,10 @@ def launch(args, tests):
         sys.stdout.flush()
         runner.create_log_file()
         runner.create_testruns_file()
+        if IS_LINUX:
+            dmesg.end_run()
+            print('joining dmesg threads')
+            dmesg_thread.join()
         runner.print_and_exit_closing_stance()
 
 def filter_tests(args, tests):
@@ -848,6 +996,11 @@ def filter_tests(args, tests):
 
     if args.format == "ps1" or IS_WINDOWS:
         filters.append(lambda test: "!windows" not in test["flags"])
+
+    if args.no_report:
+        global CREATE_REPORT
+        print("Disabling report generation")
+        CREATE_REPORT = False
 
     for one_filter in filters:
         tests = filter(one_filter, tests)
@@ -920,8 +1073,9 @@ def parse_arguments():
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
-    parser.add_argument("--gtest", help="only runt gtest", action="store_true")
+    parser.add_argument("--gtest", help="only run gtest", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")
+    parser.add_argument("--no-report", help="don't create testreport and crash tarballs", type=bool)
     args = parser.parse_args()
 
     return args

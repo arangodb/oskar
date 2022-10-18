@@ -28,7 +28,7 @@ set -gx UBUNTUBUILDIMAGE5_TAG 11
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
-set -gx UBUNTUBUILDIMAGE6_TAG 3
+set -gx UBUNTUBUILDIMAGE6_TAG 4
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
@@ -46,7 +46,7 @@ set -gx ALPINEBUILDIMAGE5_TAG 11
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
-set -gx ALPINEBUILDIMAGE6_TAG 2
+set -gx ALPINEBUILDIMAGE6_TAG 3
 set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -1693,7 +1693,7 @@ function runInContainer
   # from a regular user. Therefore we have to do some Eiertanz to stop it
   # if we receive a TERM outside the container. Note that this does not
   # cover SIGINT, since this will directly abort the whole function.
-  set c (docker run -d --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+  set c (docker run -d --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
              -v $WORKDIR/work/:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
@@ -1806,7 +1806,7 @@ function interactiveContainer
     set -l agentstarted ""
   end
 
-  docker run -it --rm --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
+  docker run -it --rm --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
     -v $WORKDIR/work:$INNERWORKDIR \
     -v $SSH_AUTH_SOCK:/ssh-agent \
     -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \

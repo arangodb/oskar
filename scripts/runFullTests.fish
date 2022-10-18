@@ -92,9 +92,9 @@ end
 if test "$SAN" = "On"
   switch $SAN_MODE
     case "TSan"
-      set timeLimit (math $timeLimit \* 8)
+      set timeLimit (math $timeLimit \* 12)
     case "AULSan"
-      set timeLimit (math $timeLimit \* 4)
+      set timeLimit (math $timeLimit \* 8)
     case "*"
       echo Unknown SAN mode $SAN_MODE
       set -g result BAD

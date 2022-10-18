@@ -10,3 +10,6 @@ release
 .bash_history
 .config
 .local
+.idea
+__pycache__
+
