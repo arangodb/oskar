@@ -818,7 +818,9 @@ class TestingRunner():
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
         elif IS_LINUX:
-            core_dir = Path(Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()).parent
+            core_pattern = Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()
+            if core_pattern.startswith('/'):
+                core_dir = Path(core_pattern.parent)
             move_files = True
         else:
             move_files = True
@@ -827,40 +829,42 @@ class TestingRunner():
             move_files = True
             system_corefiles = list(Path('/cores').glob(core_pattern))
         files_unsorted = list(core_dir.glob(core_pattern)) + system_corefiles
-        files = files_unsorted.copy()
-        files.sort(key=get_file_size, reverse=True)
-        size_count = 0;
+        files = files_unsorted.copy().sort(key=get_file_size, reverse=True)
+        size_count = 0
         have_too_big_files = False
         for one_file in files:
             if one_file.is_file():
                 size = (one_file.stat().st_size / (1024 * 1024))
                 too_big = False
                 if 0 < MAX_COREFILE_SIZE_MB < size:
-                    have_to_big_files = True
+                    have_too_big_files = True
                     too_big = True
                 size_count += size
                 print(f'Coredump: {str(one_file)} {str(size)}MB {too_big}')
+            else:
+                files.remove(one_file)
+                files_unsorted.remove(one_file)
+
         total_files_too_big = 0 < MAX_TOTAL_CORESIZE_MB < size_count
         if total_files_too_big or have_too_big_files:
             for one_file in files:
-                if one_file.is_file():
-                    size = (one_file.stat().st_size / (1024 * 1024))
-                    delete_it = False
-                    too_big = False
-                    if 0 < MAX_COREFILE_SIZE_MB < size:
-                        delete_it = True
-                    if 0 < MAX_TOTAL_CORESIZE_MB < size_count:
-                        too_big = True
-                        delete_it = True
-                    if delete_it:
-                        size_count -= size
-                        print(f'deleting coredump {str(one_file)} {"its too big" if too_big else "exceeds sum"}')
-                        files.remove(one_file)
-                        files_unsorted.remove(one_file)
+                size = (one_file.stat().st_size / (1024 * 1024))
+                delete_it = False
+                too_big = False
+                if 0 < MAX_COREFILE_SIZE_MB < size:
+                    delete_it = True
+                if 0 < MAX_TOTAL_CORESIZE_MB < size_count:
+                    too_big = True
+                    delete_it = True
+                if delete_it:
+                    size_count -= size
+                    print(f'deleting coredump {str(one_file)} {"its too big" if too_big else "exceeds sum"}')
+                    files.remove(one_file)
+                    files_unsorted.remove(one_file)
 
-        if len(files_unsorted) > core_max_count:
+        if len(files_unsorted) > core_max_count > 0:
             count = 0
-            for one_crash_file in files:
+            for one_crash_file in files_unsorted:
                 if not one_crash_file.is_file():
                     continue
                 count += 1
