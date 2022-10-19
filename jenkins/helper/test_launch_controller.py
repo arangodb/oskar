@@ -773,7 +773,7 @@ class TestingRunner():
         elif IS_LINUX:
             core_pattern = Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()
             if core_pattern.startswith('/'):
-                core_dir = Path(core_pattern.parent)
+                core_dir = Path(core_pattern).parent
             move_files = True
         else:
             move_files = True
