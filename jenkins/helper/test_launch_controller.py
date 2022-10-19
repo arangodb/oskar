@@ -420,16 +420,16 @@ class SiteConfig:
         self.overload = self.max_load * 1.4
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
         self.rapid_fire = round(self.available_slots / 10)
-        if 'SAN' in os.environ and os.environ['SAN'] == 'On':
+        self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
+        if self.is_asan:
             print('SAN enabled, reducing possible system capacity')
             self.rapid_fire = 1
-            self.available_slots /= 2
+            self.available_slots /= 4
             self.timeout *= 1.5
             self.loop_sleep *= 2
+            self.max_load /= 2
             if os.environ['SAN_MODE'] == 'AULSan':
                 print('Aulsan must reduce even more!')
-                self.available_slots /= 2
-                self.max_load /= 2
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -1063,7 +1063,8 @@ def launch(args, tests):
         runner.overload_report_fh.close()
         runner.generate_report_txt()
         if create_report:
-            runner.generate_crash_report()
+            if not runner.cfg.is_asan:
+                runner.generate_crash_report()
             runner.generate_test_report()
     except Exception as exc:
         sys.stderr.flush()
