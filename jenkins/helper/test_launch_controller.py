@@ -1014,6 +1014,7 @@ def launch(args, tests):
             runner.generate_crash_report()
             runner.generate_test_report()
     except Exception as exc:
+        self.success = False
         sys.stderr.flush()
         sys.stdout.flush()
         print(exc, file=sys.stderr)
