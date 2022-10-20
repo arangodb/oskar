@@ -782,6 +782,8 @@ class TestingRunner():
             move_files = True
             system_corefiles = list(Path('/cores').glob(core_pattern))
         files_unsorted = list(core_dir.glob(core_pattern)) + system_corefiles
+        if len(files_unsorted) == 0:
+            return
         files = files_unsorted.copy().sort(key=get_file_size, reverse=True)
         size_count = 0
         have_too_big_files = False
