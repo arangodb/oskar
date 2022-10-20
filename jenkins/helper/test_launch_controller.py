@@ -425,7 +425,7 @@ class SiteConfig:
             print('SAN enabled, reducing possible system capacity')
             self.rapid_fire = 1
             self.available_slots /= 4
-            self.timeout *= 1.5
+            #self.timeout *= 1.5
             self.loop_sleep *= 2
             self.max_load /= 2
             if os.environ['SAN_MODE'] == 'AULSan':
@@ -879,7 +879,7 @@ class TestingRunner():
             for one_file in files:
                 if one_file.exists():
                     try:
-                        shutil.move(one_file, core_dir)
+                        shutil.move(str(one_file.resolve()), str(core_dir.resolve()))
                     except PermissionError as ex:
                         print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
                         self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
