@@ -830,7 +830,7 @@ class TestingRunner():
             for one_file in files:
                 if one_file.exists():
                     try:
-                        shutil.move(one_file, core_dir)
+                        shutil.move(str(one_file.resolve()), str(core_dir.resolve()))
                     except PermissionError as ex:
                         print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
                         self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
