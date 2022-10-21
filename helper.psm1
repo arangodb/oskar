@@ -19,7 +19,6 @@ If (-Not(Test-Path -PathType Container -Path "work"))
 
 $global:TSHARK = ((Get-ChildItem -ErrorAction SilentlyContinue -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1) -replace ' ', '` '
 
-$global:dumpDevice="Npcap Loopback Adapter"
 If (-Not($global:TSHARK))
 {
     Write-Host "failed to locate TSHARK"
@@ -35,7 +34,7 @@ Else
             Exit 1
         }
         Else {
-            $global:TSHARK = $global:TSHARK -replace '` ', ' '
+            $global:dumpDevice="Npcap Loopback Adapter"
         }
     }
     Else
