@@ -795,7 +795,7 @@ class TestingRunner():
                     have_too_big_files = True
                     too_big = True
                 size_count += size
-                print(f'Coredump: {str(one_file)} {str(size)}MB {too_big}')
+                print(f'Coredump {str(one_file)} is {"of acceptable size" if not too_big else "too big"}: {str(size)}MB')
             else:
                 files.remove(one_file)
                 files_unsorted.remove(one_file)
