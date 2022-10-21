@@ -34,7 +34,7 @@ Else
             Exit 1
         }
         Else {
-            $global:TSHARK = $global:TSHARK -replace '` ', ' '
+            $global:dumpDevice="Npcap Loopback Adapter"
         }
     }
     Else
@@ -44,7 +44,7 @@ Else
   }
 }
 $ENV:TSHARK=$global:TSHARK
-$ENV:DUMPDEVICE=$global:TSHARK
+$ENV:DUMPDEVICE=$global:dumpDevice
 
 $global:HANDLE_EXE = $null
 If (Get-Command handle.exe -ErrorAction SilentlyContinue)
