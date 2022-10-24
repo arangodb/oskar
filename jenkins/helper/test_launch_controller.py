@@ -208,8 +208,12 @@ class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
         """ dmesg wrapper """
         print('------')
         args = ['-wT']
+        process = 'dmesg'
         verbose = False
-        self.params = make_tail_params(verbose, 'dmesg ', self.cfg.test_report_dir / 'dmesg_log.txt')
+        if IS_MAC:
+            args = ['dmesg']
+            process = 'sudo'
+        self.params = make_tail_params(verbose, process, self.cfg.test_report_dir / 'dmesg_log.txt')
         ret = self.run_monitored(
             "dmesg",
             args,
@@ -1046,7 +1050,7 @@ def launch(args, tests):
     """ Manage test execution on our own """
     runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
     dmesg = DmesgWatcher(runner.cfg)
-    if IS_LINUX:
+    if IS_LINUX or IS_MAC:
         dmesg_thread = Thread(target=dmesg_runner, args=[dmesg])
         dmesg_thread.start()
         time.sleep(3)
@@ -1063,11 +1067,11 @@ def launch(args, tests):
         runner.overload_report_fh.close()
         runner.generate_report_txt()
         if create_report:
+            runner.generate_test_report()
             if not runner.cfg.is_asan:
                 runner.generate_crash_report()
-            runner.generate_test_report()
     except Exception as exc:
-        self.success = False
+        runner.success = False
         sys.stderr.flush()
         sys.stdout.flush()
         print(exc, file=sys.stderr)
@@ -1077,7 +1081,7 @@ def launch(args, tests):
         sys.stdout.flush()
         runner.create_log_file()
         runner.create_testruns_file()
-        if IS_LINUX:
+        if IS_LINUX or IS_MAC:
             dmesg.end_run()
             print('joining dmesg threads')
             dmesg_thread.join()
