@@ -25,12 +25,12 @@ If (-Not("$ENV:TSHARK"))
 }
 Else
 {
-    If ((Invoke-Expression "$ENV:TSHARK" -D | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
+    If (($ENV:TSHARK -D | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
     {
         $ENV:DUMPDEVICE = $Matches[1]
         If ($ENV:DUMPDEVICE -notmatch '\d+') {
             Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
-            Invoke-Expression "$ENV:TSHARK" -D
+            $ENV:TSHARK -D
             Exit 1
         }
         Else {
