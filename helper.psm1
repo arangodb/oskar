@@ -17,34 +17,32 @@ If (-Not(Test-Path -PathType Container -Path "work"))
     New-Item -ItemType Directory -Path "work"
 }
 
-$global:TSHARK = ((Get-ChildItem -ErrorAction SilentlyContinue -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1) -replace ' ', '` '
+$ENV:TSHARK = ((Get-ChildItem -ErrorAction SilentlyContinue -Recurse "${env:ProgramFiles}" tshark.exe).FullName | Select-Object -Last 1)
 
-If (-Not($global:TSHARK))
+If (-Not("$ENV:TSHARK"))
 {
     Write-Host "failed to locate TSHARK"
 }
 Else
 {
-    If ((Invoke-Expression "$global:TSHARK -D" | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
+    If ((Invoke-Expression "$ENV:TSHARK" -D | Select-String -SimpleMatch Npcap ) -match '^(\d).*')
     {
-        $global:dumpDevice = $Matches[1]
-        If ($global:dumpDevice -notmatch '\d+') {
+        $ENV:DUMPDEVICE = $Matches[1]
+        If ($ENV:DUMPDEVICE -notmatch '\d+') {
             Write-Host "unable to detect the loopback-device. we expect this to have an Npcacp one:"
-            Invoke-Expression $global:TSHARK -D
+            Invoke-Expression "$ENV:TSHARK" -D
             Exit 1
         }
         Else {
-            $global:dumpDevice="Npcap Loopback Adapter"
+            $ENV:DUMPDEVICE="Npcap Loopback Adapter"
         }
     }
     Else
     {
         Write-Host "failed to get loopbackdevice - check NCAP Driver installation"
-        $global:TSHARK = ""
+        $ENV:TSHARK = ""
   }
 }
-$ENV:TSHARK=$global:TSHARK
-$ENV:DUMPDEVICE=$global:dumpDevice
 
 $global:HANDLE_EXE = $null
 If (Get-Command handle.exe -ErrorAction SilentlyContinue)
