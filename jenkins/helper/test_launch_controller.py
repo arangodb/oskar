@@ -783,7 +783,7 @@ class TestingRunner():
             system_corefiles = list(Path('/cores').glob(core_pattern))
         files_unsorted = list(core_dir.glob(core_pattern)) + system_corefiles
         if len(files_unsorted) == 0 or core_max_count <= 0:
-            print(f'Coredumps are not collected: {str(len(files_unsorted))} coredumps found; coredumps max limit to collect is {str(core_max_count )!')
+            print(f'Coredumps are not collected: {str(len(files_unsorted))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
             return
         files = files_unsorted.copy().sort(key=get_file_size, reverse=True)
         size_count = 0
