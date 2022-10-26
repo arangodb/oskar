@@ -57,7 +57,7 @@ if IS_MAC:
 pp = pprint.PrettyPrinter(indent=4)
 
 all_tests = []
-#pylint: disable=line-too-long disable=broad-except
+#pylint: disable=line-too-long disable=broad-except disable=chained-comparison
 
 def sigint_boomerang_handler(signum, frame):
     """do the right thing to behave like linux does"""
@@ -792,7 +792,7 @@ class TestingRunner():
             if one_file.is_file():
                 size = (one_file.stat().st_size / (1024 * 1024))
                 too_big = False
-                if 0 < MAX_COREFILE_SIZE_MB < size:
+                if 0 < MAX_COREFILE_SIZE_MB and MAX_COREFILE_SIZE_MB < size:
                     have_too_big_files = True
                     too_big = True
                 size_count += size
@@ -801,15 +801,15 @@ class TestingRunner():
                 files.remove(one_file)
                 files_unsorted.remove(one_file)
 
-        total_files_too_big = 0 < MAX_TOTAL_CORESIZE_MB < size_count
+        total_files_too_big = 0 < MAX_TOTAL_CORESIZE_MB and MAX_TOTAL_CORESIZE_MB < size_count
         if total_files_too_big or have_too_big_files:
             for one_file in files:
                 size = (one_file.stat().st_size / (1024 * 1024))
                 delete_it = False
                 too_big = False
-                if 0 < MAX_COREFILE_SIZE_MB < size:
+                if 0 < MAX_COREFILE_SIZE_MB and MAX_COREFILE_SIZE_MB < size:
                     delete_it = True
-                if 0 < MAX_TOTAL_CORESIZE_MB < size_count:
+                if 0 < MAX_TOTAL_CORESIZE_MB and MAX_TOTAL_CORESIZE_MB < size_count:
                     too_big = True
                     delete_it = True
                 if delete_it:
