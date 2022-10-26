@@ -1,4 +1,3 @@
-python.exe jenkins/helper/clear_machine.py
 $global:WORKDIR = $pwd
 $global:SCRIPTSDIR = Join-Path -Path $global:WORKDIR -ChildPath scripts
 
@@ -1366,6 +1365,7 @@ Function clearResults
 
 Function clearWorkdir
 {
+    python.exe jenkins/helper/clear_machine.py
     $Excludes = [System.Collections.ArrayList]@(
         ("$global:ARANGODIR*" | split-path -leaf),
         ("$env:TMP*" | split-path -leaf),
