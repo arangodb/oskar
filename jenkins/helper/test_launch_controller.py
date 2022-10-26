@@ -544,8 +544,10 @@ def get_socket_count():
     """ get the number of sockets lingering destruction """
     counter = 0
     if IS_MAC:
+        # Mac would need root for all sockets, so we just look
+        # for arangods and their ports, which works without.
         for proc in psutil.process_iter(['pid', 'name']):
-            if proc.name != 'arangod':
+            if proc.name() != 'arangod':
                 continue
             for socket in psutil.Process(proc.pid).connections():
                 if socket.status in [
