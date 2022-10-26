@@ -1,3 +1,4 @@
+python.exe jenkins/helper/clear_machine.py
 $global:WORKDIR = $pwd
 $global:SCRIPTSDIR = Join-Path -Path $global:WORKDIR -ChildPath scripts
 
