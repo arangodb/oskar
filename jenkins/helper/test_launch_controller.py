@@ -1073,7 +1073,12 @@ class TestingRunner():
 
 def launch(args, tests):
     """ Manage test execution on our own """
-    runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
+    runner = None
+    try:
+        runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
+    except Exception as exc:
+        print(exc)
+        raise exc
     dmesg = DmesgWatcher(runner.cfg)
     if IS_LINUX or IS_MAC:
         dmesg_thread = Thread(target=dmesg_runner, args=[dmesg])
