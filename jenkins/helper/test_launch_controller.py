@@ -117,9 +117,6 @@ MAX_COREFILES_CLUSTER=15
 if 'MAX_CORECOUNT' in os.environ:
     MAX_COREFILES_SINGLE=int(os.environ['MAX_CORECOUNT'])
     MAX_COREFILES_CLUSTER=int(os.environ['MAX_CORECOUNT'])
-MAX_TOTAL_CORESIZE_MB=1500
-if 'MAX_TOTAL_CORESIZE' in os.environ:
-    MAX_TOTAL_CORESIZE_MB=int(os.environ['MAX_TOTAL_CORESIZE'])
 MAX_COREFILE_SIZE_MB=750
 if 'MAX_CORESIZE' in os.environ:
     MAX_COREFILE_SIZE_MB=int(os.environ['MAX_CORESIZE'])
@@ -786,39 +783,19 @@ class TestingRunner():
             print(f'Coredumps are not collected: {str(len(files_unsorted))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
             return
         files = files_unsorted.copy().sort(key=get_file_size, reverse=True)
-        size_count = 0
-        have_too_big_files = False
+        
         for one_file in files:
             if one_file.is_file():
                 size = (one_file.stat().st_size / (1024 * 1024))
-                too_big = False
                 if 0 < MAX_COREFILE_SIZE_MB and MAX_COREFILE_SIZE_MB < size:
-                    have_too_big_files = True
-                    too_big = True
-                size_count += size
-                print(f'Coredump {str(one_file)} is {"of acceptable size" if not too_big else "too big"}: {str(size)}MB')
+                    print(f'deleting coredump {str(one_file)} its too big: {str(size)}')
+                    files.remove(one_file)
+                    files_unsorted.remove(one_file)
             else:
                 files.remove(one_file)
                 files_unsorted.remove(one_file)
 
-        total_files_too_big = 0 < MAX_TOTAL_CORESIZE_MB and MAX_TOTAL_CORESIZE_MB < size_count
-        if total_files_too_big or have_too_big_files:
-            for one_file in files:
-                size = (one_file.stat().st_size / (1024 * 1024))
-                delete_it = False
-                too_big = False
-                if 0 < MAX_COREFILE_SIZE_MB and MAX_COREFILE_SIZE_MB < size:
-                    delete_it = True
-                if 0 < MAX_TOTAL_CORESIZE_MB and MAX_TOTAL_CORESIZE_MB < size_count:
-                    too_big = True
-                    delete_it = True
-                if delete_it:
-                    size_count -= size
-                    print(f'deleting coredump {str(one_file)} {"its too big" if too_big else "exceeds sum"}')
-                    files.remove(one_file)
-                    files_unsorted.remove(one_file)
-
-        if len(files_unsorted) > core_max_count > 0:
+        if len(files_unsorted) > core_max_count and core_max_count > 0:
             count = 0
             for one_crash_file in files_unsorted:
                 count += 1
@@ -826,7 +803,7 @@ class TestingRunner():
                     print(f'{core_max_count} reached. will not archive {one_crash_file}')
                     one_crash_file.unlink(missing_ok=True)
 
-        is_empty = len(files) == 0
+        is_empty = len(files_unsorted) == 0
         if not is_empty and move_files:
             core_dir = core_dir / 'coredumps'
             core_dir.mkdir(parents=True, exist_ok=True)
