@@ -57,7 +57,7 @@ if IS_MAC:
 pp = pprint.PrettyPrinter(indent=4)
 
 all_tests = []
-#pylint: disable=line-too-long disable=broad-except
+#pylint: disable=line-too-long disable=broad-except disable=chained-comparison
 
 def sigint_boomerang_handler(signum, frame):
     """do the right thing to behave like linux does"""
@@ -90,7 +90,8 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
-print(os.environ)
+for env in os.environ:
+    print(f'{env}={os.environ[env]}')
 TEMP = Path("/tmp/")
 if 'TMP' in os.environ:
     TEMP = Path(os.environ['TMP'])
@@ -110,6 +111,19 @@ if not TEMP.exists():
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
 os.environ['TMP'] = str(TEMP)
+
+MAX_COREFILES_SINGLE=4
+MAX_COREFILES_CLUSTER=15
+if 'MAX_CORECOUNT' in os.environ:
+    MAX_COREFILES_SINGLE=int(os.environ['MAX_CORECOUNT'])
+    MAX_COREFILES_CLUSTER=int(os.environ['MAX_CORECOUNT'])
+MAX_COREFILE_SIZE_MB=750
+if 'MAX_CORESIZE' in os.environ:
+    MAX_COREFILE_SIZE_MB=int(os.environ['MAX_CORESIZE'])
+
+def get_file_size(elem):
+    """ get the size of a file for sorting """
+    return elem.stat().st_size
 
 def list_all_processes():
     """list all processes for later reference"""
@@ -741,10 +755,10 @@ class TestingRunner():
 
     def generate_crash_report(self):
         """ crash report zips """
-        # pylint: disable=too-many-statements disable=too-many-branches
-        core_max_count = 4 # single server crashdumps...
+        # pylint: disable=too-many-statements disable=too-many-branches disable=too-many-locals
+        core_max_count = MAX_COREFILES_SINGLE
         if self.cluster:
-            core_max_count = 15 # 3 cluster instances
+            core_max_count = MAX_COREFILES_CLUSTER
         core_dir = Path.cwd()
         core_pattern = "core*"
         move_files = False
@@ -754,31 +768,49 @@ class TestingRunner():
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
         elif IS_LINUX:
-            core_dir = Path(Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()).parent
+            core_pattern = Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()
+            if core_pattern.startswith('/'):
+                core_dir = Path(core_pattern).parent
             move_files = True
         else:
             move_files = True
             core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
         if IS_MAC:
             move_files = True
-            system_corefiles = sorted(Path('/cores').glob(core_pattern))
-        files = sorted(core_dir.glob(core_pattern)) + system_corefiles
-        if len(files) > core_max_count:
+            system_corefiles = list(Path('/cores').glob(core_pattern))
+        files_unsorted = list(core_dir.glob(core_pattern)) + system_corefiles
+        if len(files_unsorted) == 0 or core_max_count <= 0:
+            print(f'Coredumps are not collected: {str(len(files_unsorted))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
+            return
+        files = files_unsorted.copy().sort(key=get_file_size, reverse=True)
+        
+        for one_file in files:
+            if one_file.is_file():
+                size = (one_file.stat().st_size / (1024 * 1024))
+                if 0 < MAX_COREFILE_SIZE_MB and MAX_COREFILE_SIZE_MB < size:
+                    print(f'deleting coredump {str(one_file)} its too big: {str(size)}')
+                    files.remove(one_file)
+                    files_unsorted.remove(one_file)
+            else:
+                files.remove(one_file)
+                files_unsorted.remove(one_file)
+
+        if len(files_unsorted) > core_max_count and core_max_count > 0:
             count = 0
-            for one_crash_file in files:
+            for one_crash_file in files_unsorted:
                 count += 1
                 if count > core_max_count:
                     print(f'{core_max_count} reached. will not archive {one_crash_file}')
                     one_crash_file.unlink(missing_ok=True)
 
-        is_empty = len(files) == 0
+        is_empty = len(files_unsorted) == 0
         if not is_empty and move_files:
             core_dir = core_dir / 'coredumps'
             core_dir.mkdir(parents=True, exist_ok=True)
             for one_file in files:
                 if one_file.exists():
                     try:
-                        shutil.move(one_file, core_dir)
+                        shutil.move(str(one_file.resolve()), str(core_dir.resolve()))
                     except PermissionError as ex:
                         print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
                         self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
@@ -960,6 +992,7 @@ def launch(args, tests):
             runner.generate_crash_report()
             runner.generate_test_report()
     except Exception as exc:
+        runner.success = False
         sys.stderr.flush()
         sys.stdout.flush()
         print(exc, file=sys.stderr)
