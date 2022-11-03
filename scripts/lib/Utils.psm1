@@ -20,6 +20,15 @@ Function log([array]$log)
 # Test main control
 ################################################################################
 
+If ($ENTERPRISEEDITION -eq "On")
+{
+    $ENV:EncryptionAtRest = "--encryptionAtRest true"
+}
+Else
+{
+    $ENV:EncryptionAtRest = ""
+}
+
 Function runTests
 {
     If (Test-Path -PathType Container -Path $env:TMP)
