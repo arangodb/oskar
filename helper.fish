@@ -1914,6 +1914,10 @@ function checkoutIfNeeded
       checkoutArangoDB
     end
   end
+  if test ! -d $WORKDIR/release-test-automation
+     checkoutRTA
+  end
+  
 end
 
 function clearResults

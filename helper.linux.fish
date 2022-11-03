@@ -286,6 +286,11 @@ function checkoutMirror
   or return $status
 end
 
+function checkoutRTA
+  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutRTA.fish
+  or return $status
+end
+
 function checkoutArangoDB
   runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutArangoDB.fish
   or return $status
