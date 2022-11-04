@@ -1210,10 +1210,9 @@ function buildDockerAny
   and buildDockerImage $IMAGE_NAME1
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
     docker tag $IMAGE_NAME1 $IMAGE_NAME2
-  else
     if test "$GCR_REG" = "On"
-      docker tag $IMAGE_NAME1 $GCR_REG_PREFIX$IMAGE_NAME1
-      and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME1
+      docker tag $IMAGE_NAME1 $GCR_REG_PREFIX$IMAGE_NAME2
+      and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME2
     end
   end
   and pushDockerImage $IMAGE_NAME2
