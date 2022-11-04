@@ -849,21 +849,23 @@ class TestingRunner():
         if IS_MAC:
             move_files = True
             system_corefiles = list(Path('/cores').glob(core_pattern))
-        files_unsorted = list(core_dir.glob(core_pattern)) + system_corefiles
+            if system_corefiles is None:
+                system_corefiles = []
+        files_unsorted = list(core_dir.glob(core_pattern))
+        if files_unsorted is None:
+            files_unsorted = []
+        files_unsorted += system_corefiles
         if len(files_unsorted) == 0 or core_max_count <= 0:
             print(f'Coredumps are not collected: {str(len(files_unsorted))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
             return
-        files = files_unsorted.copy().sort(key=get_file_size, reverse=True)
-        
-        for one_file in files:
+
+        for one_file in files_unsorted:
             if one_file.is_file():
                 size = (one_file.stat().st_size / (1024 * 1024))
                 if 0 < MAX_COREFILE_SIZE_MB and MAX_COREFILE_SIZE_MB < size:
                     print(f'deleting coredump {str(one_file)} its too big: {str(size)}')
-                    files.remove(one_file)
                     files_unsorted.remove(one_file)
             else:
-                files.remove(one_file)
                 files_unsorted.remove(one_file)
 
         if len(files_unsorted) > core_max_count and core_max_count > 0:
@@ -878,7 +880,7 @@ class TestingRunner():
         if not is_empty and move_files:
             core_dir = core_dir / 'coredumps'
             core_dir.mkdir(parents=True, exist_ok=True)
-            for one_file in files:
+            for one_file in files_unsorted:
                 if one_file.exists():
                     try:
                         shutil.move(str(one_file.resolve()), str(core_dir.resolve()))
