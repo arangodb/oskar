@@ -287,7 +287,7 @@ class TestConfig():
         self.args = copy.deepcopy(cfg.extra_args)
         for param in args:
             if param.startswith('$'):
-                paramname = param[1:].upper()
+                paramname = param[1:]
                 if paramname in os.environ:
                     self.args += os.environ[paramname].split(' ')
                 else:
@@ -332,8 +332,6 @@ class TestConfig():
             self.args += [ '--protocol', 'ssl']
         if 'http2' in flags:
             self.args += [ '--http2', 'true']
-        if 'encrypt' in flags:
-            self.args += [ '--encryptionAtRest', 'true']
 
     def __repr__(self):
         return f"""
