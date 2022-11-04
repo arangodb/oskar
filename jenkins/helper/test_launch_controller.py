@@ -776,6 +776,8 @@ class TestingRunner():
         if IS_MAC:
             move_files = True
             system_corefiles = list(Path('/cores').glob(core_pattern))
+            if system_corefiles is None:
+                system_corefiles = []
         files_unsorted = list(core_dir.glob(core_pattern))
         if files_unsorted is None:
             files_unsorted = []
