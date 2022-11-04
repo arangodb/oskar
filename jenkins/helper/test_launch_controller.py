@@ -497,24 +497,36 @@ def testing_runner(testing_instance, this, arangosh):
             testing_instance.success = False
     testing_instance.done_job(this.parallelity)
 
+INTERESTING_SOCKETS = [
+    psutil.CONN_FIN_WAIT1,
+    psutil.CONN_FIN_WAIT2,
+    psutil.CONN_CLOSE_WAIT,
+    psutil.CONN_ESTABLISHED,
+    psutil.CONN_SYN_SENT,
+    psutil.CONN_SYN_RECV,
+    psutil.CONN_TIME_WAIT,
+    psutil.CONN_CLOSE,
+    psutil.CONN_LAST_ACK,
+    psutil.CONN_LISTEN,
+    psutil.CONN_CLOSING
+]
+
 def get_socket_count():
     """ get the number of sockets lingering destruction """
     counter = 0
-    for socket in psutil.net_connections(kind='inet'):
-        if socket.status in [
-                psutil.CONN_FIN_WAIT1,
-                psutil.CONN_FIN_WAIT2,
-                psutil.CONN_CLOSE_WAIT,
-                psutil.CONN_ESTABLISHED,
-                psutil.CONN_SYN_SENT,
-                psutil.CONN_SYN_RECV,
-                psutil.CONN_TIME_WAIT,
-                psutil.CONN_CLOSE,
-                psutil.CONN_LAST_ACK,
-                psutil.CONN_LISTEN,
-                psutil.CONN_CLOSING
-        ]:
-            counter += 1
+    if IS_MAC:
+        # Mac would need root for all sockets, so we just look
+        # for arangods and their ports, which works without.
+        for proc in psutil.process_iter(['pid', 'name']):
+            if proc.name() != 'arangod':
+                continue
+            for socket in psutil.Process(proc.pid).connections():
+                if socket.status in INTERESTING_SOCKETS:
+                    counter += 1
+    else:
+        for socket in psutil.net_connections(kind='inet'):
+            if socket.status in INTERESTING_SOCKETS:
+                counter += 1
     return counter
 
 class TestingRunner():
