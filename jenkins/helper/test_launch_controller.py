@@ -520,9 +520,12 @@ def get_socket_count():
         for proc in psutil.process_iter(['pid', 'name']):
             if proc.name() != 'arangod':
                 continue
-            for socket in psutil.Process(proc.pid).connections():
-                if socket.status in INTERESTING_SOCKETS:
-                    counter += 1
+            try:
+                for socket in psutil.Process(proc.pid).connections():
+                    if socket.status in INTERESTING_SOCKETS:
+                        counter += 1
+            except psutil.ZombieProcess:
+                pass
     else:
         for socket in psutil.net_connections(kind='inet'):
             if socket.status in INTERESTING_SOCKETS:
