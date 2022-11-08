@@ -42,6 +42,7 @@ if sys.version_info[0] != 3:
     sys.exit()
 
 
+IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
 IS_LINUX = not IS_MAC and not IS_WINDOWS
@@ -1033,6 +1034,9 @@ def filter_tests(args, tests):
     if IS_MAC:
         filters.append(lambda test: "!mac" not in test["flags"])
 
+    if IS_ARM:
+        filters.append(lambda test: "!arm" not in test["flags"])
+
     if args.no_report:
         global CREATE_REPORT
         print("Disabling report generation")
@@ -1074,7 +1078,8 @@ known_flags = {
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
     "!windows": "test is excluded when launched on windows",
-    "!mac": "test is excluded when launched on MacOS"
+    "!mac": "test is excluded when launched on MacOS",
+    "!arm": "test is excluded when launched on Arm Linux/MacOS hosts"
 }
 
 known_parameter = {
