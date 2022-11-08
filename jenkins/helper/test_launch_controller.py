@@ -1027,8 +1027,11 @@ def filter_tests(args, tests):
     if args.gtest:
         filters.append(lambda test: "gtest" ==  test["name"])
 
-    if args.format == "ps1" or IS_WINDOWS:
+    if IS_WINDOWS:
         filters.append(lambda test: "!windows" not in test["flags"])
+
+    if IS_MAC:
+        filters.append(lambda test: "!mac" not in test["flags"])
 
     if args.no_report:
         global CREATE_REPORT
@@ -1070,7 +1073,8 @@ known_flags = {
     "sniff": "whether tcpdump / ngrep should be used",
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
-    "!windows": "test is excluded from ps1 output"
+    "!windows": "test is excluded when launched on windows",
+    "!mac": "test is excluded when launched on MacOS"
 }
 
 known_parameter = {
