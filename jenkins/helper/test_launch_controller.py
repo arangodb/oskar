@@ -205,7 +205,6 @@ class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
         """ dmesg wrapper """
         print('------')
         args = ['-wT']
-        process = 'dmesg'
         verbose = False
         self.params = make_tail_params(verbose, 'dmesg ', self.cfg.test_report_dir / 'dmesg_log.txt')
         ret = self.run_monitored(
