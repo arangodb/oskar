@@ -207,10 +207,7 @@ class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
         args = ['-wT']
         process = 'dmesg'
         verbose = False
-        if IS_MAC:
-            args = ['dmesg']
-            process = 'sudo'
-        self.params = make_tail_params(verbose, process, self.cfg.test_report_dir / 'dmesg_log.txt')
+        self.params = make_tail_params(verbose, 'dmesg ', self.cfg.test_report_dir / 'dmesg_log.txt')
         ret = self.run_monitored(
             "dmesg",
             args,
@@ -1045,7 +1042,7 @@ def launch(args, tests):
         print(exc)
         raise exc
     dmesg = DmesgWatcher(runner.cfg)
-    if IS_LINUX or IS_MAC:
+    if IS_LINUX:
         dmesg_thread = Thread(target=dmesg_runner, args=[dmesg])
         dmesg_thread.start()
         time.sleep(3)
@@ -1076,7 +1073,7 @@ def launch(args, tests):
         sys.stdout.flush()
         runner.create_log_file()
         runner.create_testruns_file()
-        if IS_LINUX or IS_MAC:
+        if IS_LINUX:
             dmesg.end_run()
             print('joining dmesg threads')
             dmesg_thread.join()
