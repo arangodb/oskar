@@ -558,6 +558,8 @@ def get_socket_count():
                             counter += 1
                 except psutil.ZombieProcess:
                     pass
+                except psutil.NoSuchProcess:
+                    pass
     else:
         for socket in psutil.net_connections(kind='inet'):
             if socket.status in INTERESTING_SOCKETS:
