@@ -154,9 +154,10 @@ def convert_result(result_array):
             result += "\n" + one_line.decode("utf-8").rstrip()
     return result
 
-def add_message_to_report(params, string):
+def add_message_to_report(params, string, print_it = True):
     """ add a message from python to the report strings/files + print it """
-    print(string)
+    if print_it:
+        print(string)
     if isinstance(params['output'], list):
         params['output'] += f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n"
     else:
@@ -396,6 +397,12 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 result_line_handler(tcount, None, params)
                 line = ""
                 try:
+                    overload = self.cfg.get_overload()
+                    if overload:
+                        add_message_to_report(
+                            params,
+                            overload,
+                            False)
                     line = queue.get(timeout=1)
                     ret = result_line_handler(0, line, params)
                     line_filter = line_filter or ret
@@ -417,6 +424,24 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         process.kill()
                         kill_children(identifier, params, children)
                         rc_exit = process.wait()
+                except OSError as error:
+                    print(f"Got an OS-Error, will abort all! {error.strerror}")
+                    try:
+                        # get ALL subprocesses!
+                        children = psutil.Process().children(recursive=True)
+                    except psutil.NoSuchProcess:
+                        pass
+                    process.kill()
+                    kill_children(identifier, params, children)
+                    thread1.join()
+                    thread2.join()
+                    return {
+                        "progressive_timeout": True,
+                        "have_deadline": True,
+                        "rc_exit": -99,
+                        "line_filter": -99,
+                    }
+
                 if datetime.now() > deadline:
                     have_deadline += 1
                 if have_deadline == 1:

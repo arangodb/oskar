@@ -1,6 +1,7 @@
 #!/bin/env python3
 """ read test definition, and generate the output for the specified target """
 import argparse
+import copy
 from datetime import datetime, timedelta
 import platform
 import os
@@ -25,8 +26,6 @@ from async_client import (
     tail_line_result,
     delete_tail_params
 )
-
-CREATE_REPORT=True
 
 ZIPFORMAT="gztar"
 try:
@@ -227,7 +226,11 @@ class DmesgWatcher(ArangoCLIprogressiveTimeoutExecutor):
     def end_run(self):
         """ terminate dmesg again """
         print(f'killing dmesg {self.pid}')
-        psutil.Process(self.pid).kill()
+        try:
+            psutil.Process(self.pid).kill()
+        except psutil.NoSuchProcess:
+            print('dmesg already gone?')
+            pass
 
 TEST_LOG_FILES = []
 
@@ -278,7 +281,7 @@ class TestConfig():
         self.report_file =  self.base_logdir / 'UNITTEST_RESULT.json'
         self.base_testdir = cfg.test_data_dir_x / self.name
 
-        self.args = []
+        self.args = copy.deepcopy(cfg.extra_args)
         for param in args:
             if param.startswith('$'):
                 paramname = param[1:]
@@ -313,8 +316,8 @@ class TestConfig():
             self.args += [ '--dumpAgencyOnError', os.environ['DUMPAGENCYONERROR']]
 
         myport = cfg.portbase
-        cfg.portbase += 100
-        self.args += [ '--minPort', str(myport), '--maxPort', str(myport + 99)]
+        cfg.portbase += cfg.port_offset
+        self.args += [ '--minPort', str(myport), '--maxPort', str(myport + cfg.port_offset - 1)]
         if 'SKIPGREY' in os.environ:
             self.args += [ '--skipGrey', os.environ['SKIPGREY']]
         if 'ONLYGREY' in os.environ:
@@ -367,27 +370,40 @@ class SiteConfig:
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
         # pylint: disable=too-many-statements disable=too-many-branches
+        self.datetime_format = "%Y-%m-%dT%H%M%SZ"
         self.trace = False
+        self.portbase = 7000
+        if 'PORTBASE' in os.environ:
+            self.portbase = int(os.environ['PORTBASE'])
+        self.port_offset = 100
         self.timeout = 1800
         if 'timeLimit'.upper() in os.environ:
             self.timeout = int(os.environ['timeLimit'.upper()])
         elif 'timeLimit' in os.environ:
             self.timeout = int(os.environ['timeLimit'])
-
-        if psutil.cpu_count(logical=False) <= 8:
-            print("Small machine detected, quadrupling deadline!")
+        self.small_machine = False
+        self.extra_args = []
+        if psutil.cpu_count(logical=False) <= 12:
+            print("Small machine detected, quadrupling deadline, disabling buckets!")
+            self.small_machine = True
+            self.port_offset = 400
             self.timeout *= 4
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
-        if IS_MAC and platform.processor() == "arm" and psutil.cpu_count() == 8:
-            self.no_threads = 6 # M1 only has 4 performance cores
-            self.available_slots = 10
+        if IS_MAC and platform.processor() == "arm":
+            if psutil.cpu_count() == 8:
+                self.no_threads = 6 # M1 mac mini only has 4 performance cores
+                self.available_slots = 10
+            if psutil.cpu_count() == 20:
+                self.no_threads = 16 # M2 mac studio only has 16 performance cores
+                self.available_slots = 14
+                self.timeout *= 2
         if IS_WINDOWS:
             self.max_load = self.no_threads * 0.5
             self.max_load1 = self.no_threads * 0.6
         else:
             self.max_load = self.no_threads * 0.9
-            self.max_load1 = self.no_threads * 0.95
+            self.max_load1 = self.no_threads * 1.1
         # roughly increase 1 per ten cores
         self.core_dozend = round(self.no_threads / 10)
         if self.core_dozend == 0:
@@ -396,9 +412,16 @@ class SiteConfig:
         self.overload = self.max_load * 1.4
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
         self.rapid_fire = round(self.available_slots / 10)
-        if 'SAN' in os.environ and os.environ['SAN'] == 'On':
-            self.available_slots /= 2
-            self.timeout *= 1.5
+        self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
+        if self.is_asan:
+            print('SAN enabled, reducing possible system capacity')
+            self.rapid_fire = 1
+            self.available_slots /= 4
+            #self.timeout *= 1.5
+            self.loop_sleep *= 2
+            self.max_load /= 2
+            if os.environ['SAN_MODE'] == 'AULSan':
+                print('Aulsan must reduce even more!')
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -422,6 +445,7 @@ class SiteConfig:
  - {self.slots_to_parallelity_factor} parallelity to load estimate factor
  - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
+ - {self.slots_to_parallelity_factor} parallelity to load estimate factor
  - {self.available_slots} test slots {self.rapid_fire} rapid fire slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
@@ -445,6 +469,12 @@ class SiteConfig:
         self.portbase = 7000
         if 'PORTBASE' in os.environ:
             self.portbase = int(os.environ['PORTBASE'])
+
+    def get_overload(self):
+        """ estimate whether the system is overloaded """
+        load = psutil.getloadavg()
+        if load[0] > self.overload:
+            return(f"HIGH SYSTEM LOAD! {load[0]}")
 
 def dmesg_runner(dmesg):
     """ thread to run dmesg in """
@@ -520,12 +550,15 @@ def get_socket_count():
         # Mac would need root for all sockets, so we just look
         # for arangods and their ports, which works without.
         for proc in psutil.process_iter(['pid', 'name']):
+
             if proc.name() in ['arangod', 'arangosh']:
                 try:
                     for socket in psutil.Process(proc.pid).connections():
                         if socket.status in INTERESTING_SOCKETS:
                             counter += 1
                 except psutil.ZombieProcess:
+                    pass
+                except psutil.NoSuchProcess:
                     pass
     else:
         for socket in psutil.net_connections(kind='inet'):
@@ -550,15 +583,26 @@ class TestingRunner():
         self.cluster = False
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
         self.testfailures_file = get_workspace() / 'testfailures.txt'
+        self.overload_report_file = self.cfg.test_report_dir / 'overload.txt'
+        self.overload_report_fh = self.overload_report_file.open('w', encoding='utf-8')
 
     def print_active(self):
         """ output currently active testsuites """
+        now = datetime.now(tz=None).strftime(f"testreport-{self.cfg.datetime_format}")
+        load = psutil.getloadavg()
+        used_slots = ""
+        running_slots = ""
         with self.slot_lock:
-            print(str(psutil.getloadavg()) + "<= Load " +
-                  "Running: " + str(self.running_suites) +
-                  " => Active Slots: " + str(self.used_slots) +
-                  " => Disk I/O: " + str(psutil.disk_io_counters()))
+            used_slots = str(self.used_slots)
+            running_slots = str(self.running_suites)
+        print(str(load) + "<= Load " +
+              "Running: " + str(self.running_suites) +
+              " => Active Slots: " + used_slots +
+              " => Swap: " + str(psutil.swap_memory()) +
+              " => Disk I/O: " + str(psutil.disk_io_counters()))
         sys.stdout.flush()
+        if load[0] > self.cfg.overload:
+            print(f"{now} {load[0]} | {used_slots} | {running_slots}", file=self.overload_report_fh)
 
     def done_job(self, parallelity):
         """ if one job is finished... """
@@ -705,6 +749,7 @@ class TestingRunner():
                 if par > 0:
                     parallelity = par
                     last_started_count = sleep_count
+                    sleep_count += 1
                     time.sleep(self.cfg.loop_sleep)
                     self.print_active()
                 else:
@@ -712,6 +757,7 @@ class TestingRunner():
                         print("done")
                         break
                     self.print_active()
+                    sleep_count += 1
                     time.sleep(self.cfg.loop_sleep)
                     sleep_count += 1
             else:
@@ -832,7 +878,7 @@ class TestingRunner():
                         self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
 
         if self.crashed or not is_empty:
-            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.datetime_format}")
+            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
             print("creating crashreport: " + str(crash_report_file))
             sys.stdout.flush()
             try:
@@ -845,7 +891,7 @@ class TestingRunner():
                 print("Failed to create binaries zip: " + str(ex))
                 self.append_report_txt("Failed to create binaries zip: " + str(ex))
             self.cleanup_unneeded_binary_files()
-            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.datetime_format}")
+            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
             print("creating crashreport binary support zip: " + str(binary_report_file))
             sys.stdout.flush()
             try:
@@ -861,12 +907,12 @@ class TestingRunner():
                 print("Deleting corefile " + str(corefile))
                 sys.stdout.flush()
                 corefile.unlink()
-            if move_files:
+            if not is_empty and move_files:
                 core_dir.rmdir()
 
     def generate_test_report(self):
         """ regular testresults zip """
-        tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.datetime_format}")
+        tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.cfg.datetime_format}")
         print("Creating " + str(tarfile))
         sys.stdout.flush()
         try:
@@ -952,7 +998,7 @@ class TestingRunner():
         if "ldap" in test["flags"] and not 'LDAPHOST' in os.environ:
             return
 
-        if "buckets" in params:
+        if "buckets" in params and not self.cfg.small_machine:
             num_buckets = int(params["buckets"])
             for i in range(num_buckets):
                 self.scenarios.append(
@@ -991,7 +1037,12 @@ class TestingRunner():
 
 def launch(args, tests):
     """ Manage test execution on our own """
-    runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
+    runner = None
+    try:
+        runner = TestingRunner(SiteConfig(Path(args.definitions).resolve()))
+    except Exception as exc:
+        print(exc)
+        raise exc
     dmesg = DmesgWatcher(runner.cfg)
     if IS_LINUX:
         dmesg_thread = Thread(target=dmesg_runner, args=[dmesg])
@@ -1001,12 +1052,18 @@ def launch(args, tests):
         runner.register_test_func(args.cluster, test)
     runner.sort_by_priority()
     print(runner.scenarios)
+    create_report = True
+    if args.no_report:
+        print("won't generate report as you demanded!")
+        create_report = False
     try:
         runner.testing_runner()
+        runner.overload_report_fh.close()
         runner.generate_report_txt()
-        if CREATE_REPORT:
-            runner.generate_crash_report()
+        if create_report:
             runner.generate_test_report()
+            if not runner.cfg.is_asan:
+                runner.generate_crash_report()
     except Exception as exc:
         runner.success = False
         sys.stderr.flush()
@@ -1053,9 +1110,8 @@ def filter_tests(args, tests):
         filters.append(lambda test: "!arm" not in test["flags"])
 
     if args.no_report:
-        global CREATE_REPORT
         print("Disabling report generation")
-        CREATE_REPORT = False
+        args.create_report = False
 
     for one_filter in filters:
         tests = filter(one_filter, tests)
@@ -1092,9 +1148,10 @@ known_flags = {
     "sniff": "whether tcpdump / ngrep should be used",
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
-    "!windows": "test is excluded when launched on windows",
+    "!windows": "test is excluded from ps1 output",
     "!mac": "test is excluded when launched on MacOS",
-    "!arm": "test is excluded when launched on Arm Linux/MacOS hosts"
+    "!arm": "test is excluded when launched on Arm Linux/MacOS hosts",
+    "no_report": "disable reporting"
 }
 
 known_parameter = {
@@ -1197,12 +1254,12 @@ def read_definition_line(line):
     # check all flags
     for flag in flags:
         if flag not in known_flags:
-            raise Exception(f"Unknown flag `{flag}`")
+            raise Exception(f"Unknown flag `{flag}` in `{line}`")
 
     # check all params
     for param in params:
         if param not in known_parameter:
-            raise Exception(f"Unknown parameter `{param}`")
+            raise Exception(f"Unknown parameter `{param}` in `{line}`")
 
     validate_flags(flags)
     params = validate_params(params, 'cluster' in flags)
@@ -1230,7 +1287,7 @@ def read_definitions(filename):
                 test = read_definition_line(line)
                 tests.append(test)
             except Exception as exc:
-                print(f"{filename}:{line_no + 1}: {exc}", file=sys.stderr)
+                print(f"{filename}:{line_no + 1}: \n`{line}`\n {exc}", file=sys.stderr)
                 has_error = True
     if has_error:
         raise Exception("abort due to errors")
