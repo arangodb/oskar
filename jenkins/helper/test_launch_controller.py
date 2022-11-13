@@ -301,8 +301,10 @@ class TestConfig():
                 self.args += ['--sniff', 'true',
                              '--sniffProgram',  os.environ['TSHARK'],
                              '--sniffDevice', os.environ['DUMPDEVICE']]
-            else:
+            elif IS_MAC::
                 self.args += ['--sniff', 'sudo']
+            else:
+                self.args += ['--sniff', 'true']
 
         if 'SKIPNONDETERMINISTIC' in os.environ:
             self.args += ['--skipNondeterministic', os.environ['SKIPNONDETERMINISTIC']]
@@ -550,7 +552,6 @@ def get_socket_count():
         # Mac would need root for all sockets, so we just look
         # for arangods and their ports, which works without.
         for proc in psutil.process_iter(['pid', 'name']):
-
             if proc.name() in ['arangod', 'arangosh']:
                 try:
                     for socket in psutil.Process(proc.pid).connections():
