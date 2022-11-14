@@ -301,7 +301,7 @@ class TestConfig():
                 self.args += ['--sniff', 'true',
                              '--sniffProgram',  os.environ['TSHARK'],
                              '--sniffDevice', os.environ['DUMPDEVICE']]
-            elif IS_MAC::
+            elif IS_MAC:
                 self.args += ['--sniff', 'sudo']
             else:
                 self.args += ['--sniff', 'true']
