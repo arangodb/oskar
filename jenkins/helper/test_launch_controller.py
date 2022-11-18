@@ -1,14 +1,7 @@
 #!/bin/env python3
 """ read test definition, and generate the output for the specified target """
 import argparse
-# import copy
-# import platform
-# import os
-# from pathlib import Path
-# import signal
 import sys
-# from threading  import Thread, Lock
-# import time
 from traceback import print_exc
 
 from site_config import IS_ARM, IS_WINDOWS, IS_MAC
