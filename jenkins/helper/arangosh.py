@@ -1,5 +1,6 @@
 #!/bin/env python3
 """ launch a testing.js instance with given testsuite and arguments """
+import os
 
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
@@ -15,7 +16,16 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     def __init__(self, site_config, slot_lock):
         self.slot_lock = slot_lock
         self.read_only = False
+        self.temp_dir = ""
         super().__init__(site_config, None)
+
+    def get_environment(self):
+        """ hook to implemnet custom environment variable setters """
+        my_env = os.environ.copy()
+        my_env['TMPDIR'] = str(self.temp_dir)
+        my_env['TEMP'] = str(self.temp_dir)
+        my_env['TMP'] = str(self.temp_dir)
+        return my_env
 
     def run_testing(self,
                     testcase,
@@ -24,12 +34,14 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     directory,
                     logfile,
                     identifier,
+                    tempdir,
                     verbose
                     ):
        # pylint: disable=R0913 disable=R0902
         """ testing.js wrapper """
         print('------')
         print(testing_args)
+        self.temp_dir = tempdir
         args = [
             '-c', str(self.cfg.cfgdir / 'arangosh.conf'),
             "--log.foreground-tty", "true",

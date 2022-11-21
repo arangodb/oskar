@@ -260,7 +260,10 @@ class ArangoCLIprogressiveTimeoutExecutor:
             else:
                 self.deadline_signal = signal.SIGINT
 
-
+    def get_environment(self):
+        """ hook to implemnet custom environment variable setters """
+        return os.environ.copy()
+    
     def run_arango_tool_monitored(
             self,
             executeable,
@@ -352,6 +355,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             stderr=PIPE,
             close_fds=ON_POSIX,
             cwd=self.cfg.test_data_dir.resolve(),
+            env=self.get_environment()
         ) as process:
             # pylint: disable=consider-using-f-string
             self.pid = process.pid

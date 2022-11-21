@@ -49,6 +49,7 @@ def testing_runner(testing_instance, this, arangosh):
                                this.base_logdir,
                                this.log_file,
                                this.name_enum,
+                               this.temp_dir,
                                True) #verbose?
     this.success = (
         not ret["progressive_timeout"] or
