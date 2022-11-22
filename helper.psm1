@@ -1364,7 +1364,6 @@ Function clearResults
 
 Function clearWorkdir
 {
-    python.exe jenkins/helper/clear_machine.py
     $Excludes = [System.Collections.ArrayList]@(
         ("$global:ARANGODIR*" | split-path -leaf),
         ("$env:TMP*" | split-path -leaf),
