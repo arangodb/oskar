@@ -7,7 +7,7 @@ import platform
 import signal
 import subprocess
 import time
-import sys
+# import sys
 
 winver = platform.win32_ver()
 if winver[0]:
@@ -89,7 +89,7 @@ if winver[0]:
                 #         sys.exit(1)
                 #     # pylint: disable=unnecessary-pass
                 #     pass
-                # 
+                #
                 # original_sigint_handler = signal.getsignal(signal.SIGINT)
                 # signal.signal(signal.SIGINT, sigint_boomerang_handler)
                 # # only here on the wintendo:
