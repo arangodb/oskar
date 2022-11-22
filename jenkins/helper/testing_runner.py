@@ -442,12 +442,8 @@ class TestingRunner():
         print('flattening inner dir structure')
         for subdir in TEMP.iterdir():
             for subsubdir in subdir.iterdir():
-                print(subsubdir)
-                print(subsubdir.parts)
-                print(subsubdir.parts[len(subsubdir.parts) - 1])
                 path_segment = subsubdir.parts[len(subsubdir.parts) - 1]
                 if path_segment.startswith('arangosh_'):
-                    print('bla')
                     for subsubsubdir in subsubdir.iterdir():
                         shutil.move(str(subsubsubdir), str(subdir))
                     subsubdir.rmdir()
