@@ -3,7 +3,7 @@
 import copy
 import os
 
-from site_config import IS_WINDOWS, IS_MAC
+from site_config import IS_WINDOWS, IS_MAC, TEMP
 TEST_LOG_FILES = []
 
 class TestConfig():
@@ -40,6 +40,8 @@ class TestConfig():
         if not self.base_logdir.exists():
             self.base_logdir.mkdir()
         self.log_file =  cfg.run_root / f'{self.name}.log'
+
+        self.temp_dir = TEMP / self.name
         # pylint: disable=global-variable-not-assigned
         global TEST_LOG_FILES
         try:

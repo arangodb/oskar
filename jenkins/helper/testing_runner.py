@@ -49,6 +49,7 @@ def testing_runner(testing_instance, this, arangosh):
                                this.base_logdir,
                                this.log_file,
                                this.name_enum,
+                               this.temp_dir,
                                True) #verbose?
     this.success = (
         not ret["progressive_timeout"] or
@@ -86,6 +87,9 @@ def testing_runner(testing_instance, this, arangosh):
             if this.crashed:
                 testing_instance.crashed = True
             testing_instance.success = False
+        temp_dir = TEMP / ("FAIL_" + this.name)
+        this.temp_dir.rename(temp_dir)
+        this.temp_dir = temp_dir
     testing_instance.done_job(this.parallelity)
 
 class TestingRunner():
@@ -435,6 +439,14 @@ class TestingRunner():
     def generate_test_report(self):
         """ regular testresults zip """
         tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.cfg.datetime_format}")
+        print('flattening inner dir structure')
+        for subdir in TEMP.iterdir():
+            for subsubdir in subdir.iterdir():
+                path_segment = subsubdir.parts[len(subsubdir.parts) - 1]
+                if path_segment.startswith('arangosh_'):
+                    for subsubsubdir in subsubdir.iterdir():
+                        shutil.move(str(subsubsubdir), str(subdir))
+                    subsubdir.rmdir()
         print("Creating " + str(tarfile))
         sys.stdout.flush()
         try:
