@@ -18,7 +18,7 @@ from socket_counter import get_socket_count
 from arangosh import ArangoshExecutor
 from test_config import get_priority, TestConfig
 from site_config import TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace
-from tools.killall import list_all_processes
+from tools.killall import list_all_processes, kill_all_arango_processes
 
 MAX_COREFILES_SINGLE=4
 MAX_COREFILES_CLUSTER=15
@@ -206,6 +206,8 @@ class TestingRunner():
                         one_child.kill()
                     except psutil.NoSuchProcess:  # pragma: no cover
                         pass
+            if IS_WINDOWS:
+                kill_all_arango_processes()
             print("Main: waiting for the children to terminate")
             psutil.wait_procs(children, timeout=20)
             print("Main: giving workers 20 more seconds to exit.")

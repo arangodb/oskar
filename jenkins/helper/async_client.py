@@ -263,7 +263,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
     def get_environment(self):
         """ hook to implemnet custom environment variable setters """
         return os.environ.copy()
-    
+
     def run_arango_tool_monitored(
             self,
             executeable,
