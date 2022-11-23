@@ -1,9 +1,5 @@
 set -gx KEYNAME 115E1684
 
-if test "$IS_JENKINS" = "true"
-   python3 jenkins/helper/clear_machine.py
-end
-
 function lockDirectory
   # Now grab the lock ourselves:
   set -l pid (echo %self)
