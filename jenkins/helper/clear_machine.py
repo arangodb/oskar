@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 """ aimns to purge all resources that are stray and hinder ci work by blocking resources """
 import collections
+from datetime import datetime, timedelta
 import os
 import sys
 import platform
 import psutil
-from datetime import datetime, timedelta
 # pylint: disable=bare-except disable=broad-except
 arango_processes = [
     "arangod",
