@@ -98,7 +98,7 @@ def clean_docker_containers():
     now = datetime.now()
     print("Searching for volatile running docker containers")
     for container in client.containers.list(all=True):
-        is_running = container.status != 'exited' and container.status != 'created'
+        is_running = container.status not in ['exited', 'created']
         is_old = False
         workspace = ""
         if not container.attrs['Config']['Env'] is None:
