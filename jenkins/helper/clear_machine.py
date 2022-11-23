@@ -18,7 +18,7 @@ arango_processes = [
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
 IS_LINUX = not IS_WINDOWS and not IS_MAC
-print(IS_LINUX)
+
 def print_tree(parent, tree, indent=''):
     """ print the process tree """
     try:
