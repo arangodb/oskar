@@ -77,5 +77,5 @@ If($(Get-Module).Name -contains "oskar")
 }
 Import-Module "$OSKARDIR\oskar\helper.psm1"
 clearResults
-If($IS_JENKINS) { clearMachine }
+If($env:IS_JENKINS) { clearMachine }
 clearWorkdir
