@@ -134,7 +134,7 @@ class SiteConfig:
             self.max_load /= 2
             if os.environ['SAN_MODE'] == 'AULSan':
                 print('Aulsan must reduce even more!')
-        self.timeout = 40 # TODO: remove 
+        self.timeout = 40*60 # TODO: remove 
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 60) # TODO 660
         if definition_file.is_file():
