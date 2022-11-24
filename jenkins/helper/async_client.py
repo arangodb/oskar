@@ -461,7 +461,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     try:
                         process.send_signal(self.deadline_signal)
                     except psutil.NoSuchProcess:
-                        print_log(f"{identifier} process already dead!")
+                        print_log(f"{identifier} process already dead!", params)
                 elif have_deadline > 1 and datetime.now() > final_deadline:
                     try:
                         # give it some time to exit:
