@@ -401,6 +401,8 @@ class TestingRunner():
                 if one_file.exists():
                     try:
                         shutil.move(str(one_file.resolve()), str(core_dir.resolve()))
+                    except shutil.Error as ex:
+                        print(f"failed to move file while cleaning up temporary files {ex}")
                     except PermissionError as ex:
                         print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
                         self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
