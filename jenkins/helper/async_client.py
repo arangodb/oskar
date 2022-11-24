@@ -257,6 +257,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
     # pylint: disable=too-few-public-methods too-many-arguments disable=too-many-instance-attributes disable=too-many-statements disable=too-many-branches disable=too-many-locals
     def __init__(self, config, connect_instance, deadline_signal=-1):
         """launcher class for cli tools"""
+        global ID_COUNTER
         self.connect_instance = connect_instance
         self.cfg = config
         self.deadline_signal = deadline_signal
@@ -268,7 +269,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 self.deadline_signal = signal.CTRL_BREAK_EVENT
             else:
                 self.deadline_signal = signal.SIGINT
-        self.my_id = -1
+        self.my_id = ID_COUNTER
+        ID_COUNTER += 1
 
     def dig_for_children(self):
         """ manual search for children that may be there without the self.pid still being there """
@@ -358,9 +360,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
         children = []
         if identifier == "":
             # pylint: disable=global-statement
-            global ID_COUNTER
-            self.my_id = ID_COUNTER
-            ID_COUNTER += 1
             identifier = f"IO_{str(self.my_id)}"
         print(params)
         params['identifier'] = identifier
