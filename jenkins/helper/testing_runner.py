@@ -448,9 +448,15 @@ class TestingRunner():
             for subsubdir in subdir.iterdir():
                 path_segment = subsubdir.parts[len(subsubdir.parts) - 1]
                 if path_segment.startswith('arangosh_'):
+                    clean_subdir = True
                     for subsubsubdir in subsubdir.iterdir():
-                        shutil.move(str(subsubsubdir), str(subdir))
-                    subsubdir.rmdir()
+                        try:
+                            shutil.move(str(subsubsubdir), str(subdir))
+                        except shutil.Error as ex:
+                            print(f"failed to move file while cleaning up temporary files {ex}")
+                            clean_subdir = False
+                    if clean_subdir:
+                        subsubdir.rmdir()
         print("Creating " + str(tarfile))
         sys.stdout.flush()
         try:
