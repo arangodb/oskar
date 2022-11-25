@@ -28,7 +28,8 @@ def kill_all_arango_processes():
     pseaf = "PID  Process"
     # pylint: disable=catching-non-exception
     for process in psutil.process_iter(["pid", "name"]):
-        if process.name().lower().find('arango') >= 0:
+        if (process.name().lower().find('arango') >= 0 or
+            process.name().lower().find('tshark') >= 0):
             try:
                 print(f"Main: killing {process.name()} - {str(process.pid)}")
                 process.resume()
