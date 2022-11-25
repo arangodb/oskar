@@ -217,7 +217,7 @@ class TestingRunner():
         else:
             print("Main: workers terminated on time")
         if more_running:
-            self.generate_report_txt()
+            self.generate_report_txt("ALL: some suites didn't even abort!\n")
             print("Main: force-terminates the python process due to overall unresponsiveness! Geronimoooo!")
             list_all_processes()
             sys.stdout.flush()
@@ -304,18 +304,20 @@ class TestingRunner():
                 if not scenario.success:
                     self.success = False
 
-    def generate_report_txt(self):
+    def generate_report_txt(self, moremsg):
         """ create the summary testfailures.txt from all bits """
         print(self.scenarios)
-        summary = ""
+        summary = moremsg
         if self.deadline_reached:
             summary = "Deadline reached during test execution!\n"
         for testrun in self.scenarios:
             print(testrun)
             if testrun.crashed or not testrun.success:
                 summary += f"\n=== {testrun.name} ===\n{testrun.summary}"
-            if testrun.finish is None:
+            if self.start is None:
                 summary += f"\n=== {testrun.name} ===\nhasn't been launched at all!"
+            elif testrun.finish is None:
+                summary += f"\n=== {testrun.name} ===\nwouldn't exit for some reason!"
         print(summary)
         self.testfailures_file.write_text(summary)
 
