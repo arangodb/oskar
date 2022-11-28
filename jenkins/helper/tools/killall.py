@@ -7,7 +7,7 @@ def list_all_processes():
     """list all processes for later reference"""
     pseaf = "PID  Process"
     # pylint: disable=catching-non-exception
-    for process in psutil.process_iter(["pid", "name"]):
+    for process in psutil.process_iter(["pid", "ppid", "name"]):
         cmdline = process.name
         try:
             cmdline = str(process.cmdline())
@@ -19,7 +19,7 @@ def list_all_processes():
             pass
         except psutil.NoSuchProcess:
             pass
-        print(f"{process.pid} {cmdline}")
+        print(f"{process.pid} {process.ppid()} {cmdline}")
     print(pseaf)
     sys.stdout.flush()
 
