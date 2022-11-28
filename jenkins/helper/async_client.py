@@ -422,7 +422,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     have_progressive_timeout = tcount >= progressive_timeout
                     if have_progressive_timeout:
                         try:
-                            children = process.children(recursive=True)
+                            children += process.children(recursive=True)
                         except psutil.NoSuchProcess:
                             pass
                         process.kill()
