@@ -72,6 +72,7 @@ if 'INNERWORKDIR' in os.environ:
 else:
     TEMP = TEMP / 'ArangoDB'
 if TEMP.exists():
+    # pylint: disable=broad-except
     try:
         shutil.rmtree(TEMP)
         TEMP.mkdir(parents=True)
