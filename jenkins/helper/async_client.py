@@ -260,6 +260,14 @@ class ArangoCLIprogressiveTimeoutExecutor:
             else:
                 self.deadline_signal = signal.SIGINT
 
+    def dig_for_children(self):
+        """ manual search for children that may be there without the self.pid still being there """
+        children = []
+        for process in psutil.process_iter(["pid", "ppid"]):
+            if process.ppid() == self.pid:
+                children.append(process)
+        return children
+
     def get_environment(self):
         """ hook to implemnet custom environment variable setters """
         return os.environ.copy()
@@ -422,7 +430,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     have_progressive_timeout = tcount >= progressive_timeout
                     if have_progressive_timeout:
                         try:
-                            children += process.children(recursive=True)
+                            children = process.children(recursive=True)
                         except psutil.NoSuchProcess:
                             pass
                         process.kill()
@@ -432,6 +440,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         try:
                             children = children + process.children(recursive=True)
                         except psutil.NoSuchProcess:
+                            children = children + self.dig_for_children()
                             rc_exit = process.wait(timeout=0)
                             add_message_to_report(params, f"{identifier}  exited: {str(rc_exit)}")
                             kill_children(identifier, params, children)
