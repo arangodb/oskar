@@ -432,7 +432,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         try:
                             children = children + process.children(recursive=True)
                         except psutil.NoSuchProcess:
-                            rc_exit = process.wait(timeout=0) not in GOOD_STATI:
+                            rc_exit = process.wait(timeout=0)
                             add_message_to_report(params, f"{identifier}  exited: {str(rc_exit)}")
                             kill_children(identifier, params, children)
                 except OSError as error:
