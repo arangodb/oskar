@@ -19,7 +19,7 @@ def list_all_processes():
             pass
         except psutil.NoSuchProcess:
             pass
-        print(f"{process.pid} {process.ppid()} {cmdline}")
+        print(f"PID: {process.pid} PPID: {process.ppid()} {cmdline}")
     print(pseaf)
     sys.stdout.flush()
 
