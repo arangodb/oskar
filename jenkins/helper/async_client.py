@@ -466,8 +466,12 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         "line_filter": -99,
                     }
 
-                if process.status() not in GOOD_STATI:
-                    print(f"xxxxxxxxxxxxxxxxxxxxx {process.status()}")
+                #try:
+                #    if process.status() not in GOOD_STATI:
+                #        print(f"xxxxxxxxxxxxxxxxxxxxx {process.status()}")
+                #except ProcessLookupError as ex:
+                #   
+                #    print('yyyyyyy')
                 if datetime.now() > deadline:
                     have_deadline += 1
                 if have_deadline == 1:
@@ -479,6 +483,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     try:
                         children = process.children(recursive=True)
                     except psutil.NoSuchProcess:
+                        print('xxxxxxxxxxxxxzzzzzzzzzzzzzz')
                         pass
                     try:
                         process.send_signal(self.deadline_signal)
