@@ -453,7 +453,9 @@ class TestingRunner():
                         try:
                             shutil.move(str(subsubsubdir), str(subdir))
                         except shutil.Error as ex:
-                            print(f"failed to move file while cleaning up temporary files {ex}")
+                            msg = f"generate_test_report: failed to move file while cleaning up temporary files {ex}"
+                            self.append_report_txt('\n' + msg + '\n')
+                            print(msg)
                             clean_subdir = False
                     if clean_subdir:
                         subsubdir.rmdir()
