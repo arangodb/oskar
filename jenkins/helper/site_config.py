@@ -71,7 +71,13 @@ if 'INNERWORKDIR' in os.environ:
     TEMP = TEMP / 'tmp'
 else:
     TEMP = TEMP / 'ArangoDB'
-if not TEMP.exists():
+if TEMP.exists():
+    try:
+        shutil.rmtree(TEMP)
+        TEMP.mkdir(parents=True)
+    except Exception as ex:
+        print(f"failed to clean temporary directory: {ex} - will continue anyways")
+else:
     TEMP.mkdir(parents=True)
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
