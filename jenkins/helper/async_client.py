@@ -442,7 +442,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         except psutil.NoSuchProcess:
                             children = children + self.dig_for_children()
                             rc_exit = process.wait(timeout=0)
-                            add_message_to_report(params, f"{identifier}  exited: {str(rc_exit)}")
+                            add_message_to_report(params, f"{identifier} exited unexpectedly: {str(rc_exit)}")
                             kill_children(identifier, params, children)
                 except OSError as error:
                     print(f"Got an OS-Error, will abort all! {error.strerror}")
@@ -473,11 +473,11 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     try:
                         children = process.children(recursive=True)
                     except psutil.NoSuchProcess:
-                        print('xxxxxxxxxxxxxzzzzzzzzzzzzzz')
                         pass
                     try:
                         process.send_signal(self.deadline_signal)
                     except psutil.NoSuchProcess:
+                        children = children + self.dig_for_children()
                         print_log(f"{identifier} process already dead!", params)
                 elif have_deadline > 1 and datetime.now() > final_deadline:
                     try:
