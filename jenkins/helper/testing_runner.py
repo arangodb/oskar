@@ -404,7 +404,9 @@ class TestingRunner():
                     try:
                         shutil.move(str(one_file.resolve()), str(core_dir.resolve()))
                     except shutil.Error as ex:
-                        print(f"failed to move file while cleaning up temporary files {ex}")
+                        msg = f"generate_crash_report: failed to move file while while gathering coredumps: {ex}"
+                        self.append_report_txt('\n' + msg + '\n')
+                        print(msg)
                     except PermissionError as ex:
                         print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
                         self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
@@ -455,7 +457,7 @@ class TestingRunner():
                         try:
                             shutil.move(str(subsubsubdir), str(subdir))
                         except shutil.Error as ex:
-                            msg = f"generate_test_report: failed to move file while cleaning up temporary files {ex}"
+                            msg = f"generate_test_report: failed to move file while cleaning up temporary files: {ex}"
                             self.append_report_txt('\n' + msg + '\n')
                             print(msg)
                             clean_subdir = False
