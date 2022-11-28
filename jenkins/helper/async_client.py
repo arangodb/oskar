@@ -194,7 +194,7 @@ def kill_children(identifier, params, children):
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
-    print_log(f"{identifier}: Waiting for the children to terminate {killed}", params)
+    print_log(f"{identifier}: Waiting for the children to terminate {killed} {len(children)}", params)
     psutil.wait_procs(children, timeout=20)
     return err
 
