@@ -403,6 +403,8 @@ class TestingRunner():
                 if one_file.exists():
                     try:
                         shutil.move(str(one_file.resolve()), str(core_dir.resolve()))
+                    except shutil.Error as ex:
+                        print(f"failed to move file while cleaning up temporary files {ex}")
                     except PermissionError as ex:
                         print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
                         self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
@@ -448,9 +450,17 @@ class TestingRunner():
             for subsubdir in subdir.iterdir():
                 path_segment = subsubdir.parts[len(subsubdir.parts) - 1]
                 if path_segment.startswith('arangosh_'):
+                    clean_subdir = True
                     for subsubsubdir in subsubdir.iterdir():
-                        shutil.move(str(subsubsubdir), str(subdir))
-                    subsubdir.rmdir()
+                        try:
+                            shutil.move(str(subsubsubdir), str(subdir))
+                        except shutil.Error as ex:
+                            msg = f"generate_test_report: failed to move file while cleaning up temporary files {ex}"
+                            self.append_report_txt('\n' + msg + '\n')
+                            print(msg)
+                            clean_subdir = False
+                    if clean_subdir:
+                        subsubdir.rmdir()
         print("Creating " + str(tarfile))
         sys.stdout.flush()
         try:
