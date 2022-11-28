@@ -314,7 +314,7 @@ class TestingRunner():
             print(testrun)
             if testrun.crashed or not testrun.success:
                 summary += f"\n=== {testrun.name} ===\n{testrun.summary}"
-            if self.start is None:
+            if testrun.start is None:
                 summary += f"\n=== {testrun.name} ===\nhasn't been launched at all!"
             elif testrun.finish is None:
                 summary += f"\n=== {testrun.name} ===\nwouldn't exit for some reason!"
