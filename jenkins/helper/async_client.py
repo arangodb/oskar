@@ -205,17 +205,18 @@ GOOD_STATI = [
     psutil.STATUS_STOPPED,
     psutil.STATUS_TRACING_STOP,
 ]
-BAD_STATI = [
-    psutil.STATUS_ZOMBIE,
-    psutil.STATUS_DEAD,
-    psutil.STATUS_WAKE_KILL,
-    psutil.STATUS_WAKING,
-    psutil.STATUS_PARKED, # (Linux)
-    psutil.STATUS_IDLE, #(Linux, macOS, FreeBSD)
-    psutil.STATUS_LOCKED, # (FreeBSD)
-    psutil.STATUS_WAITING, # (FreeBSD)
-    psutil.STATUS_SUSPENDED #(NetBSD)
-]
+
+# BAD_STATI = [
+#     psutil.STATUS_ZOMBIE,
+#     psutil.STATUS_DEAD,
+#     psutil.STATUS_WAKE_KILL, # missing on the wintendo?
+#     psutil.STATUS_WAKING,
+#     psutil.STATUS_PARKED, # (Linux)
+#     psutil.STATUS_IDLE, #(Linux, macOS, FreeBSD)
+#     psutil.STATUS_LOCKED, # (FreeBSD)
+#     psutil.STATUS_WAITING, # (FreeBSD)
+#     psutil.STATUS_SUSPENDED #(NetBSD)
+# ]
 
 class CliExecutionException(Exception):
     """transport CLI error texts"""
