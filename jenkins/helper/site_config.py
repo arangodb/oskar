@@ -77,7 +77,10 @@ if TEMP.exists():
         shutil.rmtree(TEMP)
         TEMP.mkdir(parents=True)
     except Exception as ex:
-        print(f"failed to clean temporary directory: {ex} - will continue anyways")
+        msg = f"failed to clean temporary directory: {ex} - won't launch tests!"
+        (get_workspace() / 'testfailures.txt').write_text(msg + '\n')
+        print(msg)
+        sys.exit(2)
 else:
     TEMP.mkdir(parents=True)
 os.environ['TMPDIR'] = str(TEMP)
