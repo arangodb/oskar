@@ -198,26 +198,6 @@ def kill_children(identifier, params, children):
     psutil.wait_procs(children, timeout=20)
     return err
 
-GOOD_STATI = [
-    psutil.STATUS_RUNNING,
-    psutil.STATUS_SLEEPING,
-    psutil.STATUS_DISK_SLEEP,
-    psutil.STATUS_STOPPED,
-    psutil.STATUS_TRACING_STOP,
-]
-
-# BAD_STATI = [
-#     psutil.STATUS_ZOMBIE,
-#     psutil.STATUS_DEAD,
-#     psutil.STATUS_WAKE_KILL, # missing on the wintendo?
-#     psutil.STATUS_WAKING,
-#     psutil.STATUS_PARKED, # (Linux)
-#     psutil.STATUS_IDLE, #(Linux, macOS, FreeBSD)
-#     psutil.STATUS_LOCKED, # (FreeBSD)
-#     psutil.STATUS_WAITING, # (FreeBSD)
-#     psutil.STATUS_SUSPENDED #(NetBSD)
-# ]
-
 class CliExecutionException(Exception):
     """transport CLI error texts"""
 
@@ -448,6 +428,13 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         process.kill()
                         kill_children(identifier, params, children)
                         rc_exit = process.wait()
+                    elif tcount % 10 == 0:
+                        try:
+                            children = children + process.children(recursive=True)
+                        except psutil.NoSuchProcess:
+                            rc_exit = process.wait(timeout=0) not in GOOD_STATI:
+                            add_message_to_report(params, f"{identifier}  exited: {str(rc_exit)}")
+                            kill_children(identifier, params, children)
                 except OSError as error:
                     print(f"Got an OS-Error, will abort all! {error.strerror}")
                     try:
@@ -466,12 +453,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         "line_filter": -99,
                     }
 
-                #try:
-                #    if process.status() not in GOOD_STATI:
-                #        print(f"xxxxxxxxxxxxxxxxxxxxx {process.status()}")
-                #except ProcessLookupError as ex:
-                #   
-                #    print('yyyyyyy')
                 if datetime.now() > deadline:
                     have_deadline += 1
                 if have_deadline == 1:
