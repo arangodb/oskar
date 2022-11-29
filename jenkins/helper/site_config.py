@@ -71,7 +71,17 @@ if 'INNERWORKDIR' in os.environ:
     TEMP = TEMP / 'tmp'
 else:
     TEMP = TEMP / 'ArangoDB'
-if not TEMP.exists():
+if TEMP.exists():
+    # pylint: disable=broad-except
+    try:
+        shutil.rmtree(TEMP)
+        TEMP.mkdir(parents=True)
+    except Exception as ex:
+        msg = f"failed to clean temporary directory: {ex} - won't launch tests!"
+        (get_workspace() / 'testfailures.txt').write_text(msg + '\n')
+        print(msg)
+        sys.exit(2)
+else:
     TEMP.mkdir(parents=True)
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
