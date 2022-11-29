@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import pprint
+import re
 import shutil
 import signal
 import sys
@@ -359,6 +360,7 @@ class TestingRunner():
             core_pattern = Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()
             if core_pattern.startswith('/'):
                 core_dir = Path(core_pattern).parent
+            core_pattern = re.sub(r'%.', '*', core_pattern)
             move_files = True
         else:
             move_files = True
