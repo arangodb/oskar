@@ -54,14 +54,9 @@ if test "$SAN" = "On"
   end
 end
 
-set evalCmd "waitOrKill $timeLimit $suiteRunner"
-eval $evalCmd
-set timeout $status
-
-createReport
+eval "$suiteRunner"
 
 echo "RESULT: $result"
-echo "TIMEOUT: $timeout"
 
 if test $result = GOOD -a $timeout = 0
   exit 0
