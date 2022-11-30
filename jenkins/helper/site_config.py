@@ -160,7 +160,7 @@ class SiteConfig:
         except psutil.AccessDenied:
             pass
 
-        print(f"""Machine Info:
+        print(f"""Machine Info [{psutil.Process().pid}]:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
