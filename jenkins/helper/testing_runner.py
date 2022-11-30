@@ -71,10 +71,6 @@ def testing_runner(testing_instance, this, arangosh):
             this.summary += this.summary_file.read_text()
         else:
             print(f'{this.name_enum} no testreport!')
-
-        with arangosh.slot_lock:
-            testing_instance.running_suites.remove(this.name_enum)
-
         if this.crashed or not this.success:
             print(str(this.log_file.name))
             print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
@@ -93,6 +89,8 @@ def testing_runner(testing_instance, this, arangosh):
             this.temp_dir.rename(temp_dir)
             this.temp_dir = temp_dir
     finally:
+        with arangosh.slot_lock:
+            testing_instance.running_suites.remove(this.name_enum)
         testing_instance.done_job(this.parallelity)
 
 class TestingRunner():
