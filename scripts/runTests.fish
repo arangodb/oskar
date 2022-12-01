@@ -59,7 +59,7 @@ set -g suiteRunner ""
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
-    set -xg timeLimit 4200 + 36000
+    set -xg timeLimit 40000
     set suiteRunner "launchClusterTests"
   case "single"
     resetLaunch 1
