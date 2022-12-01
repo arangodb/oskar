@@ -154,10 +154,12 @@ def convert_result(result_array):
             result += "\n" + one_line.decode("utf-8").rstrip()
     return result
 
-def add_message_to_report(params, string, print_it = True):
+def add_message_to_report(params, string, print_it = True, add_to_error = False):
     """ add a message from python to the report strings/files + print it """
     if print_it:
         print(string)
+    if add_to_error:
+        params['error'] += 'async_client.py: ' + string + '\n'
     if isinstance(params['output'], list):
         params['output'] += f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n"
     else:
@@ -194,7 +196,8 @@ def kill_children(identifier, params, children):
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
-    print_log(f"{identifier}: Waiting for the children to terminate {killed} {len(children)}", params)
+    print_log(f"{identifier}: Waiting for the children to terminate {killed} {len(children)}",
+              params)
     psutil.wait_procs(children, timeout=20)
     return err
 
@@ -444,12 +447,18 @@ class ArangoCLIprogressiveTimeoutExecutor:
                             children = children + process.children(recursive=True)
                             rc_exit = process.wait(timeout=1)
                             children = children + self.dig_for_children()
-                            add_message_to_report(params, f"{identifier} exited unexpectedly: {str(rc_exit)}")
+                            add_message_to_report(
+                                params,
+                                f"{identifier} exited unexpectedly: {str(rc_exit)}",
+                                True, True)
                             kill_children(identifier, params, children)
                             break
                         except psutil.NoSuchProcess:
                             children = children + self.dig_for_children()
-                            add_message_to_report(params, f"{identifier} exited unexpectedly: {str(rc_exit)}")
+                            add_message_to_report(
+                                params,
+                                f"{identifier} exited unexpectedly: {str(rc_exit)}",
+                                True, True)
                             kill_children(identifier, params, children)
                             break
                         except psutil.TimeoutExpired:
