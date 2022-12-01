@@ -263,8 +263,12 @@ class ArangoCLIprogressiveTimeoutExecutor:
     def dig_for_children(self):
         """ manual search for children that may be there without the self.pid still being there """
         children = []
-        for process in psutil.process_iter(["pid", "ppid"]):
+        for process in psutil.process_iter(["pid", "ppid", "name"]):
             if process.ppid() == self.pid:
+                children.append(process)
+            elif (process.ppid() == 1 and
+                  (process.name().lower().find('arango') >= 0 or
+                   process.name().lower().find('tshark') >= 0)):
                 children.append(process)
         return children
 
@@ -425,7 +429,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         if close_count == 2:
                             break
                 except Empty:
-                    # print(identifier  + '..' + str(deadline_grace_count))
                     tcount += 1
                     have_progressive_timeout = tcount >= progressive_timeout
                     if have_progressive_timeout:
@@ -436,14 +439,21 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         process.kill()
                         kill_children(identifier, params, children)
                         rc_exit = process.wait()
-                    elif tcount % 10 == 0:
+                    elif tcount % 30 == 0:
                         try:
                             children = children + process.children(recursive=True)
-                        except psutil.NoSuchProcess:
+                            rc_exit = process.wait(timeout=1)
                             children = children + self.dig_for_children()
-                            rc_exit = process.wait(timeout=0)
                             add_message_to_report(params, f"{identifier} exited unexpectedly: {str(rc_exit)}")
                             kill_children(identifier, params, children)
+                            break
+                        except psutil.NoSuchProcess:
+                            children = children + self.dig_for_children()
+                            add_message_to_report(params, f"{identifier} exited unexpectedly: {str(rc_exit)}")
+                            kill_children(identifier, params, children)
+                            break
+                        except psutil.TimeoutExpired:
+                            pass # Wait() has thrown, all is well!
                 except OSError as error:
                     print(f"Got an OS-Error, will abort all! {error.strerror}")
                     try:
