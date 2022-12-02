@@ -154,10 +154,12 @@ def convert_result(result_array):
             result += "\n" + one_line.decode("utf-8").rstrip()
     return result
 
-def add_message_to_report(params, string, print_it = True):
+def add_message_to_report(params, string, print_it = True, add_to_error = False):
     """ add a message from python to the report strings/files + print it """
     if print_it:
         print(string)
+    if add_to_error:
+        params['error'] += 'async_client.py: ' + string + '\n'
     if isinstance(params['output'], list):
         params['output'] += f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n"
     else:
@@ -194,7 +196,8 @@ def kill_children(identifier, params, children):
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
-    print_log(f"{identifier}: Waiting for the children to terminate", params)
+    print_log(f"{identifier}: Waiting for the children to terminate {killed} {len(children)}",
+              params)
     psutil.wait_procs(children, timeout=20)
     return err
 
@@ -259,6 +262,18 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 self.deadline_signal = signal.CTRL_BREAK_EVENT
             else:
                 self.deadline_signal = signal.SIGINT
+
+    def dig_for_children(self):
+        """ manual search for children that may be there without the self.pid still being there """
+        children = []
+        for process in psutil.process_iter(["pid", "ppid", "name"]):
+            if process.ppid() == self.pid:
+                children.append(process)
+            elif (process.ppid() == 1 and
+                  (process.name().lower().find('arango') >= 0 or
+                   process.name().lower().find('tshark') >= 0)):
+                children.append(process)
+        return children
 
     def get_environment(self):
         """ hook to implemnet custom environment variable setters """
@@ -417,7 +432,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         if close_count == 2:
                             break
                 except Empty:
-                    # print(identifier  + '..' + str(deadline_grace_count))
                     tcount += 1
                     have_progressive_timeout = tcount >= progressive_timeout
                     if have_progressive_timeout:
@@ -428,6 +442,27 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         process.kill()
                         kill_children(identifier, params, children)
                         rc_exit = process.wait()
+                    elif tcount % 30 == 0:
+                        try:
+                            children = children + process.children(recursive=True)
+                            rc_exit = process.wait(timeout=1)
+                            children = children + self.dig_for_children()
+                            add_message_to_report(
+                                params,
+                                f"{identifier} exited unexpectedly: {str(rc_exit)}",
+                                True, True)
+                            kill_children(identifier, params, children)
+                            break
+                        except psutil.NoSuchProcess:
+                            children = children + self.dig_for_children()
+                            add_message_to_report(
+                                params,
+                                f"{identifier} exited unexpectedly: {str(rc_exit)}",
+                                True, True)
+                            kill_children(identifier, params, children)
+                            break
+                        except psutil.TimeoutExpired:
+                            pass # Wait() has thrown, all is well!
                 except OSError as error:
                     print(f"Got an OS-Error, will abort all! {error.strerror}")
                     try:
@@ -458,7 +493,11 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         children = process.children(recursive=True)
                     except psutil.NoSuchProcess:
                         pass
-                    process.send_signal(self.deadline_signal)
+                    try:
+                        process.send_signal(self.deadline_signal)
+                    except psutil.NoSuchProcess:
+                        children = children + self.dig_for_children()
+                        print_log(f"{identifier} process already dead!", params)
                 elif have_deadline > 1 and datetime.now() > final_deadline:
                     try:
                         # give it some time to exit:

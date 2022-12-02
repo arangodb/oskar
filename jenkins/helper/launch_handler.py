@@ -35,7 +35,7 @@ def launch(args, tests):
     try:
         runner.testing_runner()
         runner.overload_report_fh.close()
-        runner.generate_report_txt()
+        runner.generate_report_txt("")
         if create_report:
             runner.generate_test_report()
             if not runner.cfg.is_asan:

@@ -7,7 +7,7 @@ def list_all_processes():
     """list all processes for later reference"""
     pseaf = "PID  Process"
     # pylint: disable=catching-non-exception
-    for process in psutil.process_iter(["pid", "name"]):
+    for process in psutil.process_iter(["pid", "ppid", "name"]):
         cmdline = process.name
         try:
             cmdline = str(process.cmdline())
@@ -19,7 +19,7 @@ def list_all_processes():
             pass
         except psutil.NoSuchProcess:
             pass
-        print(f"{process.pid} {cmdline}")
+        print(f"PID: {process.pid} PPID: {process.ppid()} {cmdline}")
     print(pseaf)
     sys.stdout.flush()
 
@@ -28,7 +28,8 @@ def kill_all_arango_processes():
     pseaf = "PID  Process"
     # pylint: disable=catching-non-exception
     for process in psutil.process_iter(["pid", "name"]):
-        if process.name().lower().find('arango') >= 0:
+        if (process.name().lower().find('arango') >= 0 or
+            process.name().lower().find('tshark') >= 0):
             try:
                 print(f"Main: killing {process.name()} - {str(process.pid)}")
                 process.resume()
