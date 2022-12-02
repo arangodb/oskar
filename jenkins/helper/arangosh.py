@@ -1,7 +1,6 @@
 #!/bin/env python3
 """ launch a testing.js instance with given testsuite and arguments """
 import os
-from site_config import TEMP
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
 
@@ -33,7 +32,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     directory,
                     logfile,
                     identifier,
-                    counter,
+                    temp_dir,
                     verbose
                     ):
        # pylint: disable=R0913 disable=R0902
@@ -54,7 +53,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
             '--',
             testcase,
             '--testOutput', directory ] + testing_args
-        params = make_logfile_params(verbose, logfile, self.cfg.trace, TEMP / str(counter))
+        params = make_logfile_params(verbose, logfile, self.cfg.trace, temp_dir)
         ret = self.run_monitored(
             self.cfg.bin_dir / "arangosh",
             run_cmd,

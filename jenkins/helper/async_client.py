@@ -271,11 +271,11 @@ class ArangoCLIprogressiveTimeoutExecutor:
             else:
                 self.deadline_signal = signal.SIGINT
 
-    def dig_for_children(self):
+    def dig_for_children(self, params):
         """ manual search for children that may be there without the self.pid still being there """
         children = []
         for process in psutil.process_iter(["pid", "ppid", "name"]):
-            if process.ppid() == self.pid:
+            if process.ppid() == params['pid']:
                 children.append(process)
             elif (process.ppid() == 1 and
                   (process.name().lower().find('arango') >= 0 or
@@ -378,7 +378,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             env=self.get_environment(params)
         ) as process:
             # pylint: disable=consider-using-f-string
-            self.pid = process.pid
+            params['pid'] = process.pid
             queue = Queue()
             thread1 = Thread(
                 name=f"readIO {identifier}",
@@ -451,7 +451,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         try:
                             children = children + process.children(recursive=True)
                             rc_exit = process.wait(timeout=1)
-                            children = children + self.dig_for_children()
+                            children = children + self.dig_for_children(params)
                             add_message_to_report(
                                 params,
                                 f"{identifier} exited unexpectedly: {str(rc_exit)}",
@@ -459,7 +459,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                             kill_children(identifier, params, children)
                             break
                         except psutil.NoSuchProcess:
-                            children = children + self.dig_for_children()
+                            children = children + self.dig_for_children(params)
                             add_message_to_report(
                                 params,
                                 f"{identifier} exited unexpectedly: {str(rc_exit)}",
@@ -501,7 +501,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     try:
                         process.send_signal(self.deadline_signal)
                     except psutil.NoSuchProcess:
-                        children = children + self.dig_for_children()
+                        children = children + self.dig_for_children(params)
                         print_log(f"{identifier} process already dead!", params)
                 elif have_deadline > 1 and datetime.now() > final_deadline:
                     try:

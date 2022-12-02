@@ -51,7 +51,7 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.base_logdir,
                                    this.log_file,
                                    this.name_enum,
-                                   this.counter,
+                                   this.temp_dir,
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
@@ -71,6 +71,7 @@ def testing_runner(testing_instance, this, arangosh):
             this.summary += this.summary_file.read_text()
         else:
             print(f'{this.name_enum} no testreport!')
+        final_name = TEMP / this.name
         if this.crashed or not this.success:
             print(str(this.log_file.name))
             print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
@@ -85,11 +86,11 @@ def testing_runner(testing_instance, this, arangosh):
                 if this.crashed:
                     testing_instance.crashed = True
                 testing_instance.success = False
-            this.temp_dir = TEMP / ("FAIL_" + this.name)
+            final_name = TEMP / ("FAIL_" + this.name)
         try:
-            arangosh.temp_dir.rename(this.temp_dir)
+            this.temp_dir.rename(final_name)
         except FileExistsError as ex:
-            print(f"can't expand the temp directory {ex} to {this.temp_dir}")
+            print(f"can't expand the temp directory {ex} to {final_name}")
     finally:
         with arangosh.slot_lock:
             testing_instance.running_suites.remove(this.name_enum)
@@ -165,6 +166,7 @@ class TestingRunner():
         self.used_slots += parallelity
         this = self.scenarios[offset]
         this.counter = counter
+        this.temp_dir = TEMP / str(counter)
         this.name_enum = f"{this.name} {str(counter)}"
         print(f"launching {this.name_enum}")
         pp.pprint(this)
