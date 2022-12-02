@@ -16,15 +16,14 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     def __init__(self, site_config, slot_lock):
         self.slot_lock = slot_lock
         self.read_only = False
-        self.temp_dir = ""
         super().__init__(site_config, None)
 
-    def get_environment(self):
+    def get_environment(self, params):
         """ hook to implemnet custom environment variable setters """
         my_env = os.environ.copy()
-        my_env['TMPDIR'] = str(self.temp_dir)
-        my_env['TEMP'] = str(self.temp_dir)
-        my_env['TMP'] = str(self.temp_dir)
+        my_env['TMPDIR'] = str(params['temp_dir'])
+        my_env['TEMP'] = str(params['temp_dir'])
+        my_env['TMP'] = str(params['temp_dir'])
         return my_env
 
     def run_testing(self,
@@ -34,13 +33,13 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     directory,
                     logfile,
                     identifier,
+                    counter,
                     verbose
                     ):
        # pylint: disable=R0913 disable=R0902
         """ testing.js wrapper """
         print('------')
         print(testing_args)
-        self.temp_dir = TEMP / str(self.my_id)
         args = [
             '-c', str(self.cfg.cfgdir / 'arangosh.conf'),
             "--log.foreground-tty", "true",
@@ -55,7 +54,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
             '--',
             testcase,
             '--testOutput', directory ] + testing_args
-        params = make_logfile_params(verbose, logfile, self.cfg.trace)
+        params = make_logfile_params(verbose, logfile, self.cfg.trace, TEMP / str(counter))
         ret = self.run_monitored(
             self.cfg.bin_dir / "arangosh",
             run_cmd,

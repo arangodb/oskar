@@ -88,7 +88,7 @@ def delete_tail_params(params):
     params['output'].close()
     print(f"{params['identifier']} {params['lfn']} closed")
 
-def make_logfile_params(verbose, logfile, trace):
+def make_logfile_params(verbose, logfile, trace, temp_dir):
     """ create the structure to work with logfiles """
     return {
         "trace_io": True,
@@ -97,8 +97,10 @@ def make_logfile_params(verbose, logfile, trace):
         "verbose": verbose,
         "output": logfile.open('wb'),
         "identifier": "",
-        "lfn": str(logfile)
+        "lfn": str(logfile),
+        "temp_dir": temp_dir
     }
+
 def logfile_line_result(wait, line, params):
     """ Write the line to a logfile, print progress. """
     # pylint: disable=pointless-statement
@@ -257,7 +259,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
     # pylint: disable=too-few-public-methods too-many-arguments disable=too-many-instance-attributes disable=too-many-statements disable=too-many-branches disable=too-many-locals
     def __init__(self, config, connect_instance, deadline_signal=-1):
         """launcher class for cli tools"""
-        global ID_COUNTER
         self.connect_instance = connect_instance
         self.cfg = config
         self.deadline_signal = deadline_signal
@@ -269,8 +270,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 self.deadline_signal = signal.CTRL_BREAK_EVENT
             else:
                 self.deadline_signal = signal.SIGINT
-        self.my_id = ID_COUNTER
-        ID_COUNTER += 1
 
     def dig_for_children(self):
         """ manual search for children that may be there without the self.pid still being there """
@@ -284,7 +283,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 children.append(process)
         return children
 
-    def get_environment(self):
+    def get_environment(self, params):
         """ hook to implemnet custom environment variable setters """
         return os.environ.copy()
 
@@ -360,7 +359,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         children = []
         if identifier == "":
             # pylint: disable=global-statement
-            identifier = f"IO_{str(self.my_id)}"
+            identifier = f"IO_{str(params.my_id)}"
         print(params)
         params['identifier'] = identifier
         if not isinstance(deadline,datetime):
@@ -376,7 +375,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             stderr=PIPE,
             close_fds=ON_POSIX,
             cwd=self.cfg.test_data_dir.resolve(),
-            env=self.get_environment()
+            env=self.get_environment(params)
         ) as process:
             # pylint: disable=consider-using-f-string
             self.pid = process.pid

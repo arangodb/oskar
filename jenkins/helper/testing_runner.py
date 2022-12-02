@@ -51,6 +51,7 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.base_logdir,
                                    this.log_file,
                                    this.name_enum,
+                                   this.counter,
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
@@ -163,6 +164,7 @@ class TestingRunner():
             parallelity = self.scenarios[offset].parallelity
         self.used_slots += parallelity
         this = self.scenarios[offset]
+        this.counter = counter
         this.name_enum = f"{this.name} {str(counter)}"
         print(f"launching {this.name_enum}")
         pp.pprint(this)
