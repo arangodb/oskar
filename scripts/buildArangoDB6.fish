@@ -75,7 +75,7 @@ if test "$SAN" = "On"
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=Off \
    -DCMAKE_C_FLAGS="-pthread $SANITIZERS -fno-sanitize=alignment" \
-   -DCMAKE_CXX_FLAGS="-pthread $SANITIZERS -fno-sanitize=vptr -fno-sanitize=alignment" \
+   -DCMAKE_CXX_FLAGS="-pthread $SANITIZERS -fno-sanitize=alignment" \
    -DBASE_LIBS="-pthread"
 else if test "$COVERAGE" = "On"
   echo "COVERAGE is not support in this environment!"
