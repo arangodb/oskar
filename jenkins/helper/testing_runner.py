@@ -26,7 +26,7 @@ MAX_COREFILES_CLUSTER=15
 if 'MAX_CORECOUNT' in os.environ:
     MAX_COREFILES_SINGLE=int(os.environ['MAX_CORECOUNT'])
     MAX_COREFILES_CLUSTER=int(os.environ['MAX_CORECOUNT'])
-MAX_COREFILE_SIZE_MB=750
+MAX_COREFILE_SIZE_MB=850
 if 'MAX_CORESIZE' in os.environ:
     MAX_COREFILE_SIZE_MB=int(os.environ['MAX_CORESIZE'])
 
@@ -357,7 +357,6 @@ class TestingRunner():
             core_max_count = MAX_COREFILES_CLUSTER
         core_dir = Path.cwd()
         core_pattern = "core*"
-        move_files = False
         if IS_WINDOWS:
             core_pattern = "*.dmp"
         system_corefiles = []
@@ -369,88 +368,84 @@ class TestingRunner():
                 core_dir = Path(core_pattern).parent
                 core_pattern = Path(core_pattern).name
             core_pattern = re.sub(r'%.', '*', core_pattern)
-            move_files = True
         else:
-            move_files = True
             core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
         if IS_MAC:
-            move_files = True
             system_corefiles = list(Path('/cores').glob(core_pattern))
             if system_corefiles is None:
                 system_corefiles = []
-        files_unsorted = list(core_dir.glob(core_pattern))
-        if files_unsorted is None:
-            files_unsorted = []
-        files_unsorted += system_corefiles
-        if len(files_unsorted) == 0 or core_max_count <= 0:
-            print(f'Coredumps are not collected: {str(len(files_unsorted))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
+        core_files_list = list(core_dir.glob(core_pattern))
+        if core_files_list is None:
+            core_files_list = []
+        core_files_list += system_corefiles
+        if len(core_files_list) == 0 or core_max_count <= 0:
+            print(f'Coredumps are not collected: {str(len(core_files_list))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
             return
 
-        for one_file in files_unsorted:
+        for one_file in core_files_list:
             if one_file.is_file():
                 size = (one_file.stat().st_size / (1024 * 1024))
                 if 0 < MAX_COREFILE_SIZE_MB and MAX_COREFILE_SIZE_MB < size:
                     print(f'deleting coredump {str(one_file)} its too big: {str(size)}')
-                    files_unsorted.remove(one_file)
+                    one_file.unlink(missing_ok=True)
+                    core_files_list.remove(one_file)
             else:
-                files_unsorted.remove(one_file)
+                print(f"removing file from list {str(one_file)}")
+                core_files_list.remove(one_file)
 
-        if len(files_unsorted) > core_max_count and core_max_count > 0:
+        if len(core_files_list) > core_max_count and core_max_count > 0:
             count = 0
-            for one_crash_file in files_unsorted:
+            for one_crash_file in core_files_list:
                 count += 1
                 if count > core_max_count:
                     print(f'{core_max_count} reached. will not archive {one_crash_file}')
                     one_crash_file.unlink(missing_ok=True)
+                    core_files_list.remove(one_crash_file)
 
-        is_empty = len(files_unsorted) == 0
-        if not is_empty and move_files:
-            core_dir = core_dir / 'coredumps'
-            core_dir.mkdir(parents=True, exist_ok=True)
-            for one_file in files_unsorted:
-                if one_file.exists():
-                    try:
-                        shutil.move(str(one_file.resolve()), str(core_dir.resolve()))
-                    except shutil.Error as ex:
-                        msg = f"generate_crash_report: failed to move file while while gathering coredumps: {ex}"
-                        self.append_report_txt('\n' + msg + '\n')
-                        print(msg)
-                    except PermissionError as ex:
-                        print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
-                        self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
+        if len(core_files_list) == 0:
+            return
+        self.crashed = True
 
-        if self.crashed or not is_empty:
-            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
-            print("creating crashreport: " + str(crash_report_file))
-            sys.stdout.flush()
-            try:
-                shutil.make_archive(str(crash_report_file),
-                                    ZIPFORMAT,
-                                    (core_dir / '..').resolve(),
-                                    core_dir.name,
-                                    True)
-            except Exception as ex:
-                print("Failed to create binaries zip: " + str(ex))
-                self.append_report_txt("Failed to create binaries zip: " + str(ex))
-            self.cleanup_unneeded_binary_files()
-            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
-            print("creating crashreport binary support zip: " + str(binary_report_file))
-            sys.stdout.flush()
-            try:
-                shutil.make_archive(str(binary_report_file),
-                                    ZIPFORMAT,
-                                    (self.cfg.bin_dir / '..').resolve(),
-                                    self.cfg.bin_dir.name,
-                                    True)
-            except Exception as ex:
-                print("Failed to create crashdump zip: " + str(ex))
-                self.append_report_txt("Failed to create crashdump zip: " + str(ex))
-            for corefile in core_dir.glob(core_pattern):
-                print("Deleting corefile " + str(corefile))
-                sys.stdout.flush()
-                corefile.unlink()
-            if not is_empty and move_files:
-                core_dir.rmdir()
+        core_zip_dir = get_workspace() / 'coredumps'
+        core_zip_dir.mkdir(parents=True, exist_ok=True)
+        for one_file in core_files_list:
+            if one_file.exists():
+                try:
+                    shutil.move(str(one_file.resolve()), str(core_zip_dir.resolve()))
+                except shutil.Error as ex:
+                    msg = f"generate_crash_report: failed to move file while while gathering coredumps: {ex}"
+                    self.append_report_txt('\n' + msg + '\n')
+                    print(msg)
+                except PermissionError as ex:
+                    print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
+                    self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
+
+        crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
+        print(f"creating crashreport: {str(crash_report_file)} with {str(core_files_list)}")
+        sys.stdout.flush()
+        try:
+            shutil.make_archive(str(crash_report_file),
+                                ZIPFORMAT,
+                                (core_zip_dir / '..').resolve(),
+                                core_zip_dir.name,
+                                True)
+        except Exception as ex:
+            print("Failed to create binaries zip: " + str(ex))
+            self.append_report_txt("Failed to create binaries zip: " + str(ex))
+        self.cleanup_unneeded_binary_files()
+        binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
+        print("creating crashreport binary support zip: " + str(binary_report_file))
+        sys.stdout.flush()
+        try:
+            shutil.make_archive(str(binary_report_file),
+                                ZIPFORMAT,
+                                (self.cfg.bin_dir / '..').resolve(),
+                                self.cfg.bin_dir.name,
+                                True)
+        except Exception as ex:
+            print("Failed to create crashdump zip: " + str(ex))
+            self.append_report_txt("Failed to create crashdump zip: " + str(ex))
+        shutil.rmtree(str(core_zip_dir), ignore_errors=True)
 
     def generate_test_report(self):
         """ regular testresults zip """
