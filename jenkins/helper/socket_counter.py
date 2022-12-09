@@ -29,16 +29,19 @@ def get_socket_count():
     if IS_MAC:
         # Mac would need root for all sockets, so we just look
         # for arangods and their ports, which works without.
-        for proc in psutil.process_iter(['pid', 'name']):
-            if proc.name() in ['arangod', 'arangosh']:
-                try:
-                    for socket in psutil.Process(proc.pid).connections():
-                        if socket.status in INTERESTING_SOCKETS:
-                            counter += 1
-                except psutil.ZombieProcess:
-                    pass
-                except psutil.NoSuchProcess:
-                    pass
+        try:
+            for proc in psutil.process_iter(['pid', 'name']):
+                if proc.name() in ['arangod', 'arangosh']:
+                    try:
+                        for socket in psutil.Process(proc.pid).connections():
+                            if socket.status in INTERESTING_SOCKETS:
+                                counter += 1
+                    except psutil.ZombieProcess:
+                        pass
+                    except psutil.NoSuchProcess:
+                        pass
+        except ProcessLookupError:
+            pass
     else:
         for socket in psutil.net_connections(kind='inet'):
             if socket.status in INTERESTING_SOCKETS:
