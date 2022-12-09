@@ -135,8 +135,8 @@ def clean_docker_containers():
         for container in (kill_first + kill_then):
             try:
                 print(f"Stopping {container.id} {container.attrs['Path']}")
-                container.stop()
-                container.kill()
+                # container.stop()
+                # container.kill()
             except Exception as ex:
                 print(ex)
                 print('next to come')
@@ -161,6 +161,7 @@ def clean_docker_containers():
             bare_k = k[:-5]
             if bare_k in os.environ:
                 stable_versions.append(os.environ[bare_k])
+    print(f"Stable versions: {str(stable_versions)}")
     print('pruning: ')
     print(client.images.prune())
     images_tags = {}
@@ -203,6 +204,7 @@ def clean_docker_containers():
                         if gtag not in images_tags:
                             images_tags[gtag] = struct
                         else:
+                            print(images_tags[gtag]['tag'])
                             if images_tags[gtag]['tag'] > tag:
                                 delete_images.append(image)
                             else:
@@ -215,7 +217,8 @@ def clean_docker_containers():
     else:
         for image in delete_images:
             try:
-                print(f'deleting {image} {client.images.remove(image=image.id)}')
+                # print(f'deleting {image} {client.images.remove(image=image.id)}')
+                print(f'deleting {image} ')
             except:
                 pass
 def main():
@@ -232,8 +235,8 @@ def main():
     # on systems supporting PID 0, PID 0's parent is usually 0
     if 0 in tree and 0 in tree[0]:
         tree[0].remove(0)
-    print_tree(min(tree), tree)
-    get_and_kill_all_processes()
+    # print_tree(min(tree), tree)
+    # get_and_kill_all_processes()
     if IS_LINUX:
         clean_docker_containers()
 main()
