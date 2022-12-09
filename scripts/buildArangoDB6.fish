@@ -34,7 +34,7 @@ set -l pie ""
 set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
 
 set -g FULLARGS $argv \
- -DCMAKE_BUILD_TYPE=$BUILDMODE \
+ -DCMAKE_BUILD_TYPE=Debug \
  -DCMAKE_INSTALL_PREFIX=/ \
  -DSTATIC_EXECUTABLES=Off \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
