@@ -35,7 +35,7 @@ if not test -z $SAN; and test $SAN = "On"
       set -xg LSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log"
 
       # undefined behavior sanitizer
-      set -xg UBSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log"
+      set -xg UBSAN_OPTIONS "$common_options:print_stacktrace=1:log_path=$INNERWORKDIR/aulsan.log"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
