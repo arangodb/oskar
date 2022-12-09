@@ -169,7 +169,7 @@ def add_message_to_report(params, string, print_it = True, add_to_error = False)
             f"{oskar*count}\n{oskar}{datestr}{string}{' '*offset}{oskar}\n{oskar*count}\n"
     else:
         params['output'].write(bytearray(
-            f"{oskar*count}\n{oskar}{datestr}{string}{' '*offset}{oskar}\n{oskar*count}\n"
+            f"{oskar*count}\n{oskar}{datestr}{string}{' '*offset}{oskar}\n{oskar*count}\n",
             "utf-8"))
         params['output'].flush()
     sys.stdout.flush()
