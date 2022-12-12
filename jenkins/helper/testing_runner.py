@@ -43,55 +43,56 @@ except ModuleNotFoundError:
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
-    try:
-        this.start = datetime.now(tz=None)
-        ret = arangosh.run_testing(this.suite,
-                                   this.args,
-                                   999999999,
-                                   this.base_logdir,
-                                   this.log_file,
-                                   this.name_enum,
-                                   this.temp_dir,
-                                   True) #verbose?
-        this.success = (
-            not ret["progressive_timeout"] or
-            not ret["have_deadline"] or
-            ret["rc_exit"] == 0
-        )
-        this.finish = datetime.now(tz=None)
-        this.delta = this.finish - this.start
-        this.delta_seconds = this.delta.total_seconds()
-        print(f'done with {this.name_enum}')
-        this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
-        this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
-        if this.report_file.exists():
-            this.structured_results = this.report_file.read_text(encoding="UTF-8", errors='ignore')
-        this.summary = ret['error']
-        if this.summary_file.exists():
-            this.summary += this.summary_file.read_text()
-        else:
-            print(f'{this.name_enum} no testreport!')
-        if this.crashed or not this.success:
-            print(str(this.log_file.name))
-            print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
-                  )
-            failname = this.log_file.parent / ("FAIL_" + str(this.log_file.name))
-            this.log_file.rename(failname)
-            this.log_file = failname
-            if (this.summary == "" and failname.stat().st_size < 1024*10):
-                print("pulling undersized test output into testfailures.txt")
-                this.summary = failname.read_text(encoding='utf-8')
-            with arangosh.slot_lock:
-                if this.crashed:
-                    testing_instance.crashed = True
-                testing_instance.success = False
-            temp_dir = TEMP / ("FAIL_" + this.name)
-            this.temp_dir.rename(temp_dir)
-            this.temp_dir = temp_dir
-    finally:
+    this.start = datetime.now(tz=None)
+    ret = arangosh.run_testing(this.suite,
+                               this.args,
+                               999999999,
+                               this.base_logdir,
+                               this.log_file,
+                               this.name_enum,
+                               True) #verbose?
+    this.success = (
+        not ret["progressive_timeout"] or
+        not ret["have_deadline"] or
+        ret["rc_exit"] == 0
+    )
+    this.finish = datetime.now(tz=None)
+    this.delta = this.finish - this.start
+    this.delta_seconds = this.delta.total_seconds()
+    print(f'done with {this.name_enum}')
+    this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
+    this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
+    if this.report_file.exists():
+        this.structured_results = this.report_file.read_text(encoding="UTF-8", errors='ignore')
+    this.summary = ret['error']
+    if this.summary_file.exists():
+        this.summary += this.summary_file.read_text()
+    else:
+        print(f'{this.name_enum} no testreport!')
+
+    with arangosh.slot_lock:
+        testing_instance.running_suites.remove(this.name_enum)
+
+    if this.crashed or not this.success:
+        print(str(this.log_file.name))
+        print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
+              )
+        failname = this.log_file.parent / ("FAIL_" + str(this.log_file.name))
+        this.log_file.rename(failname)
+        this.log_file = failname
+        if (this.summary == "" and failname.stat().st_size < 1024*10):
+            print("pulling undersized test output into testfailures.txt")
+            this.summary = failname.read_text(encoding='utf-8')
         with arangosh.slot_lock:
-            testing_instance.running_suites.remove(this.name_enum)
-        testing_instance.done_job(this.parallelity)
+            if this.crashed:
+                testing_instance.crashed = True
+            testing_instance.success = False
+        this.temp_dir = TEMP / ("FAIL_" + this.name)
+    try:
+        arangosh.temp_dir.rename(this.temp_dir)
+    except FileExistsError as ex:
+        print(f"can't expand the temp directory {ex} to {this.temp_dir}")
+    testing_instance.done_job(this.parallelity)
 
 class TestingRunner():
     """ manages test runners, creates report """

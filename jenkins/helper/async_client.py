@@ -268,6 +268,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 self.deadline_signal = signal.CTRL_BREAK_EVENT
             else:
                 self.deadline_signal = signal.SIGINT
+        self.my_id = -1
 
     def dig_for_children(self):
         """ manual search for children that may be there without the self.pid still being there """
@@ -358,9 +359,9 @@ class ArangoCLIprogressiveTimeoutExecutor:
         if identifier == "":
             # pylint: disable=global-statement
             global ID_COUNTER
-            my_no = ID_COUNTER
+            self.my_id = ID_COUNTER
             ID_COUNTER += 1
-            identifier = f"IO_{str(my_no)}"
+            identifier = f"IO_{str(self.my_id)}"
         print(params)
         params['identifier'] = identifier
         if not isinstance(deadline,datetime):
