@@ -67,7 +67,7 @@ if test "$SAN" = "On"
   set -xg CXX_NAME clang++
   # Suppress leaks detection only during building
   set -gx SAN_OPTIONS "detect_leaks=0"
-  set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak"
+  set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak -fsanitize-address-use-after-return=never"
   if test "$SAN_MODE" = "TSan"
     set SANITIZERS "-fsanitize=thread"
   end
