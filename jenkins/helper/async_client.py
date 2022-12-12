@@ -154,14 +154,23 @@ def convert_result(result_array):
             result += "\n" + one_line.decode("utf-8").rstrip()
     return result
 
-def add_message_to_report(params, string):
+def add_message_to_report(params, string, print_it = True, add_to_error = False):
     """ add a message from python to the report strings/files + print it """
-    print(string)
+    oskar = 'OSKAR'
+    count = int(80 / len(oskar))
+    datestr = f'  {datetime.now()} - '
+    offset = 80 - (len(string) + len(datestr) + 2 * len(oskar))
+    if print_it:
+        print(string)
+    if add_to_error:
+        params['error'] += 'async_client.py: ' + string + '\n'
     if isinstance(params['output'], list):
-        params['output'] += f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n"
+        params['output'] += \
+            f"{oskar*count}\n{oskar}{datestr}{string}{' '*offset}{oskar}\n{oskar*count}\n"
     else:
         params['output'].write(bytearray(
-            f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n", "utf-8"))
+            f"{oskar*count}\n{oskar}{datestr}{string}{' '*offset}{oskar}\n{oskar*count}\n",
+            "utf-8"))
         params['output'].flush()
     sys.stdout.flush()
     return string + '\n'
@@ -193,7 +202,8 @@ def kill_children(identifier, params, children):
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
-    print_log(f"{identifier}: Waiting for the children to terminate", params)
+    print_log(f"{identifier}: Waiting for the children to terminate {killed} {len(children)}",
+              params)
     psutil.wait_procs(children, timeout=20)
     return err
 
@@ -259,6 +269,21 @@ class ArangoCLIprogressiveTimeoutExecutor:
             else:
                 self.deadline_signal = signal.SIGINT
 
+    def dig_for_children(self):
+        """ manual search for children that may be there without the self.pid still being there """
+        children = []
+        for process in psutil.process_iter(["pid", "ppid", "name"]):
+            if process.ppid() == self.pid:
+                children.append(process)
+            elif (process.ppid() == 1 and
+                  (process.name().lower().find('arango') >= 0 or
+                   process.name().lower().find('tshark') >= 0)):
+                children.append(process)
+        return children
+
+    def get_environment(self):
+        """ hook to implemnet custom environment variable setters """
+        return os.environ.copy()
 
     def run_arango_tool_monitored(
             self,
@@ -351,6 +376,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
             stderr=PIPE,
             close_fds=ON_POSIX,
             cwd=self.cfg.test_data_dir.resolve(),
+            env=self.get_environment()
         ) as process:
             # pylint: disable=consider-using-f-string
             self.pid = process.pid
@@ -396,6 +422,12 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 result_line_handler(tcount, None, params)
                 line = ""
                 try:
+                    overload = self.cfg.get_overload()
+                    if overload:
+                        add_message_to_report(
+                            params,
+                            overload,
+                            False)
                     line = queue.get(timeout=1)
                     ret = result_line_handler(0, line, params)
                     line_filter = line_filter or ret
@@ -406,7 +438,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         if close_count == 2:
                             break
                 except Empty:
-                    # print(identifier  + '..' + str(deadline_grace_count))
                     tcount += 1
                     have_progressive_timeout = tcount >= progressive_timeout
                     if have_progressive_timeout:
@@ -417,6 +448,45 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         process.kill()
                         kill_children(identifier, params, children)
                         rc_exit = process.wait()
+                    elif tcount % 30 == 0:
+                        try:
+                            children = children + process.children(recursive=True)
+                            rc_exit = process.wait(timeout=1)
+                            children = children + self.dig_for_children()
+                            add_message_to_report(
+                                params,
+                                f"{identifier} exited unexpectedly: {str(rc_exit)}",
+                                True, True)
+                            kill_children(identifier, params, children)
+                            break
+                        except psutil.NoSuchProcess:
+                            children = children + self.dig_for_children()
+                            add_message_to_report(
+                                params,
+                                f"{identifier} exited unexpectedly: {str(rc_exit)}",
+                                True, True)
+                            kill_children(identifier, params, children)
+                            break
+                        except psutil.TimeoutExpired:
+                            pass # Wait() has thrown, all is well!
+                except OSError as error:
+                    print(f"Got an OS-Error, will abort all! {error.strerror}")
+                    try:
+                        # get ALL subprocesses!
+                        children = psutil.Process().children(recursive=True)
+                    except psutil.NoSuchProcess:
+                        pass
+                    process.kill()
+                    kill_children(identifier, params, children)
+                    thread1.join()
+                    thread2.join()
+                    return {
+                        "progressive_timeout": True,
+                        "have_deadline": True,
+                        "rc_exit": -99,
+                        "line_filter": -99,
+                    }
+
                 if datetime.now() > deadline:
                     have_deadline += 1
                 if have_deadline == 1:
@@ -429,7 +499,11 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         children = process.children(recursive=True)
                     except psutil.NoSuchProcess:
                         pass
-                    process.send_signal(self.deadline_signal)
+                    try:
+                        process.send_signal(self.deadline_signal)
+                    except psutil.NoSuchProcess:
+                        children = children + self.dig_for_children()
+                        print_log(f"{identifier} process already dead!", params)
                 elif have_deadline > 1 and datetime.now() > final_deadline:
                     try:
                         # give it some time to exit:

@@ -272,7 +272,9 @@ if supported, set number of concurrent builds to `PARALLELISM`
     - `gtest`: only the gtests are to be executed
     - `ldap`: ldap
     - `enterprise`: this test is only executed with the enterprise version
-    - `!windows`: test is excluded from ps1 output
+    - `!windows`: test is excluded from Windows runs
+    - `!mac`: test is excluded from MacOS
+    - `!arm`: test is excluded from ARM Linux / MacOS hosts 
  - `--cluster` filter `test-definition.txt` for all tests flagged as `cluster`
  - `--full` - all tests including those flagged as `full` are executed.
  - `--gtest` - only gtests are executed

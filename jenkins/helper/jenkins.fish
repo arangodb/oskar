@@ -50,6 +50,10 @@ function prepareOskar
   begin test -f $HOME/.gcs-credentials; and cp $HOME/.gcs-credentials work/.gcs-credentials; end; or true
 end
 
+function clearMachine
+  python3 jenkins/helper/clear_machine.py
+end
+
 function cleanBranchName
   echo $argv[1] | sed -e 's:[^-a-zA-Z0-9_/#.+]::g'
 end
@@ -68,6 +72,7 @@ function cleanPrepareLockUpdateClear
     and lockDirectory
     and updateOskar
     and clearResults
+    and clearMachine
   else
     source helper.fish
   end
@@ -80,6 +85,7 @@ function cleanPrepareLockUpdateClear2
     and lockDirectory
     and updateOskarOnly
     and clearResults
+    and clearMachine
   else
     source helper.fish
   end
