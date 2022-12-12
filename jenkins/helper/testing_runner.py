@@ -71,6 +71,7 @@ def testing_runner(testing_instance, this, arangosh):
             this.summary += this.summary_file.read_text()
         else:
             print(f'{this.name_enum} no testreport!')
+        final_name = TEMP / this.name
         if this.crashed or not this.success:
             print(str(this.log_file.name))
             print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
@@ -85,9 +86,11 @@ def testing_runner(testing_instance, this, arangosh):
                 if this.crashed:
                     testing_instance.crashed = True
                 testing_instance.success = False
-            temp_dir = TEMP / ("FAIL_" + this.name)
-            this.temp_dir.rename(temp_dir)
-            this.temp_dir = temp_dir
+            final_name = TEMP / ("FAIL_" + this.name)
+        try:
+            this.temp_dir.rename(final_name)
+        except FileExistsError as ex:
+            print(f"can't expand the temp directory {ex} to {final_name}")
     finally:
         with arangosh.slot_lock:
             testing_instance.running_suites.remove(this.name_enum)
@@ -162,6 +165,8 @@ class TestingRunner():
             parallelity = self.scenarios[offset].parallelity
         self.used_slots += parallelity
         this = self.scenarios[offset]
+        this.counter = counter
+        this.temp_dir = TEMP / str(counter)
         this.name_enum = f"{this.name} {str(counter)}"
         print(f"launching {this.name_enum}")
         pp.pprint(this)
