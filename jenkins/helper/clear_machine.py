@@ -234,6 +234,6 @@ def main():
         tree[0].remove(0)
     print_tree(min(tree), tree)
     get_and_kill_all_processes()
-    if IS_LINUX:
-        clean_docker_containers()
+    #if IS_LINUX:
+    #    clean_docker_containers()
 main()
