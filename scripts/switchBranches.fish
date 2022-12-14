@@ -27,8 +27,7 @@ function checkoutRepo
     else
       git remote update origin
       git fetch --force --all
-      git pull
-      git reset --hard "$branch"
+      git reset --hard origin/"$branch"
     end
     and git clean -fdx
   else
