@@ -21,8 +21,10 @@ and begin
   single     ; oskarFull --isAsan true --sanitizer true ; or set s $status
   cluster    ; oskarFull --isAsan true --sanitizer true ; or set s $status
 
-  collectCoverage
-  or set s $status
+  if test $status = 0
+     collectCoverage
+     or set s $status
+  end
 end
 or set s $status
 
