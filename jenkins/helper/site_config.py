@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import signal
 import sys
@@ -55,8 +56,9 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
+ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 for env in os.environ:
-    print(f'{env}={os.environ[env]}')
+    print(f"{env}={ansi_escape.sub('', os.environ[env])}")
 TEMP = Path("/tmp/")
 if 'TMP' in os.environ:
     TEMP = Path(os.environ['TMP'])
