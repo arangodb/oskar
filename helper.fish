@@ -1940,11 +1940,11 @@ function moveResultsToWorkspace
   if test ! -z "$WORKSPACE"
     # Used in jenkins test
     echo Moving reports and logs to $WORKSPACE ...
-    if test -f $WORKDIR/work/test.log
-      for f in $WORKDIR/work/testreport* ; echo "mv $f" ; mv $f $WORKSPACE ; end
-
-      echo "mv test.log"
-      mv $WORKDIR/work/test.log $WORKSPACE
+    if head -1 $WORKDIR/work/test.log | grep -i -e ^BAD -e ^CRASH > /dev/null; or test $WORKSPACE_LOGS = "all"
+        for f in $WORKDIR/work/testreport* ; echo "mv $f" ; mv $f $WORKSPACE ; end
+      else
+        for f in $WORKDIR/work/testreport* ; echo "rm $f" ; rm $f ; end
+      end
 
       if test -f $WORKDIR/work/testProtocol.txt
         echo "mv testProtocol.txt"
