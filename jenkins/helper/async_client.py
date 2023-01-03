@@ -88,7 +88,7 @@ def delete_tail_params(params):
     params['output'].close()
     print(f"{params['identifier']} {params['lfn']} closed")
 
-def make_logfile_params(verbose, logfile, trace):
+def make_logfile_params(verbose, logfile, trace, temp_dir):
     """ create the structure to work with logfiles """
     return {
         "trace_io": True,
@@ -97,8 +97,10 @@ def make_logfile_params(verbose, logfile, trace):
         "verbose": verbose,
         "output": logfile.open('wb'),
         "identifier": "",
-        "lfn": str(logfile)
+        "lfn": str(logfile),
+        "temp_dir": temp_dir
     }
+
 def logfile_line_result(wait, line, params):
     """ Write the line to a logfile, print progress. """
     # pylint: disable=pointless-statement
@@ -156,15 +158,21 @@ def convert_result(result_array):
 
 def add_message_to_report(params, string, print_it = True, add_to_error = False):
     """ add a message from python to the report strings/files + print it """
+    oskar = 'OSKAR'
+    count = int(80 / len(oskar))
+    datestr = f'  {datetime.now()} - '
+    offset = 80 - (len(string) + len(datestr) + 2 * len(oskar))
     if print_it:
         print(string)
     if add_to_error:
         params['error'] += 'async_client.py: ' + string + '\n'
     if isinstance(params['output'], list):
-        params['output'] += f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n"
+        params['output'] += \
+            f"{oskar*count}\n{oskar}{datestr}{string}{' '*offset}{oskar}\n{oskar*count}\n"
     else:
         params['output'].write(bytearray(
-            f"{'v'*80}\n{datetime.now()}>>>{string}<<<\n{'^'*80}\n", "utf-8"))
+            f"{oskar*count}\n{oskar}{datestr}{string}{' '*offset}{oskar}\n{oskar*count}\n",
+            "utf-8"))
         params['output'].flush()
     sys.stdout.flush()
     return string + '\n'
@@ -263,11 +271,11 @@ class ArangoCLIprogressiveTimeoutExecutor:
             else:
                 self.deadline_signal = signal.SIGINT
 
-    def dig_for_children(self):
+    def dig_for_children(self, params):
         """ manual search for children that may be there without the self.pid still being there """
         children = []
         for process in psutil.process_iter(["pid", "ppid", "name"]):
-            if process.ppid() == self.pid:
+            if process.ppid() == params['pid']:
                 children.append(process)
             elif (process.ppid() == 1 and
                   (process.name().lower().find('arango') >= 0 or
@@ -275,7 +283,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 children.append(process)
         return children
 
-    def get_environment(self):
+    def get_environment(self, params):
         """ hook to implemnet custom environment variable setters """
         return os.environ.copy()
 
@@ -351,10 +359,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         children = []
         if identifier == "":
             # pylint: disable=global-statement
-            global ID_COUNTER
-            my_no = ID_COUNTER
-            ID_COUNTER += 1
-            identifier = f"IO_{str(my_no)}"
+            identifier = f"IO_{str(params.my_id)}"
         print(params)
         params['identifier'] = identifier
         if not isinstance(deadline,datetime):
@@ -370,10 +375,10 @@ class ArangoCLIprogressiveTimeoutExecutor:
             stderr=PIPE,
             close_fds=ON_POSIX,
             cwd=self.cfg.test_data_dir.resolve(),
-            env=self.get_environment()
+            env=self.get_environment(params)
         ) as process:
             # pylint: disable=consider-using-f-string
-            self.pid = process.pid
+            params['pid'] = process.pid
             queue = Queue()
             thread1 = Thread(
                 name=f"readIO {identifier}",
@@ -446,7 +451,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         try:
                             children = children + process.children(recursive=True)
                             rc_exit = process.wait(timeout=1)
-                            children = children + self.dig_for_children()
+                            children = children + self.dig_for_children(params)
                             add_message_to_report(
                                 params,
                                 f"{identifier} exited unexpectedly: {str(rc_exit)}",
@@ -454,7 +459,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                             kill_children(identifier, params, children)
                             break
                         except psutil.NoSuchProcess:
-                            children = children + self.dig_for_children()
+                            children = children + self.dig_for_children(params)
                             add_message_to_report(
                                 params,
                                 f"{identifier} exited unexpectedly: {str(rc_exit)}",
@@ -496,7 +501,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     try:
                         process.send_signal(self.deadline_signal)
                     except psutil.NoSuchProcess:
-                        children = children + self.dig_for_children()
+                        children = children + self.dig_for_children(params)
                         print_log(f"{identifier} process already dead!", params)
                 elif have_deadline > 1 and datetime.now() > final_deadline:
                     try:

@@ -24,7 +24,7 @@ set -gx UBUNTUBUILDIMAGE4_TAG 20
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
 
 set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 13
+set -gx UBUNTUBUILDIMAGE5_TAG 14
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
@@ -1040,7 +1040,7 @@ function makeDockerMultiarch
       set MANIFEST_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
     end
 
-    if test "$RELEASE_IS_HEAD" = "true"
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
       set MANIFEST_NAME2 arangodb/enterprise-preview:latest
     end
   else
@@ -1050,7 +1050,7 @@ function makeDockerMultiarch
       set MANIFEST_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
     end
 
-    if test "$RELEASE_IS_HEAD" = "true"
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
       set MANIFEST_NAME2 arangodb/arangodb-preview:latest
     end
   end
