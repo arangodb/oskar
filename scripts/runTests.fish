@@ -62,9 +62,9 @@ switch $TESTSUITE
     set -xg timeLimit 4200
     set suiteRunner "launchClusterTests"
   case "single"
-    resetLaunch 1
-    set -xg  timeLimit 3900
-    set suiteRunner "launchSingleTests"
+    resetLaunch 4
+    set -xg  timeLimit 4200
+    set suiteRunner "launchClusterTests"
   case "gtest"
     resetLaunch 1
     set -xg  timeLimit 1800
