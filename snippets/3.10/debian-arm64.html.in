@@ -3,7 +3,7 @@
     The following packages are for Debian-based Linux distributions.
   </p>
   <p>
-    The processor(s) must be 64-bit ARM chips (<strong>AArch64</strong>).
+    The processor(s) must be 64-bit ARM chips (<strong>AArch64</strong>, Little Endian).
     The minimum requirement is <strong>ARMv8</strong> with <strong>Neon</strong>
     (SIMD extension).
   </p>
