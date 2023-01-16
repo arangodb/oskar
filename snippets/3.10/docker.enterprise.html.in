@@ -3,6 +3,10 @@
     ArangoDB is available as a multi-architecture Docker image.
   </p>
   <p>
+    You can run container images on Linux, as well as on macOS and Windows with
+    <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener noreferrer">Docker Desktop</a>, for instance.
+  </p>
+  <p>
     For the <code>linux/amd64</code> image variant,
     the processor(s) must support the <strong>x86-64</strong> instruction set,
     as well as the <strong>SSE 4.2</strong> and <strong>AVX</strong> instruction
