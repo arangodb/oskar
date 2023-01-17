@@ -21,8 +21,8 @@ and begin
   set -l TMPDIR_O "$TMPDIR"
   set -l TMPDIR_SG "$TMPDIR/sg"
   set -l TMPDIR_CL "$TMPDIR/cl"
-  if test -d $TMPDIR_SG; rm -rf $TMPDIR_SG; end
-  if test -d $TMPDIR_CL; rm -rf $TMPDIR_CL; end
+  if test -d $TMPDIR_SG ; rm -rf $TMPDIR_SG ; end
+  if test -d $TMPDIR_CL ; rm -rf $TMPDIR_CL ; end
   mkdir $TMPDIR_SG
   mkdir $TMPDIR_CL
   set TMPDIR $TMPDIR_SG
