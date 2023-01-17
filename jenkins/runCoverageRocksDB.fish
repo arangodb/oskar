@@ -27,10 +27,12 @@ and begin
   mkdir $TMPDIR_CL
   set TMPDIR $TMPDIR_SG
   single     ; oskarFull --isAsan true --sanitizer true ; or set s $status
+  echo "S: $s"
   set TMPDIR $TMPDIR_CL
   cluster    ; oskarFull --isAsan true --sanitizer true ; or set s $status
+  echo "S: $s"
   set TMPDIR $TMPDIR_O
-
+  echo $status
   if test $status = 0
      collectCoverage
      or set s $status
