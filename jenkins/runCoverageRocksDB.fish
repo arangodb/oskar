@@ -18,20 +18,11 @@ and begin
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
 
   rocksdb
-  set -l TMPDIR_O "$TMPDIR"
-  set -l TMPDIR_SG "$TMPDIR/sg"
-  set -l TMPDIR_CL "$TMPDIR/cl"
-  if test -d $TMPDIR_SG ; rm -rf $TMPDIR_SG ; end
-  if test -d $TMPDIR_CL ; rm -rf $TMPDIR_CL ; end
-  mkdir $TMPDIR_SG
-  mkdir $TMPDIR_CL
-  set TMPDIR $TMPDIR_SG
   single     ; oskarFull --isAsan true --sanitizer true ; or set s $status
-  echo "S: $s"
-  set TMPDIR $TMPDIR_CL
+  moveResultsToWorkspace
+  setupTmp
   cluster    ; oskarFull --isAsan true --sanitizer true ; or set s $status
   echo "S: $s"
-  set TMPDIR $TMPDIR_O
   echo $status
   if test $status = 0
      collectCoverage
