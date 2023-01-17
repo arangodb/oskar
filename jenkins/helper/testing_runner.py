@@ -351,17 +351,26 @@ class TestingRunner():
         needed = [
             'tzdata',
             'icudtl.dat',
-            'arangod',
-            'arangosh',
-            'arangodump',
-            'arangorestore',
-            'arangoimport',
+            'fuertetest',
+            'arangovpack',
             'arangobackup',
-            'arangodbtests']
+            'arangosh',
+            'arangoexport',
+            'arangoinspect',
+            'arangoimport',
+            'arangoimp',
+            'arango-secure-installation',
+            'foxx-manager',
+            'arangorestore',
+            'arangobench',
+            'snowball',
+            'arangodbtests',
+            'arangod',
+            'arango-init-database',
+            'arangodump']
         for one_file in self.cfg.bin_dir.iterdir():
             if (one_file.suffix == '.lib' or
-                (one_file.stem not in needed) or
-                not one_file.is_symlink()):
+                (one_file.stem not in needed)):
                 print(f'Deleting {str(one_file)}')
                 one_file.unlink(missing_ok=True)
 
