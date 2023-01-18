@@ -20,7 +20,6 @@ and begin
   rocksdb
   single     ; oskarFull --isAsan true --sanitizer true ; or set s $status
   moveResultsToWorkspace
-  setupTmp
   cluster    ; oskarFull --isAsan true --sanitizer true ; or set s $status
   echo "S: $s"
   echo $status
