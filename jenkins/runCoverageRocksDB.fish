@@ -23,7 +23,7 @@ and begin
   cluster    ; oskarFull --isAsan true --sanitizer true ; or set s $status
   echo "S: $s"
   echo $status
-  if test $status = 0
+  if test $status -eq 0
      collectCoverage
      or set s $status
   end
