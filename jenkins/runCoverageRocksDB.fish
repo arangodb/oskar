@@ -18,6 +18,7 @@ and begin
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
 
   rocksdb
+  set -e GCOV On
   single     ; oskarFull --isAsan true --sanitizer true ; or set s $status
   moveResultsToWorkspace
   setupTmp
