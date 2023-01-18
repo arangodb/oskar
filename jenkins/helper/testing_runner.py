@@ -350,7 +350,7 @@ class TestingRunner():
         shutil.rmtree(str(self.cfg.bin_dir / 'tzdata'))
         needed = [
             'tzdata',
-            'icudtl.dat',
+            'icudtl',
             'fuertetest',
             'arangovpack',
             'arangobackup',
