@@ -138,7 +138,7 @@ class SiteConfig:
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
         self.is_gcov = 'GCOV' in os.environ and os.environ['GCOV'] == 'On'
-        if self.is_asan or is_gcov:
+        if self.is_asan or self.is_gcov:
             print(('SAN' if self.is_asan else 'GCOV') + 'enabled, reducing possible system capacity')
             self.rapid_fire = 1
             self.available_slots /= 4
