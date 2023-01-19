@@ -139,7 +139,7 @@ class SiteConfig:
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
         self.is_gcov = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
         if self.is_asan or self.is_gcov:
-            print(('SAN' if self.is_asan else 'GCOV') + 'enabled, reducing possible system capacity')
+            print(('SAN' if self.is_asan else 'GCOV') + ' enabled, reducing possible system capacity')
             self.rapid_fire = 1
             self.available_slots /= 4
             #self.timeout *= 1.5
