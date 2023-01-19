@@ -10,9 +10,9 @@
   </p>
   <p>
     For the <code>linux/arm64/v8</code> image variant,
-    the processor(s) must be 64-bit ARM chips (<strong>AArch64</strong>, Little Endian).
+    the processor(s) must be 64-bit ARM chips (<strong>AArch64</strong>).
     The minimum requirement is <strong>ARMv8</strong> with <strong>Neon</strong>
-    (SIMD extension).
+    (SIMD extension). A system with Little Endian byte order is required.
   </p>
   <p>
     In order to install the stand-alone version use
