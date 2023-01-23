@@ -549,10 +549,12 @@ class TestingRunner():
 
     def register_test_func(self, cluster, test):
         """ print one test function """
+        print('santoehuasnoetuh')
+        print(test)
         args = test["args"]
         params = test["params"]
         suffix = params.get("suffix", "")
-        name = test["name"]
+        name = test['prefix'] + test["name"]
         if suffix:
             name += f"_{suffix}"
 

@@ -19,6 +19,8 @@ if sys.version_info[0] != 3:
 
 def filter_tests(args, tests):
     """ filter testcase by operations target Single/Cluster/full """
+    for one in tests:
+        one['prefix'] = ""
     if args.all:
         return tests
 
@@ -52,13 +54,19 @@ def filter_tests(args, tests):
 
         filtered = copy.deepcopy(tests)
         for one_filter in filters:
+            print('zzzzz')
+            
+            print(one_filter)
             filtered = filter(one_filter, filtered)
         return filtered
     if args.both:
-        args.suffix = "sg"
         res_sg = list(list_generator(False))
-        args.suffix = "cl"
+        for one in res_sg:
+            print(one)
+            one['prefix'] = "sg_"
         res_cl = list(list_generator(True))
+        for one in res_cl:
+            one['prefix'] = "cl_"
         return res_sg + res_cl
     else:
         return list(list_generator(args.cluster))
@@ -84,6 +92,7 @@ known_flags = {
 }
 
 known_parameter = {
+    "prefix": 'internal',
     "buckets": "number of buckets to use for this test",
     "suffix": "suffix that is appended to the tests folder name",
     "priority": "priority that controls execution order. Testsuites with lower priority are executed later",
