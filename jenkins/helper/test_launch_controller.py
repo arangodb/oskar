@@ -55,7 +55,11 @@ def filter_tests(args, tests):
             filtered = filter(one_filter, filtered)
         return filtered
     if args.both:
-        return list(list_generator(True)) + list(list_generator(False))
+        args.suffix = "sg"
+        res_sg = list(list_generator(False))
+        args.suffix = "cl"
+        res_cl = list(list_generator(True))
+        return res_sg + res_cl
     else:
         return list(list_generator(args.cluster))
 
