@@ -810,8 +810,7 @@ function buildTarGzPackageHelper
   and ln -s "$name-$v$arch" "$name-$os-$v$arch"
   and tar -c -z -f "$WORKDIR/work/$name-$os-$v$arch.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
   and rm -rf "$name-$os-$v$arch"
-  set s $
-  status
+  set s $status
 
   if test "$s" -eq 0
     rm -rf "$name-client-$os-$v$arch"
