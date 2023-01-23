@@ -3,6 +3,10 @@
     ArangoDB is available as a multi-architecture Docker image.
   </p>
   <p>
+    You can run container images on Linux, as well as on macOS and Windows with
+    <a href="https://www.docker.com/products/docker-desktop/" target="_blank" rel="noopener noreferrer">Docker Desktop</a>, for instance.
+  </p>
+  <p>
     For the <code>linux/amd64</code> image variant,
     the processor(s) must support the <strong>x86-64</strong> instruction set,
     as well as the <strong>SSE 4.2</strong> and <strong>AVX</strong> instruction
@@ -15,15 +19,12 @@
     (SIMD extension). A system with Little Endian byte order is required.
   </p>
   <p>
-    In order to install the stand-alone version use
+    In order to install the stand-alone version, use:
     <pre>docker run -p 8529:8529 -e ARANGO_ROOT_PASSWORD=openSesame @DOCKER_IMAGE@</pre>
   </p>
   <p>
-    See the
-    <a href="https://www.arangodb.com/docs/@ARANGODB_PACKAGES@/deployment-docker.html" target="_blank">
-      Docker Deployment
-    </a>
-    section in the documentation about running ArangoDB in containers
-    and how to persist your data under Docker.
+    See the documentation on
+    <a href="https://hub.docker.com/_/arangodb" target="_blank" rel="noopener noreferrer">Docker Hub</a>
+    about running ArangoDB in containers and how to persist your data under Docker.
   </p>
 </div>
