@@ -94,6 +94,7 @@ end
 
 function single ; set -gx TESTSUITE single ; end
 function cluster ; set -gx TESTSUITE cluster ; end
+function both ; set -gx TESTSUITE both ; end
 function resilience ; set -gx TESTSUITE resilience ; end
 function catchtest ; set -gx TESTSUITE gtest ; end
 function gtest ; set -gx TESTSUITE gtest ; end
@@ -809,7 +810,8 @@ function buildTarGzPackageHelper
   and ln -s "$name-$v$arch" "$name-$os-$v$arch"
   and tar -c -z -f "$WORKDIR/work/$name-$os-$v$arch.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
   and rm -rf "$name-$os-$v$arch"
-  set s $status
+  set s $
+  status
 
   if test "$s" -eq 0
     rm -rf "$name-client-$os-$v$arch"
@@ -1519,7 +1521,7 @@ function showConfig
   printf $fmt3 'SkipGrey'       $SKIPGREY      '(skipGrey/includeGrey)'
   printf $fmt3 'OnlyGrey'       $ONLYGREY      '(onlyGreyOn/onlyGreyOff)'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'
-  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/gtest)'
+  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/both/resilience/gtest)'
   printf $fmt2 'Log Levels'     (echo $LOG_LEVELS)
   echo
   echo 'Package Configuration'

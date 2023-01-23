@@ -18,9 +18,7 @@ and begin
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
 
   rocksdb
-  single     ; oskarFull --isAsan true --sanitizer true ; or set s $status
-  moveResultsToWorkspace
-  cluster    ; oskarFull --isAsan true --sanitizer true ; or set s $status
+  both     ; oskarFull --isAsan true --sanitizer true ; or set s $status
   echo "S: $s"
   echo $status
   if test $status -eq 0
