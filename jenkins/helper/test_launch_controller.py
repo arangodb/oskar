@@ -54,9 +54,6 @@ def filter_tests(args, tests):
 
         filtered = copy.deepcopy(tests)
         for one_filter in filters:
-            print('zzzzz')
-            
-            print(one_filter)
             filtered = filter(one_filter, filtered)
         return filtered
     if args.both:
