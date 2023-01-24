@@ -425,9 +425,8 @@ class TestingRunner():
             if one_file.exists():
                 zip_slot_array[count % zip_slots].append(one_file)
                 count += 1
-        print(zip_slot_array)
         zippers = []
-        print("coredump launching zipper sub processes")
+        print(f"coredump launching zipper sub processes {zip_slot_array}")
         for zip_slot in zip_slot_array:
             if len(zip_slot) > 0:
                 proc = Process(target=zipp_this, args=(zip_slot, core_zip_dir))
