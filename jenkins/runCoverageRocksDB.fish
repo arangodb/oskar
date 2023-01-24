@@ -24,7 +24,6 @@ and begin
   if test "$s" -eq 1
      set exticode 5
   end
-set exticode
   collectCoverage
 end
 or set exitcode $status
