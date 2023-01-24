@@ -2,7 +2,7 @@
 source jenkins/helper/jenkins.fish
 
 set s 0
-set exticode 0
+set exitcode 0
 cleanPrepareLockUpdateClear
 and enterprise
 and maintainerOn
@@ -22,7 +22,7 @@ and begin
   echo "S: $s"
   echo $status
   if test "$s" -eq 1
-     set exticode 5
+     set exitcode 5
   end
   collectCoverage
 end
