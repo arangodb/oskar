@@ -47,10 +47,10 @@ and gcovr --exclude-throw-branches --root /work/ArangoDB \
         -e /work/ArangoDB/build/3rdParty/libunwind/v* \
         -e /work/ArangoDB/build/3rdParty/libunwind/v*/src/ \
         -e /work/ArangoDB/3rdParty \
-        -e /work/ArangoDB/3rdParty/jemalloc/v*/
+        -e /work/ArangoDB/3rdParty/jemalloc/v*/ \
         -e /work/ArangoDB/usr/ \
         -e /work/ArangoDB/tests \
-        -e include/jemalloc/internal \
+        -e /work/ArangoDB/arangod/Aql \
         -o coverage/coverage.xml \
         --exclude-lines-by-pattern "TRI_ASSERT" \
         --print-summary \
