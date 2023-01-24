@@ -30,4 +30,4 @@ or set exitcode $status
 
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 echo "exiting $exitcode"
-exit exitcode
+exit $exitcode
