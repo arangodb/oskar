@@ -44,7 +44,10 @@ and mkdir coverage/enterprise
 and gcovr --exclude-throw-branches --root /work/ArangoDB \
         -x \
         -e /work/ArangoDB/build \
+        -e /work/ArangoDB/build/3rdParty/libunwind/v* \
+        -e /work/ArangoDB/build/3rdParty/libunwind/v*/src/ \
         -e /work/ArangoDB/3rdParty \
+        -e /work/ArangoDB/3rdParty/jemalloc/v*/
         -e /work/ArangoDB/usr/ \
         -e /work/ArangoDB/tests \
         -e include/jemalloc/internal \
