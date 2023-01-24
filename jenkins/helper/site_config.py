@@ -138,15 +138,19 @@ class SiteConfig:
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
         self.is_gcov = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
+        san_gcov_msg = ""
         if self.is_asan or self.is_gcov:
-            print(('SAN' if self.is_asan else 'GCOV') + ' enabled, reducing possible system capacity')
+            san_gcov_msg = ' - SAN '
+            if os.environ['SAN_MODE'] == 'AULSan':
+                san_gcov_msg = ' - AUL-SAN '
+            elif self.is_gcov:
+                san_gcov_msg = ' - GCOV'
+            san_gcov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
             self.available_slots /= 4
             #self.timeout *= 1.5
             self.loop_sleep *= 2
             self.max_load /= 2
-            if os.environ['SAN_MODE'] == 'AULSan':
-                print('Aulsan must reduce even more!')
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -178,7 +182,7 @@ class SiteConfig:
  - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
  - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
  - {socket_count} number of currently active tcp sockets
- """)
+{san_gcov_msg}""")
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
