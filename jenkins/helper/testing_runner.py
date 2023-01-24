@@ -507,6 +507,10 @@ class TestingRunner():
         """ create the log file with the stati """
         logfile = get_workspace() / 'test.log'
         with open(logfile, "w", encoding="utf-8") as filep:
+            state = 'GOOD\n'
+            if not self.success or self.crashed:
+                state  = 'BAD\n'
+            filep.write(state)
             for one_scenario in self.scenarios:
                 filep.write(one_scenario.print_test_log_line())
 
