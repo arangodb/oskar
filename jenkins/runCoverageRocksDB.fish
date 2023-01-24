@@ -2,7 +2,7 @@
 source jenkins/helper/jenkins.fish
 
 set s 0
-
+set exticode 0
 cleanPrepareLockUpdateClear
 and enterprise
 and maintainerOn
@@ -21,12 +21,14 @@ and begin
   both     ; oskarFull --isAsan true --sanitizer true ; or set s $status
   echo "S: $s"
   echo $status
-  if test $status -eq 0
-     collectCoverage
-     or set s $status
+  if test "$s" -eq 1
+     set exticode 5
   end
+set exticode
+  collectCoverage
 end
-or set s $status
+or set exitcode $status
 
-cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
-exit $s
+cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
+echo "exiting $exitcode"
+exit exitcode
