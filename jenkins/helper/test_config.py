@@ -115,9 +115,9 @@ class TestConfig():
         # pylint: disable=consider-using-f-string
         resultstr = "Good result in"
         if not self.success:
-            resultstr = "Bad result in"
+            resultstr = "BAD result in"
         if self.crashed:
-            resultstr = "Crash occured in"
+            resultstr = "BAD Crash occured in"
         return """
 {1} {0.name} => {0.delta_seconds}, {0.parallelity}, {0.priority}, {0.success} -- {2}""".format(
             self,
