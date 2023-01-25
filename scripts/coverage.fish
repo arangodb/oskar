@@ -50,7 +50,6 @@ and gcovr --exclude-throw-branches --root /work/ArangoDB \
         -e /work/ArangoDB/3rdParty/jemalloc/v*/ \
         -e /work/ArangoDB/usr/ \
         -e /work/ArangoDB/tests \
-        -e /work/ArangoDB/arangod/Aql \
         -o coverage/coverage.xml \
         --exclude-lines-by-pattern "TRI_ASSERT" \
         --print-summary \
@@ -60,7 +59,8 @@ and cat coverage/coverage.xml \
       > coverage/coverage.xml.tmp
 and mv coverage/coverage.xml.tmp coverage/coverage.xml
 and for d in lib arangosh client-tools arangod enterprise/Enterprise
-  if test -d $d
+  if test -d /work/ArangoDB/$d
+  	echo "cp -a /work/ArangoDB/$d coverage/$d"
   	cp -a /work/ArangoDB/$d coverage/$d
   end
 end
