@@ -57,6 +57,7 @@ and gcovr --exclude-throw-branches --root /work/ArangoDB \
 and cat coverage/coverage.xml \
       | sed -e "s:filename=\":filename=\"./coverage/:g" \
       > coverage/coverage.xml.tmp
+and mv coverage/coverage.xml coverage/coverage.org.xml
 and mv coverage/coverage.xml.tmp coverage/coverage.xml
 and for d in lib arangosh client-tools arangod enterprise/Enterprise
   if test -d /work/ArangoDB/$d
