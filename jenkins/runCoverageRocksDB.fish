@@ -19,8 +19,6 @@ and begin
 
   rocksdb
   both     ; oskarFull --isAsan true --sanitizer true ; or set s $status
-  echo "S: $s"
-  echo $status
   if test "$s" -eq 1
      set exitcode 5
   end
