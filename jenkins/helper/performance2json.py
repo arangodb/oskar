@@ -7,6 +7,7 @@ import json
 import datetime as dt
 import statistics
 import sys
+import re
 from abc import abstractmethod, ABC
 
 from dateutil import parser as dt_parser
@@ -58,9 +59,10 @@ class CSVTranslator(ABC):
 
     def load_version_file(self):
         """ the version file contains information about the SUT, load it. """
+        # pylint: disable=too-many-branches
         j = None
         if self.version_filename:
-            with open(self.version_filename) as jsonfile:
+            with open(self.version_filename, encoding="utf-8") as jsonfile:
                 j = json.load(jsonfile)
 
             if not self.edition:
@@ -72,7 +74,7 @@ class CSVTranslator(ABC):
                     self.mode = 'cluster'
 
             if not self.version:
-               self.version = j['version']
+                self.version = j['version']
 
             if not self.version:
                 if self.name:
@@ -80,26 +82,27 @@ class CSVTranslator(ABC):
                 else:
                     self.version = self.branch
         elif self.version_textname:
-            with open(self.version_textname) as textfile:
-                c = 0
+            with open(self.version_textname, encoding="utf-8") as textfile:
+                char_c = 0
+                stripped_line = ""
                 for line in textfile.readlines():
-                    c += 1
-                    s = line.strip()
+                    char_c += 1
+                    stripped_line = line.strip()
 
-                if c == 1:
-                    if not version:
-                        self.version = s
+                if char_c == 1:
+                    if not self.version:
+                        self.version = stripped_line
                 else:
-                    m = re.search('(license):\W*(.+)$', s)
+                    match = re.search(r'(license):\W*(.+)$', stripped_line)
 
-                    if m:
-                        if m.group(1):
-                            if not edition:
-                                self.edition = m.group(2)
+                    if match:
+                        if match.group(1):
+                            if not self.edition:
+                                self.edition = match.group(2)
 
     def process_csv_file(self):
         """ load the CSV file and iterate it line by line """
-        with open(self.csv_filename) as csvfile:
+        with open(self.csv_filename, encoding="utf-8") as csvfile:
             lines = csv.reader(csvfile, delimiter=',', quotechar='|')
             row_num = 0
             for row_data in lines:
@@ -117,7 +120,7 @@ class CSVTranslator(ABC):
 class SimplePerformance(CSVTranslator):
     """ process simple perfomance tests CSV-Files """
     def process_csv_line(self, row_num, row_data):
-
+        # pylint: disable=too-many-branches
         size = "big"
         if len(row_data) > 11:
             size = row_data[11]
@@ -284,54 +287,33 @@ class DDLPerformanceCluster(CSVTranslator):
 
         print(json.dumps(result))
 
-class Coverage():
-    def __init__(self,
-                 csv_filename,
-                 version_filename,
-                 version,
-                 date,
-                 branch,
-                 name,
-                 mode,
-                 edition,
-                 size,
-                 collections_per_database,
-                 indexes_per_collection,
-                 no_shards,
-                 replication_factor):
-        self.version = version
-        self.branch = branch
-        self.current_date = None
+class Coverage(CSVTranslator):
+    """ load coverage csv files """
+    def process_csv_line(self, row_num, row_data):
+        """ process one csv line """
 
-        if date:
-            self.current_date = dt_parser.parse(date)
-        else:
-            self.current_date = dt.datetime.now()
-
-    def load_version_file(self):
-        pass
-
-    def process_csv_file():
+    def process_csv_file(self):
+        """ load a coverage CSV file and output it as json string """
         lines = []
-        with open(options.filename) as textfile:
+        with open(self.csv_filename, encoding="utf-8") as textfile:
             lines = textfile.readlines()
 
         result = {}
         date = self.current_date
 
         for line in lines:
-            s = line.strip()
+            stripped_line = line.strip()
 
-            m = re.search('(lines|branches):\W*([0-9\.]+)%', s)
+            match = re.search(r'(lines|branches):\W*([0-9\.]+)%', stripped_line)
 
-            if m:
-                result[m.group(1)] = m.group(2)
+            if match:
+                result[match.group(1)] = match.group(2)
 
         print(json.dumps({
             "coverage": result,
             "configuration": {
-                "version": version,
-                "branch": branch
+                "version": self.version,
+                "branch": self.branch
             },
             "isoDate": date.isoformat(),
             "date": date.timestamp(),
@@ -396,7 +378,7 @@ def convert_file(filename,
     elif input_type == "coverage":
         create_class = Coverage
     else:
-        print("unknown output format '%s'" % (input_type))
+        print(f"unknown output format '{input_type}'")
         return 1
 
     inst = create_class(filename,
@@ -418,4 +400,5 @@ def convert_file(filename,
     return 0
 
 if __name__ == "__main__":
+    # pylint: disable=no-value-for-parameter # fix clickiness.
     sys.exit(convert_file())
