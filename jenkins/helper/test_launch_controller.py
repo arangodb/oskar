@@ -59,7 +59,6 @@ def filter_tests(args, tests):
     if args.both:
         res_sg = list(list_generator(False))
         for one in res_sg:
-            print(one)
             one['prefix'] = "sg_"
         res_cl = list(list_generator(True))
         for one in res_cl:
