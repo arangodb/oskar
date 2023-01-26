@@ -2,7 +2,7 @@
 set -g SCRIPTS (dirname (status -f))
 source $SCRIPTS/lib/tests.fish
 
-set ENTERPRISE_ARG ""
+set ENTERPRISE_ARG "--no-enterprise"
 if test "$ENTERPRISEEDITION" = "On"
    set ENTERPRISE_ARG "--enterprise"
 end
