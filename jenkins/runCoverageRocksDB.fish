@@ -9,6 +9,7 @@ and maintainerOn
 and sanOff
 and coverageOn
 and skipGrey
+and single_cluster
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and set -gx NOSTRIP 1
 and showConfig
@@ -17,8 +18,7 @@ and begin
   rm -rf $WORKDIR/work/gcov.old
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
 
-  rocksdb
-  single_cluster     ; oskarFull --isAsan true --sanitizer true ; or set s $status
+  oskarFull --isAsan true --sanitizer true ; or set s $status
   if test "$s" -eq 1
      set exitcode 5
   end
