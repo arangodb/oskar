@@ -37,7 +37,7 @@ function launchClusterTests
 end
 
 ################################################################################
-## both tests: runtime,command
+## single and cluster tests: runtime,command
 ################################################################################
 
 function launchSingleClusterTests
