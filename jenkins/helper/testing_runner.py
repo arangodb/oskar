@@ -91,6 +91,13 @@ def testing_runner(testing_instance, this, arangosh):
             this.temp_dir.rename(final_name)
         except FileExistsError as ex:
             print(f"can't expand the temp directory {ex} to {final_name}")
+    except Exception as ex:
+        this.crashed = True
+        this.success = False
+        this.summary = f"Python exception caught during test execution: {ex}"
+        this.finish = datetime.now(tz=None)
+        this.delta = this.finish - this.start
+        this.delta_seconds = this.delta.total_seconds()
     finally:
         with arangosh.slot_lock:
             testing_instance.running_suites.remove(this.name_enum)
@@ -500,6 +507,10 @@ class TestingRunner():
         """ create the log file with the stati """
         logfile = get_workspace() / 'test.log'
         with open(logfile, "w", encoding="utf-8") as filep:
+            state = 'GOOD\n'
+            if not self.success or self.crashed:
+                state  = 'BAD\n'
+            filep.write(state)
             for one_scenario in self.scenarios:
                 filep.write(one_scenario.print_test_log_line())
 

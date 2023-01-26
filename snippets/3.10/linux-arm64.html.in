@@ -7,7 +7,7 @@
   <p>
     The processor(s) must be 64-bit ARM chips (<strong>AArch64</strong>).
     The minimum requirement is <strong>ARMv8</strong> with <strong>Neon</strong>
-    (SIMD extension).
+    (SIMD extension). A system with Little Endian byte order is required.
   </p>
   <hr/>
   <p><strong>Tar</strong> package</p>
