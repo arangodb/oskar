@@ -39,6 +39,9 @@ def filter_tests(args, tests):
         if args.gtest:
             filters.append(lambda test: "gtest" ==  test["name"])
 
+        if not args.enterprise:
+            filters.append(lambda test: "enterprise" not in test["flags"])
+
         if IS_WINDOWS:
             filters.append(lambda test: "!windows" not in test["flags"])
 
@@ -121,6 +124,7 @@ def parse_arguments():
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
     parser.add_argument("--single_cluster", help="process cluster cluster and single tests", action="store_true")
+    parser.add_argument("--enterprise", help="add enterprise tests", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
     parser.add_argument("--gtest", help="only run gtest", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")

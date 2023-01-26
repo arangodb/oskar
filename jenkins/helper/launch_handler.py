@@ -25,7 +25,7 @@ def launch(args, tests):
         dmesg_thread.start()
         time.sleep(3)
     for test in tests:
-        runner.register_test_func(args.cluster, test)
+        runner.register_test_func(test)
     runner.sort_by_priority()
     print(runner.scenarios)
     create_report = True

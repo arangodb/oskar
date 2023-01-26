@@ -550,7 +550,7 @@ class TestingRunner():
 </table>
 ''')
 
-    def register_test_func(self, cluster, test):
+    def register_test_func(self, test):
         """ print one test function """
         args = test["args"]
         params = test["params"]
@@ -561,18 +561,12 @@ class TestingRunner():
 
         if test["parallelity"] :
             parallelity = test["parallelity"]
-        if 'single' in test['flags'] and cluster:
-            return
-        if 'cluster' in test['flags'] and not cluster:
-            return
-        if cluster:
+        if 'cluster' in test['flags']:
             self.cluster = True
             if parallelity == 1:
                 parallelity = 4
             args += ['--cluster', 'true',
                      '--dumpAgencyOnError', 'true']
-        if "enterprise" in test["flags"]:
-            return
         if "ldap" in test["flags"] and not 'LDAPHOST' in os.environ:
             return
 
