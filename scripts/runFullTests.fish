@@ -15,7 +15,7 @@ end
 
 function launchSingleTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full $ENTERPRISE_ARG
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full "$ENTERPRISE_ARG"
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -25,7 +25,7 @@ end
 ################################################################################
 
 function launchGTest
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest $ENTERPRISE_ARG
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest "$ENTERPRISE_ARG"
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -36,7 +36,7 @@ end
 
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full $ENTERPRISE_ARG
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full "$ENTERPRISE_ARG"
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -47,7 +47,7 @@ end
 
 function launchSingleClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster --full $ENTERPRISE_ARG
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster --full "$ENTERPRISE_ARG"
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
