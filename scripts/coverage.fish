@@ -66,7 +66,7 @@ and for d in lib arangosh client-tools arangod enterprise/Enterprise
   	cp -a /work/ArangoDB/$d coverage/$d
   end
 and if test -d /work/ArangoDB/enterprise/tests
-        mkdir -p coverage/enterprise/tests
+        echo "cp -a /work/ArangoDB/enterprise/tests coverage/enterprise/tests"
         cp -a /work/ArangoDB/enterprise/tests coverage/enterprise/tests
     end
 end
