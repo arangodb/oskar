@@ -41,6 +41,7 @@ and tar x -f /tmp/gcno.tar -C /work/combined/result
 and rm -rf coverage
 and mkdir coverage
 and mkdir coverage/enterprise
+and ln -s /work/ArangoDB/3rdParty/jemalloc/v*/include /work/ArangoDB/include
 and gcovr --exclude-throw-branches --root /work/ArangoDB \
         -x \
         -e /work/ArangoDB/build \
@@ -64,4 +65,8 @@ and for d in lib arangosh client-tools arangod enterprise/Enterprise
   	echo "cp -a /work/ArangoDB/$d coverage/$d"
   	cp -a /work/ArangoDB/$d coverage/$d
   end
+and if test -d /work/ArangoDB/enterprise/tests
+        mkdir -p coverage/enterprise/tests
+        cp -a /work/ArangoDB/enterprise/tests coverage/enterprise/tests
+    end
 end
