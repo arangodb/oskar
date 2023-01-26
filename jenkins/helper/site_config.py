@@ -137,17 +137,20 @@ class SiteConfig:
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
+        self.is_aulsan = self.is_asan and os.environ['SAN_MODE'] == 'AULSan'
         self.is_gcov = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
         san_gcov_msg = ""
         if self.is_asan or self.is_gcov:
             san_gcov_msg = ' - SAN '
-            if os.environ['SAN_MODE'] == 'AULSan':
+            slot_divisor = 4
+            if self.is_aulsan:
                 san_gcov_msg = ' - AUL-SAN '
             elif self.is_gcov:
                 san_gcov_msg = ' - GCOV'
+                slot_divisor = 3
             san_gcov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
-            self.available_slots /= 4
+            self.available_slots /= slot_divisor
             #self.timeout *= 1.5
             self.loop_sleep *= 2
             self.max_load /= 2
