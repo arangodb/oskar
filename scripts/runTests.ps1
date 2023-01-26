@@ -11,7 +11,7 @@ Function global:registerSingleTests()
     Write-Host "Registering tests..."
 
     $env:TIMELIMIT = 3900
-    Set-Variable -Name ENTERPRISE_ARG ""
+    Set-Variable -Name ENTERPRISE_ARG "--no-enterprise"
     If ($ENTERPRISEEDITION -eq "On")
     {
         Set-Variable -Name ENTERPRISE_ARG "--enterprise"
@@ -19,7 +19,7 @@ Function global:registerSingleTests()
 
     Write-Host "Using test definitions from repo..."
     pip install py7zr
-    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt" -logfile $false -priority "Normal" $ENTERPRISE_ARG
+    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt $ENTERPRISE_ARG" -logfile $false -priority "Normal" 
 }
 
 Function global:registerClusterTests()
@@ -28,7 +28,7 @@ Function global:registerClusterTests()
     Write-Host "Registering tests..."
 
     $env:TIMELIMIT = 6600
-    Set-Variable -Name ENTERPRISE_ARG ""
+    Set-Variable -Name ENTERPRISE_ARG "--no-enterprise"
     If ($ENTERPRISEEDITION -eq "On")
     {
         Set-Variable -Name ENTERPRISE_ARG "--enterprise"
@@ -36,7 +36,7 @@ Function global:registerClusterTests()
 
     Write-Host "Using test definitions from repo..."
     pip install py7zr
-    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt --cluster" -logfile $false -priority "Normal"  $ENTERPRISE_ARG
+    proc -process "python.exe" -argument "$env:WORKSPACE\jenkins\helper\test_launch_controller.py $INNERWORKDIR\ArangoDB\tests\test-definitions.txt --cluster $ENTERPRISE_ARG" -logfile $false -priority "Normal"
 }
 
 runTests
