@@ -59,23 +59,24 @@ def filter_tests(args, tests):
         filtered = copy.deepcopy(tests)
         for one_filter in filters:
             filtered = filter(one_filter, filtered)
+        remaining_tests = list(filtered)
         if cluster:
             # after we filtered for cluster only tests, we now need to make sure
             # that tests are actually launched as cluster tests:
-            for one in filtered:
+            for one in remaining_tests:
                 if not 'cluster' in one['flags']:
                     one['flags'].append('cluster')
-        return filtered
+        return remaining_tests
 
     if args.single_cluster:
-        res_sg = list(list_generator(False))
+        res_sg = list_generator(False)
         for one in res_sg:
             one['prefix'] = "sg_"
-        res_cl = list(list_generator(True))
+        res_cl = list_generator(True)
         for one in res_cl:
             one['prefix'] = "cl_"
         return res_sg + res_cl
-    return list(list_generator(args.cluster))
+    return list_generator(args.cluster)
 
 formats = {
     "dump": generate_dump_output,
