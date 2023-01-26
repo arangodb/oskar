@@ -132,6 +132,7 @@ def parse_arguments():
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
     parser.add_argument("--single_cluster", help="process cluster cluster and single tests", action="store_true")
     parser.add_argument("--enterprise", help="add enterprise tests", action="store_true")
+    parser.add_argument("--no-enterprise", help="add enterprise tests", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
     parser.add_argument("--gtest", help="only run gtest", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")
