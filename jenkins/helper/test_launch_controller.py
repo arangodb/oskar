@@ -56,7 +56,7 @@ def filter_tests(args, tests):
         for one_filter in filters:
             filtered = filter(one_filter, filtered)
         return filtered
-    if args.both:
+    if args.single_cluster:
         res_sg = list(list_generator(False))
         for one in res_sg:
             one['prefix'] = "sg_"
@@ -120,7 +120,7 @@ def parse_arguments():
     parser.add_argument("--validate-only", help="validates the test definition file", action="store_true")
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
-    parser.add_argument("--both", help="process cluster cluster and single tests", action="store_true")
+    parser.add_argument("--single_cluster", help="process cluster cluster and single tests", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
     parser.add_argument("--gtest", help="only run gtest", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")

@@ -35,12 +35,12 @@ function launchClusterTests
 end
 
 ################################################################################
-## both tests: runtime,command
+## single and cluster tests: runtime,command
 ################################################################################
 
-function launchBothTests
+function launchSingleClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --both
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -72,10 +72,10 @@ switch $TESTSUITE
     resetLaunch 4
     set -xg timeLimit 4200
     set suiteRunner "launchClusterTests"
-  case "cluster"
+  case "single_cluster"
     resetLaunch 4
     set -xg timeLimit 8100
-    set suiteRunner "launchBothTests"
+    set suiteRunner "launchSingleClusterTests"
   case "single"
     resetLaunch 1
     set -xg  timeLimit 3900
