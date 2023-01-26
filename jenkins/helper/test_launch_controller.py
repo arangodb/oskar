@@ -25,6 +25,7 @@ def filter_tests(args, tests):
         return tests
 
     def list_generator(cluster):
+        # pylint: disable=too-many-branches
         filters = []
         if cluster:
             filters.append(lambda test: "single" not in test["flags"])
@@ -58,7 +59,14 @@ def filter_tests(args, tests):
         filtered = copy.deepcopy(tests)
         for one_filter in filters:
             filtered = filter(one_filter, filtered)
+        if cluster:
+            # after we filtered for cluster only tests, we now need to make sure
+            # that tests are actually launched as cluster tests:
+            for one in filtered:
+                if not 'cluster' in one['flags']:
+                    one['flags'].append('cluster')
         return filtered
+
     if args.single_cluster:
         res_sg = list(list_generator(False))
         for one in res_sg:
@@ -67,8 +75,7 @@ def filter_tests(args, tests):
         for one in res_cl:
             one['prefix'] = "cl_"
         return res_sg + res_cl
-    else:
-        return list(list_generator(args.cluster))
+    return list(list_generator(args.cluster))
 
 formats = {
     "dump": generate_dump_output,
