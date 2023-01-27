@@ -94,6 +94,7 @@ end
 
 function single ; set -gx TESTSUITE single ; end
 function cluster ; set -gx TESTSUITE cluster ; end
+function single_cluster ; set -gx TESTSUITE single_cluster ; end
 function resilience ; set -gx TESTSUITE resilience ; end
 function catchtest ; set -gx TESTSUITE gtest ; end
 function gtest ; set -gx TESTSUITE gtest ; end
@@ -1519,7 +1520,7 @@ function showConfig
   printf $fmt3 'SkipGrey'       $SKIPGREY      '(skipGrey/includeGrey)'
   printf $fmt3 'OnlyGrey'       $ONLYGREY      '(onlyGreyOn/onlyGreyOff)'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'
-  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/gtest)'
+  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/single_cluster/resilience/gtest)'
   printf $fmt2 'Log Levels'     (echo $LOG_LEVELS)
   echo
   echo 'Package Configuration'

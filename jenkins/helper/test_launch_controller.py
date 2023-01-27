@@ -1,6 +1,7 @@
 #!/bin/env python3
 """ read test definition, and generate the output for the specified target """
 import argparse
+import copy
 import sys
 from traceback import print_exc
 
@@ -18,39 +19,64 @@ if sys.version_info[0] != 3:
 
 def filter_tests(args, tests):
     """ filter testcase by operations target Single/Cluster/full """
+    for one in tests:
+        one['prefix'] = ""
     if args.all:
         return tests
 
-    filters = []
-    if args.cluster:
-        filters.append(lambda test: "single" not in test["flags"])
-    else:
-        filters.append(lambda test: "cluster" not in test["flags"])
+    def list_generator(cluster):
+        # pylint: disable=too-many-branches
+        filters = []
+        if cluster:
+            filters.append(lambda test: "single" not in test["flags"])
+        else:
+            filters.append(lambda test: "cluster" not in test["flags"])
 
-    if args.full:
-        filters.append(lambda test: "!full" not in test["flags"])
-    else:
-        filters.append(lambda test: "full" not in test["flags"])
+        if args.full:
+            filters.append(lambda test: "!full" not in test["flags"])
+        else:
+            filters.append(lambda test: "full" not in test["flags"])
 
-    if args.gtest:
-        filters.append(lambda test: "gtest" ==  test["name"])
+        if args.gtest:
+            filters.append(lambda test: "gtest" ==  test["name"])
 
-    if IS_WINDOWS:
-        filters.append(lambda test: "!windows" not in test["flags"])
+        if not args.enterprise:
+            filters.append(lambda test: "enterprise" not in test["flags"])
 
-    if IS_MAC:
-        filters.append(lambda test: "!mac" not in test["flags"])
+        if IS_WINDOWS:
+            filters.append(lambda test: "!windows" not in test["flags"])
 
-    if IS_ARM:
-        filters.append(lambda test: "!arm" not in test["flags"])
+        if IS_MAC:
+            filters.append(lambda test: "!mac" not in test["flags"])
 
-    if args.no_report:
-        print("Disabling report generation")
-        args.create_report = False
+        if IS_ARM:
+            filters.append(lambda test: "!arm" not in test["flags"])
 
-    for one_filter in filters:
-        tests = filter(one_filter, tests)
-    return list(tests)
+        if args.no_report:
+            print("Disabling report generation")
+            args.create_report = False
+
+        filtered = copy.deepcopy(tests)
+        for one_filter in filters:
+            filtered = filter(one_filter, filtered)
+        remaining_tests = list(filtered)
+        if cluster:
+            # after we filtered for cluster only tests, we now need to make sure
+            # that tests are actually launched as cluster tests:
+            for one in remaining_tests:
+                if not 'cluster' in one['flags']:
+                    one['flags'].append('cluster')
+        return remaining_tests
+
+    if args.single_cluster:
+        res_sg = list_generator(False)
+        for one in res_sg:
+            one['prefix'] = "sg_"
+        res_cl = list_generator(True)
+        for one in res_cl:
+            one['prefix'] = "cl_"
+        return res_sg + res_cl
+    return list_generator(args.cluster)
 
 formats = {
     "dump": generate_dump_output,
@@ -73,6 +99,7 @@ known_flags = {
 }
 
 known_parameter = {
+    "prefix": 'internal',
     "buckets": "number of buckets to use for this test",
     "suffix": "suffix that is appended to the tests folder name",
     "priority": "priority that controls execution order. Testsuites with lower priority are executed later",
@@ -104,6 +131,9 @@ def parse_arguments():
     parser.add_argument("--validate-only", help="validates the test definition file", action="store_true")
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
+    parser.add_argument("--single_cluster", help="process cluster cluster and single tests", action="store_true")
+    parser.add_argument("--enterprise", help="add enterprise tests", action="store_true")
+    parser.add_argument("--no-enterprise", help="add enterprise tests", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
     parser.add_argument("--gtest", help="only run gtest", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")

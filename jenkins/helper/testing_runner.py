@@ -10,6 +10,8 @@ import signal
 import sys
 import time
 from threading  import Thread, Lock
+from multiprocessing import Process
+import zipfile
 
 import psutil
 
@@ -40,6 +42,17 @@ try:
     ZIPFORMAT="7zip"
 except ModuleNotFoundError:
     pass
+
+def zipp_this(filenames, target_dir):
+    """ worker function to zip one file a time in a subprocess """
+    # pylint: disable=consider-using-with
+    for corefile in filenames:
+        try:
+            print(f'zipping {corefile}')
+            zipfile.ZipFile(str(target_dir / (corefile.name + '.xz')),
+                            mode='w', compression=zipfile.ZIP_LZMA).write(str(corefile))
+        except Exception as exc:
+            print(f'skipping {corefile} since {exc}')
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
@@ -343,16 +356,28 @@ class TestingRunner():
         """ delete all files not needed for the crashreport binaries """
         shutil.rmtree(str(self.cfg.bin_dir / 'tzdata'))
         needed = [
-            'arangod',
-            'arangosh',
-            'arangodump',
-            'arangorestore',
-            'arangoimport',
+            'tzdata',
+            'icudtl',
+            'fuertetest',
+            'arangovpack',
             'arangobackup',
-            'arangodbtests']
+            'arangosh',
+            'arangoexport',
+            'arangoinspect',
+            'arangoimport',
+            'arangoimp',
+            'arango-secure-installation',
+            'foxx-manager',
+            'arangorestore',
+            'arangobench',
+            'snowball',
+            'arangodbtests',
+            'arangod',
+            'arango-init-database',
+            'arangodump']
         for one_file in self.cfg.bin_dir.iterdir():
             if (one_file.suffix == '.lib' or
-                (one_file.stem not in needed) ):
+                (one_file.stem not in needed)):
                 print(f'Deleting {str(one_file)}')
                 one_file.unlink(missing_ok=True)
 
@@ -389,56 +414,45 @@ class TestingRunner():
             print(f'Coredumps are not collected: {str(len(core_files_list))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
             return
 
-        for one_file in core_files_list:
-            if one_file.is_file():
-                size = (one_file.stat().st_size / (1024 * 1024))
-                if 0 < MAX_COREFILE_SIZE_MB and MAX_COREFILE_SIZE_MB < size:
-                    print(f'deleting coredump {str(one_file)} its too big: {str(size)}')
-                    one_file.unlink(missing_ok=True)
-                    core_files_list.remove(one_file)
-            else:
-                print(f"removing file from list {str(one_file)}")
-                core_files_list.remove(one_file)
-
-        if len(core_files_list) > core_max_count and core_max_count > 0:
-            count = 0
-            for one_crash_file in core_files_list:
-                count += 1
-                if count > core_max_count:
-                    print(f'{core_max_count} reached. will not archive {one_crash_file}')
-                    one_crash_file.unlink(missing_ok=True)
-                    core_files_list.remove(one_crash_file)
-
-        if len(core_files_list) == 0:
-            return
-        self.crashed = True
-
         core_zip_dir = get_workspace() / 'coredumps'
         core_zip_dir.mkdir(parents=True, exist_ok=True)
+        zip_slots = psutil.cpu_count(logical=False)
+        count = 0
+        zip_slot_array = []
+        for _ in range(zip_slots):
+            zip_slot_array.append([])
         for one_file in core_files_list:
             if one_file.exists():
-                try:
-                    shutil.move(str(one_file.resolve()), str(core_zip_dir.resolve()))
-                except shutil.Error as ex:
-                    msg = f"generate_crash_report: failed to move file while while gathering coredumps: {ex}"
-                    self.append_report_txt('\n' + msg + '\n')
-                    print(msg)
-                except PermissionError as ex:
-                    print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
-                    self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
+                zip_slot_array[count % zip_slots].append(one_file)
+                count += 1
+        zippers = []
+        print(f"coredump launching zipper sub processes {zip_slot_array}")
+        for zip_slot in zip_slot_array:
+            if len(zip_slot) > 0:
+                proc = Process(target=zipp_this, args=(zip_slot, core_zip_dir))
+                proc.start()
+                zippers.append(proc)
+        for zipper in zippers:
+            zipper.join()
+        print("compressing files done")
+
+        for one_file in core_files_list:
+            if one_file.is_file():
+                one_file.unlink(missing_ok=True)
 
         crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
         print(f"creating crashreport: {str(crash_report_file)} with {str(core_files_list)}")
         sys.stdout.flush()
         try:
             shutil.make_archive(str(crash_report_file),
-                                ZIPFORMAT,
+                                'tar',
                                 (core_zip_dir / '..').resolve(),
                                 core_zip_dir.name,
                                 True)
         except Exception as ex:
             print("Failed to create binaries zip: " + str(ex))
             self.append_report_txt("Failed to create binaries zip: " + str(ex))
+
         self.cleanup_unneeded_binary_files()
         binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
         print("creating crashreport binary support zip: " + str(binary_report_file))
@@ -536,29 +550,23 @@ class TestingRunner():
 </table>
 ''')
 
-    def register_test_func(self, cluster, test):
+    def register_test_func(self, test):
         """ print one test function """
         args = test["args"]
         params = test["params"]
         suffix = params.get("suffix", "")
-        name = test["name"]
+        name = test['prefix'] + test["name"]
         if suffix:
             name += f"_{suffix}"
 
         if test["parallelity"] :
             parallelity = test["parallelity"]
-        if 'single' in test['flags'] and cluster:
-            return
-        if 'cluster' in test['flags'] and not cluster:
-            return
-        if cluster:
+        if 'cluster' in test['flags']:
             self.cluster = True
             if parallelity == 1:
                 parallelity = 4
             args += ['--cluster', 'true',
                      '--dumpAgencyOnError', 'true']
-        if "enterprise" in test["flags"]:
-            return
         if "ldap" in test["flags"] and not 'LDAPHOST' in os.environ:
             return
 

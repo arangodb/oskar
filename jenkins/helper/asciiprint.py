@@ -58,7 +58,7 @@ ANSI_ESCAPE = re.compile(
 
 def ascii_convert_str(the_str: str):
     """convert string to only be ascii without control sequences"""
-    return ANSI_ESCAPE.sub(rb"", the_str)
+    return ANSI_ESCAPE.sub("", the_str)
 
 
 def ascii_print(string):

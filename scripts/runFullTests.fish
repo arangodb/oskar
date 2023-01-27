@@ -4,13 +4,18 @@ source $SCRIPTS/lib/tests.fish
 
 set -xg ADDITIONAL_OPTIONS $argv
 
+set ENTERPRISE_ARG "--no-enterprise"
+if test "$ENTERPRISEEDITION" = "On"
+   set ENTERPRISE_ARG "--enterprise"
+end
+
 ################################################################################
 ## Single tests: runtime,command
 ################################################################################
 
 function launchSingleTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full "$ENTERPRISE_ARG"
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -20,7 +25,7 @@ end
 ################################################################################
 
 function launchGTest
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest "$ENTERPRISE_ARG"
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -31,7 +36,18 @@ end
 
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full "$ENTERPRISE_ARG"
+  and set -xg result "GOOD"
+  or set -xg result "BAD"
+end
+
+################################################################################
+## single and cluster tests: runtime,command
+################################################################################
+
+function launchSingleClusterTests
+  echo "Using test definitions from arangodb repo"
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster --full "$ENTERPRISE_ARG"
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
@@ -63,6 +79,10 @@ switch $TESTSUITE
     resetLaunch 4
     set -xg timeLimit 16200
     set suiteRunner "launchClusterTests"
+  case "single_cluster"
+    resetLaunch 4
+    set -xg timeLimit 25200
+    set suiteRunner "launchSingleClusterTests"
   case "single"
     resetLaunch 1
     set -xg timeLimit 9000

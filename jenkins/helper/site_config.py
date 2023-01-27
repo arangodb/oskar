@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import signal
 import sys
@@ -55,8 +56,9 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
+ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 for env in os.environ:
-    print(f'{env}={os.environ[env]}')
+    print(f"{env}={ansi_escape.sub('', os.environ[env])}")
 TEMP = Path("/tmp/")
 if 'TMP' in os.environ:
     TEMP = Path(os.environ['TMP'])
@@ -135,15 +137,23 @@ class SiteConfig:
         self.slots_to_parallelity_factor = self.max_load / self.available_slots
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
-        if self.is_asan:
-            print('SAN enabled, reducing possible system capacity')
+        self.is_aulsan = self.is_asan and os.environ['SAN_MODE'] == 'AULSan'
+        self.is_gcov = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
+        san_gcov_msg = ""
+        if self.is_asan or self.is_gcov:
+            san_gcov_msg = ' - SAN '
+            slot_divisor = 4
+            if self.is_aulsan:
+                san_gcov_msg = ' - AUL-SAN '
+            elif self.is_gcov:
+                san_gcov_msg = ' - GCOV'
+                slot_divisor = 3
+            san_gcov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
-            self.available_slots /= 4
+            self.available_slots /= slot_divisor
             #self.timeout *= 1.5
             self.loop_sleep *= 2
             self.max_load /= 2
-            if os.environ['SAN_MODE'] == 'AULSan':
-                print('Aulsan must reduce even more!')
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -175,7 +185,7 @@ class SiteConfig:
  - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
  - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
  - {socket_count} number of currently active tcp sockets
- """)
+{san_gcov_msg}""")
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
