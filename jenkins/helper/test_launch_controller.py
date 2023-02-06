@@ -216,6 +216,7 @@ def read_definition_line(line):
 
     return {
         "name": params.get("name", suites),
+        "suite": suites,
         "priority": params["priority"],
         "parallelity": params["parallelity"],
         "flags": flags,
