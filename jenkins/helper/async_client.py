@@ -289,7 +289,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
 
     def run_arango_tool_monitored(
             self,
-            executeable,
+            executable,
             more_args,
             use_default_auth=True,
             params={"error": "", "verbose": True, "output":[]},
@@ -325,7 +325,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 run_cmd += ["--server.password", passvoid]
 
         run_cmd += more_args
-        ret = self.run_monitored(executeable,
+        ret = self.run_monitored(executable,
                                  run_cmd,
                                  params,
                                  progressive_timeout,
@@ -337,7 +337,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
 
     # fmt: on
     def run_monitored(self,
-                      executeable,
+                      executable,
                       args,
                       params={"error": "", "verbose": True, "output":[]},
                       progressive_timeout=60,
@@ -355,7 +355,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         """
         rc_exit = None
         line_filter = False
-        run_cmd = [executeable] + args
+        run_cmd = [executable] + args
         children = []
         if identifier == "":
             # pylint: disable=global-statement
