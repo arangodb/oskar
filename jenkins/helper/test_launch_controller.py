@@ -100,6 +100,8 @@ known_flags = {
 
 known_parameter = {
     "prefix": 'internal',
+    "name": "name of the test suite. This is mainly useful if a set of suites is combined. If not set, defaults to the suite name.",
+    "size": "container size to be used in CircleCI",
     "buckets": "number of buckets to use for this test",
     "suffix": "suffix that is appended to the tests folder name",
     "priority": "priority that controls execution order. Testsuites with lower priority are executed later",
@@ -182,7 +184,7 @@ def read_definition_line(line):
     bits = line.split()
     if len(bits) < 1:
         raise Exception("expected at least one argument: <testname>")
-    name, *remainder = bits
+    suites, *remainder = bits
 
     flags = []
     params = {}
@@ -213,7 +215,7 @@ def read_definition_line(line):
     params = validate_params(params, 'cluster' in flags)
 
     return {
-        "name": name,
+        "name": params.get("name", suites),
         "priority": params["priority"],
         "parallelity": params["parallelity"],
         "flags": flags,
