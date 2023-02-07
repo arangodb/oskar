@@ -29,7 +29,7 @@ function checkoutRepo
       git pull
       or begin
          git reset --hard "$branch"
-         git for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD) | grep .
+         git for-each-ref --format='%(upstream:short)' (git symbolic-ref -q HEAD) | grep .
          and git reset --hard @{upstream}
       end
     end
