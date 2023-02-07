@@ -30,7 +30,7 @@ function checkoutRepo
       or begin
          git reset --hard "$branch"
          git for-each-ref --format='%(upstream:short)' (git symbolic-ref -q HEAD) | grep .
-         and git reset --hard @{upstream}
+         and git reset --hard "origin/$branch"
       end
     end
     and git clean -fdx
