@@ -17,8 +17,7 @@ function checkoutRepo
   set -l clean $argv[2]
 
   set fish_trace 1
-  git remote update origin
-  and git fetch --prune --force --all --tags
+  git fetch --prune --force --all --tags
   and git checkout -- .
   and git submodule deinit --all -f
   and git checkout -f "$branch"
