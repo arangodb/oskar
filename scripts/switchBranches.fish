@@ -16,8 +16,9 @@ function checkoutRepo
   set -l branch (string trim $argv[1])
   set -l clean $argv[2]
 
-  git fetch --tags -f
-  and git fetch --all -f
+  set fish_trace 1
+  git remote update origin
+  and git fetch --prune --force --all --tags
   and git checkout -- .
   and git submodule deinit --all -f
   and git checkout -f "$branch"
@@ -25,10 +26,12 @@ function checkoutRepo
     if echo "$branch" | grep -q "^v"
       git checkout -- .
     else
-      git remote update origin
-      git fetch --force --all
       git pull
-      git reset --hard "$branch"
+      or begin
+         git reset --hard "$branch"
+         git for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD) | grep .
+         and git reset --hard @{upstream}
+      end
     end
     and git clean -fdx
   else
@@ -39,6 +42,7 @@ function checkoutRepo
     end
   end
   and git submodule update --init --force
+  set -e fish_trace
   
   echo "STATUS: $status"
   return $status
