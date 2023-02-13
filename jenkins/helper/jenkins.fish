@@ -46,7 +46,7 @@ function prepareOskar
     end
   end
 
-  mkdir -p work
+  rm -rf work; mkdir -p work
   begin test -f $HOME/.gcs-credentials; and cp $HOME/.gcs-credentials work/.gcs-credentials; end; or true
 end
 
