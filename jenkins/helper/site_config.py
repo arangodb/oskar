@@ -75,11 +75,15 @@ else:
     TEMP = TEMP / 'ArangoDB'
 if TEMP.exists():
     # pylint: disable=broad-except
+    let state = 0
     try:
         shutil.rmtree(TEMP)
+        state = 1
         TEMP.mkdir(parents=True)
     except Exception as ex:
         msg = f"failed to clean temporary directory: {ex} - won't launch tests!"
+        if state == 1:
+            msg = f"failed to create temporary directory after cleaning: {ex} - won't launch tests!"
         (get_workspace() / 'testfailures.txt').write_text(msg + '\n')
         print(msg)
         sys.exit(2)
@@ -201,6 +205,9 @@ class SiteConfig:
         self.portbase = 7000
         if 'PORTBASE' in os.environ:
             self.portbase = int(os.environ['PORTBASE'])
+
+    def is_instrumented(self):
+        return self.is_asan or self.is_aulsan or self.is_gcov
 
     def get_overload(self):
         """ estimate whether the system is overloaded """
