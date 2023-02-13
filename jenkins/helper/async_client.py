@@ -42,14 +42,15 @@ def default_line_result(wait, line, params):
         else:
             return False
     return True
-def make_default_params(verbose):
+def make_default_params(verbose, identifier):
     """ create the structure to work with arrays to output the strings to """
     return {
         "trace_io": False,
         "error": "",
         "verbose": verbose,
         "output": [],
-        "identifier": ""
+        "identifier": "",
+        "my_id": identifier
     }
 
 def tail_line_result(wait, line, params):
@@ -353,14 +354,14 @@ class ArangoCLIprogressiveTimeoutExecutor:
         follow.
         (is still alive...)
         """
+        print(executeable)
         rc_exit = None
         line_filter = False
         run_cmd = [executable] + args
         children = []
         if identifier == "":
             # pylint: disable=global-statement
-            identifier = f"IO_{str(params.my_id)}"
-        print(params)
+            identifier = f"IO_{str(params['my_id'])}"
         params['identifier'] = identifier
         if not isinstance(deadline,datetime):
             if deadline == 0:
