@@ -15,36 +15,38 @@ function checkoutRepo
   end
   set -l branch (string trim $argv[1])
   set -l clean $argv[2]
+  set -l STATUS 0
 
   set fish_trace 1
   git fetch --prune --force --all --tags
-  and git checkout -- .
+  and git checkout -f
   and git submodule deinit --all -f
   and git checkout -f "$branch"
   and if test "$clean" = "true"
-    if echo "$branch" | grep -q "^v"
-      git checkout -- .
-    else
-      git pull
-      or begin
-         git reset --hard "$branch"
-         git for-each-ref --format='%(upstream:short)' (git symbolic-ref -q HEAD) | grep .
-         and git reset --hard "origin/$branch"
+        if echo "$branch" | grep -q "^v"
+          git checkout -- .
+        else
+          git pull
+          or begin
+            git reset --hard "$branch"
+            git for-each-ref --format='%(upstream:short)' (git symbolic-ref -q HEAD) | grep .
+            and git reset --hard "origin/$branch"
+          end
+        end
+        and git clean -fdx
+      else
+        if echo "$branch" | grep -q "^v"
+          git checkout --
+        else
+          git pull
+        end
       end
-    end
-    and git clean -fdx
-  else
-    if echo "$branch" | grep -q "^v"
-      git checkout --
-    else
-      git pull
-    end
-  end
   and git submodule update --init --force
+  or set STATUS 1
   set -e fish_trace
   
-  echo "STATUS: $status"
-  return $status
+  echo "STATUS: $STATUS"
+  return $STATUS
 end
 
 if test "$argv[1]" = "help"
