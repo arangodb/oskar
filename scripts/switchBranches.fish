@@ -81,8 +81,8 @@ cd $INNERWORKDIR/ArangoDB
 and checkoutRepo $arango $force_clean
 if test $status -ne 0
   echo "Failed to checkout community branch"
-  setupSourceInfo "VERSION" "N/A"
-  setupSourceInfo "Community" "N/A"
+  setupSourceInfo "VERSION" "N\/A"
+  setupSourceInfo "Community" "N\/A"
   exit 1
 else
   setupSourceInfo "VERSION" (cat $INNERWORKDIR/ArangoDB/ARANGO-VERSION)
@@ -94,7 +94,7 @@ if test $ENTERPRISEEDITION = On
   and checkoutRepo $enterprise $force_clean
   if test $status -ne 0
     echo "Failed to checkout enterprise branch"
-    setupSourceInfo "Enterprise" "N/A"
+    setupSourceInfo "Enterprise" "N\/A"
     exit 1
   else
     setupSourceInfo "Enterprise" (git rev-parse --verify HEAD)
