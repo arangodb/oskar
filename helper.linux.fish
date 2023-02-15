@@ -1205,12 +1205,12 @@ function buildDockerAny
   and buildDockerImage $IMAGE_NAME1
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
     docker tag $IMAGE_NAME1 $IMAGE_NAME2
-    if test "$GCR_REG" = "On"
+  end
+  and pushDockerImage $IMAGE_NAME2
+  and if test "$GCR_REG" = "On"
       docker tag $IMAGE_NAME1 $GCR_REG_PREFIX$IMAGE_NAME2
       and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME2
     end
-  end
-  and pushDockerImage $IMAGE_NAME2
   and if test "$ENTERPRISEEDITION" = "On"
     echo $IMAGE_NAME1 > $WORKDIR/work/arangodb3e.docker
   else
