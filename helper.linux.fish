@@ -630,7 +630,7 @@ end
 function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
-  and runInContainer (findStaticBuildImage) /scripts/coverage.fish
+  and runInContainer (findBuildImage) /scripts/coverage.fish
   return $status
 end
 
