@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """test drivers"""
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -33,7 +34,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         self.params = make_default_params(verbose, 111)
         print(self.params)
         ret = self.run_monitored(
-            "gcov",
+            "gcov-tool",
             self.job,
             self.params
         )
@@ -44,7 +45,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
 
     def end_run(self):
         """ terminate dmesg again """
-        print(f"killing gcovr {self.params['pid']}")
+        print(f"killing gcov-tool {self.params['pid']}")
         try:
             psutil.Process(self.params['pid']).kill()
         except psutil.NoSuchProcess:
@@ -96,11 +97,15 @@ def main():
     count = 0
     jobcount = 0
     last_output = ''
+    combined_dir = gcov_dir / 'combined'
+    if combined_dir.exists():
+        shutil.rmtree(str(combined_dir))
+    combined_dir.mkdir()
     while len(sub_jobs) > 1:
         next_jobs = []
         jobs.append([])
         while len(sub_jobs) > 1:
-            last_output = gcov_dir / f'combined_{jobcount}'
+            last_output = combined_dir / f'{jobcount}'
             this_subjob = [str(sub_jobs.pop()),
                            str(sub_jobs.pop()),
                            str(last_output)]
@@ -133,8 +138,6 @@ def main():
             launch_gcov_merge(one_job, cfg)
             ccc += 1
             time.sleep(1)
-            if ccc > 5: 
-                raise Exception('snatohue')
 
         with SLOT_LOCK:
             local_active_job = len(JOB_SLOT_ARRAY)
