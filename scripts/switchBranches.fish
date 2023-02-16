@@ -26,13 +26,10 @@ function checkoutRepo
         if echo "$branch" | grep -q "^v"
           git checkout -- .
         else
-          git pull
-          or begin
-            git reset --hard "$branch"
-            git status | head -n 1 | grep -v "HEAD detached"
-            and git for-each-ref --format='%(upstream:short)' (git symbolic-ref -q HEAD) | grep .
-            and git reset --hard "origin/$branch"
-          end
+          git status | head -n 1 | grep -v "HEAD detached"
+          and git for-each-ref --format='%(upstream:short)' (git symbolic-ref -q HEAD) | grep .
+          and git reset --hard "origin/$branch"
+          or git reset --hard "$branch"
         end
         and git clean -fdx
       else
