@@ -46,7 +46,7 @@ set -gx ALPINEBUILDIMAGE5_TAG 13
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
-set -gx ALPINEBUILDIMAGE6_TAG 4
+set -gx ALPINEBUILDIMAGE6_TAG 5
 set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
@@ -630,7 +630,7 @@ end
 function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
-  and runInContainer (findBuildImage) /scripts/coverage.fish
+  and runInContainer (findStaticBuildImage) /scripts/coverage.fish
   return $status
 end
 
