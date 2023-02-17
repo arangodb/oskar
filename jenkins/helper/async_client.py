@@ -354,7 +354,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
         follow.
         (is still alive...)
         """
-        print(executeable)
+        print(executable)
         rc_exit = None
         line_filter = False
         run_cmd = [executable] + args
