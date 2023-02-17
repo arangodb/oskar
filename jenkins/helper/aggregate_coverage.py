@@ -36,7 +36,10 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         ret = self.run_monitored(
             "gcov-tool",
             self.job,
-            self.params
+            self.params,
+            progressive_timeout=600,
+            deadline_grace_period=30*60,
+            self.identifier
         )
         #delete_logfile_params(params)
         ret = {}
@@ -117,7 +120,7 @@ def main():
             next_jobs.append(sub_jobs.pop())
         sub_jobs = next_jobs
 
-    max_jobs = 5 # psutil.cpu_count(logical=False)
+    max_jobs = psutil.cpu_count(logical=False)
     active_job_count = 0
     ccc = 0
     for one_job_set in jobs:
