@@ -21,7 +21,8 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
 
     def __init__(self, jobs, site_config):
         self.identifier = jobs[0]
-        self.job = ['merge', jobs[0], jobs[1], '-o', jobs[2]]
+        self.job = jobs
+        self.job_parameters = ['merge', jobs[0], jobs[1], '-o', jobs[2]]
         self.params = None
         super().__init__(site_config, None)
 
@@ -34,7 +35,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         print(self.params)
         ret = self.run_monitored(
             "gcov-tool",
-            self.job,
+            self.job_parameters,
             self.params,
             progressive_timeout=600,
             deadline_grace_period=30*60,
@@ -43,6 +44,9 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         #delete_logfile_params(params)
         ret = {}
         ret['error'] = self.params['error']
+        print(self.job)
+        psutil.rmtree(self.job[0])
+        psutil.rmtree(self.job[1])
         return ret
 
     def end_run(self):
