@@ -10,8 +10,7 @@ import psutil
 
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
-    make_default_params,
-    default_line_result
+    make_default_params
 )
 
 from site_config import SiteConfig
@@ -39,7 +38,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             self.params,
             progressive_timeout=600,
             deadline_grace_period=30*60,
-            self.identifier
+            identifier=self.identifier
         )
         #delete_logfile_params(params)
         ret = {}
@@ -58,7 +57,7 @@ SLOT_LOCK = Lock()
 JOB_SLOT_ARRAY = []
 JOB_DONE_ARRAY = []
 
-def gcov_merge_runner(abcde, instance):
+def gcov_merge_runner(_, instance):
     """ thread runner """
     global JOB_DONE_ARRAY, SLOT_LOCK
     print(f'thread started {instance.job}')
@@ -155,51 +154,6 @@ def main():
                     finished_job[0].join()
                 JOB_DONE_ARRAY = []
     last_output.rename(Path(sys.argv[2]))
-        
+
 if __name__ == "__main__":
     main()
-# """
-# and for i in gcov/????????????????????????????????
-#   if test $c -eq 0
-#     echo "first file $i"
-#     and cp -a $i combined/1
-#     and set c 1
-#   else if test $c -eq 1
-#     echo "merging $i"
-#     and rm -rf combined/2
-#     and gcov-tool merge $i combined/1 -o combined/2
-#     and set c 2
-#   else if test $c -eq 2
-#     echo "merging $i"
-#     and rm -rf combined/1
-#     and gcov-tool merge $i combined/2 -o combined/1
-#     and set c 1
-#   end
-# end
-#         core_zip_dir = get_workspace() / 'coredumps'
-#         core_zip_dir.mkdir(parents=True, exist_ok=True)
-#         zip_slots = psutil.cpu_count(logical=False)
-#         count = 0
-#         zip_slot_array = []
-#         for _ in range(zip_slots):
-#             zip_slot_array.append([])
-#         for one_file in core_files_list:
-#             if one_file.exists():
-#                 zip_slot_array[count % zip_slots].append(one_file)
-#                 count += 1
-#         zippers = []
-#         print(f"coredump launching zipper sub processes {zip_slot_array}")
-#         for zip_slot in zip_slot_array:
-#             if len(zip_slot) > 0:
-#                 proc = Process(target=zipp_this, args=(zip_slot, core_zip_dir))
-#                 proc.start()
-#                 zippers.append(proc)
-#         for zipper in zippers:
-#             zipper.join()
-#         print("compressing files done")
-# 
-#         for one_file in core_files_list:
-#             if one_file.is_file():
-#                 one_file.unlink(missing_ok=True)
-# """
-# 
