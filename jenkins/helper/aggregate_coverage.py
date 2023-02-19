@@ -45,8 +45,8 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         ret = {}
         ret['error'] = self.params['error']
         print(self.job)
-        psutil.rmtree(self.job[0])
-        psutil.rmtree(self.job[1])
+        shutil.rmtree(self.job[0])
+        shutil.rmtree(self.job[1])
         return ret
 
     def end_run(self):
