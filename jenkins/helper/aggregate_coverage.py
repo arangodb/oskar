@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """test drivers"""
+from datetime import datetime
 import shutil
 import sys
 import time
@@ -33,6 +34,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         verbose = True
         self.params = make_default_params(verbose, 111)
         print(self.params)
+        start = datetime.now()
         ret = self.run_monitored(
             "gcov-tool",
             self.job_parameters,
@@ -41,10 +43,11 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             deadline_grace_period=30*60,
             identifier=self.identifier
         )
+        end = datetime.now()
+        print(f'done with {self.job[0]} {self.job[1]} in {end-start} - {ret}')
         #delete_logfile_params(params)
         ret = {}
         ret['error'] = self.params['error']
-        print(self.job)
         shutil.rmtree(self.job[0])
         shutil.rmtree(self.job[1])
         return ret
@@ -82,8 +85,9 @@ def launch_gcov_merge(jobs, cfg):
     with SLOT_LOCK:
         worker = Thread(target=gcov_merge_runner,
                         args=('true', merger))
-        worker.start()
         JOB_SLOT_ARRAY.append((worker, merger))
+        worker.start()
+    print('thread launched')
 
 def main():
     """ go """
@@ -124,6 +128,9 @@ def main():
         sub_jobs = next_jobs
 
     max_jobs = psutil.cpu_count(logical=False)
+    print(max_jobs)
+    if max_jobs < 10:
+        max_jobs = 10
     active_job_count = 0
     ccc = 0
     for one_job_set in jobs:
@@ -131,6 +138,7 @@ def main():
         for one_job in one_job_set:
             with SLOT_LOCK:
                 local_active_job = len(JOB_SLOT_ARRAY)
+            print(local_active_job)
             while active_job_count >= max_jobs:
                 print('.')
                 time.sleep(1)
@@ -143,7 +151,7 @@ def main():
             print(f"launching {one_job}")
             launch_gcov_merge(one_job, cfg)
             ccc += 1
-            time.sleep(1)
+            time.sleep(0.2)
 
         with SLOT_LOCK:
             local_active_job = len(JOB_SLOT_ARRAY)
