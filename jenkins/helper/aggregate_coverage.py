@@ -15,9 +15,10 @@ from async_client import (
     make_default_params
 )
 
+from site_config import SiteConfig
+
 SUCCESS=True
 
-from site_config import SiteConfig
 # pylint disable=global-variable-not-assigned
 
 class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
@@ -31,7 +32,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         super().__init__(site_config, None)
 
     def launch(self):
-       # pylint: disable=R0913 disable=R0902
+       # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
         print('------')
         verbose = True
@@ -78,8 +79,8 @@ def gcov_merge_runner(_, instance):
     ret = instance.launch()
     with SLOT_LOCK:
         if ret['error'] != '':
-            print(f'marking failure: {ret['error']}')
-            SUCCESS = False 
+            print(f"marking failure: {ret['error']}")
+            SUCCESS = False
         count = 0
         for job in JOB_SLOT_ARRAY:
             if job[1].identifier == instance.identifier:
@@ -139,8 +140,7 @@ def main():
 
     max_jobs = psutil.cpu_count(logical=False)
     print(max_jobs)
-    if max_jobs < 10:
-        max_jobs = 10
+    max_jobs = max(max_jobs, 10)
     active_job_count = 0
     ccc = 0
     for one_job_set in jobs:
@@ -181,7 +181,8 @@ def main():
                     finished_job[0].join()
                 JOB_DONE_ARRAY = []
     last_output.rename(Path(sys.argv[2]))
-    os.exit(SUCCESS?0:1)
+    if not SUCCESS:
+        os.exit(1)
 
 if __name__ == "__main__":
     main()
