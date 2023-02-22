@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """test drivers"""
 from datetime import datetime
+import os
 import shutil
 import sys
 import time
@@ -13,6 +14,8 @@ from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
     make_default_params
 )
+
+SUCCESS=True
 
 from site_config import SiteConfig
 # pylint disable=global-variable-not-assigned
@@ -35,14 +38,18 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         self.params = make_default_params(verbose, 111)
         print(self.params)
         start = datetime.now()
-        ret = self.run_monitored(
-            "gcov-tool",
-            self.job_parameters,
-            self.params,
-            progressive_timeout=600,
-            deadline_grace_period=30*60,
-            identifier=self.identifier
-        )
+        try:
+            ret = self.run_monitored(
+                "gcov-tool",
+                self.job_parameters,
+                self.params,
+                progressive_timeout=600,
+                deadline_grace_period=30*60,
+                identifier=self.identifier
+            )
+        except Exception as ex:
+            print(f'exception in {self.job[0]} {self.job[1]}: {ex}')
+            self.params['error'] += str(ex)
         end = datetime.now()
         print(f'done with {self.job[0]} {self.job[1]} in {end-start} - {ret}')
         #delete_logfile_params(params)
@@ -66,10 +73,13 @@ JOB_DONE_ARRAY = []
 
 def gcov_merge_runner(_, instance):
     """ thread runner """
-    global JOB_DONE_ARRAY, SLOT_LOCK
+    global JOB_DONE_ARRAY, SLOT_LOCK, SUCCESS
     print(f'thread started {instance.job}')
-    instance.launch()
+    ret = instance.launch()
     with SLOT_LOCK:
+        if ret['error'] != '':
+            print(f'marking failure: {ret['error']}')
+            SUCCESS = False 
         count = 0
         for job in JOB_SLOT_ARRAY:
             if job[1].identifier == instance.identifier:
@@ -92,7 +102,7 @@ def launch_gcov_merge(jobs, cfg):
 def main():
     """ go """
     # pylint disable=too-many-locals disable=too-many-statements
-    global JOB_DONE_ARRAY, SLOT_LOCK, JOB_DONE_ARRAY
+    global JOB_DONE_ARRAY, SLOT_LOCK, JOB_DONE_ARRAY, SUCCESS
     gcov_dir = Path(sys.argv[1])
     cfg = SiteConfig(gcov_dir.resolve())
     coverage_dirs = []
@@ -135,11 +145,13 @@ def main():
     ccc = 0
     for one_job_set in jobs:
         local_active_job = 0
+        count = 0
         for one_job in one_job_set:
-            with SLOT_LOCK:
-                local_active_job = len(JOB_SLOT_ARRAY)
+            if count > 100:
+                with SLOT_LOCK:
+                    local_active_job = len(JOB_SLOT_ARRAY)
             print(local_active_job)
-            while active_job_count >= max_jobs:
+            while active_job_count >= max_jobs and count > 100:
                 print('.')
                 time.sleep(1)
                 with SLOT_LOCK:
@@ -152,6 +164,9 @@ def main():
             launch_gcov_merge(one_job, cfg)
             ccc += 1
             time.sleep(0.2)
+            if count <= 100:
+                local_active_job += 1
+            count += 1
 
         with SLOT_LOCK:
             local_active_job = len(JOB_SLOT_ARRAY)
@@ -166,6 +181,7 @@ def main():
                     finished_job[0].join()
                 JOB_DONE_ARRAY = []
     last_output.rename(Path(sys.argv[2]))
+    os.exit(SUCCESS?0:1)
 
 if __name__ == "__main__":
     main()
