@@ -590,8 +590,9 @@ end
 ## #############################################################################
 
 function makeRelease
-  makeEnterpriseRelease
-  and makeCommunityRelease
+  # makeEnterpriseRelease
+  # and makeCommunityRelease
+  makeCommunityRelease
 end
 
 function makeCommunityRelease
