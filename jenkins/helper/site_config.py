@@ -56,9 +56,6 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
-ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-for env in os.environ:
-    print(f"{env}={ansi_escape.sub('', os.environ[env])}")
 TEMP = Path("/tmp/")
 if 'TMP' in os.environ:
     TEMP = Path(os.environ['TMP'])
@@ -74,36 +71,38 @@ if 'INNERWORKDIR' in os.environ:
 else:
     TEMP = TEMP / 'ArangoDB'
 
-if TEMP.is_symlink():
-    ORGTMP = str(TEMP)
-    TEMP = TEMP.resolve()
-    print(f'resolved symlink {ORGTMP} to {str(TEMP)}')
-
-if TEMP.exists():
-    # pylint: disable=broad-except
-    STATE = 0
-    try:
-        shutil.rmtree(TEMP)
-        STATE = 1
-        TEMP.mkdir(parents=True)
-    except Exception as ex:
-        msg = f"failed to clean temporary directory: {ex} - won't launch tests!"
-        if STATE == 1:
-            msg = f"failed to create temporary directory after cleaning: {ex} - won't launch tests!"
-        (get_workspace() / 'testfailures.txt').write_text(msg + '\n')
-        print(msg)
-        sys.exit(2)
-else:
-    TEMP.mkdir(parents=True)
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
 os.environ['TMP'] = str(TEMP)
+
+def print_env():
+    """ dump the environment to the console """
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    for env in os.environ:
+        print(f"{env}={ansi_escape.sub('', os.environ[env])}")
+
+def init_temp():
+    """ set up the temporary directory and make sure its empty """
+    if TEMP.exists():
+        # pylint: disable=broad-except
+        try:
+            shutil.rmtree(TEMP)
+            TEMP.mkdir(parents=True)
+        except Exception as ex:
+            msg = f"failed to clean temporary directory: {ex} - won't launch tests!"
+            (get_workspace() / 'testfailures.txt').write_text(msg + '\n')
+            print(msg)
+            sys.exit(2)
+    else:
+        TEMP.mkdir(parents=True)
 
 class SiteConfig:
     """ this environment - adapted to oskar defaults """
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
         # pylint: disable=too-many-statements disable=too-many-branches
+        print_env()
+        init_temp()
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
         self.trace = False
         self.portbase = 7000
