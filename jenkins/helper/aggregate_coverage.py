@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 import shutil
 import sys
-import time
+from queue import Queue
 from pathlib import Path
 from threading  import Thread, Lock
 
@@ -69,41 +69,42 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             print('dmesg already gone?')
 
 SLOT_LOCK = Lock()
-JOB_SLOT_ARRAY = []
-JOB_DONE_ARRAY = []
+WORKER_ARRAY = []
+JOB_QUEUE = Queue()
+JOB_DONE_QUEUE = Queue()
 
-def gcov_merge_runner(_, instance):
+def gcov_merge_runner(cfg, _):
     """ thread runner """
-    global JOB_DONE_ARRAY, SLOT_LOCK, SUCCESS
-    print(f'thread started {instance.job}')
-    ret = instance.launch()
-    with SLOT_LOCK:
-        if ret['error'] != '':
-            print(f"marking failure: {ret['error']}")
-            SUCCESS = False
-        count = 0
-        for job in JOB_SLOT_ARRAY:
-            if job[1].identifier == instance.identifier:
-                break
-            count += 1
-        job = JOB_SLOT_ARRAY.pop(count)
-        JOB_DONE_ARRAY.append(job)
+    global SLOT_LOCK, SUCCESS
+    print('worker thread started')
+    while True:
+        job = JOB_QUEUE.get()
+        if job[0] == 'done':
+            print('worker exiting')
+            return
+        print(f'thread starting {job}')
+        merger = GcovMerger(job, cfg)
+        ret = merger.launch()
+        with SLOT_LOCK:
+            if ret['error'] != '':
+                print(f"marking failure: {ret['error']}")
+                SUCCESS = False
+        JOB_DONE_QUEUE.put((job, ret))
 
-def launch_gcov_merge(jobs, cfg):
+def launch_worker(cfg):
     """ launch one instance """
-    global JOB_DONE_ARRAY, SLOT_LOCK, JOB_DONE_ARRAY
-    merger = GcovMerger(jobs, cfg)
+    global SLOT_LOCK
     with SLOT_LOCK:
         worker = Thread(target=gcov_merge_runner,
-                        args=('true', merger))
-        JOB_SLOT_ARRAY.append((worker, merger))
+                        args=(cfg, ''))
+        WORKER_ARRAY.append(worker)
         worker.start()
     print('thread launched')
 
 def main():
     """ go """
     # pylint disable=too-many-locals disable=too-many-statements
-    global JOB_DONE_ARRAY, SLOT_LOCK, JOB_DONE_ARRAY, SUCCESS
+    global SLOT_LOCK, SUCCESS
     gcov_dir = Path(sys.argv[1])
     cfg = SiteConfig(gcov_dir.resolve())
     coverage_dirs = []
@@ -115,13 +116,13 @@ def main():
             print(f"Skipping {subdir}")
     jobs = []
     sub_jobs = coverage_dirs
-    count = 0
-    jobcount = 0
     last_output = ''
     combined_dir = gcov_dir / 'combined'
     if combined_dir.exists():
         shutil.rmtree(str(combined_dir))
     combined_dir.mkdir()
+    count = 0
+    jobcount = 0
     while len(sub_jobs) > 1:
         next_jobs = []
         jobs.append([])
@@ -138,48 +139,33 @@ def main():
             next_jobs.append(sub_jobs.pop())
         sub_jobs = next_jobs
 
-    max_jobs = psutil.cpu_count(logical=False)
+    worker_count = max_jobs = psutil.cpu_count(logical=False)
     print(max_jobs)
     max_jobs = max(max_jobs, 10)
-    active_job_count = 0
-    ccc = 0
+    while worker_count > 0:
+        launch_worker(cfg)
+        worker_count -= 1
     for one_job_set in jobs:
-        local_active_job = 0
         count = 0
         for one_job in one_job_set:
-            if count > 100:
-                with SLOT_LOCK:
-                    local_active_job = len(JOB_SLOT_ARRAY)
-            print(local_active_job)
-            while active_job_count >= max_jobs and count > 100:
-                print('.')
-                time.sleep(1)
-                with SLOT_LOCK:
-                    local_active_job = len(JOB_SLOT_ARRAY)
-                    if len(JOB_DONE_ARRAY) > 0:
-                        for finished_job in JOB_DONE_ARRAY:
-                            finished_job.join()
-                        JOB_DONE_ARRAY = []
-            print(f"launching {one_job}")
-            launch_gcov_merge(one_job, cfg)
-            ccc += 1
-            time.sleep(0.2)
-            if count <= 100:
-                local_active_job += 1
+            JOB_QUEUE.put(one_job)
             count += 1
+        print(f'waiting for jobset {count} to finish')
+        while count > 0:
+            print('.')
+            JOB_DONE_QUEUE.get()
+            count -= 1
+        print('jobset finished')
+    print('sending queue flush command')
+    worker_count = max_jobs
+    while worker_count > 0:
+        JOB_QUEUE.put(('done', 'done', 'done'))
+        worker_count -= 1
 
-        with SLOT_LOCK:
-            local_active_job = len(JOB_SLOT_ARRAY)
-        while local_active_job > 0:
-            time.sleep(1)
-            with SLOT_LOCK:
-                local_active_job = len(JOB_SLOT_ARRAY)
-        with SLOT_LOCK:
-            local_active_job = len(JOB_SLOT_ARRAY)
-            if len(JOB_DONE_ARRAY) > 0:
-                for finished_job in JOB_DONE_ARRAY:
-                    finished_job[0].join()
-                JOB_DONE_ARRAY = []
+    worker_count = max_jobs
+    for worker in WORKER_ARRAY:
+        worker.join()
+
     last_output.rename(Path(sys.argv[2]))
     if not SUCCESS:
         os.exit(1)
