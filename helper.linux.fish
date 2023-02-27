@@ -31,6 +31,10 @@ set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
 set -gx UBUNTUBUILDIMAGE6_TAG 7
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
+set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7-$ARCH
+set -gx UBUNTUBUILDIMAGE7_TAG 1
+set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
+
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
@@ -153,6 +157,9 @@ function findBuildImage
       case 11.2.1_git20220219-r2
         echo $UBUNTUBUILDIMAGE6
 
+      case 12.2.1_git20220924-r4
+        echo $UBUNTUBUILDIMAGE7
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -203,6 +210,9 @@ function findBuildScript
 
       case 11.2.1_git20220219-r2
         echo buildArangoDB6.fish
+
+      case 12.2.1_git20220924-r4
+        echo buildArangoDB7.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -1485,6 +1495,22 @@ end
 
 function pullUbuntuBuildImage6 ; docker pull $UBUNTUBUILDIMAGE6 ; end
 
+function buildUbuntuBuildImage7
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUbuntu7.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushUbuntuBuildImage7
+  docker tag $UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE7
+  and docker push $UBUNTUBUILDIMAGE7_NAME:latest
+end
+
+function pullUbuntuBuildImage7 ; docker pull $UBUNTUBUILDIMAGE7 ; end
+
 function buildUbuntuPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
@@ -1651,6 +1677,8 @@ function remakeImages
   pushUbuntuBuildImage5 ; or set -l s 1
   buildUbuntuBuildImage6 ; or set -l s 1
   pushUbuntuBuildImage6 ; or set -l s 1
+  buildUbuntuBuildImage7 ; or set -l s 1
+  pushUbuntuBuildImage7 ; or set -l s 1
   buildAlpineBuildImage3 ; or set -l s 1
   pushAlpineBuildImage3 ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
@@ -1684,7 +1712,8 @@ function remakeBuildImages
   pushUbuntuBuildImage5 ; or set -l s 1
   buildUbuntuBuildImage6 ; or set -l s 1
   pushUbuntuBuildImage6 ; or set -l s 1
-  pushAlpineBuildImage2 ; or set -l s 1
+  buildUbuntuBuildImage7 ; or set -l s 1
+  pushUbuntuBuildImage7 ; or set -l s 1
   buildAlpineBuildImage3 ; or set -l s 1
   pushAlpineBuildImage3 ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
@@ -2008,6 +2037,12 @@ function pushOskar
   and buildUbuntuBuildImage5
   and pushUbuntuBuildImage5
 
+  and buildUbuntuBuildImage6
+  and pushUbuntuBuildImage6
+
+  and buildUbuntuBuildImage7
+  and pushUbuntuBuildImage7
+
   and buildAlpineBuildImage3
   and pushAlpineBuildImage3
 
@@ -2057,6 +2092,7 @@ function updateOskar
   and pullUbuntuBuildImage4
   and pullUbuntuBuildImage5
   and pullUbuntuBuildImage6
+  and pullUbuntuBuildImage7
   and pullAlpineBuildImage3
   and pullAlpineBuildImage4
   and pullAlpineBuildImage5
