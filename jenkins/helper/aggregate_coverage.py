@@ -116,7 +116,7 @@ def main():
             print(f"Skipping {subdir}")
     jobs = []
     sub_jobs = coverage_dirs
-    last_output = ''
+    last_output = None
     combined_dir = gcov_dir / 'combined'
     if combined_dir.exists():
         shutil.rmtree(str(combined_dir))
@@ -157,14 +157,20 @@ def main():
             count -= 1
         print('jobset finished')
     print('sending queue flush command')
-    worker_count = max_jobs
+    worker_count = max_jobs * 2
     while worker_count > 0:
         JOB_QUEUE.put(('done', 'done', 'done'))
         worker_count -= 1
 
-    worker_count = max_jobs
+    print('waiting for jobs to exit')
+
     for worker in WORKER_ARRAY:
+        print('.')
         worker.join()
+    print('workers collected')
+    sys.stdout.flush()
+    if not last_output.exists():
+        print(f'output {str(last_output)} not there?')
 
     last_output.rename(Path(sys.argv[2]))
     if not SUCCESS:

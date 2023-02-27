@@ -2,9 +2,9 @@
 set -l c 0
 
 cd $INNERWORKDIR
-and rm -rf combined
-and mkdir combined
-and python3 "$WORKSPACE/jenkins/helper/aggregate_coverage.py" /work/gcov work/combined/result
+and rm -rf /work/combined
+and mkdir /work/combined
+and python3 "$WORKSPACE/jenkins/helper/aggregate_coverage.py" /work/gcov /work/combined/result
 
 and echo "creating gcno tar"
 and pushd ArangoDB/build
