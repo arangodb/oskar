@@ -49,6 +49,10 @@ set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
 set -gx ALPINEBUILDIMAGE6_TAG 5
 set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
 
+set -gx ALPINEBUILDIMAGE7_NAME arangodb/alpinebuildarangodb7-$ARCH
+set -gx ALPINEBUILDIMAGE7_TAG 1
+set -gx ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:$ALPINEBUILDIMAGE7_TAG
+
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
@@ -1547,6 +1551,22 @@ end
 
 function pullAlpineBuildImage6 ; docker pull $ALPINEBUILDIMAGE6 ; end
 
+function buildAlpineBuildImage7
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine7.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE7 ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage7
+  docker tag $ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:latest
+  and docker push $ALPINEBUILDIMAGE7
+  and docker push $ALPINEBUILDIMAGE7_NAME:latest
+end
+
+function pullAlpineBuildImage7 ; docker pull $ALPINEBUILDIMAGE6 ; end
+
 function buildAlpineUtilsImage
   pushd $WORKDIR
   and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
@@ -1611,22 +1631,24 @@ function pullLdapImage ; docker pull $LDAPIMAGE ; end
 function remakeImages
   set -l s 0
 
-  buildUbuntuBuildImage ; or set -l s 1
-  pushUbuntuBuildImage ; or set -l s 1
-  buildUbuntuBuildImage2 ; or set -l s 1
-  pushUbuntuBuildImage2 ; or set -l s 1
   buildUbuntuBuildImage3 ; or set -l s 1
   pushUbuntuBuildImage3 ; or set -l s 1
   buildUbuntuBuildImage4 ; or set -l s 1
   pushUbuntuBuildImage4 ; or set -l s 1
-  buildAlpineBuildImage ; or set -l s 1
-  pushAlpineBuildImage ; or set -l s 1
-  buildAlpineBuildImage2 ; or set -l s 1
-  pushAlpineBuildImage2 ; or set -l s 1
+  buildUbuntuBuildImage5 ; or set -l s 1
+  pushUbuntuBuildImage5 ; or set -l s 1
+  buildUbuntuBuildImage6 ; or set -l s 1
+  pushUbuntuBuildImage6 ; or set -l s 1
   buildAlpineBuildImage3 ; or set -l s 1
   pushAlpineBuildImage3 ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
+  buildAlpineBuildImage5 ; or set -l s 1
+  pushAlpineBuildImage5 ; or set -l s 1
+  buildAlpineBuildImage6 ; or set -l s 1
+  pushAlpineBuildImage6 ; or set -l s 1
+  buildAlpineBuildImage7 ; or set -l s 1
+  pushAlpineBuildImage7 ; or set -l s 1
   buildAlpineUtilsImage ; or set -l s 1
   pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
@@ -1642,22 +1664,25 @@ end
 function remakeBuildImages
   set -l s 0
 
-  buildUbuntuBuildImage ; or set -l s 1
-  pushUbuntuBuildImage ; or set -l s 1
-  buildUbuntuBuildImage2 ; or set -l s 1
-  pushUbuntuBuildImage2 ; or set -l s 1
   buildUbuntuBuildImage3 ; or set -l s 1
   pushUbuntuBuildImage3 ; or set -l s 1
   buildUbuntuBuildImage4 ; or set -l s 1
   pushUbuntuBuildImage4 ; or set -l s 1
-  buildAlpineBuildImage ; or set -l s 1
-  pushAlpineBuildImage ; or set -l s 1
-  buildAlpineBuildImage2 ; or set -l s 1
+  buildUbuntuBuildImage5 ; or set -l s 1
+  pushUbuntuBuildImage5 ; or set -l s 1
+  buildUbuntuBuildImage6 ; or set -l s 1
+  pushUbuntuBuildImage6 ; or set -l s 1
   pushAlpineBuildImage2 ; or set -l s 1
   buildAlpineBuildImage3 ; or set -l s 1
   pushAlpineBuildImage3 ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
+  buildAlpineBuildImage5 ; or set -l s 1
+  pushAlpineBuildImage5 ; or set -l s 1
+  buildAlpineBuildImage6 ; or set -l s 1
+  pushAlpineBuildImage6 ; or set -l s 1
+  buildAlpineBuildImage7 ; or set -l s 1
+  pushAlpineBuildImage7 ; or set -l s 1
 
   return $s
 end
@@ -1980,6 +2005,12 @@ function pushOskar
   and buildAlpineBuildImage5
   and pushAlpineBuildImage5
 
+  and buildAlpineBuildImage6
+  and pushAlpineBuildImage6
+
+  and buildAlpineBuildImage7
+  and pushAlpineBuildImage7
+
   and buildAlpineUtilsImage
   and pushAlpineUtilsImage
 
@@ -2018,6 +2049,7 @@ function updateOskar
   and pullAlpineBuildImage4
   and pullAlpineBuildImage5
   and pullAlpineBuildImage6
+  and pullAlpineBuildImage7
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage
