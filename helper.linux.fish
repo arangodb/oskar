@@ -102,6 +102,9 @@ function compiler
     case 11.2.1_git20220219-r2
       set -gx COMPILER_VERSION $cversion
 
+    case 12.2.1_git20220924-r4
+      set -gx COMPILER_VERSION $cversion
+
     case '*'
       echo "unknown compiler version $cversion"
   end
@@ -123,6 +126,9 @@ function opensslVersion
       set -gx OPENSSL_VERSION $oversion
 
     case '1.1.1'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '3.0'
       set -gx OPENSSL_VERSION $oversion
 
     case '*'
@@ -170,6 +176,9 @@ function findStaticBuildImage
 
       case 11.2.1_git20220219-r2
         echo $ALPINEBUILDIMAGE6
+
+      case 12.2.1_git20220924-r4
+        echo $ALPINEBUILDIMAGE7
 
       case '*'
         echo "unknown compiler version $version"
@@ -219,6 +228,9 @@ function findStaticBuildScript
       case 11.2.1_git20220219-r2
         echo buildAlpine6.fish
 
+      case 12.2.1_git20220924-r4
+        echo buildAlpine7.fish
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -265,7 +277,7 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9]")
+  set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9](\.[0-9])?")
 
   if test "$v" = ""
     echo "$f: no OPENSSL_LINUX specified, using 1.1.0"
