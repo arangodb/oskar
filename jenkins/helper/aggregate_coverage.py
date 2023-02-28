@@ -17,7 +17,7 @@ from async_client import (
 
 from site_config import SiteConfig
 
-SUCCESS=True
+SUCCESS = True
 
 # pylint disable=global-variable-not-assigned
 
