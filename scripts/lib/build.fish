@@ -65,6 +65,7 @@ function setupCcache
       echo "using sccache at S3 ($SCCACHE_BUCKET)"
       set -e SCCACHE_DIR
       set -e SCCACHE_GCS_BUCKET
+      set -e SCCACHE_GCS_KEY_PATH
       set -e SCCACHE_MEMCACHED
       set -e SCCACHE_REDIS
     else if test "$SCCACHE_GCS_BUCKET" != "" -a -f "/work/.gcs-credentials"
