@@ -4,7 +4,7 @@ MAINTAINER Max Neunhoeffer <max@arangodb.com>
 ARG ARCH "x86_64"
 
 RUN apk update && \
-    apk add groff g++ bison flex make cmake ccache python python3 git linux-headers vim boost-dev ctags man gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool nodejs npm
+    apk add groff g++ bison flex make cmake ccache python python3 git linux-headers vim boost-dev ctags man gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool nodejs npm py3-psutil
 
 COPY ./tools/install-poll.sh /tools/
 RUN /tools/install-poll.sh
