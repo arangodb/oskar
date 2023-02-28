@@ -452,6 +452,17 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         try:
                             children = children + process.children(recursive=True)
                             rc_exit = process.wait(timeout=1)
+                            if rc_exit == 0:
+                                print('process exited zero without further output')
+                                kill_children(identifier, params, children)
+                                thread1.join()
+                                thread2.join()
+                                return {
+                                    "progressive_timeout": False,
+                                    "have_deadline": False,
+                                    "rc_exit": rc_exit,
+                                    "line_filter": line_filter
+                                }
                             children = children + self.dig_for_children(params)
                             add_message_to_report(
                                 params,

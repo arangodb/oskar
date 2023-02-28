@@ -174,7 +174,7 @@ def main():
 
     last_output.rename(Path(sys.argv[2]))
     if not SUCCESS:
-        os.exit(1)
+        os._exit(1)
 
 if __name__ == "__main__":
     main()
