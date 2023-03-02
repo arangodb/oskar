@@ -12,7 +12,7 @@ curl -O ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-$OPENLDAPV
 tar xzf openldap-$OPENLDAPVERSION.tgz
 cd openldap-$OPENLDAPVERSION
 # cp -a /tools/config.* ./build
-[ "$ARCH" -eq "x86_64" -a "${OPENSSLPATH:0:1}" -eq "3" ] && X86_64_SUFFIX="64"
+[ "$ARCH" = "x86_64" -a "${OPENSSLPATH:0:1}" = "3" ] && X86_64_SUFFIX="64"
 CPPFLAGS=-I/opt/openssl-$OPENSSLPATH/include \
 LDFLAGS=-L/opt/openssl-$OPENSSLPATH/lib$X86_64_SUFFIX \
   ./configure --prefix=/opt/openssl-$OPENSSLPATH --with-threads --with-tls=openssl --enable-static --disable-shared
