@@ -19,6 +19,12 @@ RUN [ "/tools/install-openssl.sh", "1.1.1", "t" ]
 COPY ./tools/install-openldap.sh /tools/
 RUN [ "/tools/install-openldap.sh", "1.1.1t" ]
 
+COPY ./tools/install-openssl.sh /tools/
+RUN [ "/tools/install-openssl.sh", "3.0", ".8" ]
+       
+COPY ./tools/install-openldap.sh /tools/
+RUN [ "/tools/install-openldap.sh", "3.0.8" ]
+
 RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl
 
 RUN apk add py3-pip && pip install gcovr==5 && apk del py3-pip

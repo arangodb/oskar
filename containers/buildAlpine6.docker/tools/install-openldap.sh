@@ -3,7 +3,7 @@ set -e
 
 export OPENSSLVERSION=$1
 test -n "$OPENSSLVERSION"
-export OPENSSLPATH=`echo $OPENSSLVERSION | tr -d "a-zA-Z"`
+export OPENSSLPATH=`echo $OPENSSLVERSION | sed 's/\([a-zA-Z]$\|\.[0-9]$\)//g'`
 
 # Compile openldap library:
 export OPENLDAPVERSION=2.6.4
@@ -12,8 +12,9 @@ curl -O ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-$OPENLDAPV
 tar xzf openldap-$OPENLDAPVERSION.tgz
 cd openldap-$OPENLDAPVERSION
 # cp -a /tools/config.* ./build
+[ "$ARCH" -eq "x86_64" -a "${OPENSSLPATH:0:1}" -eq "3" ] && X86_64_SUFFIX="64"
 CPPFLAGS=-I/opt/openssl-$OPENSSLPATH/include \
-LDFLAGS=-L/opt/openssl-$OPENSSLPATH/lib \
+LDFLAGS=-L/opt/openssl-$OPENSSLPATH/lib$X86_64_SUFFIX \
   ./configure --prefix=/opt/openssl-$OPENSSLPATH --with-threads --with-tls=openssl --enable-static --disable-shared
 make depend && make -j64
 make install

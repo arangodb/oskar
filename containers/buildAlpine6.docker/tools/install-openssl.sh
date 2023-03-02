@@ -4,11 +4,11 @@ set -e
 # Compile openssl library:
 export OPENSSLBRANCH=$1
 export OPENSSLREVISION=$2
-export OPENSSLVERSION=${OPENSSLBRANCH}${OPENSSLREVISION}
+export OPENSSLVERSION="${OPENSSLBRANCH}${OPENSSLREVISION}"
 
 echo $OPENSSLBRANCH
 
-if [ "$OPENSSLBRANCH" != "1.1.1" ]; then
+if [ "$OPENSSLBRANCH" != "1.1.1" -o "$OPENSSLBRANCH" != "3.0" ]; then
   OLD="old/${OPENSSLBRANCH}/"
 fi;
 

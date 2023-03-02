@@ -18,13 +18,13 @@ update-alternatives --set c++ /usr/bin/g++
 # Compile openssl library:
 export OPENSSLBRANCH=$1
 export OPENSSLREVISION=$2
-export OPENSSLVERSION=${OPENSSLBRANCH}${OPENSSLREVISION}
+export OPENSSLVERSION="${OPENSSLBRANCH}${OPENSSLREVISION}"
 
-if [ "$OPENSSLBRANCH" != "1.1.1" ]; then
+if [ "$OPENSSLBRANCH" != "1.1.1" -o "$OPENSSLBRANCH" != "3.0" ]; then
   OLD="old/${OPENSSLBRANCH}/"
 fi;
 
-export OPENSSLPATH=`echo $OPENSSLVERSION | tr -d "a-zA-Z"`
+export OPENSSLPATH=`echo $OPENSSLVERSION | sed 's/\([a-zA-Z]$\|\.[0-9]$\)//g'`
 cd /tmp
 curl -O https://www.openssl.org/source/openssl-$OPENSSLVERSION.tar.gz
 tar xzf openssl-$OPENSSLVERSION.tar.gz
