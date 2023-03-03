@@ -576,7 +576,7 @@ class TestingRunner():
                 self.scenarios.append(
                     TestConfig(self.cfg,
                                name + f"_{i}",
-                               test["name"],
+                               test["suite"],
                                [ *args,
                                  '--index', f"{i}",
                                  '--testBuckets', f'{num_buckets}/{i}'],
@@ -587,7 +587,7 @@ class TestingRunner():
             self.scenarios.append(
                 TestConfig(self.cfg,
                            name,
-                           test["name"],
+                           test["suite"],
                            [ *args],
                            test['priority'],
                            parallelity,
