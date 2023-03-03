@@ -290,8 +290,8 @@ function findRequiredOpenSSL
   set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9][a-z]")
 
   if test "$v" = ""
-    echo "$f: no OPENSSL_MACOS specified, using 1.1.1g"
-    opensslVersion 1.1.1g
+    echo "$f: no OPENSSL_MACOS specified, using 1.1.1t"
+    opensslVersion 1.1.1t
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
