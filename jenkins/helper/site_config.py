@@ -85,11 +85,15 @@ def init_temp():
     """ set up the temporary directory and make sure its empty """
     if TEMP.exists():
         # pylint: disable=broad-except
+        STATE = 0
         try:
             shutil.rmtree(TEMP)
+            STATE = 1
             TEMP.mkdir(parents=True)
         except Exception as ex:
             msg = f"failed to clean temporary directory: {ex} - won't launch tests!"
+            if STATE == 1:
+                msg = f"failed to create temporary directory after cleaning: {ex} - won't launch tests!"
             (get_workspace() / 'testfailures.txt').write_text(msg + '\n')
             print(msg)
             sys.exit(2)
