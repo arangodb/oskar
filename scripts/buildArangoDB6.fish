@@ -29,7 +29,7 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-[ "$ARCH" = "x86_64" -a "${OPENSSLPATH:0:1}" = "3" ] && X86_64_SUFFIX="64"
+test "$ARCH" = "x86_64"; and string match '3*' "$OPENSSLPATH"; and set X86_64_SUFFIX "64"
 
 set -l pie ""
 #set -l pie "-fpic -fPIC -fpie -fPIE"
