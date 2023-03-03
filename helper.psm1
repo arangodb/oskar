@@ -949,7 +949,7 @@ Function findRequiredOpenSSL
         $OPENSSL_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "OPENSSL_WINDOWS" | Select Line
         If ($OPENSSL_WINDOWS -ne "")
         {
-            If ($OPENSSL_WINDOWS -match '[0-9]{1}\.[0-9]{1}\.[0-9]{1}[a-z]{1}' -And $Matches.count -eq 1)
+            If ($OPENSSL_WINDOWS -match '[0-9]{1}\.[0-9]{1}\.[0-9]{1}[a-z]?' -And $Matches.count -eq 1)
             {
                 $global:OPENSSL_VERSION = $Matches[0]
                 return

@@ -287,7 +287,7 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9][a-z]")
+  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -E -o "[0-9]\.[0-9]\.[0-9][a-z]?")
 
   if test "$v" = ""
     echo "$f: no OPENSSL_MACOS specified, using 1.1.1t"
