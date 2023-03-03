@@ -22,7 +22,7 @@ COPY ./tools/* /tools/
 
 RUN [ "/tools/install.sh", "1.1.1", "t" ]
 
-RUN [ "/tools/install.sh", "3.0", "8" ]
+RUN [ "/tools/install.sh", "3.0", ".8" ]
 
 COPY ./scripts /scripts
 
