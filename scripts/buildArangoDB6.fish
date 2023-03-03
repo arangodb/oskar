@@ -29,6 +29,8 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
+[ "$ARCH" = "x86_64" -a "${OPENSSLPATH:0:1}" = "3" ] && X86_64_SUFFIX="64"
+
 set -l pie ""
 #set -l pie "-fpic -fPIC -fpie -fPIE"
 set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
@@ -39,7 +41,7 @@ set -g FULLARGS $argv \
  -DSTATIC_EXECUTABLES=Off \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
- -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
+ -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib$X86_64_SUFFIX \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
