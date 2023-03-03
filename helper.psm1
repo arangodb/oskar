@@ -342,7 +342,7 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
   $OPENSSL_TAG="OpenSSL_" + ($version -Replace "\.","_")
   If ("$version" -like '3.*')
   {
-    $OPENSSL_TAG=($OPENSSL_TAG.ToLower()).Replace("_", "-")
+    $OPENSSL_TAG="openssl-$version"
   }
   If (-Not(Test-Path -PathType Container -Path "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}"))
   {
