@@ -264,7 +264,7 @@ Function oskarOpenSSL
     }
     If ($global:ok)
     {
-      Write-Host "Set OPENSSL_ROOT_DIR via environment variable to $env:OPENSSL_ROOT_DIR"
+      Write-Host "Set OPENSSL_ROOT_DIR via environment variable to $OPENSSL_PATH"
       $env:OPENSSL_ROOT_DIR = $OPENSSL_PATH
     }
     Else
