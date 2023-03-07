@@ -29,7 +29,7 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-test "$ARCH" = "x86_64"; and string match '3*' "$OPENSSLPATH"; and set X86_64_SUFFIX "64"
+test "$ARCH" = "x86_64"; and string match '3*' "$OPENSSL_VERSION"; and set X86_64_OPENSSL3_PATH ";/opt/openssl-$OPENSSL_VERSION/lib64"
 
 set -l pie ""
 #set -l pie "-fpic -fPIC -fpie -fPIE"
@@ -41,7 +41,7 @@ set -g FULLARGS $argv \
  -DSTATIC_EXECUTABLES=Off \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
- -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib$X86_64_SUFFIX \
+ -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib$X86_64_OPENSSL3_PATH \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
