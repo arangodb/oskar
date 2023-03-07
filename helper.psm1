@@ -264,15 +264,8 @@ Function oskarOpenSSL
     }
     If ($global:ok)
     {
-      If ($IS_OPENSSL_3)
-      {
-        $env:OPENSSL_ROOT_DIR = "$OPENSSL_PATH\static-release"
-      }
-      Else
-      {
-        $env:OPENSSL_ROOT_DIR = $OPENSSL_PATH
-      }
       Write-Host "Set OPENSSL_ROOT_DIR via environment variable to $env:OPENSSL_ROOT_DIR"
+      $env:OPENSSL_ROOT_DIR = $OPENSSL_PATH
     }
     Else
     {
