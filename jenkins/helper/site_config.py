@@ -216,14 +216,7 @@ class SiteConfig:
             self.portbase = int(os.environ['PORTBASE'])
 
     def is_instrumented(self):
-<<<<<<< HEAD
-<<<<<<< HEAD
         """ check whether we run an instrumented build """
-=======
->>>>>>> 1918494f (improve error message)
-=======
-        """ check whether we are running instrumented """
->>>>>>> a40363a9 (lint)
         return self.is_asan or self.is_aulsan or self.is_gcov
 
     def get_overload(self):
