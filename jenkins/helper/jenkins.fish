@@ -47,7 +47,7 @@ function prepareOskar
   end
 
   mkdir -p work;
-  pushd work; and find . -not -name 'ArangoDB' -delete; popd
+  #pushd work; and find . -not -name 'ArangoDB' -delete; popd
   begin test -f $HOME/.gcs-credentials; and cp $HOME/.gcs-credentials work/.gcs-credentials; end; or true
 end
 
