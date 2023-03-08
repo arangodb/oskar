@@ -12,11 +12,11 @@ end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-  set -xg COMPILER_VERSION 11.2.1
+  set -xg COMPILER_VERSION 12.2.1
 end
 echo "Using compiler version $COMPILER_VERSION"
 
-if test "$COMPILER_VERSION" = "11.2.1"
+if test "$COMPILER_VERSION" = "12.2.1"
   set -xg CC_NAME gcc
   set -xg CXX_NAME g++
 else
@@ -25,11 +25,11 @@ else
 end
 
 if test "$OPENSSL_VERSION" = ""
-  set -xg OPENSSL_VERSION 1.1.1
+  set -xg OPENSSL_VERSION 3.0
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-test "$ARCH" = "x86_64"; and string match '3*' "$OPENSSL_VERSION"; and set X86_64_OPENSSL3_PATH ";/opt/openssl-$OPENSSL_VERSION/lib64"
+[ "$ARCH" = "x86_64" -a "${OPENSSLPATH:0:1}" = "3" ] && X86_64_SUFFIX="64"
 
 set -l pie ""
 #set -l pie "-fpic -fPIC -fpie -fPIE"
@@ -41,7 +41,7 @@ set -g FULLARGS $argv \
  -DSTATIC_EXECUTABLES=Off \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
- -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib$X86_64_OPENSSL3_PATH \
+ -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib$X86_64_SUFFIX \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
 
