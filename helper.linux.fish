@@ -28,8 +28,12 @@ set -gx UBUNTUBUILDIMAGE5_TAG 15
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
-set -gx UBUNTUBUILDIMAGE6_TAG 7
+set -gx UBUNTUBUILDIMAGE6_TAG 8
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
+
+set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7-$ARCH
+set -gx UBUNTUBUILDIMAGE7_TAG 1
+set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
@@ -46,8 +50,12 @@ set -gx ALPINEBUILDIMAGE5_TAG 13
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
-set -gx ALPINEBUILDIMAGE6_TAG 5
+set -gx ALPINEBUILDIMAGE6_TAG 6
 set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
+
+set -gx ALPINEBUILDIMAGE7_NAME arangodb/alpinebuildarangodb7-$ARCH
+set -gx ALPINEBUILDIMAGE7_TAG 1
+set -gx ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:$ALPINEBUILDIMAGE7_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
@@ -98,6 +106,9 @@ function compiler
     case 11.2.1_git20220219-r2
       set -gx COMPILER_VERSION $cversion
 
+    case 12.2.1_git20220924-r4
+      set -gx COMPILER_VERSION $cversion
+
     case '*'
       echo "unknown compiler version $cversion"
   end
@@ -121,6 +132,9 @@ function opensslVersion
     case '1.1.1'
       set -gx OPENSSL_VERSION $oversion
 
+    case '3.0'
+      set -gx OPENSSL_VERSION $oversion
+
     case '*'
       echo "unknown openssl version $oversion"
   end
@@ -142,6 +156,9 @@ function findBuildImage
 
       case 11.2.1_git20220219-r2
         echo $UBUNTUBUILDIMAGE6
+
+      case 12.2.1_git20220924-r4
+        echo $UBUNTUBUILDIMAGE7
 
       case '*'
         echo "unknown compiler version $version"
@@ -167,6 +184,9 @@ function findStaticBuildImage
       case 11.2.1_git20220219-r2
         echo $ALPINEBUILDIMAGE6
 
+      case 12.2.1_git20220924-r4
+        echo $ALPINEBUILDIMAGE7
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -191,6 +211,9 @@ function findBuildScript
       case 11.2.1_git20220219-r2
         echo buildArangoDB6.fish
 
+      case 12.2.1_git20220924-r4
+        echo buildArangoDB7.fish
+
       case '*'
         echo "unknown compiler version $version"
         return 1
@@ -214,6 +237,9 @@ function findStaticBuildScript
 
       case 11.2.1_git20220219-r2
         echo buildAlpine6.fish
+
+      case 12.2.1_git20220924-r4
+        echo buildAlpine7.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -261,7 +287,7 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9]")
+  set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o '^[0-2]\.[0-2]\.[0-2]\|^[3-9]\.[0-9]')
 
   if test "$v" = ""
     echo "$f: no OPENSSL_LINUX specified, using 1.1.0"
@@ -1469,6 +1495,22 @@ end
 
 function pullUbuntuBuildImage6 ; docker pull $UBUNTUBUILDIMAGE6 ; end
 
+function buildUbuntuBuildImage7
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUbuntu7.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushUbuntuBuildImage7
+  docker tag $UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE7
+  and docker push $UBUNTUBUILDIMAGE7_NAME:latest
+end
+
+function pullUbuntuBuildImage7 ; docker pull $UBUNTUBUILDIMAGE7 ; end
+
 function buildUbuntuPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
@@ -1547,6 +1589,22 @@ end
 
 function pullAlpineBuildImage6 ; docker pull $ALPINEBUILDIMAGE6 ; end
 
+function buildAlpineBuildImage7
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildAlpine7.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE7 ."
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushAlpineBuildImage7
+  docker tag $ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:latest
+  and docker push $ALPINEBUILDIMAGE7
+  and docker push $ALPINEBUILDIMAGE7_NAME:latest
+end
+
+function pullAlpineBuildImage7 ; docker pull $ALPINEBUILDIMAGE6 ; end
+
 function buildAlpineUtilsImage
   pushd $WORKDIR
   and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
@@ -1611,22 +1669,26 @@ function pullLdapImage ; docker pull $LDAPIMAGE ; end
 function remakeImages
   set -l s 0
 
-  buildUbuntuBuildImage ; or set -l s 1
-  pushUbuntuBuildImage ; or set -l s 1
-  buildUbuntuBuildImage2 ; or set -l s 1
-  pushUbuntuBuildImage2 ; or set -l s 1
   buildUbuntuBuildImage3 ; or set -l s 1
   pushUbuntuBuildImage3 ; or set -l s 1
   buildUbuntuBuildImage4 ; or set -l s 1
   pushUbuntuBuildImage4 ; or set -l s 1
-  buildAlpineBuildImage ; or set -l s 1
-  pushAlpineBuildImage ; or set -l s 1
-  buildAlpineBuildImage2 ; or set -l s 1
-  pushAlpineBuildImage2 ; or set -l s 1
+  buildUbuntuBuildImage5 ; or set -l s 1
+  pushUbuntuBuildImage5 ; or set -l s 1
+  buildUbuntuBuildImage6 ; or set -l s 1
+  pushUbuntuBuildImage6 ; or set -l s 1
+  buildUbuntuBuildImage7 ; or set -l s 1
+  pushUbuntuBuildImage7 ; or set -l s 1
   buildAlpineBuildImage3 ; or set -l s 1
   pushAlpineBuildImage3 ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
+  buildAlpineBuildImage5 ; or set -l s 1
+  pushAlpineBuildImage5 ; or set -l s 1
+  buildAlpineBuildImage6 ; or set -l s 1
+  pushAlpineBuildImage6 ; or set -l s 1
+  buildAlpineBuildImage7 ; or set -l s 1
+  pushAlpineBuildImage7 ; or set -l s 1
   buildAlpineUtilsImage ; or set -l s 1
   pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
@@ -1642,22 +1704,26 @@ end
 function remakeBuildImages
   set -l s 0
 
-  buildUbuntuBuildImage ; or set -l s 1
-  pushUbuntuBuildImage ; or set -l s 1
-  buildUbuntuBuildImage2 ; or set -l s 1
-  pushUbuntuBuildImage2 ; or set -l s 1
   buildUbuntuBuildImage3 ; or set -l s 1
   pushUbuntuBuildImage3 ; or set -l s 1
   buildUbuntuBuildImage4 ; or set -l s 1
   pushUbuntuBuildImage4 ; or set -l s 1
-  buildAlpineBuildImage ; or set -l s 1
-  pushAlpineBuildImage ; or set -l s 1
-  buildAlpineBuildImage2 ; or set -l s 1
-  pushAlpineBuildImage2 ; or set -l s 1
+  buildUbuntuBuildImage5 ; or set -l s 1
+  pushUbuntuBuildImage5 ; or set -l s 1
+  buildUbuntuBuildImage6 ; or set -l s 1
+  pushUbuntuBuildImage6 ; or set -l s 1
+  buildUbuntuBuildImage7 ; or set -l s 1
+  pushUbuntuBuildImage7 ; or set -l s 1
   buildAlpineBuildImage3 ; or set -l s 1
   pushAlpineBuildImage3 ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
+  buildAlpineBuildImage5 ; or set -l s 1
+  pushAlpineBuildImage5 ; or set -l s 1
+  buildAlpineBuildImage6 ; or set -l s 1
+  pushAlpineBuildImage6 ; or set -l s 1
+  buildAlpineBuildImage7 ; or set -l s 1
+  pushAlpineBuildImage7 ; or set -l s 1
 
   return $s
 end
@@ -1971,6 +2037,12 @@ function pushOskar
   and buildUbuntuBuildImage5
   and pushUbuntuBuildImage5
 
+  and buildUbuntuBuildImage6
+  and pushUbuntuBuildImage6
+
+  and buildUbuntuBuildImage7
+  and pushUbuntuBuildImage7
+
   and buildAlpineBuildImage3
   and pushAlpineBuildImage3
 
@@ -1979,6 +2051,12 @@ function pushOskar
 
   and buildAlpineBuildImage5
   and pushAlpineBuildImage5
+
+  and buildAlpineBuildImage6
+  and pushAlpineBuildImage6
+
+  and buildAlpineBuildImage7
+  and pushAlpineBuildImage7
 
   and buildAlpineUtilsImage
   and pushAlpineUtilsImage
@@ -2014,10 +2092,12 @@ function updateOskar
   and pullUbuntuBuildImage4
   and pullUbuntuBuildImage5
   and pullUbuntuBuildImage6
+  and pullUbuntuBuildImage7
   and pullAlpineBuildImage3
   and pullAlpineBuildImage4
   and pullAlpineBuildImage5
   and pullAlpineBuildImage6
+  and pullAlpineBuildImage7
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullCentosPackagingImage

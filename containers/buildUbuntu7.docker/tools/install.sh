@@ -17,14 +17,14 @@ update-alternatives --set c++ /usr/bin/g++
 
 # Compile openssl library:
 export OPENSSLBRANCH=$1
-export OPENSSLREVISION=$2
-export OPENSSLVERSION="${OPENSSLBRANCH}${OPENSSLREVISION}"
+export OPENSSLPATCH=$2
+export OPENSSLVERSION="${OPENSSLBRANCH}.${OPENSSLPATCH}"
 
-if [ "$OPENSSLBRANCH" != "1.1.1" -a "$OPENSSLBRANCH" != "3.0" ]; then
+if [ "$OPENSSLBRANCH" != "3.0" ]; then
   OLD="old/${OPENSSLBRANCH}/"
 fi;
 
-export OPENSSLPATH=`echo $OPENSSLVERSION | sed 's/\([a-zA-Z]$\|\.[0-9]$\)//g'`
+export OPENSSLPATH=`echo $OPENSSLVERSION | sed 's/\.[0-9]$//g'`
 cd /tmp
 curl -O https://www.openssl.org/source/openssl-$OPENSSLVERSION.tar.gz
 tar xzf openssl-$OPENSSLVERSION.tar.gz
@@ -42,7 +42,7 @@ curl -O ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-$OPENLDAPV
 tar xzf openldap-$OPENLDAPVERSION.tgz
 cd openldap-$OPENLDAPVERSION
 CPPFLAGS=-I/opt/openssl-$OPENSSLPATH/include \
-LDFLAGS=-L/opt/openssl-$OPENSSLPATH/lib \
+LDFLAGS=-L/opt/openssl-$OPENSSLPATH/lib64 \
 ./configure -prefix=/opt/openssl-$OPENSSLPATH --enable-static
 make depend && make -j64
 make install

@@ -253,7 +253,15 @@ Function oskarOpenSSL
     findRequiredOpenSSL
     $global:OPENSSL_PATH = $(If (isGCE) {"C:"} Else {"${global:INNERWORKDIR}"}) + "\OpenSSL\${OPENSSL_VERSION}"
     Write-Host "Use OpenSSL within oskar: build ${OPENSSL_VERSION} if not present in ${OPENSSL_PATH}"
-    $global:ok = (checkOpenSSL $(If (isGCE) {"C:"} Else {"${global:INNERWORKDIR}"}) $OPENSSL_VERSION $MSVS ${OPENSSL_MODES} ${OPENSSL_TYPES} $true)
+    $IS_OPENSSL_3 = "$global:OPENSSL_VERSION" -like '3.*'
+    If ($IS_OPENSSL_3)
+    {
+      $global:ok = (checkOpenSSL $(If (isGCE) {"C:"} Else {"${global:INNERWORKDIR}"}) $OPENSSL_VERSION $MSVS "release" "static" $true)
+    }
+    Else
+    {
+      $global:ok = (checkOpenSSL $(If (isGCE) {"C:"} Else {"${global:INNERWORKDIR}"}) $OPENSSL_VERSION $MSVS ${OPENSSL_MODES} ${OPENSSL_TYPES} $true)
+    }
     If ($global:ok)
     {
       Write-Host "Set OPENSSL_ROOT_DIR via environment variable to $OPENSSL_PATH"
@@ -325,7 +333,7 @@ Function checkOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
   {
     If ($doBuild)
     {
-      Write-Host "Build OpenSSL ${version} all configurations"
+      Write-Host "Build OpenSSL ${version} all necessary configurations: {$modes} x {$types}"
       If (buildOpenSSL $path $version $msvs $modes $types)
       {
         $count = ($modes.Length * $types.Length)
@@ -340,6 +348,10 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
 {
   Push-Location
   $OPENSSL_TAG="OpenSSL_" + ($version -Replace "\.","_")
+  If ("$version" -like '3.*')
+  {
+    $OPENSSL_TAG="openssl-$version"
+  }
   If (-Not(Test-Path -PathType Container -Path "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}"))
   {
     mkdir "${global:INNERWORKDIR}\OpenSSL\tmp_${msvs}"
@@ -385,7 +397,7 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
               {
                   $MSVS_PATH="${Env:ProgramFiles}\Microsoft Visual Studio\$msvs"
               }
-              $buildCommand = "call `"$MSVS_PATH\Community\Common7\Tools\vsdevcmd`" -arch=amd64 && perl Configure $CONFIG_TYPE --$mode --prefix=`"${env:installdir}`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A && nmake clean && nmake && nmake install"
+              $buildCommand = "call `"$MSVS_PATH\Community\Common7\Tools\vsdevcmd`" -arch=amd64 && perl Configure $CONFIG_TYPE --$mode --prefix=`"${env:installdir}`" --openssldir=`"${env:installdir}\ssl`" VC-WIN64A && nmake clean && set CL=/MP && nmake && nmake install"
               Invoke-Expression "& cmd /c '$buildCommand' 2>&1" | tee "${INNERWORKDIR}\buildOpenSSL_${type}-${mode}-${msvs}.log"
               If (-Not ($?)) { $global:ok = $false }
             }
@@ -949,7 +961,7 @@ Function findRequiredOpenSSL
         $OPENSSL_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "OPENSSL_WINDOWS" | Select Line
         If ($OPENSSL_WINDOWS -ne "")
         {
-            If ($OPENSSL_WINDOWS -match '[0-9]{1}\.[0-9]{1}\.[0-9]{1}[a-z]{1}' -And $Matches.count -eq 1)
+            If ($OPENSSL_WINDOWS -match '[0-9]{1}\.[0-9]{1}\.[0-9]{1}[a-z]?' -And $Matches.count -eq 1)
             {
                 $global:OPENSSL_VERSION = $Matches[0]
                 return
