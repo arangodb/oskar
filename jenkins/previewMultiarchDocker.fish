@@ -28,7 +28,7 @@ if test "$EDITION" = "All"; or test "$EDITION" = "Community"
   community
   makeDockerMultiarch "$DOCKER_TAG_JENKINS"
 end
-if test "$EDITION" = "All"; or test "$EDITION" = "Entreprise"
+if test "$EDITION" = "All"; or test "$EDITION" = "Enterprise"
   enterprise
   makeDockerMultiarch "$DOCKER_TAG_JENKINS"
 end
