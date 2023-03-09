@@ -24,14 +24,14 @@ end
 
 cleanPrepareLockUpdateClear
 and set -xg RELEASE_TYPE "preview"
-and if test "$EDITION" = "All"; or test "$EDITION" = "Community"
-      community
-      makeDockerMultiarch "$DOCKER_TAG_JENKINS"
-    end
-and if test "$EDITION" = "All"; or test "$EDITION" = "Entreprise"
-      enterprise
-      makeDockerMultiarch "$DOCKER_TAG_JENKINS"
-    end
+if test "$EDITION" = "All"; or test "$EDITION" = "Community"
+  community
+  makeDockerMultiarch "$DOCKER_TAG_JENKINS"
+end
+if test "$EDITION" = "All"; or test "$EDITION" = "Entreprise"
+  enterprise
+  makeDockerMultiarch "$DOCKER_TAG_JENKINS"
+end
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
