@@ -15,6 +15,7 @@ and tar x -f /tmp/gcno.tar -C $INNERWORKDIR/combined/result
 
 and rm -rf $INNERWORKDIR/coverage
 and mkdir $INNERWORKDIR/coverage
+and mkdir $INNERWORKDIR/coverage/utils/gdb-pretty-printers/immer/test
 and mkdir $INNERWORKDIR/coverage/enterprise
 and ln -s $INNERWORKDIR/ArangoDB/3rdParty/jemalloc/v*/include $INNERWORKDIR/ArangoDB/include
 and gcovr --exclude-throw-branches --root $INNERWORKDIR/ArangoDB \
@@ -44,4 +45,7 @@ and if test -d $INNERWORKDIR/ArangoDB/enterprise/tests
         echo "cp -a $INNERWORKDIR/ArangoDB/enterprise/tests $INNERWORKDIR/coverage/enterprise/tests"
         cp -a $INNERWORKDIR/ArangoDB/enterprise/tests $INNERWORKDIR/coverage/enterprise/tests
     end
+and if test -d $INNERWORKDIR/ArangoDB/utils/gdb-pretty-printers
+    echo "cp -a $INNERWORKDIR/ArangoDB/utils/gdb-pretty-printers/immer/test/flex_vector_test.cpp $INNERWORKDIR/coverage/utils/gdb-pretty-printers/immer/test/flex_vector_test.cpp"
+    cp -a $INNERWORKDIR/ArangoDB/utils/gdb-pretty-printers/immer/test/flex_vector_test.cpp $INNERWORKDIR/coverage/utils/gdb-pretty-printers/immer/test/flex_vector_test.cpp
 end
