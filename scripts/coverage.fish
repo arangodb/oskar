@@ -2,8 +2,8 @@
 set -l c 0
 
 cd $INNERWORKDIR
-and rm -rf $INNERWORKDIR/combined
-and mkdir $INNERWORKDIR/combined
+and rm -rf combined
+and mkdir combined
 and python3 "$WORKSPACE/jenkins/helper/aggregate_coverage.py" $INNERWORKDIR/gcov $INNERWORKDIR/combined/result
 
 and echo "creating gcno tar"
@@ -13,10 +13,10 @@ and popd
 and echo "copying gcno files"
 and tar x -f /tmp/gcno.tar -C $INNERWORKDIR/combined/result
 
-and rm -rf $INNERWORKDIR/coverage
-and mkdir $INNERWORKDIR/coverage
-and mkdir $INNERWORKDIR/coverage/utils/gdb-pretty-printers/immer/test
-and mkdir $INNERWORKDIR/coverage/enterprise
+and rm -rf coverage
+and mkdir coverage
+and mkdir coverage/utils/gdb-pretty-printers/immer/test
+and mkdir coverage/enterprise
 and ln -s $INNERWORKDIR/ArangoDB/3rdParty/jemalloc/v*/include $INNERWORKDIR/ArangoDB/include
 and gcovr --exclude-throw-branches --root $INNERWORKDIR/ArangoDB \
         -x \
@@ -41,6 +41,7 @@ and for d in lib arangosh client-tools arangod enterprise/Enterprise
   	echo "cp -a $INNERWORKDIR/ArangoDB/$d $INNERWORKDIR/coverage/$d"
   	cp -a $INNERWORKDIR/ArangoDB/$d $INNERWORKDIR/coverage/$d
   end
+end
 and if test -d $INNERWORKDIR/ArangoDB/enterprise/tests
         echo "cp -a $INNERWORKDIR/ArangoDB/enterprise/tests $INNERWORKDIR/coverage/enterprise/tests"
         cp -a $INNERWORKDIR/ArangoDB/enterprise/tests $INNERWORKDIR/coverage/enterprise/tests
