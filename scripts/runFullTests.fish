@@ -47,7 +47,8 @@ end
 
 function launchSingleClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster --full "$ENTERPRISE_ARG"
+  #python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster --full "$ENTERPRISE_ARG"
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions-rlog.txt" -f launch --single_cluster --full "$ENTERPRISE_ARG"
   and set -xg result "GOOD"
   or set -xg result "BAD"
 end
