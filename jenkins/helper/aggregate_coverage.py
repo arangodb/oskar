@@ -269,9 +269,9 @@ def main():
             print(f"Copy {str(srcdir)} => {str(dstdir)}")
 
             for root, _, files in os.walk(srcdir):
-                subdir = str(coverage_dir) + root[baselen:]
-                print(subdir)
-                print(files)
+                subdir = str(dstdir) + root[baselen:]
+                print(f"subdir {subdir}")
+                print(f"Files {files}")
                 path = Path(subdir)
                 path.mkdir(parents=True, exist_ok=True)
                 for filename in files:
