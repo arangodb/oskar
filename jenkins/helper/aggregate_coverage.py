@@ -18,7 +18,7 @@ from async_client import (
     make_logfile_params
 )
 
-from site_config import SiteConfig
+from site_config import SiteConfig, TEMP
 
 SUCCESS = True
 
@@ -52,7 +52,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
         verbose = True
         self.params = make_logfile_params(verbose,
                                           self.resultfile,
-                                          self.cfg.tmpdir,
+                                          TEMP,
                                           111)
         print(self.params)
         start = datetime.now()
@@ -262,7 +262,7 @@ def main():
             else:
                 dstdir = result_dir / dir_pair[0]
             print(f"Copy {str(srcdir)} => {str(dstdir)}")
-            
+
             for root, _, files in os.walk(srcdir):
                 subdir = str(result_dir) + root[baselen:]
                 print(subdir)
