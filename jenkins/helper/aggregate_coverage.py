@@ -28,8 +28,6 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
     """configuration"""
 
     def __init__(self, site_config, rootdir, xmlfile, resultfile, coverage_dir, directories):
-        self.identifier = jobs[0]
-        self.job = jobs
         self.job_parameters = [
             '--print-summary',
             '--exclude-throw-branches',
@@ -39,7 +37,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
             '--exclude-lines-by-pattern', "TRI_ASSERT",
         ]
         for one_directory in directories:
-            for one_globbed = glob.glob(str(rootdir / one_directory)):
+            for one_globbed in glob.glob(str(rootdir / one_directory)):
                 self.job_parameters += ['-e', str(one_globbed)]
         self.job_parameters.append(str(coverage_dir))
         self.resultfile = resultfile
@@ -54,6 +52,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
         verbose = True
         self.params = make_logfile_params(verbose,
                                           self.resultfile,
+                                          self.cfg.tmpdir,
                                           111)
         print(self.params)
         start = datetime.now()
@@ -64,21 +63,20 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
                 self.params,
                 progressive_timeout=600,
                 deadline_grace_period=30*60,
-                identifier=self.identifier
+                identifier='gcovr'
             )
         except Exception as ex:
-            print(f'exception in {self.job[0]} {self.job[1]}: {ex}')
+            print('exception in gcovr run')
             self.params['error'] += str(ex)
         end = datetime.now()
-        print(f'done with {self.job[0]} {self.job[1]} in {end-start} - {ret}')
+        print(f'done with gcovr {self.params} in {end-start}')
         #delete_logfile_params(params)
         ret = {}
         ret['error'] = self.params['error']
-        shutil.rmtree(self.job[0])
-        shutil.rmtree(self.job[1])
         return ret
 
     def translate_xml(self):
+        """ convert the directories inside the xml file """
         xmltext = self.xmlfile.read_text(encodig='utf8')
         xmltext = re.sub(r'filename=\"', 'filename=\"./coverage/', xmltext)
         self.xmlfile.write_text(xmltext)
@@ -243,20 +241,19 @@ def main():
         print(f'output {str(last_output)} not there?')
     result_dir = base_dir / 'combined' / 'result'
     last_output.rename(result_dir)
-    
+
     sourcedir = base_dir / 'ArangoDB'
-    # copy the gcno files from the source directory 
+    # copy the gcno files from the source directory
     srcdir = sourcedir / 'build'
     baselen = len(str(srcdir))
-    for root, dirs, files in os.walk(srcdir):
-        print(dest)
+    for root, _, files in os.walk(srcdir):
         subdir = str(result_dir) + root[baselen:]
         print(subdir)
-        p = Path(subdir)
-        p.mkdir(parents=True, exist_ok=True)
+        path = Path(subdir)
+        path.mkdir(parents=True, exist_ok=True)
         for filename in fnmatch.filter(files, '*.gcno'):
             source = (os.path.join(root, filename))
-            shutil.copy2(source, p / filename)
+            shutil.copy2(source, path / filename)
     for dir_pair in [
             ['lib'],
             ['arangosh'],
@@ -282,18 +279,18 @@ def main():
     (sourcedir / 'include').symlink_to(jmdir)
     xmlfile = base_dir / 'coverage' / 'coverage.xml'
     resultfile = base_dir / 'coverage' / 'summary.txt'
-    gc = Gcovr(cfg, sourcedir, xmlfile, result_dir, [
-        'build',
-        'build/3rdParty/libunwind/v*',
-        'build/3rdParty/libunwind/v*/src/',
-        '3rdParty',
-        '3rdParty/jemalloc/v*/',
-        'usr/',
-        'tests'
+    gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
+        Path('build'),
+        Path('build') / '3rdParty' / 'libunwind'/ 'v*',
+        Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
+        Path('3rdParty'),
+        Path('3rdParty') / 'jemalloc' / 'v*',
+        Path('usr'),
+        Path('tests')
         ])
-    gc.launch()
-    gc.translate_xml()
-    
+    gcovr.launch()
+    gcovr.translate_xml()
+
     if not SUCCESS:
         os._exit(1)
 
