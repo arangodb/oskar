@@ -155,6 +155,7 @@ def main():
     # pylint disable=too-many-locals disable=too-many-statements
     global SLOT_LOCK, SUCCESS
     base_dir = Path(sys.argv[1])
+    os.chdir(base_dir)
     gcov_dir = base_dir / sys.argv[2]
     cfg = SiteConfig(gcov_dir.resolve())
 
