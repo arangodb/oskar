@@ -263,13 +263,13 @@ def main():
             baselen = len(str(srcdir))
             dstdir = None
             if len(dir_pair) == 2:
-                dstdir = result_dir / dir_pair[1]
+                dstdir = coverage_dir / dir_pair[1]
             else:
-                dstdir = result_dir / dir_pair[0]
+                dstdir = coverage_dir / dir_pair[0]
             print(f"Copy {str(srcdir)} => {str(dstdir)}")
 
             for root, _, files in os.walk(srcdir):
-                subdir = str(result_dir) + root[baselen:]
+                subdir = str(coverage_dir) + root[baselen:]
                 print(subdir)
                 print(files)
                 path = Path(subdir)
