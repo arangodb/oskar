@@ -4,11 +4,13 @@ MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 ARG ARCH "x86_64"
 
 RUN apk update && \
-    apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool nodejs npm && apk add g++ prometheus bash
+    apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool nodejs npm && apk add g++ prometheus bash py3-psutil
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-RUN apk add py3-pip && pip3 install PyYAML && apk del py3-pip
+RUN apk add py3-pip && \
+  pip3 install PyYAML && \
+  apk del py3-pip
 
 COPY ./tools/install-poll.sh /tools/
 RUN /tools/install-poll.sh
