@@ -1,33 +1,94 @@
 #!/usr/bin/env python3
 """test drivers"""
 from datetime import datetime
+import fnmatch
+import glob
 import os
+from queue import Queue
+import re
 import shutil
 import sys
-from queue import Queue
 from pathlib import Path
 from threading  import Thread, Lock
 
 import psutil
-
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
-    make_default_params
+    make_default_params,
+    make_logfile_params
 )
 
-from site_config import SiteConfig
+from site_config import SiteConfig, TEMP
 
 SUCCESS = True
 
 # pylint disable=global-variable-not-assigned
 
+class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
+    """configuration"""
+
+    def __init__(self, site_config, rootdir, xmlfile, resultfile, coverage_dir, directories):
+        self.job_parameters = [
+            '--print-summary',
+            '--exclude-throw-branches',
+            '--root', str(rootdir),
+            '--xml',
+            '--output', str(xmlfile),
+            '--exclude-lines-by-pattern', "TRI_ASSERT",
+        ]
+        for one_directory in directories:
+            for one_globbed in glob.glob(str(rootdir / one_directory)):
+                self.job_parameters += ['-e', str(one_globbed)]
+        self.job_parameters.append(str(coverage_dir))
+        print(self.job_parameters)
+        self.resultfile = resultfile
+        self.xmlfile = xmlfile
+        self.params = None
+        super().__init__(site_config, None)
+
+    def launch(self):
+       # pylint: disable=R0913 disable=R0902 disable=broad-except
+        """ gcov merger """
+        print('------')
+        verbose = True
+        self.params = make_logfile_params(verbose,
+                                          self.resultfile,
+                                          TEMP,
+                                          111)
+        print(self.params)
+        start = datetime.now()
+        try:
+            ret = self.run_monitored(
+                "gcovr",
+                self.job_parameters,
+                self.params,
+                progressive_timeout=600,
+                deadline_grace_period=30*60,
+                identifier='gcovr'
+            )
+        except Exception as ex:
+            print('exception in gcovr run')
+            self.params['error'] += str(ex)
+        end = datetime.now()
+        print(f'done with gcovr {self.params} in {end-start}')
+        #delete_logfile_params(params)
+        ret = {}
+        ret['error'] = self.params['error']
+        return ret
+
+    def translate_xml(self):
+        """ convert the directories inside the xml file """
+        xmltext = self.xmlfile.read_text(encodig='utf8')
+        xmltext = re.sub(r'filename=\"', 'filename=\"./coverage/', xmltext)
+        self.xmlfile.write_text(xmltext)
+
 class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     """configuration"""
 
-    def __init__(self, jobs, site_config):
-        self.identifier = jobs[0]
-        self.job = jobs
-        self.job_parameters = ['merge', jobs[0], jobs[1], '-o', jobs[2]]
+    def __init__(self, job, site_config):
+        self.identifier = job[0]
+        self.job = job
+        self.job_parameters = ['merge', job[0], job[1], '-o', job[2]]
         self.params = None
         super().__init__(site_config, None)
 
@@ -105,8 +166,11 @@ def main():
     """ go """
     # pylint disable=too-many-locals disable=too-many-statements
     global SLOT_LOCK, SUCCESS
-    gcov_dir = Path(sys.argv[1])
+    base_dir = Path(sys.argv[1])
+    gcov_dir = base_dir / sys.argv[2]
     cfg = SiteConfig(gcov_dir.resolve())
+
+    # Locate all directories containing coverage information;
     coverage_dirs = []
     for subdir in gcov_dir.iterdir():
         if subdir.is_dir() and len(str(subdir.name)) == 32:
@@ -114,6 +178,8 @@ def main():
         else:
             print(len(str(subdir.name)))
             print(f"Skipping {subdir}")
+
+    # aggregate them to a tree job structure
     jobs = []
     sub_jobs = coverage_dirs
     last_output = None
@@ -121,6 +187,10 @@ def main():
     if combined_dir.exists():
         shutil.rmtree(str(combined_dir))
     combined_dir.mkdir()
+    coverage_dir = base_dir / 'coverage'
+    if coverage_dir.exists():
+        shutil.rmtree(str(coverage_dir))
+    coverage_dir.mkdir()
     count = 0
     jobcount = 0
     while len(sub_jobs) > 1:
@@ -139,12 +209,15 @@ def main():
             next_jobs.append(sub_jobs.pop())
         sub_jobs = next_jobs
 
+    # launch workers
     worker_count = max_jobs = psutil.cpu_count(logical=False)
     print(max_jobs)
     max_jobs = max(max_jobs, 10)
     while worker_count > 0:
         launch_worker(cfg)
         worker_count -= 1
+
+    # feed the workers one tree layer in one go
     for one_job_set in jobs:
         count = 0
         for one_job in one_job_set:
@@ -156,14 +229,14 @@ def main():
             JOB_DONE_QUEUE.get()
             count -= 1
         print('jobset finished')
+
+    # terminate workers
     print('sending queue flush command')
     worker_count = max_jobs * 2
     while worker_count > 0:
         JOB_QUEUE.put(('done', 'done', 'done'))
         worker_count -= 1
-
     print('waiting for jobs to exit')
-
     for worker in WORKER_ARRAY:
         print('.')
         worker.join()
@@ -171,8 +244,70 @@ def main():
     sys.stdout.flush()
     if not last_output.exists():
         print(f'output {str(last_output)} not there?')
+    result_dir = combined_dir / 'result'
+    last_output.rename(result_dir)
 
-    last_output.rename(Path(sys.argv[2]))
+    sourcedir = base_dir / 'ArangoDB'
+    # copy the source files from the sourcecode directory
+    for dir_pair in [
+            ['lib'],
+            ['arangosh'],
+            ['client-tools'],
+            ['arangod'],
+            [Path('utils/gdb-pretty-printers'), Path('utils/gdb-pretty-printers')],
+            [Path('enterprise/Enterprise'), 'Enterprise'],
+            [Path('enterprise/tests'), Path('enterprise/tests')]
+    ]:
+        srcdir = sourcedir / dir_pair[0]
+        if srcdir.exists():
+            baselen = len(str(srcdir))
+            dstdir = None
+            if len(dir_pair) == 2:
+                dstdir = result_dir / dir_pair[1]
+            else:
+                dstdir = result_dir / dir_pair[0]
+            print(f"Copy {str(srcdir)} => {str(dstdir)}")
+
+            for root, _, files in os.walk(srcdir):
+                subdir = str(result_dir) + root[baselen:]
+                print(subdir)
+                path = Path(subdir)
+                path.mkdir(parents=True, exist_ok=True)
+                for filename in files:
+                    source = (os.path.join(root, filename))
+                    print(f"source {source} => {path}/{filename}")
+                    shutil.copy2(source, path / filename)
+
+    print('copy the gcno files from the build directory')
+    buildir = sourcedir / 'build'
+    baselen = len(str(buildir))
+    for root, _, files in os.walk(buildir):
+        subdir = str(result_dir) + root[baselen:]
+        print(subdir)
+        path = Path(subdir)
+        path.mkdir(parents=True, exist_ok=True)
+        for filename in fnmatch.filter(files, '*.gcno'):
+            source = (os.path.join(root, filename))
+            shutil.copy2(source, path / filename)
+
+    print('create a symlink into the jemalloc source:')
+    jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
+    (sourcedir / 'include').symlink_to(jmdir)
+
+    xmlfile = coverage_dir / 'coverage.xml'
+    resultfile = coverage_dir / 'summary.txt'
+    gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
+        Path('build'),
+        Path('build') / '3rdParty' / 'libunwind'/ 'v*',
+        Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
+        Path('3rdParty'),
+        Path('3rdParty') / 'jemalloc' / 'v*',
+        Path('usr'),
+        Path('tests')
+        ])
+    gcovr.launch()
+    gcovr.translate_xml()
+
     if not SUCCESS:
         os._exit(1)
 
