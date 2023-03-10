@@ -258,13 +258,10 @@ def main():
 
             for root, _, files in os.walk(srcdir):
                 subdir = str(dstdir) + root[baselen:]
-                print(f"subdir {subdir}")
-                print(f"Files {files}")
                 path = Path(subdir)
                 path.mkdir(parents=True, exist_ok=True)
                 for filename in files:
                     source = (os.path.join(root, filename))
-                    print(f"source {source} => {path}/{filename}")
                     shutil.copy2(source, path / filename)
 
     print('copy the gcno files from the build directory')
@@ -272,7 +269,6 @@ def main():
     baselen = len(str(buildir))
     for root, _, files in os.walk(buildir):
         subdir = str(result_dir) + root[baselen:]
-        print(subdir)
         path = Path(subdir)
         path.mkdir(parents=True, exist_ok=True)
         for filename in fnmatch.filter(files, '*.gcno'):
