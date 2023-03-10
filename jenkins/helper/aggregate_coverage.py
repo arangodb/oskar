@@ -14,7 +14,7 @@ import psutil
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
     make_default_params,
-    make_logfile_params
+    # make_logfile_params
 )
 
 from site_config import SiteConfig, TEMP
@@ -39,7 +39,6 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
             for one_globbed in glob.glob(str(rootdir / one_directory)):
                 self.job_parameters += ['-e', str(one_globbed)]
         self.job_parameters.append(str(coverage_dir))
-        print(self.job_parameters)
         self.resultfile = resultfile
         self.xmlfile = xmlfile
         self.params = None
@@ -48,14 +47,13 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
-        print('------')
         verbose = True
         self.params = make_default_params(verbose, 111)
         #self.params = make_logfile_params(verbose,
         #                                  self.resultfile,
         #                                  False,
         #                                  TEMP)
-        print(self.params)
+        print(self.job_parameters)
         start = datetime.now()
         try:
             ret = self.run_monitored(
@@ -70,7 +68,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
             print('exception in gcovr run')
             self.params['error'] += str(ex)
         end = datetime.now()
-        print(f'done with gcovr {self.params} in {end-start}')
+        print(f'done with gcovr in {end-start}')
         #delete_logfile_params(params)
         ret = {}
         ret['error'] = self.params['error']
@@ -95,10 +93,8 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
-        print('------')
-        verbose = True
+        verbose = False
         self.params = make_default_params(verbose, 111)
-        print(self.params)
         start = datetime.now()
         try:
             ret = self.run_monitored(
@@ -113,21 +109,13 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             print(f'exception in {self.job[0]} {self.job[1]}: {ex}')
             self.params['error'] += str(ex)
         end = datetime.now()
-        print(f'done with {self.job[0]} {self.job[1]} in {end-start} - {ret}')
+        print(f"done with {self.job[0]} {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']}")
         #delete_logfile_params(params)
         ret = {}
         ret['error'] = self.params['error']
         shutil.rmtree(self.job[0])
         shutil.rmtree(self.job[1])
         return ret
-
-    def end_run(self):
-        """ terminate dmesg again """
-        print(f"killing gcov-tool {self.params['pid']}")
-        try:
-            psutil.Process(self.params['pid']).kill()
-        except psutil.NoSuchProcess:
-            print('dmesg already gone?')
 
 SLOT_LOCK = Lock()
 WORKER_ARRAY = []
@@ -240,7 +228,7 @@ def main():
     for worker in WORKER_ARRAY:
         print('.')
         worker.join()
-    print('workers collected')
+    print('all workers joined')
     sys.stdout.flush()
     if not last_output.exists():
         print(f'output {str(last_output)} not there?')
