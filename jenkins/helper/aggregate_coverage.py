@@ -262,7 +262,15 @@ def main():
             else:
                 dstdir = result_dir / dir_pair[0]
             print(f"Copy {str(srcdir)} => {str(dstdir)}")
-            shutil.copytree(srcdir, dstdir)
+            
+            for root, _, files in os.walk(srcdir):
+                subdir = str(result_dir) + root[baselen:]
+                print(subdir)
+                path = Path(subdir)
+                path.mkdir(parents=True, exist_ok=True)
+                for filename in fnmatch.filter(files, '*.gcno'):
+                    source = (os.path.join(root, filename))
+                    shutil.copy2(source, path / filename)
 
     # copy the gcno files from the build directory
     buildir = sourcedir / 'build'
