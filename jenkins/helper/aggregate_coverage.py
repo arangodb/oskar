@@ -51,10 +51,11 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
         """ gcov merger """
         print('------')
         verbose = True
-        self.params = make_logfile_params(verbose,
-                                          self.resultfile,
-                                          False,
-                                          TEMP)
+        self.params = make_default_params(verbose, 111)
+        #self.params = make_logfile_params(verbose,
+        #                                  self.resultfile,
+        #                                  False,
+        #                                  TEMP)
         print(self.params)
         start = datetime.now()
         try:
