@@ -239,10 +239,7 @@ def main():
     sys.stdout.flush()
     if not last_output.exists():
         print(f'output {str(last_output)} not there?')
-    result_dir = base_dir / 'combined'
-    result_dir.mkdir()
-    result_dir = result_dir / 'result'
-    
+    result_dir = combined_dir / 'result'
     last_output.rename(result_dir)
 
     sourcedir = base_dir / 'ArangoDB'
