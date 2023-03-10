@@ -270,6 +270,7 @@ def main():
                 path.mkdir(parents=True, exist_ok=True)
                 for filename in fnmatch.filter(files, '*.gcno'):
                     source = (os.path.join(root, filename))
+                    print(f"source {source} => {path}/{filename}")
                     shutil.copy2(source, path / filename)
 
     # copy the gcno files from the build directory
