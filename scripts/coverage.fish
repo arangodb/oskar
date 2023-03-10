@@ -15,7 +15,7 @@ and tar x -f /tmp/gcno.tar -C $INNERWORKDIR/combined/result
 
 and rm -rf coverage
 and mkdir coverage
-and mkdir coverage/utils/gdb-pretty-printers/immer/test
+and mkdir -p coverage/utils/gdb-pretty-printers/immer/test
 and mkdir coverage/enterprise
 and ln -s $INNERWORKDIR/ArangoDB/3rdParty/jemalloc/v*/include $INNERWORKDIR/ArangoDB/include
 and gcovr --exclude-throw-branches --root $INNERWORKDIR/ArangoDB \
