@@ -77,7 +77,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
     def translate_xml(self):
         """ convert the directories inside the xml file """
         xmltext = self.xmlfile.read_text(encoding='utf8')
-        xmltext.replace('filename="', 'filename="./coverage/')
+        xmltext = xmltext.replace('filename="', 'filename="./coverage/')
         self.xmlfile.write_text(xmltext)
 
 class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
