@@ -40,6 +40,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
             for one_globbed in glob.glob(str(rootdir / one_directory)):
                 self.job_parameters += ['-e', str(one_globbed)]
         self.job_parameters.append(str(coverage_dir))
+        print(self.job_parameters)
         self.resultfile = resultfile
         self.xmlfile = xmlfile
         self.params = None
@@ -186,6 +187,10 @@ def main():
     if combined_dir.exists():
         shutil.rmtree(str(combined_dir))
     combined_dir.mkdir()
+    coverage_dir = base_dir / 'coverage'
+    if coverage_dir.exists():
+        shutil.rmtree(str(coverage_dir))
+    coverage_dir.mkdir()
     count = 0
     jobcount = 0
     while len(sub_jobs) > 1:
@@ -268,12 +273,12 @@ def main():
                 print(subdir)
                 path = Path(subdir)
                 path.mkdir(parents=True, exist_ok=True)
-                for filename in fnmatch.filter(files, '*.gcno'):
+                for filename in files:
                     source = (os.path.join(root, filename))
                     print(f"source {source} => {path}/{filename}")
                     shutil.copy2(source, path / filename)
 
-    # copy the gcno files from the build directory
+    print('copy the gcno files from the build directory')
     buildir = sourcedir / 'build'
     baselen = len(str(buildir))
     for root, _, files in os.walk(buildir):
@@ -285,11 +290,12 @@ def main():
             source = (os.path.join(root, filename))
             shutil.copy2(source, path / filename)
 
-    # create a symlink into the jemalloc source:
+    print('create a symlink into the jemalloc source:')
     jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
     (sourcedir / 'include').symlink_to(jmdir)
-    xmlfile = base_dir / 'coverage' / 'coverage.xml'
-    resultfile = base_dir / 'coverage' / 'summary.txt'
+
+    xmlfile = coverage_dir / 'coverage.xml'
+    resultfile = coverage_dir / 'summary.txt'
     gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
         Path('build'),
         Path('build') / '3rdParty' / 'libunwind'/ 'v*',
