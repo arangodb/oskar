@@ -84,10 +84,10 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
 class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     """configuration"""
 
-    def __init__(self, jobs, site_config):
-        self.identifier = jobs[0]
-        self.job = jobs
-        self.job_parameters = ['merge', jobs[0], jobs[1], '-o', jobs[2]]
+    def __init__(self, job, site_config):
+        self.identifier = job[0]
+        self.job = job
+        self.job_parameters = ['merge', job[0], job[1], '-o', job[2]]
         self.params = None
         super().__init__(site_config, None)
 
