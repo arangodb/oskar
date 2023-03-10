@@ -255,7 +255,7 @@ def main():
             ['client-tools'],
             ['arangod'],
             [Path('utils/gdb-pretty-printers'), Path('utils/gdb-pretty-printers')],
-            [Path('enterprise/Enterprise'), 'Enterprise'],
+            [Path('enterprise/Enterprise')],
             [Path('enterprise/tests'), Path('enterprise/tests')]
     ]:
         srcdir = sourcedir / dir_pair[0]
