@@ -49,10 +49,6 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
         """ gcov merger """
         verbose = True
         self.params = make_default_params(verbose, 111)
-        #self.params = make_logfile_params(verbose,
-        #                                  self.resultfile,
-        #                                  False,
-        #                                  TEMP)
         print(self.job_parameters)
         start = datetime.now()
         try:
@@ -69,7 +65,6 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
             self.params['error'] += str(ex)
         end = datetime.now()
         print(f'done with gcovr in {end-start}')
-        #delete_logfile_params(params)
         ret = {}
         ret['error'] = self.params['error']
         return ret
@@ -110,7 +105,6 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             self.params['error'] += str(ex)
         end = datetime.now()
         print(f"done with {self.job[0]} {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']}")
-        #delete_logfile_params(params)
         ret = {}
         ret['error'] = self.params['error']
         shutil.rmtree(self.job[0])
