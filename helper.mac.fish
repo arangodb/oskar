@@ -235,7 +235,7 @@ function checkOskarOpenSSL
     false
     return 1
   end
-  set -l cmd "$executable version | grep -o \"[0-9]\.[0-9]\.[0-9][a-z]*\""
+  set -l cmd "$executable version | grep -m 1 -o "[0-9]\.[0-9]\.[0-9][a-z]*" | head -1"
   set -l output (eval "arch -$ARCH $cmd")
   if test "$output" = "$OPENSSL_VERSION"
     echo "Found OpenSSL $OPENSSL_VERSION"
