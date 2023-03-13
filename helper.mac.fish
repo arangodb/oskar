@@ -160,7 +160,7 @@ function buildOpenSSL
     return 1
   end
 
-  pushd $OPENSSL_SOURCE_DIR/build
+  pushd $OPENSSL_SOURCE_DIR
   for type in shared no-shared
     for mode in debug release
       set -l cmd "perl ./Configure --prefix=$OPENSSL_SOURCE_DIR/build/$mode/$type --openssldir=$OPENSSL_SOURCE_DIR/build/$mode/$type/openssl --$mode $type $OPENSSL_PLATFORM"
