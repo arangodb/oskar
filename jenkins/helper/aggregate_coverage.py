@@ -238,23 +238,19 @@ def main():
 
     sourcedir = base_dir / 'ArangoDB'
     # copy the source files from the sourcecode directory
-    for dir_pair in [
-            ['lib'],
-            ['arangosh'],
-            ['client-tools'],
-            ['arangod'],
-            [Path('utils/gdb-pretty-printers'), Path('utils/gdb-pretty-printers')],
-            [Path('enterprise/Enterprise')],
-            [Path('enterprise/tests'), Path('enterprise/tests')]
+    for copy_dir in [
+            Path('lib'),
+            Path('arangosh'),
+            Path('client-tools'),
+            Path('arangod'),
+            Path('utils/gdb-pretty-printers'),
+            Path('enterprise/Enterprise'),
+            Path('enterprise/tests')
     ]:
-        srcdir = sourcedir / dir_pair[0]
+        srcdir = sourcedir / copy_dir
         if srcdir.exists():
             baselen = len(str(srcdir))
-            dstdir = None
-            if len(dir_pair) == 2:
-                dstdir = coverage_dir / dir_pair[1]
-            else:
-                dstdir = coverage_dir / dir_pair[0]
+            dstdir = coverage_dir / copy_dir
             print(f"Copy {str(srcdir)} => {str(dstdir)}")
 
             for root, _, files in os.walk(srcdir):
