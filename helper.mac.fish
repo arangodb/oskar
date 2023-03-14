@@ -144,8 +144,7 @@ function buildOpenSSL
     echo "OpenSSL was already built! No need to rebuild it."
     return
   end
-  cd $OPENSSL_SOURCE_DIR
-  mkdir build
+  mkdir -p $OPENSSL_SOURCE_DIR/build
   
   if test -z "$ARCH"
     echo "ARCH is not set! Can't decide wether to build OpenSSL for arm64 or x86_64."
@@ -161,6 +160,7 @@ function buildOpenSSL
     return 1
   end
 
+  pushd $OPENSSL_SOURCE_DIR
   for type in shared no-shared
     for mode in debug release
       set -l cmd "perl ./Configure --prefix=$OPENSSL_SOURCE_DIR/build/$mode/$type --openssldir=$OPENSSL_SOURCE_DIR/build/$mode/$type/openssl --$mode $type $OPENSSL_PLATFORM"
@@ -171,6 +171,7 @@ function buildOpenSSL
       make install_dev
     end
   end
+  popd
 end
 
 function findOpenSSLPath
@@ -235,7 +236,7 @@ function checkOskarOpenSSL
     false
     return 1
   end
-  set -l cmd "$executable version | grep -o \"[0-9]\.[0-9]\.[0-9][a-z]*\""
+  set -l cmd "$executable version | grep -m 1 -o \"[0-9]\.[0-9]\.[0-9][a-z]*\" | head -1"
   set -l output (eval "arch -$ARCH $cmd")
   if test "$output" = "$OPENSSL_VERSION"
     echo "Found OpenSSL $OPENSSL_VERSION"
