@@ -18,8 +18,8 @@ function checkoutRepo
   set -l STATUS 0
 
   set fish_trace 1
-  git fetch --prune --force --all --tags
-  and git checkout -f
+  git fetch --prune --prune-tags --force --all --tags
+  and git reset --hard origin/devel
   and git submodule deinit --all -f
   and git checkout -f "$branch"
   and if test "$clean" = "true"
