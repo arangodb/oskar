@@ -354,7 +354,6 @@ class ArangoCLIprogressiveTimeoutExecutor:
         follow.
         (is still alive...)
         """
-        print(executable)
         rc_exit = None
         line_filter = False
         run_cmd = [executable] + args
@@ -369,7 +368,8 @@ class ArangoCLIprogressiveTimeoutExecutor:
             else:
                 deadline = datetime.now() + timedelta(seconds=deadline)
         final_deadline = deadline + timedelta(seconds=deadline_grace_period)
-        print(f"{identifier}: launching {str(run_cmd)}")
+        if params['verbose']:
+            print(f"{identifier}: launching {str(run_cmd)}")
         with psutil.Popen(
             run_cmd,
             stdout=PIPE,

@@ -656,7 +656,7 @@ end
 function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
-  and runInContainer (findStaticBuildImage) /scripts/coverage.fish
+  and runInContainer (findStaticBuildImage) python3 "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
   return $status
 end
 
