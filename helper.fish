@@ -808,7 +808,7 @@ function buildTarGzPackageHelper
 
   rm -rf "$name-$os-$v$arch"
   and ln -s "$name-$v$arch" "$name-$os-$v$arch"
-  and tar -c -z -f "$WORKDIR/work/$name-$os-$v$arch.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
+  and tar -c -z -f "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
   and rm -rf "$name-$os-$v$arch"
   set s $status
 
@@ -818,7 +818,7 @@ function buildTarGzPackageHelper
     and mv "$name-client-$os-$v$arch/bin/README" "$name-client-$os-$v$arch/README"
     and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
     and rm -rf "$name-client-$os-$v$arch/README.bak"
-    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" -h \
+    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" \
       --exclude "etc" \
       --exclude "var" \
       --exclude "*.initd" \
