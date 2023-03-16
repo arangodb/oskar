@@ -574,12 +574,11 @@ function buildTarGzPackage
   and rm -rf install
   and make install DESTDIR=install
   and makeJsSha1Sum (pwd)/install/opt/arangodb/share/arangodb3/js
-#  It's unclear why do we need arangosync symlink at `bin`
-#  and if test "$ENTERPRISEEDITION" = "On"
-#        pushd install/opt/arangodb/bin
-#        ln -s ../sbin/arangosync
-#        popd
-#      end
+  and if test "$ENTERPRISEEDITION" = "On"
+        pushd install/opt/arangodb/bin
+        ln -s ../sbin/arangosync
+        popd
+      end
   and mkdir -p install/usr
   and mv install/opt/arangodb/bin install/usr
   and mv install/opt/arangodb/sbin install/usr
