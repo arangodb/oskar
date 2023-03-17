@@ -802,19 +802,19 @@ function buildTarGzPackageHelper
   and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v$arch"
-  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v$arch"
+  and cp -a $WORKDIR/work/targz "$WORKDIR/work/$name-$v$arch"
   and cd $WORKDIR/work
   or begin ; popd ; return 1 ; end
 
   rm -rf "$name-$os-$v$arch"
-  and cp -r "$name-$v$arch" "$name-$os-$v$arch"
+  and cp -a "$name-$v$arch" "$name-$os-$v$arch"
   and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
   and rm -rf "$name-$os-$v$arch"
   set s $status
 
   if test "$s" -eq 0
     rm -rf "$name-client-$os-$v$arch"
-    and cp -r "$name-$v$arch" "$name-client-$os-$v$arch"
+    and cp -a "$name-$v$arch" "$name-client-$os-$v$arch"
     and mv "$name-client-$os-$v$arch/bin/README" "$name-client-$os-$v$arch/README"
     and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
     and rm -rf "$name-client-$os-$v$arch/README.bak"
