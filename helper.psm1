@@ -1841,6 +1841,12 @@ Function moveResultsToWorkspace
         Write-Host "Move $INNERWORKDIR\$file"
         Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
     }
+    Write-Host "*.tar ..."
+    ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "*.tar" | ? { $_.Name -notlike "ArangoDB3*.tar"}))
+    {
+        Write-Host "Move $INNERWORKDIR\$file"
+        Move-Item -Force -Path "$INNERWORKDIR\$file" -Destination $ENV:WORKSPACE; comm
+    }
     Write-Host "build* ..."
     ForEach ($file in $(Get-ChildItem $INNERWORKDIR -Filter "build*"))
     {
