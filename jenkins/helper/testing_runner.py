@@ -36,10 +36,12 @@ if 'MAX_CORESIZE' in os.environ:
 pp = pprint.PrettyPrinter(indent=4)
 
 ZIPFORMAT="gztar"
+ZIPEXT="tar.gz"
 try:
     import py7zr
     shutil.register_archive_format('7zip', py7zr.pack_7zarchive, description='7zip archive')
     ZIPFORMAT="7zip"
+    ZIPEXT="7z"
 except ModuleNotFoundError:
     pass
 
@@ -441,7 +443,7 @@ class TestingRunner():
                 one_file.unlink(missing_ok=True)
 
         crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
-        print(f"creating crashreport: {str(crash_report_file)} with {str(core_files_list)}")
+        print(f"creating crashreport: {str(crash_report_file)} with {str(core_files_list)}.tar")
         sys.stdout.flush()
         try:
             shutil.make_archive(str(crash_report_file),
@@ -455,7 +457,7 @@ class TestingRunner():
 
         self.cleanup_unneeded_binary_files()
         binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
-        print("creating crashreport binary support zip: " + str(binary_report_file))
+        print(f"creating crashreport binary support zip: {str(binary_report_file)}.{ZIPEXT}")
         sys.stdout.flush()
         try:
             shutil.make_archive(str(binary_report_file),
@@ -464,7 +466,7 @@ class TestingRunner():
                                 self.cfg.bin_dir.name,
                                 True)
         except Exception as ex:
-            print("Failed to create crashdump zip: " + str(ex))
+            print(f"Failed to create crashdump {ZIPEXT}: {str(ex)}")
             self.append_report_txt("Failed to create crashdump zip: " + str(ex))
         shutil.rmtree(str(core_zip_dir), ignore_errors=True)
 
@@ -487,7 +489,7 @@ class TestingRunner():
                             clean_subdir = False
                     if clean_subdir:
                         subsubdir.rmdir()
-        print("Creating " + str(tarfile))
+        print(f"Creating {str(tarfile)}.{ZIPEXT}")
         sys.stdout.flush()
         try:
             shutil.make_archive(self.cfg.run_root / 'innerlogs',
@@ -496,7 +498,7 @@ class TestingRunner():
                                 TEMP.name)
         except Exception as ex:
             print("Failed to create inner zip: " + str(ex))
-            self.append_report_txt("Failed to create inner zip: " + str(ex))
+            self.append_report_txt(f"Failed to create inner {ZIPEXT}: {str(ex)}")
             self.success = False
 
         try:
