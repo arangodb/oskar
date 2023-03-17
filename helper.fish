@@ -808,7 +808,7 @@ function buildTarGzPackageHelper
 
   rm -rf "$name-$os-$v$arch"
   and cp -r "$name-$v$arch" "$name-$os-$v$arch"
-  and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar" --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
+  and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
   and rm -rf "$name-$os-$v$arch"
   set s $status
 
