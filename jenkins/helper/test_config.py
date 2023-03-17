@@ -21,6 +21,8 @@ class TestConfig():
                  flags):
         """ defaults for test config """
         self.parallelity = parallelity
+        if self.parallelity > cfg.available_slots:
+            self.parallelity = cfg.available_slots
         self.launch_delay = 1.3
         self.progressive_timeout = 100
         self.priority = priority
