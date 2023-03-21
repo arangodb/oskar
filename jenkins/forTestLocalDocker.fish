@@ -25,6 +25,7 @@ if test -z "$ENTERPRISE_BRANCH"
 end
 
 rm -rf $WORKSPACE/imagenames.log
+and set -x NOSTRIP 1
 and community
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion

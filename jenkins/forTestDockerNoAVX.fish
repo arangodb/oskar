@@ -27,6 +27,7 @@ function setArchSuffix
 end
 
 cleanPrepareLockUpdateClear
+and set -x NOSTRIP 1
 and rm -rf $WORKSPACE/imagenames.log
 and community
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
