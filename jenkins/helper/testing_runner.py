@@ -575,16 +575,30 @@ class TestingRunner():
         if "buckets" in params and not self.cfg.small_machine:
             num_buckets = int(params["buckets"])
             for i in range(num_buckets):
-                self.scenarios.append(
-                    TestConfig(self.cfg,
-                               name + f"_{i}",
-                               test["suite"],
-                               [ *args,
-                                 '--index', f"{i}",
-                                 '--testBuckets', f'{num_buckets}/{i}'],
-                               test['priority'],
-                               parallelity,
-                               test['flags']))
+                if "allProtocols" in test['flags']:
+                    for proto in ["http", "http2", "vst"]:
+                        self.scenarios.append(
+                            TestConfig(self.cfg,
+                                    name + f"_{proto}_{i}",
+                                    test["suite"],
+                                    [ *args,
+                                        '--index', f"{i}",
+                                        '--testBuckets', f'{num_buckets}/{i}'
+                                        f"--{proto}", "true"],
+                                    test['priority'],
+                                    parallelity,
+                                    test['flags']))
+                else:
+                    self.scenarios.append(
+                        TestConfig(self.cfg,
+                                name + f"_{i}",
+                                test["suite"],
+                                [ *args,
+                                    '--index', f"{i}",
+                                    '--testBuckets', f'{num_buckets}/{i}'],
+                                test['priority'],
+                                parallelity,
+                                test['flags']))
         else:
             self.scenarios.append(
                 TestConfig(self.cfg,

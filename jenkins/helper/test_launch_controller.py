@@ -95,7 +95,8 @@ known_flags = {
     "!windows": "test is excluded from ps1 output",
     "!mac": "test is excluded when launched on MacOS",
     "!arm": "test is excluded when launched on Arm Linux/MacOS hosts",
-    "no_report": "disable reporting"
+    "no_report": "disable reporting",
+    "allProtocols": "run the test suite(s) for all protocols (http, http2, vst)"
 }
 
 known_parameter = {
