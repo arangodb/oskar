@@ -1215,6 +1215,7 @@ Function switchBranches($branch_c,$branch_e)
     checkoutIfNeeded
     Push-Location $pwd
     Set-Location $global:ARANGODIR;comm
+    proc -process "git" -argument "config --system core.longpaths true" -logfile $false -priority "Normal"
     If ($global:ok)
     {
         proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
