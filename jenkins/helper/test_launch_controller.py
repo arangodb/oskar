@@ -5,7 +5,7 @@ import copy
 import sys
 from traceback import print_exc
 
-from site_config import IS_ARM, IS_WINDOWS, IS_MAC
+from site_config import IS_ARM, IS_WINDOWS, IS_MAC, IS_COVERAGE
 
 from dump_handler import generate_dump_output
 from launch_handler import launch
@@ -52,6 +52,9 @@ def filter_tests(args, tests):
         if IS_ARM:
             filters.append(lambda test: "!arm" not in test["flags"])
 
+        if IS_COVERAGE:
+            filters.append(lambda test: "!coverage" not in test["flags"])
+
         if args.no_report:
             print("Disabling report generation")
             args.create_report = False
@@ -95,6 +98,7 @@ known_flags = {
     "!windows": "test is excluded from ps1 output",
     "!mac": "test is excluded when launched on MacOS",
     "!arm": "test is excluded when launched on Arm Linux/MacOS hosts",
+    "!coverage": "test is excluded when coverage scenario are ran",
     "no_report": "disable reporting"
 }
 

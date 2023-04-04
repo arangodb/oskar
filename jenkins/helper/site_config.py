@@ -12,6 +12,7 @@ import sys
 import psutil
 from socket_counter import get_socket_count
 
+IS_COVERAGE = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
 IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
@@ -151,7 +152,7 @@ class SiteConfig:
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
         self.is_aulsan = self.is_asan and os.environ['SAN_MODE'] == 'AULSan'
-        self.is_gcov = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
+        self.is_gcov = IS_COVERAGE
         san_gcov_msg = ""
         if self.is_asan or self.is_gcov:
             san_gcov_msg = ' - SAN '
