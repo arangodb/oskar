@@ -432,7 +432,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                     if overload and not params['overload']:
                         add_message_to_report(
                             params,
-                            overload,
+                            overload + self.cfg.get_max(),
                             False)
                     params['overload'] = overload
                     line = queue.get(timeout=1)

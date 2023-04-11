@@ -220,9 +220,13 @@ class SiteConfig:
         """ check whether we run an instrumented build """
         return self.is_asan or self.is_aulsan or self.is_gcov
 
+    def get_max(self):
+        """ get the maximal value before overlead is triggered """
+        return f'> {self.overload:9.2f}'
+
     def get_overload(self):
         """ estimate whether the system is overloaded """
         load = psutil.getloadavg()
         if load[0] > self.overload:
-            return f"HL[{load[0]:9.2f} > {self.overload:9.2f}]"
+            return f"HL[{load[0]:3.2f} ] "
         return None
