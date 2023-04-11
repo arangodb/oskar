@@ -115,7 +115,7 @@ def logfile_line_result(wait, line, params):
         if params['trace']:
             print("e: " + str(line[0], 'utf-8').rstrip())
         if params["overload"]:
-            params['output'].write(params["overload"] + line[0])
+            params['output'].write(bytes(params["overload"], 'utf-8') + line[0])
         else:
             params['output'].write(line[0])
     return True
