@@ -45,6 +45,7 @@ def default_line_result(wait, line, params):
 def make_default_params(verbose, identifier):
     """ create the structure to work with arrays to output the strings to """
     return {
+        "overload": None,
         "trace_io": False,
         "error": "",
         "verbose": verbose,
@@ -72,6 +73,7 @@ def tail_line_result(wait, line, params):
 def make_tail_params(verbose, prefix, logfile):
     """ create the structure to work with arrays to output the strings to """
     return {
+        "overload": None,
         "trace_io": False,
         "error": "",
         "verbose": verbose,
@@ -92,6 +94,7 @@ def delete_tail_params(params):
 def make_logfile_params(verbose, logfile, trace, temp_dir):
     """ create the structure to work with logfiles """
     return {
+        "overload": None,
         "trace_io": True,
         "trace": trace,
         "error": "",
@@ -111,7 +114,10 @@ def logfile_line_result(wait, line, params):
     if isinstance(line, tuple):
         if params['trace']:
             print("e: " + str(line[0], 'utf-8').rstrip())
-        params['output'].write(line[0])
+        if params["overload"]:
+            params['output'].write(params["overload"] + line[0])
+        else:
+            params['output'].write(line[0])
     return True
 def delete_logfile_params(params):
     """ teardown the structure to work with logfiles """
@@ -422,12 +428,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 result_line_handler(tcount, None, params)
                 line = ""
                 try:
-                    overload = self.cfg.get_overload()
-                    if overload:
-                        add_message_to_report(
-                            params,
-                            overload,
-                            False)
+                    params.overload = self.cfg.get_overload()
                     line = queue.get(timeout=1)
                     ret = result_line_handler(0, line, params)
                     line_filter = line_filter or ret
