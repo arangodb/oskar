@@ -228,5 +228,5 @@ class SiteConfig:
         """ estimate whether the system is overloaded """
         load = psutil.getloadavg()
         if load[0] > self.overload:
-            return f"HL[{load[0]:3.2f} ] "
+            return f"HIGH LOAD[{load[0]:3.2f} ] "
         return None
