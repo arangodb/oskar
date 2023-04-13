@@ -206,6 +206,7 @@ class SiteConfig:
         self.test_data_dir = base_source_dir
         self.passvoid = ''
         self.run_root = base_source_dir / 'testrun'
+        self.xml_report_dir = base_source_dir / 'testrunXml'
         if self.run_root.exists():
             shutil.rmtree(self.run_root)
         self.test_data_dir_x = self.run_root / 'run'
