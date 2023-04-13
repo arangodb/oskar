@@ -2001,6 +2001,11 @@ function moveResultsToWorkspace
       echo "mv $WORKDIR/work/testRuns.txt"
       mv $WORKDIR/work/testRuns.txt $WORKSPACE
     end
+
+    if test -d $WORKDIR/work/ArangoDB/testrunXml
+      echo "mv JUnit XMLs ($WORKDIR/work/ArangoDB/testrunXml)"
+      mv $WORKDIR/work/ArangoDB/testrunXml $WORKSPACE/testrunXml
+    end
   end
 end
 
