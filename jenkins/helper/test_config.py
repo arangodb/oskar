@@ -45,7 +45,7 @@ class TestConfig():
 
         self.xml_report_dir = cfg.xml_report_dir / self.name
         if not self.xml_report_dir.exists():
-            self.xml_report_dir.mkdir()
+            self.xml_report_dir.mkdir(parents=True)
 
         self.temp_dir = TEMP / self.name
         # pylint: disable=global-variable-not-assigned
