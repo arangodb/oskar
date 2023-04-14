@@ -55,6 +55,10 @@ def zipp_this(filenames, target_dir):
                             mode='w', compression=zipfile.ZIP_LZMA).write(str(corefile))
         except Exception as exc:
             print(f'skipping {corefile} since {exc}')
+        try:
+            corefile.unlink(missing_ok=True)
+        except Exception as ex:
+            print(f"failed to delete {corefile} because of {ex}")
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
