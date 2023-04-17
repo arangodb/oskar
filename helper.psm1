@@ -1920,7 +1920,7 @@ Function moveResultsToWorkspace
         Move-Item -Force -Path "$INNERWORKDIR\testfailures.txt" -Destination $ENV:WORKSPACE; comm 
     }
     Write-Host "testrunXml"
-    If (Test-Path -PathType Leaf "$INNERWORKDIR\ArangoDB\testrunXml")
+    If (Test-Path "$INNERWORKDIR\ArangoDB\testrunXml")
     {
         Write-Host "Move $INNERWORKDIR\ArangoDB\testrunXml"
         Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\testrunXml" -Destination $ENV:WORKSPACE; comm 
