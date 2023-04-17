@@ -73,6 +73,8 @@ class TestConfig():
                 self.args.append(param)
         self.args += ['--coreCheck', 'true',
                       '--disableMonitor', 'true',
+                      '--clusterHealthMonitor', 'true',
+                      '--disableClusterMonitor', 'false',
                       '--writeXmlReport', 'true',
                       '--testXmlOutputDirectory', str(self.xml_report_dir) ]
 
