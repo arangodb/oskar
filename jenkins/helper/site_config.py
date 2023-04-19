@@ -128,7 +128,7 @@ class SiteConfig:
             self.timeout *= 4
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
-        self.available_slots *= 0.7
+        self.available_slots = round(self.available_slots * 0.7)
         if IS_MAC and platform.processor() == "arm":
             if psutil.cpu_count() == 8:
                 self.no_threads = 6 # M1 mac mini only has 4 performance cores
