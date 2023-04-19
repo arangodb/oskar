@@ -150,7 +150,7 @@ class SiteConfig:
         self.max_load *= 0.7
         self.loop_sleep = round(5 / self.core_dozend)
         self.overload = self.max_load * 1.4
-        self.slots_to_parallelity_factor = self.max_load / self.available_slots
+        self.parallelity_to_load_factor  = self.max_load / self.available_slots
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
         self.is_aulsan = self.is_asan and os.environ['SAN_MODE'] == 'AULSan'
@@ -190,10 +190,9 @@ class SiteConfig:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
- - {self.slots_to_parallelity_factor} parallelity to load estimate factor
+ - {self.parallelity_to_load_factor} parallelity to load estimate factor
  - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
- - {self.slots_to_parallelity_factor} parallelity to load estimate factor
  - {self.available_slots} test slots {self.rapid_fire} rapid fire slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
