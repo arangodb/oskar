@@ -174,7 +174,7 @@ class TestingRunner():
                     return -1
             except psutil.AccessDenied:
                 pass
-            load_estimate = self.cfg.slots_to_parallelity_factor * self.scenarios[offset].parallelity
+            load_estimate = self.cfg.parallelity_to_load_factor * self.scenarios[offset].parallelity
             load = psutil.getloadavg()
             if ((load[0] > self.cfg.max_load) or
                 (load[1] > self.cfg.max_load1) or
