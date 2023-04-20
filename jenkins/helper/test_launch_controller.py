@@ -38,7 +38,7 @@ def filter_tests(args, tests):
             filters.append(lambda test: "full" not in test["flags"])
 
         if args.gtest:
-            filters.append(lambda test: "gtest" ==  test["name"])
+            filters.append(lambda test: test["name"].startswith("gtest"))
 
         if not args.enterprise:
             filters.append(lambda test: "enterprise" not in test["flags"])
