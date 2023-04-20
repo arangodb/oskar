@@ -91,7 +91,7 @@ known_flags = {
     "single": "this test requires a single server",
     "full": "this test is only executed in full tests",
     "!full": "this test is only executed in non-full tests",
-    "gtest": "only the gtest are to be executed",
+    "gtest": "only the testsuites starting with 'gtest' are to be executed",
     "sniff": "whether tcpdump / ngrep should be used",
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
@@ -141,7 +141,7 @@ def parse_arguments():
     parser.add_argument("--enterprise", help="add enterprise tests", action="store_true")
     parser.add_argument("--no-enterprise", help="add enterprise tests", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
-    parser.add_argument("--gtest", help="only run gtest", action="store_true")
+    parser.add_argument("--gtest", help="only run gtest-suites", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")
     parser.add_argument("--no-report", help="don't create testreport and crash tarballs", type=bool)
     args = parser.parse_args()
