@@ -15,10 +15,6 @@ set -gx DUMPDEVICE "lo"
 
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
-set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 20
-set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
-
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
 set -gx UBUNTUBUILDIMAGE4_TAG 21
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
@@ -36,10 +32,6 @@ set -gx UBUNTUBUILDIMAGE7_TAG 1
 set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
-
-set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 23
-set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
 set -gx ALPINEBUILDIMAGE4_TAG 24
@@ -142,11 +134,9 @@ end
 
 function findBuildImage
   if test "$COMPILER_VERSION" = ""
-      echo $UBUNTUBUILDIMAGE
+      echo $UBUNTUBUILDIMAGE4
   else
     switch $COMPILER_VERSION
-      case 9.3.0-r0
-        echo $UBUNTUBUILDIMAGE3
 
       case 9.3.0-r2
         echo $UBUNTUBUILDIMAGE4
@@ -169,11 +159,9 @@ end
 
 function findStaticBuildImage
   if test "$COMPILER_VERSION" = ""
-      echo $ALPINEBUILDIMAGE
+      echo $ALPINEBUILDIMAGE4
   else
     switch $COMPILER_VERSION
-      case 9.3.0-r0
-        echo $ALPINEBUILDIMAGE3
 
       case 9.3.0-r2
         echo $ALPINEBUILDIMAGE4
@@ -196,11 +184,9 @@ end
 
 function findBuildScript
   if test "$COMPILER_VERSION" = ""
-      echo buildArangoDB3.fish
+      echo buildArangoDB4.fish
   else
     switch $COMPILER_VERSION
-      case 9.3.0-r0
-        echo buildArangoDB3.fish
 
       case 9.3.0-r2
         echo buildArangoDB4.fish
@@ -223,11 +209,9 @@ end
 
 function findStaticBuildScript
   if test "$COMPILER_VERSION" = ""
-      echo buildAlpine3.fish
+      echo buildAlpine4.fish
   else
     switch $COMPILER_VERSION
-      case 9.3.0-r0
-        echo buildAlpine3.fish
 
       case 9.3.0-r2
         echo buildAlpine4.fish
@@ -265,8 +249,8 @@ function findRequiredCompiler
   set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
   if test "$v" = ""
-    echo "$f: no GCC_LINUX specified, using 9.3.0-r0"
-    compiler 9.3.0-r0
+    echo "$f: no GCC_LINUX specified, using 9.3.0-r2"
+    compiler 9.3.0-r2
   else
     echo "Using compiler '$v' from '$f'"
     compiler $v
@@ -290,8 +274,8 @@ function findRequiredOpenSSL
   set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o '^[0-2]\.[0-2]\.[0-2]\|^[3-9]\.[0-9]')
 
   if test "$v" = ""
-    echo "$f: no OPENSSL_LINUX specified, using 1.1.0"
-    opensslVersion 1.1.0
+    echo "$f: no OPENSSL_LINUX specified, using 1.1.1"
+    opensslVersion 1.1.1
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
@@ -1432,21 +1416,6 @@ end
 ## build and packaging images
 ## #############################################################################
 
-function buildUbuntuBuildImage3
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu3.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE3 ."
-  popd
-end
-
-function pushUbuntuBuildImage3
-  docker tag $UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE3
-  and docker push $UBUNTUBUILDIMAGE3_NAME:latest
-end
-
-function pullUbuntuBuildImage3 ; docker pull $UBUNTUBUILDIMAGE3 ; end
-
 function buildUbuntuBuildImage4
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntu4.docker
@@ -1524,22 +1493,6 @@ end
 function pushUbuntuPackagingImage ; docker push $UBUNTUPACKAGINGIMAGE ; end
 
 function pullUbuntuPackagingImage ; docker pull $UBUNTUPACKAGINGIMAGE ; end
-
-function buildAlpineBuildImage3
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine3.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE3 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushAlpineBuildImage3
-  docker tag $ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:latest
-  and docker push $ALPINEBUILDIMAGE3
-  and docker push $ALPINEBUILDIMAGE3_NAME:latest
-end
-
-function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
 
 function buildAlpineBuildImage4
   pushd $WORKDIR
@@ -1669,8 +1622,6 @@ function pullLdapImage ; docker pull $LDAPIMAGE ; end
 function remakeImages
   set -l s 0
 
-  buildUbuntuBuildImage3 ; or set -l s 1
-  pushUbuntuBuildImage3 ; or set -l s 1
   buildUbuntuBuildImage4 ; or set -l s 1
   pushUbuntuBuildImage4 ; or set -l s 1
   buildUbuntuBuildImage5 ; or set -l s 1
@@ -1679,8 +1630,6 @@ function remakeImages
   pushUbuntuBuildImage6 ; or set -l s 1
   buildUbuntuBuildImage7 ; or set -l s 1
   pushUbuntuBuildImage7 ; or set -l s 1
-  buildAlpineBuildImage3 ; or set -l s 1
-  pushAlpineBuildImage3 ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
   buildAlpineBuildImage5 ; or set -l s 1
@@ -1704,8 +1653,6 @@ end
 function remakeBuildImages
   set -l s 0
 
-  buildUbuntuBuildImage3 ; or set -l s 1
-  pushUbuntuBuildImage3 ; or set -l s 1
   buildUbuntuBuildImage4 ; or set -l s 1
   pushUbuntuBuildImage4 ; or set -l s 1
   buildUbuntuBuildImage5 ; or set -l s 1
@@ -1714,8 +1661,6 @@ function remakeBuildImages
   pushUbuntuBuildImage6 ; or set -l s 1
   buildUbuntuBuildImage7 ; or set -l s 1
   pushUbuntuBuildImage7 ; or set -l s 1
-  buildAlpineBuildImage3 ; or set -l s 1
-  pushAlpineBuildImage3 ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
   buildAlpineBuildImage5 ; or set -l s 1
@@ -2028,9 +1973,6 @@ function pushOskar
   and source helper.fish
   and git push
 
-  and buildUbuntuBuildImage3
-  and pushUbuntuBuildImage3
-
   and buildUbuntuBuildImage4
   and pushUbuntuBuildImage4
 
@@ -2042,9 +1984,6 @@ function pushOskar
 
   and buildUbuntuBuildImage7
   and pushUbuntuBuildImage7
-
-  and buildAlpineBuildImage3
-  and pushAlpineBuildImage3
 
   and buildAlpineBuildImage4
   and pushAlpineBuildImage4
@@ -2088,12 +2027,10 @@ end
 
 function updateOskar
   updateOskarOnly
-  and pullUbuntuBuildImage3
   and pullUbuntuBuildImage4
   and pullUbuntuBuildImage5
   and pullUbuntuBuildImage6
   and pullUbuntuBuildImage7
-  and pullAlpineBuildImage3
   and pullAlpineBuildImage4
   and pullAlpineBuildImage5
   and pullAlpineBuildImage6

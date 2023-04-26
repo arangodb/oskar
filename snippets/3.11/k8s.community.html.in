@@ -1,0 +1,33 @@
+<div>
+  <p>
+    ArangoDB is available for Kubernetes.
+  </p>
+  <p>
+    For the <code>linux/amd64</code> Docker image variant,
+    the processor(s) must support the <strong>x86-64</strong> instruction set,
+    as well as the <strong>SSE 4.2</strong> and <strong>AVX</strong> instruction
+    set extensions (Intel Sandy Bridge or better, AMD Bulldozer or better, etc.).
+  </p>
+  <p>
+    For the <code>linux/arm64/v8</code> Docker image variant,
+    the processor(s) must be 64-bit ARM chips (<strong>AArch64</strong>).
+    The minimum requirement is <strong>ARMv8</strong> with <strong>Neon</strong>
+    (SIMD extension). A system with Little Endian byte order is required.
+  </p>
+  <p>
+    In order to install ArangoDB in your Kubernetes Cluster, first
+    deploy the latest operator. Instructions how to do so can be found
+    in the documentation:
+    <a href="https://www.arangodb.com/docs/@ARANGODB_PACKAGES@/deployment-kubernetes.html" target="_blank">ArangoDB Kubernetes Operator</a>.
+  </p>
+  <p>
+    After that, create and deploy a
+    <a href="https://www.arangodb.com/docs/@ARANGODB_PACKAGES@/deployment-kubernetes-deployment-resource.html" target="_blank">
+      ArangoDBDeployment
+    </a>
+    resource according to your needs and additionally specify
+    <pre>spec:
+  [...]
+  image: @DOCKER_IMAGE@</pre>
+  </p>
+</div>
