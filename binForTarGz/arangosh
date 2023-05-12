@@ -23,8 +23,6 @@ executable=$installation/usr/bin/$program
 if [ -x "$executable" ] ; then
   exec "$executable" \
        --configuration none \
-       --console.pretty-print true \
-       --server.endpoint tcp://127.0.0.1:8529 \
        --server.authentication true \
        --javascript.startup-directory "$installation/usr/share/arangodb3/js" \
        "$@"
