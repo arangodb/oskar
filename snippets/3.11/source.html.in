@@ -1,0 +1,31 @@
+<div>
+  <p>
+    The source code lives on
+    <a href="https://github.com/arangodb/arangodb" target="_blank">GitHub</a>.
+  </p>
+  <p>
+    There are branches for the different major/minor releases together with tags
+    for the individual releases (e.g. <code>@ARANGODB_PACKAGES@</code> branch
+    and <code>v@SOURCE_TAG@</code> tag). In general you will not need the
+    source packages, unless you want to
+    <a href="https://www.arangodb.com/docs/@ARANGODB_PACKAGES@/cookbook/compiling.html" target="_blank">compile</a>
+    ArangoDB on an operating system not supported by us.
+  </p>
+  <hr/>
+  <p>Source Packages for <strong>C++20 Compilers</strong>
+    <ul>
+      <li>
+        <a href="https://download.arangodb.com/Source/@SOURCE_TAR_GZ@">tar.gz @ARANGODB_VERSION@</a><br>
+        (@SOURCE_SIZE_TAR_GZ@ MByte, SHA256 @SOURCE_SHA256_TAR_GZ@)
+      </li>
+      <li>
+        <a href="https://download.arangodb.com/Source/@SOURCE_TAR_BZ2@">tar.bz2 @ARANGODB_VERSION@</a><br>
+        (@SOURCE_SIZE_TAR_BZ2@ MByte, SHA256 @SOURCE_SHA256_TAR_BZ2@)
+      </li>
+      <li>
+        <a href="https://download.arangodb.com/Source/@SOURCE_ZIP@">zip @ARANGODB_VERSION@</a><br>
+        (@SOURCE_SIZE_ZIP@ MByte, SHA256 @SOURCE_SHA256_ZIP@)
+      </li>
+    </ul>
+  </p>
+</div>
