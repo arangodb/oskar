@@ -9,6 +9,9 @@
     as well as the <strong>SSE 4.2</strong> and <strong>AVX</strong> instruction
     set extensions (Intel Sandy Bridge or better, AMD Bulldozer or better, etc.).
   </p>
+  <p>
+    The operating system needs to use a page size of 4096 bytes or less.
+  </p>
   <hr/>
   <p><strong>Tar</strong> package</p>
   <ul>
