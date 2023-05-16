@@ -1836,29 +1836,8 @@ function checkLogId
   and pushd $WORKDIR/work/ArangoDB
   or begin popd; return 1; end
 
-  set -l ids (find lib arangod arangosh client-tools enterprise -name "*.cpp" -o -name "*.h" \
-  | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\|CTX\|CTX_IF\)("[^\"]*"' \
-  | grep -v 'LOG_DEVEL' \
-  | sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
-  set -l duplicate (echo $ids | tr " " "\n" | sort | uniq -d)
-
-  set -l s 0
-
-  if test "$duplicate" != ""
-    echo "Duplicates: $duplicate"
-    set s 1
-  else
-    echo "Duplicates: NONE"
-  end
-
-  set -l wrong (echo $ids | tr " " "\n" | grep -v '^[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]$')
-
-  if test "$wrong" != ""
-    echo "Wrong formats: $wrong"
-    set s 1
-  else
-    echo "Wrong formats: NONE"
-  end
+  python3 utils/checkLogIds.py
+  set -l s $status
 
   popd
   return $s
