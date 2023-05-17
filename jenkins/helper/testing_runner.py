@@ -10,6 +10,7 @@ import signal
 import sys
 import time
 from threading  import Thread, Lock
+import traceback
 from multiprocessing import Process
 import zipfile
 
@@ -111,9 +112,10 @@ def testing_runner(testing_instance, this, arangosh):
         except FileExistsError as ex:
             print(f"can't expand the temp directory {ex} to {final_name}")
     except Exception as ex:
+        stack = ''.join(traceback.TracebackException.from_exception(ex).format())
         this.crashed = True
         this.success = False
-        this.summary = f"Python exception caught during test execution: {ex}"
+        this.summary = f"Python exception caught during test execution: {ex}\n{stack}"
         this.finish = datetime.now(tz=None)
         this.delta = this.finish - this.start
         this.delta_seconds = this.delta.total_seconds()
