@@ -699,7 +699,7 @@ function buildEnterprisePackage
   and releaseMode
   and enterprise
   and set -xg NOSTRIP 1
-  and buildStaticArangoDB
+  and buildArangoDB
   and downloadStarter
   and downloadSyncer
   and copyRclone "linux"
