@@ -1,6 +1,8 @@
 #!/usr/bin/env fish
 source ./scripts/lib/build.fish
 
+apt install -y libpthread-stubs0-de
+
 if test "$PARALLELISM" = ""
   set -xg PARALLELISM 64
 end
