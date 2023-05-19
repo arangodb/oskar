@@ -53,8 +53,18 @@ if test "$BUILD_SEPP" = "On"
 end
 
 if test "$SAN" = "On"
-  echo "SAN is not support in this environment"
-  exit 1
+  # Suppress leaks detection only during building
+  set -gx SAN_OPTIONS "detect_leaks=0"
+  set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak -fsanitize-address-use-after-return=never"
+  if test "$SAN_MODE" = "TSan"
+    set SANITIZERS "-fsanitize=thread"
+  end
+  set -g FULLARGS $FULLARGS \
+   -DUSE_JEMALLOC=Off \
+   -DCMAKE_C_FLAGS="-pthread $SANITIZERS -fno-sanitize=alignment" \
+   -DCMAKE_CXX_FLAGS="-pthread $SANITIZERS -fno-sanitize=vptr -fno-sanitize=alignment" \
+   -DBASE_LIBS="-pthread"
+buildStaticArangoDB
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \

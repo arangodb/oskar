@@ -680,8 +680,8 @@ end
 function buildPackage
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
-  buildDebianPackage
-  and buildRPMPackage
+#  buildDebianPackage
+#  and buildRPMPackage
   and buildTarGzPackage
 end
 
@@ -693,7 +693,8 @@ function buildEnterprisePackage
  
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
-  sanOff
+  sanOn
+  and sanModeAULSan
   and maintainerOff
   and releaseMode
   and enterprise

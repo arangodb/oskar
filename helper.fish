@@ -591,7 +591,7 @@ end
 
 function makeRelease
   makeEnterpriseRelease
-  and makeCommunityRelease
+#  and makeCommunityRelease
 end
 
 function makeCommunityRelease
