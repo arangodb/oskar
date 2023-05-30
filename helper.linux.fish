@@ -1104,9 +1104,9 @@ function makeDockerCommunityDebug
   and minimalDebugInfoOff
   and community
   and if test (count $argv) -ge 1
-    buildDockerDebug $argv[1]-debug
+    buildDockerDebug "arangodb/arangodb-debug:$argv[1]"
   else
-    buildDockerDebug $DOCKER_TAG-debug
+    buildDockerDebug "arangodb/arangodb-debug:$DOCKER_TAG"
   end
 end
 
@@ -1122,18 +1122,33 @@ function makeDockerEnterpriseDebug
   and minimalDebugInfoOff
   and enterprise
   and if test (count $argv) -ge 1
-    buildDockerDebug $argv[1]-debug
+    buildDockerDebug "arangodb/enterprise-debug:$argv[1]"
   else
-    buildDockerDebug $DOCKER_TAG-debug
+    buildDockerDebug "arangodb/enterprise-debug:$DOCKER_TAG"
   end
 end
 
 function buildDockerDebug
+  set -l archSuffix ""
+  if test "$USE_ARM" = "On"
+    switch "$ARCH"
+      case "x86_64"
+        set archSuffix "-amd64"
+      case '*'
+        if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+        set archSuffix "-arm64v8"
+      else
+        echo "fatal, unknown architecture $ARCH for docker"
+        exit 1
+      end
+    end
+  end
+
   sanOff
   and maintainerOn
-  and releaseMode
+  and debugMode
   and set -xg NOSTRIP 1
-  and buildDockerAny $argv[1]
+  and buildDockerAny $argv[1]$archSuffix
 end
 
 function buildDockerRelease
