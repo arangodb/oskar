@@ -16,8 +16,12 @@ end
 function launchSingleTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full "$ENTERPRISE_ARG"
-  and set -xg result "GOOD"
-  or set -xg result "BAD"
+  if test "$status" == 0 and test -f work/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $status"
+   end
 end
 
 ################################################################################
@@ -26,8 +30,12 @@ end
 
 function launchGTest
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest "$ENTERPRISE_ARG"
-  and set -xg result "GOOD"
-  or set -xg result "BAD"
+  if test "$status" == 0 and test -f work/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $status"
+   end
 end
 
 ################################################################################
@@ -37,8 +45,12 @@ end
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full "$ENTERPRISE_ARG"
-  and set -xg result "GOOD"
-  or set -xg result "BAD"
+  if test "$status" == 0 and test -f work/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $status"
+   end
 end
 
 ################################################################################
@@ -48,8 +60,12 @@ end
 function launchSingleClusterTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster --full "$ENTERPRISE_ARG"
-  and set -xg result "GOOD"
-  or set -xg result "BAD"
+  if test "$status" == 0 and test -f work/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $status"
+   end
 end
 
 ################################################################################
