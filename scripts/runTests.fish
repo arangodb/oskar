@@ -44,7 +44,7 @@ end
 
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster "$ENTERPRISE_ARG"
+  python3 -mtrace --trace "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster "$ENTERPRISE_ARG"
   set x $status
   if test "$x" = "0" -a -f work/testRuns.html
     set -xg result "GOOD"
