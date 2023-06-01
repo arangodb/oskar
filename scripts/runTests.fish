@@ -15,7 +15,7 @@ function launchSingleTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch "$ENTERPRISE_ARG"
   set x $status
-  if test "$x" -eq 0 -a test -f work/testRuns.html
+  if test "$x" = "0" -a -f work/testRuns.html
     set -xg result "GOOD"
   else
     set -xg result "BAD"
@@ -30,7 +30,7 @@ end
 function launchGTest
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest "$ENTERPRISE_ARG"
   set x $status
-  if test "$x" -eq 0 -a test -f work/testRuns.html
+  if test "$x" = "0" -a -f work/testRuns.html
     set -xg result "GOOD"
   else
     set -xg result "BAD"
@@ -46,7 +46,7 @@ function launchClusterTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster "$ENTERPRISE_ARG"
   set x $status
-  if test "$x" -eq 0 -a test -f work/testRuns.html
+  if test "$x" = "0" -a -f work/testRuns.html
     set -xg result "GOOD"
   else
     set -xg result "BAD"
@@ -62,7 +62,7 @@ function launchSingleClusterTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster "$ENTERPRISE_ARG"
   set x $status
-  if test "$x" -eq 0 -a test -f work/testRuns.html
+  if test "$x" = "0" -a -f work/testRuns.html
     set -xg result "GOOD"
   else
     set -xg result "BAD"
