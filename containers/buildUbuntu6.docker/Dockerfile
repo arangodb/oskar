@@ -38,7 +38,7 @@ RUN python3.11 -m ensurepip
 RUN pip3.11 install py7zr psutil
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 110 && \
     update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 100 && \
-    update-alternatives --config python3
+    echo 2 | update-alternatives --config python3
 
 
 CMD [ "/usr/bin/fish" ]
