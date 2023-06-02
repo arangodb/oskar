@@ -5,7 +5,7 @@ ARG ARCH "x86_64"
 
 ENV COMPILER_VERSION 12
 
-ENV CLANG_VERSION 15
+ENV CLANG_VERSION 16
 
 RUN apt-get update --fix-missing && \
     apt-get install -y software-properties-common && \
