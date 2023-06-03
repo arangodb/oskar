@@ -8,7 +8,7 @@ export OPENSSLVERSION="${OPENSSLBRANCH}.${OPENSSLPATCH}"
 
 echo $OPENSSLBRANCH
 
-if [ "$OPENSSLBRANCH" != "3.0" ]; then
+if [ "$OPENSSLBRANCH" != "3.1" ]; then
   OLD="old/${OPENSSLBRANCH}/"
 fi;
 
