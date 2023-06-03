@@ -20,7 +20,7 @@ export OPENSSLBRANCH=$1
 export OPENSSLPATCH=$2
 export OPENSSLVERSION="${OPENSSLBRANCH}.${OPENSSLPATCH}"
 
-if [ "$OPENSSLBRANCH" != "3.0" ]; then
+if [ "$OPENSSLBRANCH" != "3.1" ]; then
   OLD="old/${OPENSSLBRANCH}/"
 fi;
 
