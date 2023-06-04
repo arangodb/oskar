@@ -7,14 +7,14 @@ ENV COMPILER_VERSION 12
 
 ENV CLANG_VERSION 16
 
-RUN apt-get update --fix-missing && \
-    apt-get install -y software-properties-common && \
-    apt-get update && \
-    apt-get upgrade -y
-
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update --fix-missing && apt-get install -y build-essential gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} cmake make bison flex python3 ccache git libjemalloc-dev vim exuberant-ctags gdb fish psmisc sudo debhelper debconf jq wget libdb-dev curl gnupg2 gcovr prometheus bc tcpdump && apt-get clean
+RUN apt-get update --fix-missing && \
+    apt-get install -y software-properties-common &&\
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get upgrade -y --fix-missing && \
+    apt-get install -y build-essential gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} cmake make bison flex python3 ccache git libjemalloc-dev vim exuberant-ctags gdb fish psmisc sudo debhelper debconf jq wget libdb-dev curl gnupg2 gcovr prometheus bc tcpdump python3.11 python3.11-venv && apt-get clean
 
 RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.3.1/sccache-v0.3.1-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl
 
@@ -31,6 +31,12 @@ RUN update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${CL
 RUN LC_ALL="C" update-ccache-symlinks
 
 RUN git config --global --add safe.directory '*'
+
+RUN python3.11 -m ensurepip
+RUN pip3.11 install py7zr psutil
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 110 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 100 && \
+    echo 2 | update-alternatives --config python3
 
 RUN apt-get install -y python3-pip && pip3 install py7zr psutil
 
