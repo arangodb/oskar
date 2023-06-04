@@ -128,12 +128,13 @@ function downloadOpenSSL
   set -l directory $WORKDIR/work/openssl
   set -l url https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz  
   mkdir -p $directory
-  cd $directory
+  pushd $directory
   echo "Downloading sources to $directory from URL: $url"
   curl -LO $url
   rm -rf openssl-$OPENSSL_VERSION
   tar -xzvf openssl-$OPENSSL_VERSION.tar.gz
   set -xg OPENSSL_SOURCE_DIR "$directory/openssl-$OPENSSL_VERSION"
+  popd
 end
 
 function buildOpenSSL
