@@ -11,6 +11,7 @@ import sys
 import time
 from threading  import Thread, Lock
 import traceback
+from queue import Queue
 
 import psutil
 
@@ -35,69 +36,78 @@ if 'MAX_CORESIZE' in os.environ:
 
 pp = pprint.PrettyPrinter(indent=4)
 
+JOB_QUEUE = Queue()
 
-def testing_runner(testing_instance, this, arangosh):
+def testing_runner():
     """ operate one makedata instance """
-    try:
-        this.start = datetime.now(tz=None)
-        ret = arangosh.run_testing(this.suite,
-                                   this.args,
-                                   999999999,
-                                   this.base_logdir,
-                                   this.log_file,
-                                   this.name_enum,
-                                   this.temp_dir,
-                                   True) #verbose?
-        this.success = (
-            not ret["progressive_timeout"] or
-            not ret["have_deadline"] or
-            ret["rc_exit"] == 0
-        )
-        this.finish = datetime.now(tz=None)
-        this.delta = this.finish - this.start
-        this.delta_seconds = this.delta.total_seconds()
-        print(f'done with {this.name_enum}')
-        this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
-        this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
-        if this.report_file.exists():
-            this.structured_results = this.report_file.read_text(encoding="UTF-8", errors='ignore')
-        this.summary = ret['error']
-        if this.summary_file.exists():
-            this.summary += this.summary_file.read_text()
-        else:
-            print(f'{this.name_enum} no testreport!')
-        final_name = TEMP / this.name
-        if this.crashed or not this.success:
-            print(str(this.log_file.name))
-            print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
-                  )
-            failname = this.log_file.parent / ("FAIL_" + str(this.log_file.name))
-            this.log_file.rename(failname)
-            this.log_file = failname
-            if (this.summary == "" and failname.stat().st_size < 1024*10):
-                print("pulling undersized test output into testfailures.txt")
-                this.summary = failname.read_text(encoding='utf-8')
-            with arangosh.slot_lock:
-                if this.crashed:
-                    testing_instance.crashed = True
-                testing_instance.success = False
-            final_name = TEMP / ("FAIL_" + this.name)
+    while True:
+        item = JOB_QUEUE.get()
+        if item is None:
+            return
+        testing_instance, this, arangosh = item
         try:
-            this.temp_dir.rename(final_name)
-        except FileExistsError as ex:
-            print(f"can't expand the temp directory {ex} to {final_name}")
-    except Exception as ex:
-        stack = ''.join(traceback.TracebackException.from_exception(ex).format())
-        this.crashed = True
-        this.success = False
-        this.summary = f"Python exception caught during test execution: {ex}\n{stack}"
-        this.finish = datetime.now(tz=None)
-        this.delta = this.finish - this.start
-        this.delta_seconds = this.delta.total_seconds()
-    finally:
-        with arangosh.slot_lock:
-            testing_instance.running_suites.remove(this.name_enum)
-        testing_instance.done_job(this.parallelity)
+            this.start = datetime.now(tz=None)
+            ret = arangosh.run_testing(this.suite,
+                                       this.args,
+                                       999999999,
+                                       this.base_logdir,
+                                       this.log_file,
+                                       this.name_enum,
+                                       this.temp_dir,
+                                       True) #verbose?
+            this.success = (
+                not ret["progressive_timeout"] or
+                not ret["have_deadline"] or
+                ret["rc_exit"] == 0
+            )
+            this.finish = datetime.now(tz=None)
+            this.delta = this.finish - this.start
+            this.delta_seconds = this.delta.total_seconds()
+            print(f'done with {this.name_enum}')
+            this.crashed = (not this.crashed_file.exists() or
+                            this.crashed_file.read_text() == "true")
+            this.success = (this.success and this.success_file.exists() and
+                            this.success_file.read_text() == "true")
+            if this.report_file.exists():
+                this.structured_results = this.report_file.read_text(
+                    encoding="UTF-8", errors='ignore')
+            this.summary = ret['error']
+            if this.summary_file.exists():
+                this.summary += this.summary_file.read_text()
+            else:
+                print(f'{this.name_enum} no testreport!')
+            final_name = TEMP / this.name
+            if this.crashed or not this.success:
+                print(str(this.log_file.name))
+                print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
+                      )
+                failname = this.log_file.parent / ("FAIL_" + str(this.log_file.name))
+                this.log_file.rename(failname)
+                this.log_file = failname
+                if (this.summary == "" and failname.stat().st_size < 1024*10):
+                    print("pulling undersized test output into testfailures.txt")
+                    this.summary = failname.read_text(encoding='utf-8')
+                with arangosh.slot_lock:
+                    if this.crashed:
+                        testing_instance.crashed = True
+                    testing_instance.success = False
+                final_name = TEMP / ("FAIL_" + this.name)
+            try:
+                this.temp_dir.rename(final_name)
+            except FileExistsError as ex:
+                print(f"can't expand the temp directory {ex} to {final_name}")
+        except Exception as ex:
+            stack = ''.join(traceback.TracebackException.from_exception(ex).format())
+            this.crashed = True
+            this.success = False
+            this.summary = f"Python exception caught during test execution: {ex}\n{stack}"
+            this.finish = datetime.now(tz=None)
+            this.delta = this.finish - this.start
+            this.delta_seconds = this.delta.total_seconds()
+        finally:
+            with arangosh.slot_lock:
+                testing_instance.running_suites.remove(this.name_enum)
+            testing_instance.done_job(this.parallelity)
 
 class TestingRunner():
     """ manages test runners, creates report """
@@ -109,7 +119,6 @@ class TestingRunner():
         self.used_slots = 0
         self.scenarios = []
         self.arangosh = ArangoshExecutor(self.cfg, self.slot_lock)
-        self.workers = []
         self.running_suites = []
         self.success = True
         self.crashed = False
@@ -118,6 +127,8 @@ class TestingRunner():
         self.testfailures_file = get_workspace() / 'testfailures.txt'
         self.overload_report_file = self.cfg.test_report_dir / 'overload.txt'
         self.overload_report_fh = self.overload_report_file.open('w', encoding='utf-8')
+        self.workers = []
+        self.no_workers = 0
 
     def print_active(self):
         """ output currently active testsuites """
@@ -177,13 +188,7 @@ class TestingRunner():
         with self.slot_lock:
             self.running_suites.append(this.name_enum)
 
-        worker = Thread(target=testing_runner,
-                        args=(self,
-                              this,
-                              self.arangosh))
-        worker.name = this.name
-        worker.start()
-        self.workers.append(worker)
+        JOB_QUEUE.put((self, this, self.arangosh))
         return parallelity
 
     def handle_deadline(self):
@@ -245,23 +250,42 @@ class TestingRunner():
         mem = psutil.virtual_memory()
         os.environ['ARANGODB_OVERRIDE_DETECTED_TOTAL_MEMORY'] = str(int((mem.total * 0.8) / 9))
 
-        start_offset = 0
-        used_slots = 0
-        counter = 0
         if len(self.scenarios) == 0:
             raise ValueError("no valid scenarios loaded")
+        if datetime.now() > self.cfg.deadline:
+            raise ValueError("test already timed out before started?")
         some_scenario = self.scenarios[0]
         if not some_scenario.base_logdir.exists():
             some_scenario.base_logdir.mkdir()
         if not some_scenario.base_testdir.exists():
             some_scenario.base_testdir.mkdir()
         print(self.cfg.deadline)
+        self.cfg.available_slots
+        min_parallelity = 99
+        for job in self.scenarios:
+            if job.parallelity < min_parallelity:
+                min_parallelity = job.parallelity
+        self.no_workers = int(self.cfg.available_slots / min_parallelity)
+        for _ in range(0, self.no_workers):
+            worker = Thread(target=testing_runner)
+            worker.start()
+            self.workers.append(worker)
+        self.launch_them_all()
+        for _ in range(0, self.no_workers):
+            JOB_QUEUE.put(None)
+        for worker in self.workers:
+            worker.join()
+
+    def launch_them_all(self):
+        """ core scheduler running function """
+        counter = 0
+        used_slots = 0
+        start_offset = 0
         parallelity = 0
         sleep_count = 0
         last_started_count = -1
-        if datetime.now() > self.cfg.deadline:
-            raise ValueError("test already timed out before started?")
-        while (datetime.now() < self.cfg.deadline) and (start_offset < len(self.scenarios) or used_slots > 0):
+        while ((datetime.now() < self.cfg.deadline) and
+               (start_offset < len(self.scenarios) or used_slots > 0)):
             used_slots = 0
             with self.slot_lock:
                 used_slots = self.used_slots
@@ -375,7 +399,8 @@ class TestingRunner():
 
     def generate_crash_report(self):
         """ crash report zips """
-        # pylint: disable=too-many-statements disable=too-many-branches disable=too-many-locals disable=chained-comparison
+        # pylint: disable=too-many-statements disable=too-many-branches
+        # pylint: disable=too-many-locals disable=chained-comparison
         core_max_count = MAX_COREFILES_SINGLE
         if self.cluster:
             core_max_count = MAX_COREFILES_CLUSTER
@@ -387,7 +412,8 @@ class TestingRunner():
         if 'COREDIR' in os.environ:
             core_dir = Path(os.environ['COREDIR'])
         elif IS_LINUX:
-            core_pattern = Path('/proc/sys/kernel/core_pattern').read_text(encoding="utf-8").strip()
+            core_pattern = Path('/proc/sys/kernel/core_pattern').read_text(
+                encoding="utf-8").strip()
             if core_pattern.startswith('/'):
                 core_dir = Path(core_pattern).parent
                 core_pattern = Path(core_pattern).name
@@ -409,18 +435,23 @@ class TestingRunner():
         core_zip_dir = get_workspace() / 'coredumps'
         core_zip_dir.mkdir(parents=True, exist_ok=True)
 
-        crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
-        self.mt_zip_tar(core_files_list, core_zip_dir, crash_report_file, 'coredump', 'crashreport')
+        crash_report_file = get_workspace() / datetime.now(tz=None).strftime(
+            f"crashreport-{self.cfg.datetime_format}")
+        self.mt_zip_tar(core_files_list, core_zip_dir, crash_report_file,
+                        'coredump', 'crashreport')
         shutil.rmtree(str(core_zip_dir), ignore_errors=True)
 
         self.cleanup_unneeded_binary_files()
-        binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
+        binary_report_file = get_workspace() / datetime.now(tz=None).strftime(
+            f"binaries-{self.cfg.datetime_format}")
         bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
-        self.mt_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
+        self.mt_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file,
+                        'binary support', 'binreport')
 
     def generate_test_report(self):
         """ regular testresults zip """
-        tarfile = get_workspace() / datetime.now(tz=None).strftime(f"testreport-{self.cfg.datetime_format}")
+        tarfile = get_workspace() / datetime.now(tz=None).strftime(
+            f"testreport-{self.cfg.datetime_format}")
         print('flattening inner dir structure')
         for subdir in TEMP.iterdir():
             for subsubdir in subdir.iterdir():
