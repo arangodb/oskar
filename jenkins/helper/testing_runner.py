@@ -266,6 +266,7 @@ class TestingRunner():
             if job.parallelity < min_parallelity:
                 min_parallelity = job.parallelity
         self.no_workers = int(self.cfg.available_slots / min_parallelity)
+        print(f"launching {self.no_workers} worker threads")
         for _ in range(0, self.no_workers):
             worker = Thread(target=testing_runner)
             worker.start()
