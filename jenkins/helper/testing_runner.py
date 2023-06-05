@@ -11,14 +11,13 @@ import sys
 import time
 from threading  import Thread, Lock
 import traceback
-from multiprocessing import Process
-import zipfile
 
 import psutil
 
 from socket_counter import get_socket_count
 
 # pylint: disable=line-too-long disable=broad-except
+import zip_tool
 from arangosh import ArangoshExecutor
 from test_config import get_priority, TestConfig
 from site_config import TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace
@@ -36,30 +35,6 @@ if 'MAX_CORESIZE' in os.environ:
 
 pp = pprint.PrettyPrinter(indent=4)
 
-ZIPFORMAT="gztar"
-ZIPEXT="tar.gz"
-try:
-    import py7zr
-    shutil.register_archive_format('7zip', py7zr.pack_7zarchive, description='7zip archive')
-    ZIPFORMAT="7zip"
-    ZIPEXT="7z"
-except ModuleNotFoundError:
-    pass
-
-def zipp_this(filenames, target_dir):
-    """ worker function to zip one file a time in a subprocess """
-    # pylint: disable=consider-using-with
-    for corefile in filenames:
-        try:
-            print(f'zipping {corefile}')
-            zipfile.ZipFile(str(target_dir / (corefile.name + '.xz')),
-                            mode='w', compression=zipfile.ZIP_LZMA).write(str(corefile))
-        except Exception as exc:
-            print(f'skipping {corefile} since {exc}')
-        try:
-            corefile.unlink(missing_ok=True)
-        except Exception as ex:
-            print(f"failed to delete {corefile} because of {ex}")
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
@@ -274,7 +249,7 @@ class TestingRunner():
         used_slots = 0
         counter = 0
         if len(self.scenarios) == 0:
-            raise Exception("no valid scenarios loaded")
+            raise ValueError("no valid scenarios loaded")
         some_scenario = self.scenarios[0]
         if not some_scenario.base_logdir.exists():
             some_scenario.base_logdir.mkdir()
@@ -363,38 +338,8 @@ class TestingRunner():
     # pylint: disable=too-many-arguments
     def mt_zip_tar(self, fnlist, zip_dir, tarfile, verb, filetype):
         """ use full machine to compress files in zip-tar """
-        zip_slots = psutil.cpu_count(logical=False)
-        count = 0
-        zip_slot_array = []
-        for _ in range(zip_slots):
-            zip_slot_array.append([])
-        for one_file in fnlist:
-            if one_file.exists():
-                zip_slot_array[count % zip_slots].append(one_file)
-                count += 1
-        zippers = []
-        print(f"{verb} launching zipper sub processes {zip_slot_array}")
-        for zip_slot in zip_slot_array:
-            if len(zip_slot) > 0:
-                proc = Process(target=zipp_this, args=(zip_slot, zip_dir))
-                proc.start()
-                zippers.append(proc)
-        for zipper in zippers:
-            zipper.join()
-        print("compressing files done")
-
-        for one_file in fnlist:
-            if one_file.is_file():
-                one_file.unlink(missing_ok=True)
-
-        print(f"creating {filetype}: {str(tarfile)} with {str(fnlist)}.tar")
-        sys.stdout.flush()
         try:
-            shutil.make_archive(str(tarfile),
-                                'tar',
-                                (zip_dir / '..').resolve(),
-                                zip_dir.name,
-                                True)
+            zip_tool.mt_zip_tar(fnlist, zip_dir, tarfile, verb, filetype)
         except Exception as ex:
             print(f"Failed to create {verb} zip: {str(ex)}")
             self.append_report_txt(f"Failed to create {verb} zip: {str(ex)}")
@@ -492,22 +437,22 @@ class TestingRunner():
                             clean_subdir = False
                     if clean_subdir:
                         subsubdir.rmdir()
-        print(f"Creating {str(tarfile)}.{ZIPEXT}")
+        print(f"Creating {str(tarfile)}.{zip_tool.ZIPEXT}")
         sys.stdout.flush()
         try:
             shutil.make_archive(self.cfg.run_root / 'innerlogs',
-                                ZIPFORMAT,
+                                zip_tool.ZIPFORMAT,
                                 (TEMP / '..').resolve(),
                                 TEMP.name)
         except Exception as ex:
             print("Failed to create inner zip: " + str(ex))
-            self.append_report_txt(f"Failed to create inner {ZIPEXT}: {str(ex)}")
+            self.append_report_txt(f"Failed to create inner {zip_tool.ZIPEXT}: {str(ex)}")
             self.success = False
 
         try:
             shutil.rmtree(TEMP, ignore_errors=False)
             shutil.make_archive(tarfile,
-                                ZIPFORMAT,
+                                zip_tool.ZIPFORMAT,
                                 self.cfg.run_root,
                                 '.',
                                 True)
