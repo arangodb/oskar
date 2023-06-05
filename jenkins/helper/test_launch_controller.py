@@ -9,13 +9,20 @@ from site_config import IS_ARM, IS_WINDOWS, IS_MAC, IS_COVERAGE
 
 from dump_handler import generate_dump_output
 from launch_handler import launch
+import atexit
 
 # check python 3
 if sys.version_info[0] != 3:
     print("found unsupported python version ", sys.version_info)
     sys.exit()
-
+print(f"running python {sys.version}")
 #pylint: disable=line-too-long disable=broad-except disable=chained-comparison
+
+
+def printexit():
+    print('x'*80)
+
+atexit.register(printexit)
 
 def filter_tests(args, tests):
     """ filter testcase by operations target Single/Cluster/full """
