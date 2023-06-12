@@ -16,7 +16,7 @@ and if test ! -d ArangoDB/.git
 end
 and if test ! -d ArangoDB
   echo == (date) == started clone 'ArangoDB'
-  and git clone --progress $mirror ssh://git@github.com/arangodb/ArangoDB
+  and git clone --progress ssh://git@github.com/arangodb/ArangoDB
   and echo == (date) == finished clone 'ArangoDB'
   and if test -d /mirror/ArangoDB.git
     cd ArangoDB
