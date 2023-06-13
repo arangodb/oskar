@@ -316,6 +316,11 @@ function checkoutMiniChaos
   or return $status
 end
 
+function checkoutRTA
+  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutRTA.fish
+  or return $status
+end
+
 function switchBranches
   set -l force_clean false
 
