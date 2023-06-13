@@ -22,7 +22,8 @@ and downloadSyncer
 and copyRclone
 and checkoutRTA
 
-cd $INNERWORKDIR/release-test-automation/
+pwd
+cd work/release-test-automation/
 ./jenkins/oskar_tar.sh
 # cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
