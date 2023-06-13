@@ -20,12 +20,9 @@ and TT_compile
 and downloadStarter
 and downloadSyncer
 and copyRclone
+and checkoutRTA
 
-and oskar
-
-set -l s $status
-
-TT_tests
-
-cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory 
+cd $INNERWORKDIR/release-test-automation/
+./jenkins/oskar_tar.sh
+# cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
