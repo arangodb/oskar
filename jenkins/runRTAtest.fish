@@ -27,9 +27,11 @@ echo "santoeuhsanoteuh"
 downloadStarter
 pwd
 cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
-# downloadSyncer
-# cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
-# copyRclone
+downloadSyncer
+cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+copyRclone
+find work/Arangodb/build/install/usr/bin
+find work/Arangodb/build/install/usr/sbin
 checkoutRTA
 
 pwd
