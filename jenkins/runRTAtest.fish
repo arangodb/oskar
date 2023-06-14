@@ -4,27 +4,32 @@ source jenkins/helper/jenkins.fish
 cleanPrepareLockUpdateClear2
 TT_init
 
-and eval $EDITION
-and eval $STORAGE_ENGINE
-and eval $TEST_SUITE
-and skipGrey
-and setAllLogsToWorkspace
-
-and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and updateDockerBuildImage
-and pingDetails
+eval $EDITION
+eval $STORAGE_ENGINE
+eval $TEST_SUITE
+skipGrey
+setAllLogsToWorkspace
+echo "1 $status"
+switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+echo "2 $status"
+updateDockerBuildImage
+echo "3 $status"
+pingDetails
+echo "4 $status"
 echo "santoeuhsanoteuhxxxx"
-and TT_setup
-# and oskarCompile
-and TT_compile
+TT_setup
+echo "5 $status"
+oskarCompile
+echo "6 $status"
+TT_compile
 echo "santoeuhsanoteuh"
 
 downloadStarter
 pwd
 cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
-# and downloadSyncer
+# downloadSyncer
 # cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
-# and copyRclone
+# copyRclone
 checkoutRTA
 
 pwd
