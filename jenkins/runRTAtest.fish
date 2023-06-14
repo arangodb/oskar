@@ -30,7 +30,7 @@ checkoutRTA
 pwd
 cd work/release-test-automation/
 git checkout feature/mixed-source-zip-upgrade
-chmod a+x ./jenkins/oskar_tar.sh --starter-mode SG
+chmod a+x ./jenkins/oskar_tar.sh
 ./jenkins/oskar_tar.sh
 # cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
