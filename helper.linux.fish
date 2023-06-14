@@ -1107,9 +1107,9 @@ function makeDockerMultiarchDebug
   end
 
   pushDockerManifest $MANIFEST_NAME1
-  and if test "$RELEASE_IS_HEAD" = "true"
-        pushDockerManifest $MANIFEST_NAME2
-      end
+#  and if test "$RELEASE_IS_HEAD" = "true"
+#        pushDockerManifest $MANIFEST_NAME2
+#      end
   or return 1
 end
 
