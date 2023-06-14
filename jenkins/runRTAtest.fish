@@ -2,7 +2,7 @@
 source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear2
-and TT_init
+TT_init
 
 and eval $EDITION
 and eval $STORAGE_ENGINE
@@ -30,7 +30,7 @@ checkoutRTA
 pwd
 cd work/release-test-automation/
 git checkout feature/mixed-source-zip-upgrade
-chmod a+x ./jenkins/oskar_tar.sh
+chmod a+x ./jenkins/oskar_tar.sh --starter-mode SG
 ./jenkins/oskar_tar.sh
 # cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
