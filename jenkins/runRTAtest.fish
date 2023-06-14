@@ -36,7 +36,7 @@ if test "$ENTERPRISEEDITION" = "On"
    copyRclone linux
 end
 pwd
-find work/
+# find work/
 
 checkoutRTA
 
