@@ -24,10 +24,13 @@ TT_compile
 echo "santoeuhsanoteuh"
 
 downloadStarter
+cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
+cp /work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
+#       work/ArangoDB/build/install/usr/bin/arangodb
 set RTA_EDITION C
 if test "$ENTERPRISEEDITION" = "On"
    set RTA_EDITION EP
-   cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
+
    downloadSyncer
    cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
    copyRclone linux
