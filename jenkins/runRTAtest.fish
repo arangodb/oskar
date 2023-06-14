@@ -29,15 +29,14 @@ pwd
 cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
 downloadSyncer
 cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
-copyRclone
-find work/Arangodb/build/install/usr/bin
-find work/Arangodb/build/install/usr/sbin
+copyRclone linux
+find work/Arangodb/build/
 checkoutRTA
 
 pwd
 cd work/release-test-automation/
 git checkout feature/mixed-source-zip-upgrade
 chmod a+x ./jenkins/oskar_tar.sh
-./jenkins/oskar_tar.sh
+./jenkins/oskar_tar.sh --edition C
 # cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
