@@ -1083,6 +1083,36 @@ function makeDockerMultiarch
   end
 end
 
+function makeDockerMultiarchDebug
+  set -l DOCKER_TAG $argv[1]
+
+  # build tag
+  set -l MANIFEST_NAME1 ""
+
+  # latest tag
+  set -l MANIFEST_NAME2 ""
+
+  if test "$ENTERPRISEEDITION" = "On"
+    set MANIFEST_NAME1 arangodb/enterprise-debug:$DOCKER_TAG
+
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
+      set MANIFEST_NAME2 arangodb/enterprise-debug:latest
+    end
+  else
+    set MANIFEST_NAME1 arangodb/arangodb-debug:$DOCKER_TAG
+
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
+      set MANIFEST_NAME2 arangodb/arangodb-debug:latest
+    end
+  end
+
+  pushDockerManifest $MANIFEST_NAME1
+  and if test "$RELEASE_IS_HEAD" = "true"
+        pushDockerManifest $MANIFEST_NAME2
+      end
+  or return 1
+end
+
 function makeDockerDebug
   if test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
