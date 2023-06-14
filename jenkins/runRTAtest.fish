@@ -5,7 +5,6 @@ cleanPrepareLockUpdateClear2
 TT_init
 
 eval $EDITION
-eval $STORAGE_ENGINE
 eval $TEST_SUITE
 skipGrey
 setAllLogsToWorkspace
@@ -25,18 +24,23 @@ TT_compile
 echo "santoeuhsanoteuh"
 
 downloadStarter
+set RTA_EDITION C
+if test "$ENTERPRISEEDITION" = "On"
+   set RTA_EDITION EP
+   cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
+   downloadSyncer
+   cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+   copyRclone linux
+end
 pwd
-cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
-downloadSyncer
-cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
-copyRclone linux
-find work/Arangodb/build/
+find work/
+
 checkoutRTA
 
 pwd
 cd work/release-test-automation/
 git checkout feature/mixed-source-zip-upgrade
 chmod a+x ./jenkins/oskar_tar.sh
-./jenkins/oskar_tar.sh --edition C
+bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION
 # cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory
 exit $s
