@@ -17,7 +17,7 @@ end
 and if test ! -d release-test-automation
   echo == (date) == started clone 'RTA'
   and git clone --progress $mirror ssh://git@github.com/arangodb/release-test-automation
-  and echo == (date) == finished clone 'ArangoDB'
+  and echo == (date) == finished clone 'release test automation'
   and if test -d /mirror/release-test-automation.git
     cd release-test-automation
     and git repack -a
