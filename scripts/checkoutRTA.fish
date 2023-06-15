@@ -23,5 +23,7 @@ and if test ! -d release-test-automation
     and git repack -a
     and git submodule init
     and git submodule update
+    and git checkout $RTA_BRANCH
+    and git submodule update
   end
 end
