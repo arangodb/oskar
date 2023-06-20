@@ -21,7 +21,7 @@ set RTA_EDITION "C"
 if test "$ENTERPRISEEDITION" = "On"
    set RTA_EDITION "EP"
    copyRclone linux
-   cp work/ArangoDB/build/install/usr/bin/rclone-arangodb work/ArangoDB/build/bin/
+   cp work/ArangoDB/build/install/usr/sbin/rclone-arangodb work/ArangoDB/build/bin/
    downloadSyncer
    cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
    pwd
