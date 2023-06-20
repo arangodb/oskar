@@ -68,5 +68,6 @@ and begin
   end
 end
 and for i in ../Documentation/Examples/arango*.json; mv $i ../Documentation/(basename $i .json)-options.json; end
+and cp -a Documentation/Examples/optimizer-rules.json ../docs/$ARANGODB_VERSION/generated/optimizer-rules.json
 or begin echo "FAILED!"; popd; exit 1; end
 popd
