@@ -24,6 +24,8 @@ if test "$ENTERPRISEEDITION" = "On"
    cp work/ArangoDB/build/install/usr/bin/rclone-arangodb work/ArangoDB/build/bin/
    downloadSyncer
    cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+   pwd
+   find work
 end
 
 checkoutRTA
