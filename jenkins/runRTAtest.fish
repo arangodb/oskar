@@ -31,5 +31,5 @@ end
 checkoutRTA
 cd work/release-test-automation/
 git checkout $RTA_BRANCH
-bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION
+bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $ADDITIONAL_PARAMS
 exit $s
