@@ -2121,6 +2121,17 @@ function downloadSyncer
   and convertSItoJSON
 end
 
+function downloadAuxBinariesToBuildBin
+  if test "$ENTERPRISEEDITION" = "On"
+     copyRclone linux
+     and cp work/ArangoDB/build/install/usr/sbin/rclone-arangodb work/ArangoDB/build/bin/
+     and downloadSyncer
+     and cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+  end
+  and downloadStarter
+  and cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
+end
+
 ## #############################################################################
 ## set PARALLELISM in a sensible way
 ## #############################################################################
