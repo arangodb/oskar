@@ -317,7 +317,7 @@ function checkoutMiniChaos
 end
 
 function checkoutRTA
-  runInContainer $ALPINEUTILSIMAGE -e RTA_BRANCH="$RTA_BRANCH" $SCRIPTSDIR/checkoutRTA.fish
+  runInContainer -e RTA_BRANCH="$RTA_BRANCH" $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutRTA.fish
   or return $status
 end
 
