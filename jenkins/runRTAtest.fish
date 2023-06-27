@@ -4,9 +4,6 @@ source jenkins/helper/jenkins.fish
 cleanPrepareLockUpdateClear2
 TT_init
 set RTA_EDITION "C"
-if test "$ENTERPRISEEDITION" = "On"
-   set RTA_EDITION "EP"
-end
 
 and eval $EDITION
 and eval $TEST_SUITE
@@ -22,5 +19,8 @@ and downloadAuxBinariesToBuildBin
 and checkoutRTA
 and cd work/release-test-automation/
 # git checkout $RTA_BRANCH
+if test "$ENTERPRISEEDITION" = "On"
+   set RTA_EDITION "EP"
+end
 and bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $ADDITIONAL_PARAMS
 exit $s
