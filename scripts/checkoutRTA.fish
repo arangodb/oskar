@@ -6,9 +6,6 @@ set -l mirror
 if test -d /mirror/release-test-automation.git
   set mirror --reference-if-able /mirror/release-test-automation.git
 end
-echo "in here"
-echo $RTA_BRANCH
-echo "go"
 cd $INNERWORKDIR
 and git config --global http.postBuffer 524288000
 and git config --global https.postBuffer 524288000
