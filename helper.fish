@@ -1960,7 +1960,7 @@ function moveResultsToWorkspace
 
     set -l matches $WORKDIR/work/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv,tar}
     for f in $matches
-      echo $f | grep -qv testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"
+      echo $f | grep -qv testreport ; and echo "mv $f $WORKSPACE" ; and mv $f $WORKSPACE; or echo "skipping $f"
     end
 
     for f in $WORKDIR/work/*san.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end

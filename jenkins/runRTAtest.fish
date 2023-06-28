@@ -30,7 +30,7 @@ moveResultsToWorkspace
 
 set -l matches $WORKDIR/work/release-test-automation/test_dir/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv,tar,png}
 for f in $matches
-   echo $f | grep -qv testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"
+   echo $f | grep -qv testreport ; and echo "mv $f $WORKSPACE" ; and mv $f $WORKSPACE; or echo "skipping $f"
 end
 
 unlockDirectory
