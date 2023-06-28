@@ -316,6 +316,11 @@ function checkoutMiniChaos
   or return $status
 end
 
+function checkoutRTA
+  runInContainer -e RTA_BRANCH="$RTA_BRANCH" $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutRTA.fish
+  or return $status
+end
+
 function switchBranches
   set -l force_clean false
 
@@ -2114,6 +2119,17 @@ function downloadSyncer
   and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
   and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
   and convertSItoJSON
+end
+
+function downloadAuxBinariesToBuildBin
+  if test "$ENTERPRISEEDITION" = "On"
+     copyRclone linux
+     and cp work/ArangoDB/build/install/usr/sbin/rclone-arangodb work/ArangoDB/build/bin/
+     and downloadSyncer
+     and cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+  end
+  and downloadStarter
+  and cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
 end
 
 ## #############################################################################
