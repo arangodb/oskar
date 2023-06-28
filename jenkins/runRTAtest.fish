@@ -25,9 +25,14 @@ and bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $argv
 
 set -l s $status
 
-# RTA leaves its results here:
-cd test_dir; mv *.7z *.png ../..; cd ..
+# compiling results:
 moveResultsToWorkspace
+# RTA leaves its results here:
+cd test_dir
+set wd "$WORKDIR"
+set set -gx WORKDIR (pwd)
+moveResultsToWorkspace
+set WORKDIR "$wd"
 unlockDirectory
 
 exit $s
