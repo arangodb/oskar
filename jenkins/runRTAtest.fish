@@ -22,4 +22,7 @@ if test "$ENTERPRISEEDITION" = "On"
    set RTA_EDITION "EP"
 end
 and bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $ADDITIONAL_PARAMS
+set -l s $status
+# RTA leaves its results here:
+cd test_dir; moveResultsToWorkspace ; unlockDirectory
 exit $s
