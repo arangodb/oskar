@@ -21,7 +21,7 @@ and cd work/release-test-automation/
 if test "$ENTERPRISEEDITION" = "On"
    set RTA_EDITION "EP"
 end
-and bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $ADDITIONAL_PARAMS
+and bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $argv
 
 set -l s $status
 
