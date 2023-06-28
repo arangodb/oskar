@@ -27,12 +27,12 @@ set -l s $status
 
 # compiling results:
 moveResultsToWorkspace
-# RTA leaves its results here:
-cd test_dir
-set wd "$WORKDIR"
-set set -gx WORKDIR (pwd)
-moveResultsToWorkspace
-set WORKDIR "$wd"
+
+set -l matches $WORKDIR/work/release-test-automation/test_dir/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv,tar,png}
+for f in $matches
+   echo $f | grep -qv testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"
+end
+
 unlockDirectory
 
 exit $s
