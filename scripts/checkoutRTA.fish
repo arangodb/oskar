@@ -20,9 +20,19 @@ and if test ! -d release-test-automation
   and if test -d /mirror/release-test-automation.git
     cd release-test-automation
     and git repack -a
+    and git pull
+    and git checkout $RTA_BRANCH
     and git submodule init
     and git submodule update
+  else
+    echo "pulling RTA branch to make sure we're up to date"
+    and git pull
     and git checkout $RTA_BRANCH
     and git submodule update
-  end
+ end
+else
+    echo "pulling RTA branch to make sure we're up to date"
+    and git pull
+    and git checkout $RTA_BRANCH
+    and git submodule update
 end
