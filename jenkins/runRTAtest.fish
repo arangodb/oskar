@@ -17,6 +17,7 @@ and TT_compile
 and downloadAuxBinariesToBuildBin
 
 and checkoutRTA
+git checkout $RTA_BRANCH
 and cd work/release-test-automation/
 if test "$ENTERPRISEEDITION" = "On"
    set RTA_EDITION "EP"
