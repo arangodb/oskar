@@ -460,7 +460,8 @@ class TestingRunner():
         if len(core_files_list) == 0 or core_max_count <= 0:
             print(f'Coredumps are not collected: {str(len(core_files_list))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
             return
-
+        self.crashed = True
+        self.success = False
         core_zip_dir = get_workspace() / 'coredumps'
         core_zip_dir.mkdir(parents=True, exist_ok=True)
 
