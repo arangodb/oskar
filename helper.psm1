@@ -972,6 +972,30 @@ Function findRequiredOpenSSL
     $global:OPENSSL_VERSION = $global:OPENSSL_DEFAULT_VERSION
 }
 
+Function defaultBuildRepoInfo
+{
+    $global:BUILD_REPO_INFO = "default"
+}
+
+Function releaseBuildRepoInfo
+{
+    $global:BUILD_REPO_INFO = "release"
+}
+
+Function nightlyBuildRepoInfo
+{
+    $global:BUILD_REPO_INFO = "nightly"
+}
+
+If (-Not($BUILD_REPO_INFO))
+{
+    defaultBuildRepoInfo
+}
+Else 
+{
+    $global:BUILD_REPO_INFO = "$BUILD_REPO_INFO"
+}
+
 # ##############################################################################
 # Version detection
 # ##############################################################################
@@ -1674,6 +1698,7 @@ Function setNightlyRelease
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_NUMBER.*', ('set(ARANGODB_VERSION_RELEASE_NUMBER "' + (Get-Date).ToString("yyyyMMdd") + '")') | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
     findArangoDBVersion
     setupSourceInfo "VERSION" $global:ARANGODB_FULL_VERSION
+    nightlyBuildRepoInfo
 }
 
 Function movePackagesToWorkdir
