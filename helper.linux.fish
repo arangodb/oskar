@@ -342,7 +342,6 @@ function switchBranches
   and findRequiredCompiler
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
-  and setBuildRepoInfo
   and findUseARM
 end
 
