@@ -592,6 +592,7 @@ function setNightlyRelease
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
   and setupSourceInfo "VERSION" "$ARANGODB_FULL_VERSION"
   and nightlyBuildRepoInfo
+  echo "NIGHTLY BUILD: ${BUILD_REPO_INFO}"
 end
 
 ## #############################################################################
