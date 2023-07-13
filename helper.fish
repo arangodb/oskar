@@ -454,13 +454,13 @@ function copyRclone
   cp -L $WORKDIR/rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
-function defaultBuildRepoInfo; set -gx BUILD_REPO_INFO default ; end
-function releaseBuildRepoInfo; set -gx BUILD_REPO_INFO release ; end
-function nightlyBuildRepoInfo; set -gx BUILD_REPO_INFO nightly ; end
+function defaultBuildRepoInfo; set -gx BUILD_REPO_INFO "default" ; end
+function releaseBuildRepoInfo; set -gx BUILD_REPO_INFO "release" ; end
+function nightlyBuildRepoInfo; set -gx BUILD_REPO_INFO "nightly" ; end
 
 if test -z "$BUILD_REPO_INFO"
   defaultBuildRepoInfo
-else; set -gx BUILD_REPO_INFO $BUILD_REPO_INFO; end
+else; set -gx BUILD_REPO_INFO "$BUILD_REPO_INFO"; end
 
 ## #############################################################################
 ## test
