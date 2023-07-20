@@ -158,10 +158,8 @@ function shutdownCcache
 end
 
 function selectArchitecture
-  echo "NIGHTLY BUILD1: $BUILD_REPO_INFO"
   if begin test "$USE_ARM" = "On";and test (string match -ir '^arm64$|^aarch64$' "$ARCH"); end
     echo "using architecture ARM"
-    
     set -g FULLARGS $FULLARGS \
       -DCMAKE_SYSTEM_PROCESSOR="aarch64" -DASM_OPTIMIZATIONS=Off
   else
