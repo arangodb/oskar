@@ -48,10 +48,10 @@ set -g FULLARGS $argv \
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
 end
@@ -81,7 +81,7 @@ if test "$SAN" = "On"
    -DCMAKE_CXX_FLAGS="-pthread $SANITIZERS -fno-sanitize=vptr -fno-sanitize=alignment" \
    -DBASE_LIBS="-pthread"
 else if test "$COVERAGE" = "On"
-  echo "COVERAGE is not support in this environment!"
+  echo "COVERAGE is not supported in this environment!"
   exit 1
 else
   set -g FULLARGS $FULLARGS \
@@ -89,12 +89,12 @@ else
 
   if test "$MAINTAINER" = "On"
     set -g FULLARGS $FULLARGS \
-     -DCMAKE_C_FLAGS="$pie -fno-stack-protector" \
-     -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector"
+     -DCMAKE_C_FLAGS="$pie" \
+     -DCMAKE_CXX_FLAGS="$pie"
   else
     set -g FULLARGS $FULLARGS \
-     -DCMAKE_C_FLAGS="$pie $inline -fno-stack-protector" \
-     -DCMAKE_CXX_FLAGS="$pie $inline -fno-stack-protector"
+     -DCMAKE_C_FLAGS="$pie $inline" \
+     -DCMAKE_CXX_FLAGS="$pie $inline"
   end
 end
 

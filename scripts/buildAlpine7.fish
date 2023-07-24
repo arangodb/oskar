@@ -40,10 +40,10 @@ set -g FULLARGS $argv \
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
 end
@@ -59,8 +59,8 @@ else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-    -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
-    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
+    -DCMAKE_C_FLAGS="$pie -fprofile-arcs -ftest-coverage" \
+    -DCMAKE_CXX_FLAGS="$pie -fprofile-arcs -ftest-coverage" \
     -DUSE_COVERAGE=ON
 else
   set -g FULLARGS $FULLARGS \
@@ -68,12 +68,12 @@ else
 
   if test "$MAINTAINER" = "On"
     set -g FULLARGS $FULLARGS \
-     -DCMAKE_C_FLAGS="$pie -fno-stack-protector" \
-     -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector"
+     -DCMAKE_C_FLAGS="$pie" \
+     -DCMAKE_CXX_FLAGS="$pie"
   else
     set -g FULLARGS $FULLARGS \
-     -DCMAKE_C_FLAGS="$pie $inline -fno-stack-protector" \
-     -DCMAKE_CXX_FLAGS="$pie $inline -fno-stack-protector"
+     -DCMAKE_C_FLAGS="$pie $inline" \
+     -DCMAKE_CXX_FLAGS="$pie $inline"
   end
 end
 
