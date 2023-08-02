@@ -12,6 +12,7 @@ cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and showRepository
+and releaseBuildRepoInfo
 and makeDockerEnterpriseDebug
 
 set -l s $status

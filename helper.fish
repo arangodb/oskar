@@ -454,6 +454,24 @@ function copyRclone
   cp -L $WORKDIR/rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
+function defaultBuildRepoInfo
+  set -gx BUILD_REPO_INFO "default"
+end
+
+function releaseBuildRepoInfo
+  set -gx BUILD_REPO_INFO "release" 
+end
+
+function nightlyBuildRepoInfo
+  set -gx BUILD_REPO_INFO "nightly"
+end
+
+if test -z "$BUILD_REPO_INFO"
+  defaultBuildRepoInfo
+else
+  set -gx BUILD_REPO_INFO "$BUILD_REPO_INFO"
+end
+
 ## #############################################################################
 ## test
 ## #############################################################################
@@ -583,6 +601,7 @@ function setNightlyRelease
   and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/ARANGO-VERSION
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
   and setupSourceInfo "VERSION" "$ARANGODB_FULL_VERSION"
+  and nightlyBuildRepoInfo
 end
 
 ## #############################################################################

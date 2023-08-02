@@ -1826,6 +1826,7 @@ function runInContainer
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              -e WORKSPACE="$WORKSPACE" \
              -e PROMTOOL_PATH="$PROMTOOL_PATH" \
+             -e BUILD_REPO_INFO="$BUILD_REPO_INFO" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1937,6 +1938,7 @@ function interactiveContainer
     -e VERBOSEOSKAR="$VERBOSEOSKAR" \
     -e WORKSPACE="$WORKSPACE" \
     -e PROMTOOL_PATH="$PROMTOOL_PATH" \
+    -e BUILD_REPO_INFO="$BUILD_REPO_INFO" \
     $argv
 
   if test -n "$agentstarted"

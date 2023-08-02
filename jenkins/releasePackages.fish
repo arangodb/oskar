@@ -10,6 +10,7 @@ cleanPrepareLockUpdateClear
 and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and ccacheOff
+and releaseBuildRepoInfo
 and makeRelease
 
 set -l s $status
