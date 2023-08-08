@@ -237,7 +237,7 @@ function checkOskarOpenSSL
     false
     return 1
   end
-  set -l cmd "$executable version | grep -m 1 -o \"[0-9]\.[0-9]\.[0-9][a-z]*\" | head -1"
+  set -l cmd "$executable version | grep -m 1 -o \"[0-9]\.[0-9]\.[0-9]*[a-z]*\" | head -1"
   set -l output (eval "arch -$ARCH $cmd")
   if test "$output" = "$OPENSSL_VERSION"
     echo "Found OpenSSL $OPENSSL_VERSION"
@@ -289,7 +289,7 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -E -o "[0-9]\.[0-9]\.[0-9][a-z]?")
+  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -E -o "[0-9]\.[0-9]\.[0-9]*[a-z]?")
 
   if test "$v" = ""
     echo "$f: no OPENSSL_MACOS specified, using 1.1.1t"
