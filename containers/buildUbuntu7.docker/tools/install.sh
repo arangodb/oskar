@@ -24,7 +24,7 @@ if [ "$OPENSSLBRANCH" != "3.1" ]; then
   OLD="old/${OPENSSLBRANCH}/"
 fi;
 
-export OPENSSLPATH=`echo $OPENSSLVERSION | sed 's/\.[0-9]$//g'`
+export OPENSSLPATH=`echo $OPENSSLVERSION | sed 's/\.[0-9]+$//g'`
 cd /tmp
 curl -O https://www.openssl.org/source/openssl-$OPENSSLVERSION.tar.gz
 tar xzf openssl-$OPENSSLVERSION.tar.gz
