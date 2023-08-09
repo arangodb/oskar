@@ -168,7 +168,6 @@ function buildOpenSSL
       echo "Executing: $cmd"
       eval $cmd
       make
-      make test
       make install_dev
     end
   end
