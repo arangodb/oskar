@@ -67,7 +67,7 @@ if test (ls -1 $simple/core* 2>/dev/null | wc -l) -gt 0
            -v $simple:/performance \
            --rm \
        $DOCKER_IMAGE \
-       chown -R (id -u):(id -g) '/performance/core*'
+       sh -c "chmod a+rw /performance/core*"
     7z a $simple/../coredumps $simple/core*
     printf "\nCoredumps found after testrun:\n"
     ls -l $simple/core*
