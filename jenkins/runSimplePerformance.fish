@@ -23,9 +23,11 @@ and if test -z "$DOCKER_IMAGE"
 end
 
 and sudo rm -rf work/database $simple/results.csv
+and cat /proc/sys/kernel/core_pattern
 and echo "==== starting performance run ===="
 and if test -z "$DOCKER_IMAGE"
   docker run \
+    --ulimit core=-1 \
     -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
     -v (pwd)/work/ArangoDB:/ArangoDB \
     -v (pwd)/work:/data \
@@ -43,6 +45,7 @@ and if test -z "$DOCKER_IMAGE"
     --javascript.script simple/$ARANGODB_TEST_CONFIG"
 else
   docker run \
+    --ulimit core=-1 \
     -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
     -v (pwd)/work:/data \
     -v $simple:/performance \
