@@ -61,6 +61,16 @@ else
 end
 
 set -l s $status
+
+if test (ls -1 ${simple}/core* 2>/dev/null | wc -l) -gt 0
+    7z a ${simple}/../coredumps ${simple}/core*
+    printf "\nCoredumps found after testrun:\n
+    ls -l ${simple}/core*
+    rm -f ${simple}/core*
+    echo "FAILED BY COREDUMP FOUND!"
+    set -l s 1
+end
+
 set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
 set -l localname work/results.csv
 
