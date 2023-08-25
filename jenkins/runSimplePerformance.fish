@@ -62,7 +62,7 @@ end
 
 set -l s $status
 
-if test (ls -1 $simple/core* 2>/dev/null | wc -l) -gt 0
+if count $simple/core* >/dev/null
    docker run \
            -v $simple:/performance \
            --rm \
