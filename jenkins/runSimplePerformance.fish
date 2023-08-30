@@ -75,7 +75,7 @@ if count $simple/core* >/dev/null
     echo "FAILED BY COREDUMP FOUND!"
     set -l s 1
 else
-    touch  $simple/../coredumps.7z
+    echo "no coredumps"
 end
 
 set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
