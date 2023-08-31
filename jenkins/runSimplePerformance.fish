@@ -68,10 +68,10 @@ if count $simple/core* >/dev/null
            --rm \
        $DOCKER_IMAGE \
        sh -c "cp /usr/sbin/arangod /performance; chmod a+rw /performance/core* /performance/arangod"
-    7z a $simple/../coredumps $simple/core* $simple/arangod
     printf "\nCoredumps found after testrun:\n"
-    ls -l $simple/core*
-    rm -f $simple/core*
+    ls -l $simple/core* $simple/arangod
+    7z a $simple/../coredumps $simple/core* $simple/arangod
+    and rm -f $simple/core* $simple/arangod
     echo "FAILED BY COREDUMP FOUND!"
     set -l s 1
 else
