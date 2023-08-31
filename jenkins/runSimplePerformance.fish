@@ -67,8 +67,8 @@ if count $simple/core* >/dev/null
            -v $simple:/performance \
            --rm \
        $DOCKER_IMAGE \
-       sh -c "chmod a+rw /performance/core*"
-    7z a $simple/../coredumps $simple/core*
+       sh -c "cp /usr/sbin/arangod /performance; chmod a+rw /performance/core* /performance/arangod"
+    7z a $simple/../coredumps $simple/core* $simple/arangod
     printf "\nCoredumps found after testrun:\n"
     ls -l $simple/core*
     rm -f $simple/core*
