@@ -29,6 +29,9 @@ if test "$OPENSSL_VERSION" = ""
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
+set -xg X86_64_OPENSSL3_PATH ""
+test "$ARCH" = "x86_64"; and string match '3*' "$OPENSSL_VERSION"; and set X86_64_OPENSSL3_PATH ";/opt/openssl-$OPENSSL_VERSION/lib64"
+
 set -l pie ""
 #set -l pie "-fpic -fPIC -fpie -fPIE"
 set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
@@ -39,9 +42,10 @@ set -g FULLARGS $argv \
  -DSTATIC_EXECUTABLES=Off \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
- -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
+ -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib"$X86_64_OPENSSL3_PATH" \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
- -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL \
+ -DBUILD_REPO_INFO=$BUILD_REPO_INFO
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
@@ -68,7 +72,7 @@ if test "$SAN" = "On"
   set -xg CXX_NAME clang++
   # Suppress leaks detection only during building
   set -gx SAN_OPTIONS "detect_leaks=0"
-  set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak"
+  set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak -fsanitize-address-use-after-return=never"
   if test "$SAN_MODE" = "TSan"
     set SANITIZERS "-fsanitize=thread"
   end

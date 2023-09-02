@@ -10,6 +10,9 @@ import signal
 import sys
 import time
 from threading  import Thread, Lock
+import traceback
+from multiprocessing import Process
+import zipfile
 
 import psutil
 
@@ -26,7 +29,7 @@ MAX_COREFILES_CLUSTER=15
 if 'MAX_CORECOUNT' in os.environ:
     MAX_COREFILES_SINGLE=int(os.environ['MAX_CORECOUNT'])
     MAX_COREFILES_CLUSTER=int(os.environ['MAX_CORECOUNT'])
-MAX_COREFILE_SIZE_MB=750
+MAX_COREFILE_SIZE_MB=850
 if 'MAX_CORESIZE' in os.environ:
     MAX_COREFILE_SIZE_MB=int(os.environ['MAX_CORESIZE'])
 
@@ -34,12 +37,29 @@ if 'MAX_CORESIZE' in os.environ:
 pp = pprint.PrettyPrinter(indent=4)
 
 ZIPFORMAT="gztar"
+ZIPEXT="tar.gz"
 try:
     import py7zr
     shutil.register_archive_format('7zip', py7zr.pack_7zarchive, description='7zip archive')
     ZIPFORMAT="7zip"
+    ZIPEXT="7z"
 except ModuleNotFoundError:
     pass
+
+def zipp_this(filenames, target_dir):
+    """ worker function to zip one file a time in a subprocess """
+    # pylint: disable=consider-using-with
+    for corefile in filenames:
+        try:
+            print(f'zipping {corefile}')
+            zipfile.ZipFile(str(target_dir / (corefile.name + '.xz')),
+                            mode='w', compression=zipfile.ZIP_LZMA).write(str(corefile))
+        except Exception as exc:
+            print(f'skipping {corefile} since {exc}')
+        try:
+            corefile.unlink(missing_ok=True)
+        except Exception as ex:
+            print(f"failed to delete {corefile} because of {ex}")
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
@@ -71,6 +91,7 @@ def testing_runner(testing_instance, this, arangosh):
             this.summary += this.summary_file.read_text()
         else:
             print(f'{this.name_enum} no testreport!')
+        final_name = TEMP / this.name
         if this.crashed or not this.success:
             print(str(this.log_file.name))
             print(this.log_file.parent / ("FAIL_" + str(this.log_file.name))
@@ -85,9 +106,19 @@ def testing_runner(testing_instance, this, arangosh):
                 if this.crashed:
                     testing_instance.crashed = True
                 testing_instance.success = False
-            temp_dir = TEMP / ("FAIL_" + this.name)
-            this.temp_dir.rename(temp_dir)
-            this.temp_dir = temp_dir
+            final_name = TEMP / ("FAIL_" + this.name)
+        try:
+            this.temp_dir.rename(final_name)
+        except FileExistsError as ex:
+            print(f"can't expand the temp directory {ex} to {final_name}")
+    except Exception as ex:
+        stack = ''.join(traceback.TracebackException.from_exception(ex).format())
+        this.crashed = True
+        this.success = False
+        this.summary = f"Python exception caught during test execution: {ex}\n{stack}"
+        this.finish = datetime.now(tz=None)
+        this.delta = this.finish - this.start
+        this.delta_seconds = this.delta.total_seconds()
     finally:
         with arangosh.slot_lock:
             testing_instance.running_suites.remove(this.name_enum)
@@ -149,7 +180,7 @@ class TestingRunner():
                     return -1
             except psutil.AccessDenied:
                 pass
-            load_estimate = self.cfg.slots_to_parallelity_factor * self.scenarios[offset].parallelity
+            load_estimate = self.cfg.parallelity_to_load_factor * self.scenarios[offset].parallelity
             load = psutil.getloadavg()
             if ((load[0] > self.cfg.max_load) or
                 (load[1] > self.cfg.max_load1) or
@@ -162,6 +193,8 @@ class TestingRunner():
             parallelity = self.scenarios[offset].parallelity
         self.used_slots += parallelity
         this = self.scenarios[offset]
+        this.counter = counter
+        this.temp_dir = TEMP / str(counter)
         this.name_enum = f"{this.name} {str(counter)}"
         print(f"launching {this.name_enum}")
         pp.pprint(this)
@@ -327,20 +360,71 @@ class TestingRunner():
         with self.testfailures_file.open("a") as filep:
             filep.write(text + '\n')
 
+    # pylint: disable=too-many-arguments
+    def mt_zip_tar(self, fnlist, zip_dir, tarfile, verb, filetype):
+        """ use full machine to compress files in zip-tar """
+        zip_slots = psutil.cpu_count(logical=False)
+        count = 0
+        zip_slot_array = []
+        for _ in range(zip_slots):
+            zip_slot_array.append([])
+        for one_file in fnlist:
+            if one_file.exists():
+                zip_slot_array[count % zip_slots].append(one_file)
+                count += 1
+        zippers = []
+        print(f"{verb} launching zipper sub processes {zip_slot_array}")
+        for zip_slot in zip_slot_array:
+            if len(zip_slot) > 0:
+                proc = Process(target=zipp_this, args=(zip_slot, zip_dir))
+                proc.start()
+                zippers.append(proc)
+        for zipper in zippers:
+            zipper.join()
+        print("compressing files done")
+
+        for one_file in fnlist:
+            if one_file.is_file():
+                one_file.unlink(missing_ok=True)
+
+        print(f"creating {filetype}: {str(tarfile)} with {str(fnlist)}.tar")
+        sys.stdout.flush()
+        try:
+            shutil.make_archive(str(tarfile),
+                                'tar',
+                                (zip_dir / '..').resolve(),
+                                zip_dir.name,
+                                True)
+        except Exception as ex:
+            print(f"Failed to create {verb} zip: {str(ex)}")
+            self.append_report_txt(f"Failed to create {verb} zip: {str(ex)}")
+
     def cleanup_unneeded_binary_files(self):
         """ delete all files not needed for the crashreport binaries """
         shutil.rmtree(str(self.cfg.bin_dir / 'tzdata'))
         needed = [
-            'arangod',
-            'arangosh',
-            'arangodump',
-            'arangorestore',
-            'arangoimport',
+            'tzdata',
+            'icudtl',
+            'fuertetest',
+            'arangovpack',
             'arangobackup',
-            'arangodbtests']
+            'arangosh',
+            'arangoexport',
+            'arangoinspect',
+            'arangoimport',
+            'arangoimp',
+            'arango-secure-installation',
+            'foxx-manager',
+            'arangorestore',
+            'arangobench',
+            'snowball',
+            'arangodbtests',
+            'arangod',
+            'arango-init-database',
+            'arangodump']
         for one_file in self.cfg.bin_dir.iterdir():
             if (one_file.suffix == '.lib' or
-                (one_file.stem not in needed) ):
+                (one_file.stem not in needed)):
                 print(f'Deleting {str(one_file)}')
                 one_file.unlink(missing_ok=True)
 
@@ -352,7 +436,6 @@ class TestingRunner():
             core_max_count = MAX_COREFILES_CLUSTER
         core_dir = Path.cwd()
         core_pattern = "core*"
-        move_files = False
         if IS_WINDOWS:
             core_pattern = "*.dmp"
         system_corefiles = []
@@ -364,88 +447,34 @@ class TestingRunner():
                 core_dir = Path(core_pattern).parent
                 core_pattern = Path(core_pattern).name
             core_pattern = re.sub(r'%.', '*', core_pattern)
-            move_files = True
         else:
-            move_files = True
             core_dir = Path('/var/tmp/') # default to coreDirectory in testing.js
         if IS_MAC:
-            move_files = True
             system_corefiles = list(Path('/cores').glob(core_pattern))
             if system_corefiles is None:
                 system_corefiles = []
-        files_unsorted = list(core_dir.glob(core_pattern))
-        if files_unsorted is None:
-            files_unsorted = []
-        files_unsorted += system_corefiles
-        if len(files_unsorted) == 0 or core_max_count <= 0:
-            print(f'Coredumps are not collected: {str(len(files_unsorted))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
+        core_files_list = list(core_dir.glob(core_pattern))
+        if core_files_list is None:
+            core_files_list = []
+        core_files_list += system_corefiles
+        if len(core_files_list) == 0 or core_max_count <= 0:
+            print(f'Coredumps are not collected: {str(len(core_files_list))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
             return
+        if not self.crashed or self.success:
+            self.append_report_txt("non captured crash reports found; please inspect the tests to find out who created them.")
+        self.crashed = True
+        self.success = False
+        core_zip_dir = get_workspace() / 'coredumps'
+        core_zip_dir.mkdir(parents=True, exist_ok=True)
 
-        for one_file in files_unsorted:
-            if one_file.is_file():
-                size = (one_file.stat().st_size / (1024 * 1024))
-                if 0 < MAX_COREFILE_SIZE_MB and MAX_COREFILE_SIZE_MB < size:
-                    print(f'deleting coredump {str(one_file)} its too big: {str(size)}')
-                    files_unsorted.remove(one_file)
-            else:
-                files_unsorted.remove(one_file)
+        crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
+        self.mt_zip_tar(core_files_list, core_zip_dir, crash_report_file, 'coredump', 'crashreport')
+        shutil.rmtree(str(core_zip_dir), ignore_errors=True)
 
-        if len(files_unsorted) > core_max_count and core_max_count > 0:
-            count = 0
-            for one_crash_file in files_unsorted:
-                count += 1
-                if count > core_max_count:
-                    print(f'{core_max_count} reached. will not archive {one_crash_file}')
-                    one_crash_file.unlink(missing_ok=True)
-
-        is_empty = len(files_unsorted) == 0
-        if not is_empty and move_files:
-            core_dir = core_dir / 'coredumps'
-            core_dir.mkdir(parents=True, exist_ok=True)
-            for one_file in files_unsorted:
-                if one_file.exists():
-                    try:
-                        shutil.move(str(one_file.resolve()), str(core_dir.resolve()))
-                    except shutil.Error as ex:
-                        msg = f"generate_crash_report: failed to move file while while gathering coredumps: {ex}"
-                        self.append_report_txt('\n' + msg + '\n')
-                        print(msg)
-                    except PermissionError as ex:
-                        print(f"won't move {str(one_file)} - not an owner! {str(ex)}")
-                        self.append_report_txt(f"won't move {str(one_file)} - not an owner! {str(ex)}")
-
-        if self.crashed or not is_empty:
-            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
-            print("creating crashreport: " + str(crash_report_file))
-            sys.stdout.flush()
-            try:
-                shutil.make_archive(str(crash_report_file),
-                                    ZIPFORMAT,
-                                    (core_dir / '..').resolve(),
-                                    core_dir.name,
-                                    True)
-            except Exception as ex:
-                print("Failed to create binaries zip: " + str(ex))
-                self.append_report_txt("Failed to create binaries zip: " + str(ex))
-            self.cleanup_unneeded_binary_files()
-            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
-            print("creating crashreport binary support zip: " + str(binary_report_file))
-            sys.stdout.flush()
-            try:
-                shutil.make_archive(str(binary_report_file),
-                                    ZIPFORMAT,
-                                    (self.cfg.bin_dir / '..').resolve(),
-                                    self.cfg.bin_dir.name,
-                                    True)
-            except Exception as ex:
-                print("Failed to create crashdump zip: " + str(ex))
-                self.append_report_txt("Failed to create crashdump zip: " + str(ex))
-            for corefile in core_dir.glob(core_pattern):
-                print("Deleting corefile " + str(corefile))
-                sys.stdout.flush()
-                corefile.unlink()
-            if not is_empty and move_files:
-                core_dir.rmdir()
+        self.cleanup_unneeded_binary_files()
+        binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
+        bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
+        self.mt_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
 
     def generate_test_report(self):
         """ regular testresults zip """
@@ -466,7 +495,7 @@ class TestingRunner():
                             clean_subdir = False
                     if clean_subdir:
                         subsubdir.rmdir()
-        print("Creating " + str(tarfile))
+        print(f"Creating {str(tarfile)}.{ZIPEXT}")
         sys.stdout.flush()
         try:
             shutil.make_archive(self.cfg.run_root / 'innerlogs',
@@ -475,7 +504,7 @@ class TestingRunner():
                                 TEMP.name)
         except Exception as ex:
             print("Failed to create inner zip: " + str(ex))
-            self.append_report_txt("Failed to create inner zip: " + str(ex))
+            self.append_report_txt(f"Failed to create inner {ZIPEXT}: {str(ex)}")
             self.success = False
 
         try:
@@ -500,6 +529,10 @@ class TestingRunner():
         """ create the log file with the stati """
         logfile = get_workspace() / 'test.log'
         with open(logfile, "w", encoding="utf-8") as filep:
+            state = 'GOOD\n'
+            if not self.success or self.crashed:
+                state  = 'BAD\n'
+            filep.write(state)
             for one_scenario in self.scenarios:
                 filep.write(one_scenario.print_test_log_line())
 
@@ -525,29 +558,23 @@ class TestingRunner():
 </table>
 ''')
 
-    def register_test_func(self, cluster, test):
+    def register_test_func(self, test):
         """ print one test function """
         args = test["args"]
         params = test["params"]
         suffix = params.get("suffix", "")
-        name = test["name"]
+        name = test['prefix'] + test["name"]
         if suffix:
             name += f"_{suffix}"
 
         if test["parallelity"] :
             parallelity = test["parallelity"]
-        if 'single' in test['flags'] and cluster:
-            return
-        if 'cluster' in test['flags'] and not cluster:
-            return
-        if cluster:
+        if 'cluster' in test['flags']:
             self.cluster = True
             if parallelity == 1:
                 parallelity = 4
             args += ['--cluster', 'true',
                      '--dumpAgencyOnError', 'true']
-        if "enterprise" in test["flags"]:
-            return
         if "ldap" in test["flags"] and not 'LDAPHOST' in os.environ:
             return
 
@@ -557,7 +584,7 @@ class TestingRunner():
                 self.scenarios.append(
                     TestConfig(self.cfg,
                                name + f"_{i}",
-                               test["name"],
+                               test["suite"],
                                [ *args,
                                  '--index', f"{i}",
                                  '--testBuckets', f'{num_buckets}/{i}'],
@@ -568,7 +595,7 @@ class TestingRunner():
             self.scenarios.append(
                 TestConfig(self.cfg,
                            name,
-                           test["name"],
+                           test["suite"],
                            [ *args],
                            test['priority'],
                            parallelity,

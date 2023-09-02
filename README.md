@@ -269,7 +269,7 @@ if supported, set number of concurrent builds to `PARALLELISM`
     - `single`: this test requires a single server
     - `full`: this test is only executed in full tests
     - `!full`: this test is only executed in non-full tests
-    - `gtest`: only the gtests are to be executed
+    - `gtest`: only testsuites starting with 'gtest' are to be executed
     - `ldap`: ldap
     - `enterprise`: this test is only executed with the enterprise version
     - `!windows`: test is excluded from Windows runs
@@ -277,7 +277,7 @@ if supported, set number of concurrent builds to `PARALLELISM`
     - `!arm`: test is excluded from ARM Linux / MacOS hosts 
  - `--cluster` filter `test-definition.txt` for all tests flagged as `cluster`
  - `--full` - all tests including those flagged as `full` are executed.
- - `--gtest` - only gtests are executed
+ - `--gtest` - only testsuites starting with 'gtest' are executed
  - `--all` - output unfiltered
  
 ### Syntax in `test-definition.txt`

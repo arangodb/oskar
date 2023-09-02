@@ -41,7 +41,8 @@ set -g FULLARGS $argv \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
- -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL \
+ -DBUILD_REPO_INFO=$BUILD_REPO_INFO
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
@@ -68,7 +69,7 @@ if test "$SAN" = "On"
   set -xg CXX_NAME clang++
   # Suppress leaks detection only during building
   set -gx SAN_OPTIONS "detect_leaks=0"
-  set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak"
+  set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak -fsanitize-address-use-after-return=never"
   if test "$SAN_MODE" = "TSan"
     set SANITIZERS "-fsanitize=thread"
   end

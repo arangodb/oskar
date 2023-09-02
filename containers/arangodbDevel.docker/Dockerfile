@@ -1,10 +1,8 @@
-FROM alpine:3.16
+FROM alpine:3.17
 MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 RUN apk add --no-cache pwgen nodejs numactl numactl-tools
 RUN apk add --no-cache npm && npm install -g foxx-cli && apk del npm
-
-ENV GLIBCXX_FORCE_NEW=1
 
 ADD install.tar.gz /
 COPY setup.sh /setup.sh

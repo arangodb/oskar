@@ -1,7 +1,6 @@
 #!/bin/env python3
 """ launch a testing.js instance with given testsuite and arguments """
 import os
-
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
 
@@ -16,15 +15,14 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     def __init__(self, site_config, slot_lock):
         self.slot_lock = slot_lock
         self.read_only = False
-        self.temp_dir = ""
         super().__init__(site_config, None)
 
-    def get_environment(self):
+    def get_environment(self, params):
         """ hook to implemnet custom environment variable setters """
         my_env = os.environ.copy()
-        my_env['TMPDIR'] = str(self.temp_dir)
-        my_env['TEMP'] = str(self.temp_dir)
-        my_env['TMP'] = str(self.temp_dir)
+        my_env['TMPDIR'] = str(params['temp_dir'])
+        my_env['TEMP'] = str(params['temp_dir'])
+        my_env['TMP'] = str(params['temp_dir'])
         return my_env
 
     def run_testing(self,
@@ -34,14 +32,18 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     directory,
                     logfile,
                     identifier,
-                    tempdir,
+                    temp_dir,
                     verbose
                     ):
        # pylint: disable=R0913 disable=R0902
         """ testing.js wrapper """
         print('------')
         print(testing_args)
-        self.temp_dir = tempdir
+
+        testscript = self.cfg.base_path / 'js' / 'client' / 'modules' / '@arangodb' / 'testutils' / 'unittest.js'
+        if not testscript.exists():
+            testscript = self.cfg.base_path / 'UnitTests' / 'unittest.js'
+
         args = [
             '-c', str(self.cfg.cfgdir / 'arangosh.conf'),
             "--log.foreground-tty", "true",
@@ -50,13 +52,13 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
             "--log.level", "v8=debug",
             '--server.endpoint', 'none',
             '--javascript.allow-external-process-control', 'true',
-            '--javascript.execute', self.cfg.base_path / 'UnitTests' / 'unittest.js',
+            '--javascript.execute', str(testscript),
             ]
         run_cmd = args +[
             '--',
             testcase,
             '--testOutput', directory ] + testing_args
-        params = make_logfile_params(verbose, logfile, self.cfg.trace)
+        params = make_logfile_params(verbose, logfile, self.cfg.trace, temp_dir)
         ret = self.run_monitored(
             self.cfg.bin_dir / "arangosh",
             run_cmd,

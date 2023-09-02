@@ -1,10 +1,11 @@
 #!/bin/env python3
 """ read test definition, and generate the output for the specified target """
 import argparse
+import copy
 import sys
 from traceback import print_exc
 
-from site_config import IS_ARM, IS_WINDOWS, IS_MAC
+from site_config import IS_ARM, IS_WINDOWS, IS_MAC, IS_COVERAGE
 
 from dump_handler import generate_dump_output
 from launch_handler import launch
@@ -18,39 +19,67 @@ if sys.version_info[0] != 3:
 
 def filter_tests(args, tests):
     """ filter testcase by operations target Single/Cluster/full """
+    for one in tests:
+        one['prefix'] = ""
     if args.all:
         return tests
 
-    filters = []
-    if args.cluster:
-        filters.append(lambda test: "single" not in test["flags"])
-    else:
-        filters.append(lambda test: "cluster" not in test["flags"])
+    def list_generator(cluster):
+        # pylint: disable=too-many-branches
+        filters = []
+        if cluster:
+            filters.append(lambda test: "single" not in test["flags"])
+        else:
+            filters.append(lambda test: "cluster" not in test["flags"])
 
-    if args.full:
-        filters.append(lambda test: "!full" not in test["flags"])
-    else:
-        filters.append(lambda test: "full" not in test["flags"])
+        if args.full:
+            filters.append(lambda test: "!full" not in test["flags"])
+        else:
+            filters.append(lambda test: "full" not in test["flags"])
 
-    if args.gtest:
-        filters.append(lambda test: "gtest" ==  test["name"])
+        if args.gtest:
+            filters.append(lambda test: test["name"].startswith("gtest"))
 
-    if IS_WINDOWS:
-        filters.append(lambda test: "!windows" not in test["flags"])
+        if not args.enterprise:
+            filters.append(lambda test: "enterprise" not in test["flags"])
 
-    if IS_MAC:
-        filters.append(lambda test: "!mac" not in test["flags"])
+        if IS_WINDOWS:
+            filters.append(lambda test: "!windows" not in test["flags"])
 
-    if IS_ARM:
-        filters.append(lambda test: "!arm" not in test["flags"])
+        if IS_MAC:
+            filters.append(lambda test: "!mac" not in test["flags"])
 
-    if args.no_report:
-        print("Disabling report generation")
-        args.create_report = False
+        if IS_ARM:
+            filters.append(lambda test: "!arm" not in test["flags"])
 
-    for one_filter in filters:
-        tests = filter(one_filter, tests)
-    return list(tests)
+        if IS_COVERAGE:
+            filters.append(lambda test: "!coverage" not in test["flags"])
+
+        if args.no_report:
+            print("Disabling report generation")
+            args.create_report = False
+
+        filtered = copy.deepcopy(tests)
+        for one_filter in filters:
+            filtered = filter(one_filter, filtered)
+        remaining_tests = list(filtered)
+        if cluster:
+            # after we filtered for cluster only tests, we now need to make sure
+            # that tests are actually launched as cluster tests:
+            for one in remaining_tests:
+                if not 'cluster' in one['flags']:
+                    one['flags'].append('cluster')
+        return remaining_tests
+
+    if args.single_cluster:
+        res_sg = list_generator(False)
+        for one in res_sg:
+            one['prefix'] = "sg_"
+        res_cl = list_generator(True)
+        for one in res_cl:
+            one['prefix'] = "cl_"
+        return res_sg + res_cl
+    return list_generator(args.cluster)
 
 formats = {
     "dump": generate_dump_output,
@@ -62,17 +91,21 @@ known_flags = {
     "single": "this test requires a single server",
     "full": "this test is only executed in full tests",
     "!full": "this test is only executed in non-full tests",
-    "gtest": "only the gtest are to be executed",
+    "gtest": "only the testsuites starting with 'gtest' are to be executed",
     "sniff": "whether tcpdump / ngrep should be used",
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
     "!windows": "test is excluded from ps1 output",
     "!mac": "test is excluded when launched on MacOS",
     "!arm": "test is excluded when launched on Arm Linux/MacOS hosts",
+    "!coverage": "test is excluded when coverage scenario are ran",
     "no_report": "disable reporting"
 }
 
 known_parameter = {
+    "prefix": 'internal',
+    "name": "name of the test suite. This is mainly useful if a set of suites is combined. If not set, defaults to the suite name.",
+    "size": "container size to be used in CircleCI",
     "buckets": "number of buckets to use for this test",
     "suffix": "suffix that is appended to the tests folder name",
     "priority": "priority that controls execution order. Testsuites with lower priority are executed later",
@@ -104,8 +137,11 @@ def parse_arguments():
     parser.add_argument("--validate-only", help="validates the test definition file", action="store_true")
     parser.add_argument("--help-flags", help="prints information about available flags and exits", action="store_true")
     parser.add_argument("--cluster", help="output only cluster tests instead of single server", action="store_true")
+    parser.add_argument("--single_cluster", help="process cluster cluster and single tests", action="store_true")
+    parser.add_argument("--enterprise", help="add enterprise tests", action="store_true")
+    parser.add_argument("--no-enterprise", help="add enterprise tests", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
-    parser.add_argument("--gtest", help="only run gtest", action="store_true")
+    parser.add_argument("--gtest", help="only run gtest-suites", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")
     parser.add_argument("--no-report", help="don't create testreport and crash tarballs", type=bool)
     args = parser.parse_args()
@@ -152,7 +188,7 @@ def read_definition_line(line):
     bits = line.split()
     if len(bits) < 1:
         raise Exception("expected at least one argument: <testname>")
-    name, *remainder = bits
+    suites, *remainder = bits
 
     flags = []
     params = {}
@@ -183,7 +219,8 @@ def read_definition_line(line):
     params = validate_params(params, 'cluster' in flags)
 
     return {
-        "name": name,
+        "name": params.get("name", suites),
+        "suite": suites,
         "priority": params["priority"],
         "parallelity": params["parallelity"],
         "flags": flags,

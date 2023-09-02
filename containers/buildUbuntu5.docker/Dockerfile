@@ -5,7 +5,7 @@ ARG ARCH "x86_64"
 
 ENV COMPILER_VERSION 10
 
-ENV CLANG_VERSION 12
+ENV CLANG_VERSION 13
 
 RUN apt-get update --fix-missing && \
     apt-get install -y software-properties-common && \
@@ -18,7 +18,7 @@ RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache
 
 COPY ./tools/* /tools/
 
-RUN [ "/tools/install.sh", "1.1.1", "s" ]
+RUN [ "/tools/install.sh", "1.1.1", "v" ]
 
 COPY ./scripts /scripts
 

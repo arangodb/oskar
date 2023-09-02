@@ -35,7 +35,7 @@ if not test -z $SAN; and test $SAN = "On"
       set -xg LSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log"
 
       # undefined behavior sanitizer
-      set -xg UBSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log"
+      set -xg UBSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log:print_stacktrace=1"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
@@ -55,8 +55,7 @@ if not test -z $SAN; and test $SAN = "On"
       echo "UBSAN: $UBSAN_OPTIONS"
     case "TSan"
       # thread sanitizer
-      set addr2line_path (which addr2line)
-      set -xg TSAN_OPTIONS "$common_options:allow_addr2line=true:external_symbolizer_path=$addr2line_path:log_path=$INNERWORKDIR/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
+      set -xg TSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
 
       # suppressions
       if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt

@@ -94,6 +94,7 @@ end
 
 function single ; set -gx TESTSUITE single ; end
 function cluster ; set -gx TESTSUITE cluster ; end
+function single_cluster ; set -gx TESTSUITE single_cluster ; end
 function resilience ; set -gx TESTSUITE resilience ; end
 function catchtest ; set -gx TESTSUITE gtest ; end
 function gtest ; set -gx TESTSUITE gtest ; end
@@ -453,6 +454,24 @@ function copyRclone
   cp -L $WORKDIR/rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb
 end
 
+function defaultBuildRepoInfo
+  set -gx BUILD_REPO_INFO "default"
+end
+
+function releaseBuildRepoInfo
+  set -gx BUILD_REPO_INFO "release" 
+end
+
+function nightlyBuildRepoInfo
+  set -gx BUILD_REPO_INFO "nightly"
+end
+
+if test -z "$BUILD_REPO_INFO"
+  defaultBuildRepoInfo
+else
+  set -gx BUILD_REPO_INFO "$BUILD_REPO_INFO"
+end
+
 ## #############################################################################
 ## test
 ## #############################################################################
@@ -582,6 +601,7 @@ function setNightlyRelease
   and echo "$ARANGODB_FULL_VERSION" > $WORKDIR/work/ArangoDB/ARANGO-VERSION
   and test (find $WORKDIR/work -name 'sourceInfo.*' | wc -l) -gt 0
   and setupSourceInfo "VERSION" "$ARANGODB_FULL_VERSION"
+  and nightlyBuildRepoInfo
 end
 
 ## #############################################################################
@@ -801,23 +821,23 @@ function buildTarGzPackageHelper
   and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v$arch"
-  and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v$arch"
+  and cp -a $WORKDIR/work/targz "$WORKDIR/work/$name-$v$arch"
   and cd $WORKDIR/work
   or begin ; popd ; return 1 ; end
 
   rm -rf "$name-$os-$v$arch"
-  and ln -s "$name-$v$arch" "$name-$os-$v$arch"
-  and tar -c -z -f "$WORKDIR/work/$name-$os-$v$arch.tar.gz" -h --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
+  and cp -a "$name-$v$arch" "$name-$os-$v$arch"
+  and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
   and rm -rf "$name-$os-$v$arch"
   set s $status
 
   if test "$s" -eq 0
     rm -rf "$name-client-$os-$v$arch"
-    and ln -s "$name-$v$arch" "$name-client-$os-$v$arch"
+    and cp -a "$name-$v$arch" "$name-client-$os-$v$arch"
     and mv "$name-client-$os-$v$arch/bin/README" "$name-client-$os-$v$arch/README"
     and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
     and rm -rf "$name-client-$os-$v$arch/README.bak"
-    and tar -c -z -f "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" -h \
+    and tar czvf "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" \
       --exclude "etc" \
       --exclude "var" \
       --exclude "*.initd" \
@@ -842,7 +862,7 @@ function buildTarGzPackageHelper
   end
 
   popd
-  and return $s 
+  and return $s
   or begin ; popd ; return 1 ; end
 end
 
@@ -1519,7 +1539,7 @@ function showConfig
   printf $fmt3 'SkipGrey'       $SKIPGREY      '(skipGrey/includeGrey)'
   printf $fmt3 'OnlyGrey'       $ONLYGREY      '(onlyGreyOn/onlyGreyOff)'
   printf $fmt3 'Storage engine' $STORAGEENGINE '(mmfiles/rocksdb)'
-  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/resilience/gtest)'
+  printf $fmt3 'Test suite'     $TESTSUITE     '(single/cluster/single_cluster/resilience/gtest)'
   printf $fmt2 'Log Levels'     (echo $LOG_LEVELS)
   echo
   echo 'Package Configuration'
@@ -1835,29 +1855,8 @@ function checkLogId
   and pushd $WORKDIR/work/ArangoDB
   or begin popd; return 1; end
 
-  set -l ids (find lib arangod arangosh client-tools enterprise -name "*.cpp" -o -name "*.h" \
-  | xargs grep -h 'LOG_\(TOPIC\|TRX\|TOPIC_IF\|QUERY\|CTX\|CTX_IF\)("[^\"]*"' \
-  | grep -v 'LOG_DEVEL' \
-  | sed -e 's:^.*LOG_[^(]*("\([^\"]*\)".*:\1:')
-  set -l duplicate (echo $ids | tr " " "\n" | sort | uniq -d)
-
-  set -l s 0
-
-  if test "$duplicate" != ""
-    echo "Duplicates: $duplicate"
-    set s 1
-  else
-    echo "Duplicates: NONE"
-  end
-
-  set -l wrong (echo $ids | tr " " "\n" | grep -v '^[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]$')
-
-  if test "$wrong" != ""
-    echo "Wrong formats: $wrong"
-    set s 1
-  else
-    echo "Wrong formats: NONE"
-  end
+  python3 utils/checkLogIds.py
+  set -l s $status
 
   popd
   return $s
@@ -1978,9 +1977,9 @@ function moveResultsToWorkspace
       mv $WORKDIR/work/coverage $WORKSPACE
     end
 
-    set -l matches $WORKDIR/work/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv}
+    set -l matches $WORKDIR/work/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv,tar}
     for f in $matches
-      echo $f | grep -qv testreport ; and echo "mv $f" ; and mv $f $WORKSPACE; or echo "skipping $f"
+      echo $f | grep -qv testreport ; and echo "mv $f $WORKSPACE" ; and mv $f $WORKSPACE; or echo "skipping $f"
     end
 
     for f in $WORKDIR/work/*san.log.* ; echo "mv $f" ; mv $f $WORKSPACE/(basename $f).log ; end
@@ -1999,6 +1998,11 @@ function moveResultsToWorkspace
     if test -f $WORKDIR/work/testRuns.txt
       echo "mv $WORKDIR/work/testRuns.txt"
       mv $WORKDIR/work/testRuns.txt $WORKSPACE
+    end
+
+    if test -d $WORKDIR/work/ArangoDB/testrunXml
+      echo "mv JUnit XMLs ($WORKDIR/work/ArangoDB/testrunXml)"
+      mv $WORKDIR/work/ArangoDB/testrunXml $WORKSPACE/testrunXml
     end
   end
 end

@@ -35,7 +35,8 @@ set -g FULLARGS $argv \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
- -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL
+ -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL \
+ -DBUILD_REPO_INFO=$BUILD_REPO_INFO
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
@@ -59,7 +60,8 @@ else if test "$COVERAGE" = "On"
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
     -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
-    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage"
+    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
+    -DUSE_COVERAGE=ON
 else
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=$JEMALLOC_OSKAR

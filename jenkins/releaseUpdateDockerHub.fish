@@ -19,15 +19,15 @@ end
 function updateDockerHub
   set -l to $argv[1]
   set -l from $to-preview
-  set -l version $argv[2]
+  set -l tag $argv[2]
 
   echo "Copying $from to $to"
 
-  docker pull arangodb/$from:$version
-  and docker tag arangodb/$from:$version arangodb/$to:$version
-  and docker push arangodb/$to:$version
+  docker pull arangodb/$from:$tag
+  and docker tag arangodb/$from:$tag arangodb/$to:$tag
+  and docker push arangodb/$to:$tag
   and if test "$RELEASE_IS_HEAD" = "true"
-    docker tag arangodb/$from:$version arangodb/$to:latest
+    docker tag arangodb/$from:$tag arangodb/$to:tag
     docker push arangodb/$to:latest
   end
 end

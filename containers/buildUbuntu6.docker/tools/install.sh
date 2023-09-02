@@ -18,13 +18,13 @@ update-alternatives --set c++ /usr/bin/g++
 # Compile openssl library:
 export OPENSSLBRANCH=$1
 export OPENSSLREVISION=$2
-export OPENSSLVERSION=${OPENSSLBRANCH}${OPENSSLREVISION}
+export OPENSSLVERSION="${OPENSSLBRANCH}${OPENSSLREVISION}"
 
-if [ "$OPENSSLBRANCH" != "1.1.1" ]; then
+if [ "$OPENSSLBRANCH" != "1.1.1" -a "$OPENSSLBRANCH" != "3.0" -a "$OPENSSLBRANCH" != "3.1" ]; then
   OLD="old/${OPENSSLBRANCH}/"
 fi;
 
-export OPENSSLPATH=`echo $OPENSSLVERSION | tr -d "a-zA-Z"`
+export OPENSSLPATH=`echo $OPENSSLVERSION | sed 's/\([a-zA-Z]$\|\.[0-9]*$\)//g'`
 cd /tmp
 curl -O https://www.openssl.org/source/openssl-$OPENSSLVERSION.tar.gz
 tar xzf openssl-$OPENSSLVERSION.tar.gz
@@ -36,7 +36,7 @@ cd /tmp
 rm -rf openssl-$OPENSSLVERSION.tar.gz openssl-$OPENSSLVERSION
 
 # Compile openldap library:
-export OPENLDAPVERSION=2.6.3
+export OPENLDAPVERSION=2.6.6
 cd /tmp
 curl -O ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-$OPENLDAPVERSION.tgz
 tar xzf openldap-$OPENLDAPVERSION.tgz

@@ -21,6 +21,8 @@ class TestConfig():
                  flags):
         """ defaults for test config """
         self.parallelity = parallelity
+        if self.parallelity > cfg.available_slots:
+            self.parallelity = cfg.available_slots
         self.launch_delay = 1.3
         self.progressive_timeout = 100
         self.priority = priority
@@ -40,6 +42,10 @@ class TestConfig():
         if not self.base_logdir.exists():
             self.base_logdir.mkdir()
         self.log_file =  cfg.run_root / f'{self.name}.log'
+
+        self.xml_report_dir = cfg.xml_report_dir / self.name
+        if not self.xml_report_dir.exists():
+            self.xml_report_dir.mkdir(parents=True)
 
         self.temp_dir = TEMP / self.name
         # pylint: disable=global-variable-not-assigned
@@ -65,7 +71,10 @@ class TestConfig():
                     print("Error: failed to expand environment variable: '" + param + "' for '" + self.name + "'")
             else:
                 self.args.append(param)
-        self.args += ['--coreCheck', 'true', '--disableMonitor', 'true', '--writeXmlReport', 'true']
+        self.args += ['--coreCheck', 'true',
+                      '--disableMonitor', 'true',
+                      '--writeXmlReport', 'true',
+                      '--testXmlOutputDirectory', str(self.xml_report_dir) ]
 
 
         if 'filter' in os.environ:
@@ -119,7 +128,7 @@ class TestConfig():
         if self.crashed:
             resultstr = "Crash occured in"
         return """
-{1} {0.name} => {0.parallelity}, {0.priority}, {0.success} -- {2}""".format(
+{1} {0.name} => {0.delta_seconds}, {0.parallelity}, {0.priority}, {0.success} -- {2}""".format(
             self,
             resultstr,
             ' '.join(self.args))

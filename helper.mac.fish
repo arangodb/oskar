@@ -128,12 +128,13 @@ function downloadOpenSSL
   set -l directory $WORKDIR/work/openssl
   set -l url https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz  
   mkdir -p $directory
-  cd $directory
+  pushd $directory
   echo "Downloading sources to $directory from URL: $url"
   curl -LO $url
   rm -rf openssl-$OPENSSL_VERSION
   tar -xzvf openssl-$OPENSSL_VERSION.tar.gz
   set -xg OPENSSL_SOURCE_DIR "$directory/openssl-$OPENSSL_VERSION"
+  popd
 end
 
 function buildOpenSSL
@@ -144,8 +145,7 @@ function buildOpenSSL
     echo "OpenSSL was already built! No need to rebuild it."
     return
   end
-  cd $OPENSSL_SOURCE_DIR
-  mkdir build
+  mkdir -p $OPENSSL_SOURCE_DIR/build
   
   if test -z "$ARCH"
     echo "ARCH is not set! Can't decide wether to build OpenSSL for arm64 or x86_64."
@@ -161,16 +161,17 @@ function buildOpenSSL
     return 1
   end
 
+  pushd $OPENSSL_SOURCE_DIR
   for type in shared no-shared
     for mode in debug release
       set -l cmd "perl ./Configure --prefix=$OPENSSL_SOURCE_DIR/build/$mode/$type --openssldir=$OPENSSL_SOURCE_DIR/build/$mode/$type/openssl --$mode $type $OPENSSL_PLATFORM"
       echo "Executing: $cmd"
       eval $cmd
       make
-      make test
       make install_dev
     end
   end
+  popd
 end
 
 function findOpenSSLPath
@@ -235,7 +236,7 @@ function checkOskarOpenSSL
     false
     return 1
   end
-  set -l cmd "$executable version | grep -o \"[0-9]\.[0-9]\.[0-9][a-z]\""
+  set -l cmd "$executable version | grep -m 1 -o \"[0-9]\.[0-9]\.[0-9]*[a-z]*\" | head -1"
   set -l output (eval "arch -$ARCH $cmd")
   if test "$output" = "$OPENSSL_VERSION"
     echo "Found OpenSSL $OPENSSL_VERSION"
@@ -287,11 +288,11 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9][a-z]")
+  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -E -o "[0-9]\.[0-9]\.[0-9]*[a-z]?")
 
   if test "$v" = ""
-    echo "$f: no OPENSSL_MACOS specified, using 1.1.1g"
-    opensslVersion 1.1.1g
+    echo "$f: no OPENSSL_MACOS specified, using 1.1.1t"
+    opensslVersion 1.1.1t
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v

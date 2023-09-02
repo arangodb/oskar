@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import signal
 import sys
@@ -11,6 +12,7 @@ import sys
 import psutil
 from socket_counter import get_socket_count
 
+IS_COVERAGE = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
 IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
@@ -55,8 +57,6 @@ def get_workspace():
     #        return workdir
     return Path.cwd() / 'work'
 
-for env in os.environ:
-    print(f'{env}={os.environ[env]}')
 TEMP = Path("/tmp/")
 if 'TMP' in os.environ:
     TEMP = Path(os.environ['TMP'])
@@ -71,27 +71,43 @@ if 'INNERWORKDIR' in os.environ:
     TEMP = TEMP / 'tmp'
 else:
     TEMP = TEMP / 'ArangoDB'
-if TEMP.exists():
-    # pylint: disable=broad-except
-    try:
-        shutil.rmtree(TEMP)
-        TEMP.mkdir(parents=True)
-    except Exception as ex:
-        msg = f"failed to clean temporary directory: {ex} - won't launch tests!"
-        (get_workspace() / 'testfailures.txt').write_text(msg + '\n')
-        print(msg)
-        sys.exit(2)
-else:
-    TEMP.mkdir(parents=True)
+
 os.environ['TMPDIR'] = str(TEMP)
 os.environ['TEMP'] = str(TEMP)
 os.environ['TMP'] = str(TEMP)
+
+def print_env():
+    """ dump the environment to the console """
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    for env in os.environ:
+        print(f"{env}={ansi_escape.sub('', os.environ[env])}")
+
+def init_temp():
+    """ set up the temporary directory and make sure its empty """
+    if TEMP.exists():
+        # pylint: disable=broad-except
+        STATE = 0
+        try:
+            shutil.rmtree(TEMP)
+            STATE = 1
+            TEMP.mkdir(parents=True)
+        except Exception as ex:
+            msg = f"failed to clean temporary directory: {ex} - won't launch tests!"
+            if STATE == 1:
+                msg = f"failed to create temporary directory after cleaning: {ex} - won't launch tests!"
+            (get_workspace() / 'testfailures.txt').write_text(msg + '\n')
+            print(msg)
+            sys.exit(2)
+    else:
+        TEMP.mkdir(parents=True)
 
 class SiteConfig:
     """ this environment - adapted to oskar defaults """
     # pylint: disable=too-few-public-methods disable=too-many-instance-attributes
     def __init__(self, definition_file):
         # pylint: disable=too-many-statements disable=too-many-branches
+        print_env()
+        init_temp()
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
         self.trace = False
         self.portbase = 7000
@@ -112,6 +128,7 @@ class SiteConfig:
             self.timeout *= 4
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
+        self.available_slots = round(self.available_slots * 0.7)
         if IS_MAC and platform.processor() == "arm":
             if psutil.cpu_count() == 8:
                 self.no_threads = 6 # M1 mac mini only has 4 performance cores
@@ -130,20 +147,29 @@ class SiteConfig:
         self.core_dozend = round(self.no_threads / 10)
         if self.core_dozend == 0:
             self.core_dozend = 1
+        self.max_load *= 0.7
         self.loop_sleep = round(5 / self.core_dozend)
         self.overload = self.max_load * 1.4
-        self.slots_to_parallelity_factor = self.max_load / self.available_slots
+        self.parallelity_to_load_factor  = self.max_load / self.available_slots
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
-        if self.is_asan:
-            print('SAN enabled, reducing possible system capacity')
+        self.is_aulsan = self.is_asan and os.environ['SAN_MODE'] == 'AULSan'
+        self.is_gcov = IS_COVERAGE
+        san_gcov_msg = ""
+        if self.is_asan or self.is_gcov:
+            san_gcov_msg = ' - SAN '
+            slot_divisor = 4
+            if self.is_aulsan:
+                san_gcov_msg = ' - AUL-SAN '
+            elif self.is_gcov:
+                san_gcov_msg = ' - GCOV'
+                slot_divisor = 3
+            san_gcov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
-            self.available_slots /= 4
+            self.available_slots /= slot_divisor
             #self.timeout *= 1.5
             self.loop_sleep *= 2
             self.max_load /= 2
-            if os.environ['SAN_MODE'] == 'AULSan':
-                print('Aulsan must reduce even more!')
         self.deadline = datetime.now() + timedelta(seconds=self.timeout)
         self.hard_deadline = datetime.now() + timedelta(seconds=self.timeout + 660)
         if definition_file.is_file():
@@ -164,10 +190,9 @@ class SiteConfig:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
- - {self.slots_to_parallelity_factor} parallelity to load estimate factor
+ - {self.parallelity_to_load_factor} parallelity to load estimate factor
  - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
- - {self.slots_to_parallelity_factor} parallelity to load estimate factor
  - {self.available_slots} test slots {self.rapid_fire} rapid fire slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
@@ -175,7 +200,7 @@ class SiteConfig:
  - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
  - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
  - {socket_count} number of currently active tcp sockets
- """)
+{san_gcov_msg}""")
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
@@ -184,6 +209,10 @@ class SiteConfig:
         self.run_root = base_source_dir / 'testrun'
         if self.run_root.exists():
             shutil.rmtree(self.run_root)
+        self.xml_report_dir = base_source_dir / 'testrunXml'
+        if self.xml_report_dir.exists():
+            shutil.rmtree(self.xml_report_dir)
+        self.xml_report_dir.mkdir(parents=True)
         self.test_data_dir_x = self.run_root / 'run'
         self.test_data_dir_x.mkdir(parents=True)
         self.test_report_dir = self.run_root / 'report'
@@ -192,9 +221,17 @@ class SiteConfig:
         if 'PORTBASE' in os.environ:
             self.portbase = int(os.environ['PORTBASE'])
 
+    def is_instrumented(self):
+        """ check whether we run an instrumented build """
+        return self.is_asan or self.is_aulsan or self.is_gcov
+
+    def get_max(self):
+        """ get the maximal value before overlead is triggered """
+        return f'> {self.overload:9.2f}'
+
     def get_overload(self):
         """ estimate whether the system is overloaded """
         load = psutil.getloadavg()
         if load[0] > self.overload:
-            return f"HIGH SYSTEM LOAD! {load[0]}"
+            return f"HIGH LOAD[{load[0]:3.2f} ] "
         return None

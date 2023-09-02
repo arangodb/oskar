@@ -1,0 +1,19 @@
+<div>
+  <p>
+    The following package is for macOS 11 Big Sur or higher.
+  </p>
+  <p>
+    The processor(s) must be 64-bit Apple silicon (<strong>M1</strong> or later)
+    based on ARM (<strong>AArch64</strong>).
+  </p>
+  <p>
+    We provide a client tools <strong>Tar</strong> package.
+  </p>
+  <p><strong>Tar</strong> package</p>
+  <ul>
+    <li>
+      <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/MacOSX/@TARGZ_NAME_CLIENT@">Client @ARANGODB_VERSION@</a><br>
+      (@TARGZ_SIZE_CLIENT@ MByte, SHA256 @TARGZ_SHA256_CLIENT@)
+    </li>
+  </ul>
+</div>
