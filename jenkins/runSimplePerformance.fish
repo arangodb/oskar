@@ -70,7 +70,7 @@ if count $simple/core* >/dev/null
        sh -c "cp /usr/sbin/arangod /performance; chmod a+rw /performance/core* /performance/arangod"
     printf "\nCoredumps found after testrun:\n"
     ls -l $simple/core* $simple/arangod
-    7z a $simple/../coredumps $simple/core* $simple/arangod
+    and 7z a $simple/../{$NODE_NAME}.coredumps.7z $simple/core* $simple/arangod
     and rm -f $simple/core* $simple/arangod
     echo "FAILED BY COREDUMP FOUND!"
     set -l s 1
