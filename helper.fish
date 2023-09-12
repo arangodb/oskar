@@ -745,7 +745,10 @@ function prepareInstall
 
   pushd $path
   and if test $PACKAGE_STRIP = All
-    strip usr/sbin/arangod usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+    if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10; and test $PLATFORM = "darwin"
+      strip usr/sbin/arangod
+    end
   else if test $PACKAGE_STRIP = ExceptArangod
     strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
   end
@@ -755,6 +758,9 @@ function prepareInstall
   else
     if test -f usr/bin/arangobackup -a $PACKAGE_STRIP != None
       strip usr/bin/arangobackup
+      if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 11; and test $PLATFORM = "darwin"
+        rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
+      end
     end
   end
   set s $status
@@ -825,10 +831,15 @@ function buildTarGzPackageHelper
   and cd $WORKDIR/work
   or begin ; popd ; return 1 ; end
 
-  rm -rf "$name-$os-$v$arch"
-  and cp -a "$name-$v$arch" "$name-$os-$v$arch"
-  and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
-  and rm -rf "$name-$os-$v$arch"
+
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10; and test "$PLATFORM" -eq "darwin"
+    rm -rf "$name-$os-$v$arch"
+    and cp -a "$name-$v$arch" "$name-$os-$v$arch"
+    and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
+    and rm -rf "$name-$os-$v$arch"
+  else
+    rm -rf "$name-$os-$v$arch" "$WORKDIR/work/$name-$os-$v$arch.tar.gz"
+  end
   set s $status
 
   if test "$s" -eq 0
