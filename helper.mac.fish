@@ -572,7 +572,7 @@ end
 function buildTarGzPackage
   pushd $INNERWORKDIR/ArangoDB/build
   and rm -rf install
-  and make install DESTDIR=install
+  and make -C client-tools install DESTDIR=install
   and makeJsSha1Sum (pwd)/install/opt/arangodb/share/arangodb3/js
   and if test "$ENTERPRISEEDITION" = "On"
         pushd install/opt/arangodb/bin
