@@ -10,7 +10,7 @@ and eval $TEST_SUITE
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
-if test "$ASAN" = "On"
+if test "$ASAN" = "true"
   sanOn
 end
 and pingDetails
@@ -21,7 +21,7 @@ and downloadAuxBinariesToBuildBin
 
 and checkoutRTA
 and cd work/release-test-automation/
-if test "$ENTERPRISEEDITION" = "true"
+if test "$ENTERPRISEEDITION" = "On"
    set RTA_EDITION "EP"
 end
 and bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $argv
