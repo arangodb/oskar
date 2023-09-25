@@ -10,6 +10,9 @@ and eval $TEST_SUITE
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
+if test "$ASAN" = "On"
+  sanOn
+end
 and pingDetails
 and TT_setup
 and oskarCompile
