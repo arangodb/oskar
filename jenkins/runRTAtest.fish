@@ -21,7 +21,7 @@ and downloadAuxBinariesToBuildBin
 
 and checkoutRTA
 and cd work/release-test-automation/
-if test "$ENTERPRISEEDITION" = "On"
+if test "$ENTERPRISEEDITION" = "true"
    set RTA_EDITION "EP"
 end
 and bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $argv
