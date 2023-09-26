@@ -1,3 +1,4 @@
+set -gx SCRIPTSDIR $WORKDIR/scripts
 set -gx PLATFORM darwin
 set -gx UID (id -u)
 set -gx GID (id -g)
@@ -509,7 +510,7 @@ end
 
 function setupPackaging
   if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
-    set -xg PACKAGING_OPTIONS "-DPACKAGING=Bundle -DPACKAGE_TARGET_DIR=$INNERWORKDIR -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb"    
+    set -xg PACKAGING_OPTIONS "-DPACKAGING=Bundle -DPACKAGE_TARGET_DIR=$INNERWORKDIR -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb"
     if test "$ENTERPRISEEDITION" = "On"
       if test "$USE_RCLONE" = "true"
         set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
