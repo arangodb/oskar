@@ -746,7 +746,7 @@ function prepareInstall
   pushd $path
   and if test $PACKAGE_STRIP = All
     strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
-    if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10; and test $PLATFORM = "darwin"
+    if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10; and test $PLATFORM = "darwin"; or test $PLATFORM = "linux"
       strip usr/sbin/arangod
     end
   else if test $PACKAGE_STRIP = ExceptArangod
