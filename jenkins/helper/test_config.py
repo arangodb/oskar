@@ -74,8 +74,8 @@ class TestConfig():
         self.args += ['--coreCheck', 'true',
                       '--disableMonitor', 'true',
                       '--writeXmlReport', 'true',
-                      '--testXmlOutputDirectory', str(self.xml_report_dir) ]
-
+                      '--testXmlOutputDirectory', str(self.xml_report_dir),
+                      '--memory', str(self.parallelity * cfg.slot_memory) ]
 
         if 'filter' in os.environ:
             self.args += ['--test', os.environ['filter']]
