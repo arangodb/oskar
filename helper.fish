@@ -1746,7 +1746,8 @@ function findArangoDBVersion
               -o "$ARANGODB_VERSION_RELEASE_TYPE" = "beta" \
               -o "$ARANGODB_VERSION_RELEASE_TYPE" = "milestone" \
               -o "$ARANGODB_VERSION_RELEASE_TYPE" = "preview" \
-              -o "$ARANGODB_VERSION_RELEASE_TYPE" = "rc"
+              -o "$ARANGODB_VERSION_RELEASE_TYPE" = "rc" \
+              -o "$ARANGODB_VERSION_RELEASE_TYPE" = "custom"
       if test "$ARANGODB_VERSION_RELEASE_NUMBER" = ""
         echo "ERROR: missing ARANGODB_VERSION_RELEASE_NUMBER for type $ARANGODB_VERSION_RELEASE_TYPE"
         return
@@ -1762,6 +1763,8 @@ function findArangoDBVersion
         set N 400
       else if test "$ARANGODB_VERSION_RELEASE_TYPE" = "rc"
         set N 500
+      else if test "$ARANGODB_VERSION_RELEASE_TYPE" = "custom"
+        set N 600
       end
 
       set -xg ARANGODB_VERSION "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH-$ARANGODB_VERSION_RELEASE_TYPE.$ARANGODB_VERSION_RELEASE_NUMBER"
