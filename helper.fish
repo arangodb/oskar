@@ -832,7 +832,7 @@ function buildTarGzPackageHelper
   or begin ; popd ; return 1 ; end
 
 
-  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10; and test "$PLATFORM" -eq "darwin"; or test "$PLATFORM" -eq "linux"
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10; and test "$PLATFORM" = "darwin"; or test "$PLATFORM" = "linux"
     rm -rf "$name-$os-$v$arch"
     and cp -a "$name-$v$arch" "$name-$os-$v$arch"
     and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
