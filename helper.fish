@@ -919,6 +919,45 @@ function makeSnippets
           end
         end
   end
+
+  begin
+    set -l SNIPPETS "$OUT/release/snippets"
+
+    echo '{'
+
+    if test -f "$SNIPPETS/meta-source.json"
+      echo '"source":'
+      cat "$SNIPPETS/meta-source.json"
+      echo ','
+    end
+
+    for edition in "community" "enterprise"
+      if test -f "$SNIPPETS/meta-docker-$edition.json"
+	echo '"docker-'$edition'":'
+	cat "$SNIPPETS/meta-docker-$edition.json"
+	echo ','
+      end
+
+      and if test -f "$SNIPPETS/meta-k8s-$edition.json"
+	echo '"k8s-'$edition'":'
+	cat "$SNIPPETS/meta-k8s-$edition.json"
+	echo ','
+      end
+
+      and for arch in x86_64 amd64 arm64 aarch64 win64
+        for type in bundle debian rpm windows
+          if test -f "$SNIPPETS/meta-$type-$edition-$arch.json"
+            echo '"'$type'-'$edition'-'$arch'":'
+            cat "$SNIPPETS/meta-$type-$edition-$arch.json"
+            echo ','
+	  end
+	end
+      end
+    end
+
+   echo '"serial": "'$(date +%s)'"'
+   echo '}'
+  end | jq . > "$SNIPPETS/meta.json"
 end
 
 ## #############################################################################
@@ -1059,7 +1098,7 @@ function buildDebianSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-debian$snippetArch.html"
-  set -l m "$OUT/meta-debian-$edition-$arch.html"
+  set -l m "$OUT/meta-debian-$edition-$arch.json"
 
   sed -e "s|@DEBIAN_NAME_SERVER@|$DEBIAN_NAME_SERVER|g" \
       -e "s|@DEBIAN_NAME_CLIENT@|$DEBIAN_NAME_CLIENT|g" \
@@ -1187,7 +1226,7 @@ function buildRPMSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-rpm$snippetArch.html"
-  set -l m "$OUT/meta-rpm-$edition-$arch.html"
+  set -l m "$OUT/meta-rpm-$edition-$arch.json"
 
   sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
       -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
