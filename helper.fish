@@ -1293,6 +1293,7 @@ function buildTarGzSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
+    set edition "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1302,6 +1303,7 @@ function buildTarGzSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
+    set edition "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1325,6 +1327,7 @@ function buildTarGzSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-linux$snippetArch.html"
+  set -l m "$OUT/meta-tgz-$edition-$snippetArch.json"
 
   sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
@@ -1341,6 +1344,24 @@ function buildTarGzSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/linux$snippetArch.html.in > $n
+
+  and if $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-tgz.json.in
+      sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+	  -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+	  -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+	  -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
+	  -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
+	  -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
+	  -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+	  -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+	  -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+	  -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+	  -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+	  -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+	  -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+	  -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+	  < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-tgz.json.in > $m
+  end
 
   and echo "TarGZ Snippet: $n"
 end
