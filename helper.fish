@@ -996,7 +996,7 @@ end
 
 function buildDebianSnippet
   set snippetArch "-$argv[3]"
-  set arch $snippetArch
+  set -l arch "$argv[3]"
   set packageArch $argv[3]
   set tarGzSuffix "_$argv[4]"
 
@@ -1124,7 +1124,7 @@ end
 
 function buildRPMSnippet
   set snippetArch "-$argv[3]"
-  set arch $snippetArch
+  set -l arch "$argv[3]"
   set packageArch $argv[3]
   set tarGzSuffix "_$argv[4]"
 
@@ -1285,7 +1285,7 @@ end
 
 function buildTarGzSnippet
   set snippetArch "-$argv[3]"
-  set arch $snippetArch
+  set -l arch "$argv[3]"
   set tarGzSuffix "_$argv[3]"
 
   if test "$USE_ARM" = "Off"
@@ -1375,6 +1375,7 @@ end
 
 function buildBundleSnippet
   set snippetArch "-$argv[3]"
+  set -l arch "$argv[3]"
   set packageArch $argv[3]
   set tarGzSuffix "_$argv[3]"
 
@@ -1425,6 +1426,7 @@ function buildBundleSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-macosx$snippetArch.html"
+  set -l m "$OUT/meta-bundle-$edition-$arch.json"
 
   sed -e "s|@BUNDLE_NAME_SERVER@|$BUNDLE_NAME_SERVER|g" \
       -e "s|@BUNDLE_SIZE_SERVER@|$BUNDLE_SIZE_SERVER|g" \
@@ -1444,6 +1446,27 @@ function buildBundleSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/macosx$snippetArch.html.in > $n
+
+  and if test -f $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-bundle.json.in
+      sed -e "s|@BUNDLE_NAME_SERVER@|$BUNDLE_NAME_SERVER|g" \
+	  -e "s|@BUNDLE_SIZE_SERVER@|$BUNDLE_SIZE_SERVER|g" \
+	  -e "s|@BUNDLE_SHA256_SERVER@|$BUNDLE_SHA256_SERVER|g" \
+	  -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+	  -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+	  -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+	  -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
+	  -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
+	  -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
+	  -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+	  -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+	  -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+	  -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+	  -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+	  -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+	  -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+	  -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+	  < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-bundle.json.in > $m
+  end
 
   and echo "MacOSX Bundle Snippet: $n"
 end
