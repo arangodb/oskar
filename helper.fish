@@ -951,6 +951,7 @@ function buildSourceSnippet
   set -l SOURCE_SHA256_ZIP (shasum -a 256 -b < $IN/$SOURCE_ZIP | awk '{print $1}')
 
   set -l n "$OUT/download-source.html"
+  set -l m "$OUT/meta-source.json"
 
   sed -e "s|@SOURCE_TAG@|$SOURCE_TAG|g" \
       -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
@@ -967,6 +968,24 @@ function buildSourceSnippet
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/source.html.in > $n
+
+  and if test -f $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-source.json.in
+      sed -e "s|@SOURCE_TAG@|$SOURCE_TAG|g" \
+	  -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
+	  -e "s|@SOURCE_SIZE_TAR_GZ@|$SOURCE_SIZE_TAR_GZ|g" \
+	  -e "s|@SOURCE_SHA256_TAR_GZ@|$SOURCE_SHA256_TAR_GZ|g" \
+	  -e "s|@SOURCE_TAR_BZ2@|$SOURCE_TAR_BZ2|g" \
+	  -e "s|@SOURCE_SIZE_TAR_BZ2@|$SOURCE_SIZE_TAR_BZ2|g" \
+	  -e "s|@SOURCE_SHA256_TAR_BZ2@|$SOURCE_SHA256_TAR_BZ2|g" \
+	  -e "s|@SOURCE_ZIP@|$SOURCE_ZIP|g" \
+	  -e "s|@SOURCE_SIZE_ZIP@|$SOURCE_SIZE_ZIP|g" \
+	  -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
+	  -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+	  -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+	  -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+	  -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+	  < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-source.json.in > $m
+  end
 
   and echo "Source Snippet: $n"
 end
