@@ -920,9 +920,9 @@ function makeSnippets
         end
   end
 
-  begin
-    set -l SNIPPETS "$OUT/release/snippets"
+  set -l SNIPPETS "$OUT/release/snippets"
 
+  begin
     echo '{'
 
     if test -f "$SNIPPETS/meta-source.json"
@@ -1047,7 +1047,7 @@ function buildDebianSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
-    set -l edition "enterprise"
+    set META_EDITION "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1057,7 +1057,7 @@ function buildDebianSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
-    set -l edition "community"
+    set META_EDITION "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1098,7 +1098,7 @@ function buildDebianSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-debian$snippetArch.html"
-  set -l m "$OUT/meta-debian-$edition-$arch.json"
+  set -l m "$OUT/meta-debian-$META_EDITION-$arch.json"
 
   sed -e "s|@DEBIAN_NAME_SERVER@|$DEBIAN_NAME_SERVER|g" \
       -e "s|@DEBIAN_NAME_CLIENT@|$DEBIAN_NAME_CLIENT|g" \
@@ -1175,7 +1175,7 @@ function buildRPMSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
-    set -l edition "enterprise"
+    set META_EDITION "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1185,7 +1185,7 @@ function buildRPMSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
-    set -l edition "community"
+    set META_EDITION "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1226,7 +1226,7 @@ function buildRPMSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-rpm$snippetArch.html"
-  set -l m "$OUT/meta-rpm-$edition-$arch.json"
+  set -l m "$OUT/meta-rpm-$META_EDITION-$arch.json"
 
   sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
       -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
@@ -1335,7 +1335,7 @@ function buildTarGzSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
-    set -l edition "enterprise"
+    set META_EDITION "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1345,7 +1345,7 @@ function buildTarGzSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
-    set -l edition "community"
+    set META_EDITION "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1369,7 +1369,7 @@ function buildTarGzSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-linux$snippetArch.html"
-  set -l m "$OUT/meta-tgz-$edition-$arch.json"
+  set -l m "$OUT/meta-tgz-$META_EDITION-$arch.json"
 
   sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
@@ -1426,7 +1426,7 @@ function buildBundleSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
-    set -l edition "enterprise"
+    set META_EDITION "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1436,7 +1436,7 @@ function buildBundleSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
-    set -l edition "community"
+    set META_EDITION "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1467,7 +1467,7 @@ function buildBundleSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-macosx$snippetArch.html"
-  set -l m "$OUT/meta-bundle-$edition-$arch.json"
+  set -l m "$OUT/meta-bundle-$META_EDITION-$arch.json"
 
   sed -e "s|@BUNDLE_NAME_SERVER@|$BUNDLE_NAME_SERVER|g" \
       -e "s|@BUNDLE_SIZE_SERVER@|$BUNDLE_SIZE_SERVER|g" \
@@ -1529,7 +1529,7 @@ function buildWindowsSnippet
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_EDITION_LC "enterprise"
     set ARANGODB_PKG_NAME "ArangoDB3e"
-    set -l edition "enterprise"
+    set META_EDITION "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1540,7 +1540,7 @@ function buildWindowsSnippet
     set ARANGODB_EDITION "Community"
     set ARANGODB_EDITION_LC "community"
     set ARANGODB_PKG_NAME "ArangoDB3"
-    set -l edition "community"
+    set META_EDITION "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1565,7 +1565,7 @@ function buildWindowsSnippet
   set -l WINDOWS_SHA256_CLIENT_EXE (shasum -a 256 -b < $IN/$WINDOWS_NAME_CLIENT_EXE | awk '{print $1}')
 
   set -l n "$OUT/download-windows$snippetArch-$ARANGODB_EDITION_LC.html"
-  set -l m "$OUT/meta-windows-$edition-$arch.json"
+  set -l m "$OUT/meta-windows-$META_EDITION-$arch.json"
 
   sed -e "s|@WINDOWS_NAME_SERVER_EXE@|$WINDOWS_NAME_SERVER_EXE|g" \
       -e "s|@WINDOWS_SIZE_SERVER_EXE@|$WINDOWS_SIZE_SERVER_EXE|g" \
@@ -1616,10 +1616,10 @@ end
 
 function buildDockerSnippet
   if test "$ENTERPRISEEDITION" = "On"
-    set edition enterprise
+    set META_EDITION enterprise
     set repo enterprise
   else
-    set edition community
+    set META_EDITION community
     set repo arangodb
   end
 
