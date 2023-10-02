@@ -996,6 +996,7 @@ end
 
 function buildDebianSnippet
   set snippetArch "-$argv[3]"
+  set arch $snippetArch
   set packageArch $argv[3]
   set tarGzSuffix "_$argv[4]"
 
@@ -1058,7 +1059,7 @@ function buildDebianSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-debian$snippetArch.html"
-  set -l m "$OUT/meta-debian-$edition-$snippetArch.html"
+  set -l m "$OUT/meta-debian-$edition-$arch.html"
 
   sed -e "s|@DEBIAN_NAME_SERVER@|$DEBIAN_NAME_SERVER|g" \
       -e "s|@DEBIAN_NAME_CLIENT@|$DEBIAN_NAME_CLIENT|g" \
@@ -1123,6 +1124,7 @@ end
 
 function buildRPMSnippet
   set snippetArch "-$argv[3]"
+  set arch $snippetArch
   set packageArch $argv[3]
   set tarGzSuffix "_$argv[4]"
 
@@ -1185,7 +1187,7 @@ function buildRPMSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-rpm$snippetArch.html"
-  set -l m "$OUT/meta-rpm-$edition-$snippetArch.html"
+  set -l m "$OUT/meta-rpm-$edition-$arch.html"
 
   sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
       -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
@@ -1283,6 +1285,7 @@ end
 
 function buildTarGzSnippet
   set snippetArch "-$argv[3]"
+  set arch $snippetArch
   set tarGzSuffix "_$argv[3]"
 
   if test "$USE_ARM" = "Off"
@@ -1327,7 +1330,7 @@ function buildTarGzSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-linux$snippetArch.html"
-  set -l m "$OUT/meta-tgz-$edition-$snippetArch.json"
+  set -l m "$OUT/meta-tgz-$edition-$arch.json"
 
   sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
       -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
