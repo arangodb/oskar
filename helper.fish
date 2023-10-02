@@ -955,7 +955,7 @@ function makeSnippets
       end
     end
 
-   echo '"serial": "'$(date +%s)'"'
+   echo '"serial": "'(date +%s)'"'
    echo '}'
   end | jq . > "$SNIPPETS/meta.json"
 end
