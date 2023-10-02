@@ -1616,10 +1616,10 @@ end
 
 function buildDockerSnippet
   if test "$ENTERPRISEEDITION" = "On"
-    set META_EDITION enterprise
+    set edition enterprise
     set repo enterprise
   else
-    set META_EDITION community
+    set edition community
     set repo arangodb
   end
 
