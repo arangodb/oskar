@@ -1348,7 +1348,7 @@ function buildTarGzSnippet
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/linux$snippetArch.html.in > $n
 
-  and if $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-tgz.json.in
+  and if test -f $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-tgz.json.in
       sed -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
 	  -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
 	  -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
