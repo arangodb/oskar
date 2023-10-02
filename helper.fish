@@ -1008,7 +1008,7 @@ function buildDebianSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
-    set edition "enterprise"
+    set -l edition "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1018,7 +1018,7 @@ function buildDebianSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
-    set edition "community"
+    set -l edition "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1136,7 +1136,7 @@ function buildRPMSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
-    set edition "enterprise"
+    set -l edition "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1146,7 +1146,7 @@ function buildRPMSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
-    set edition "community"
+    set -l edition "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1296,7 +1296,7 @@ function buildTarGzSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
-    set edition "enterprise"
+    set -l edition "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1306,7 +1306,7 @@ function buildTarGzSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
-    set edition "community"
+    set -l edition "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1387,6 +1387,7 @@ function buildBundleSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
+    set -l edition "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1396,6 +1397,7 @@ function buildBundleSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
+    set -l edition "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1477,6 +1479,7 @@ end
 
 function buildWindowsSnippet
   set snippetArch "-$argv[3]"
+  set -l arch "$argv[3]"
   set packageArch $argv[3]
 
   if test "$USE_ARM" = "Off"
@@ -1487,6 +1490,7 @@ function buildWindowsSnippet
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_EDITION_LC "enterprise"
     set ARANGODB_PKG_NAME "ArangoDB3e"
+    set -l edition "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1497,6 +1501,7 @@ function buildWindowsSnippet
     set ARANGODB_EDITION "Community"
     set ARANGODB_EDITION_LC "community"
     set ARANGODB_PKG_NAME "ArangoDB3"
+    set -l edition "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1521,6 +1526,7 @@ function buildWindowsSnippet
   set -l WINDOWS_SHA256_CLIENT_EXE (shasum -a 256 -b < $IN/$WINDOWS_NAME_CLIENT_EXE | awk '{print $1}')
 
   set -l n "$OUT/download-windows$snippetArch-$ARANGODB_EDITION_LC.html"
+  set -l m "$OUT/meta-windows-$edition-$arch.json"
 
   sed -e "s|@WINDOWS_NAME_SERVER_EXE@|$WINDOWS_NAME_SERVER_EXE|g" \
       -e "s|@WINDOWS_SIZE_SERVER_EXE@|$WINDOWS_SIZE_SERVER_EXE|g" \
@@ -1541,6 +1547,27 @@ function buildWindowsSnippet
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/windows$snippetArch.html.in > $n
 
+  and if test -f $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-windows.json.in
+      sed -e "s|@WINDOWS_NAME_SERVER_EXE@|$WINDOWS_NAME_SERVER_EXE|g" \
+	  -e "s|@WINDOWS_SIZE_SERVER_EXE@|$WINDOWS_SIZE_SERVER_EXE|g" \
+	  -e "s|@WINDOWS_SHA256_SERVER_EXE@|$WINDOWS_SHA256_SERVER_EXE|g" \
+	  -e "s|@WINDOWS_NAME_SERVER_ZIP@|$WINDOWS_NAME_SERVER_ZIP|g" \
+	  -e "s|@WINDOWS_SIZE_SERVER_ZIP@|$WINDOWS_SIZE_SERVER_ZIP|g" \
+	  -e "s|@WINDOWS_SHA256_SERVER_ZIP@|$WINDOWS_SHA256_SERVER_ZIP|g" \
+	  -e "s|@WINDOWS_NAME_CLIENT_EXE@|$WINDOWS_NAME_CLIENT_EXE|g" \
+	  -e "s|@WINDOWS_SIZE_CLIENT_EXE@|$WINDOWS_SIZE_CLIENT_EXE|g" \
+	  -e "s|@WINDOWS_SHA256_CLIENT_EXE@|$WINDOWS_SHA256_CLIENT_EXE|g" \
+	  -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+	  -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+	  -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+	  -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+	  -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+	  -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+	  -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+	  -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-windows.json.in > $m
+  end
+
   and echo "Windows Snippet: $n"
 end
 
@@ -1550,10 +1577,10 @@ end
 
 function buildDockerSnippet
   if test "$ENTERPRISEEDITION" = "On"
-    set edition enterprise
+    set -l edition enterprise
     set repo enterprise
   else
-    set edition community
+    set -l edition community
     set repo arangodb
   end
 
