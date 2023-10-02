@@ -1007,6 +1007,7 @@ function buildDebianSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
+    set edition "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1016,6 +1017,7 @@ function buildDebianSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
+    set edition "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1132,6 +1134,7 @@ function buildRPMSnippet
   if test "$ENTERPRISEEDITION" = "On"
     set ARANGODB_EDITION "Enterprise"
     set ARANGODB_PKG_NAME "arangodb3e"
+    set edition "enterprise"
 
     if test -z "$ENTERPRISE_DOWNLOAD_KEY"
       set DOWNLOAD_LINK "/enterprise-download"
@@ -1141,6 +1144,7 @@ function buildRPMSnippet
   else
     set ARANGODB_EDITION "Community"
     set ARANGODB_PKG_NAME "arangodb3"
+    set edition "community"
     set DOWNLOAD_LINK ""
   end
 
@@ -1181,6 +1185,7 @@ function buildRPMSnippet
   end
 
   set -l n "$OUT/download-$ARANGODB_PKG_NAME-rpm$snippetArch.html"
+  set -l m "$OUT/meta-rpm-$edition-$snippetArch.html"
 
   sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
       -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
@@ -1208,6 +1213,35 @@ function buildRPMSnippet
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
       < $WORKDIR/snippets/$ARANGODB_SNIPPETS/rpm$snippetArch.html.in > $n
+
+  and if test -f $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-rpm.json.in
+      sed -e "s|@RPM_NAME_SERVER@|$RPM_NAME_SERVER|g" \
+	  -e "s|@RPM_NAME_CLIENT@|$RPM_NAME_CLIENT|g" \
+	  -e "s|@RPM_NAME_DEBUG_SYMBOLS@|$RPM_NAME_DEBUG_SYMBOLS|g" \
+	  -e "s|@RPM_SIZE_SERVER@|$RPM_SIZE_SERVER|g" \
+	  -e "s|@RPM_SIZE_CLIENT@|$RPM_SIZE_CLIENT|g" \
+	  -e "s|@RPM_SIZE_DEBUG_SYMBOLS@|$RPM_SIZE_DEBUG_SYMBOLS|g" \
+	  -e "s|@RPM_SHA256_SERVER@|$RPM_SHA256_SERVER|g" \
+	  -e "s|@RPM_SHA256_CLIENT@|$RPM_SHA256_CLIENT|g" \
+	  -e "s|@RPM_SHA256_DEBUG_SYMBOLS@|$RPM_SHA256_DEBUG_SYMBOLS|g" \
+	  -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+	  -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+	  -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+	  -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
+	  -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
+	  -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
+	  -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+	  -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+	  -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+	  -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+	  -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+	  -e "s|@ARANGODB_RPM_UPSTREAM@|$ARANGODB_RPM_UPSTREAM|g" \
+	  -e "s|@ARANGODB_RPM_REVISION@|$ARANGODB_RPM_REVISION|g" \
+	  -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+	  -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+	  -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+	  < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-rpm.json.in > $m
+  end
 
   and echo "RPM Snippet: $n"
 
