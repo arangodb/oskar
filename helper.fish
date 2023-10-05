@@ -1440,22 +1440,24 @@ function buildBundleSnippet
     set DOWNLOAD_LINK ""
   end
 
-  set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.$packageArch.dmg"
-
   set -l IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/MacOSX/
   set -l OUT $argv[2]/release/snippets
 
-  if test ! -f "$IN/$BUNDLE_NAME_SERVER"; echo "DMG package '$BUNDLE_NAME_SERVER' is missing"; return 1; end
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+    set -l BUNDLE_NAME_SERVER "$ARANGODB_PKG_NAME-$ARANGODB_DARWIN_UPSTREAM.$packageArch.dmg"
 
-  set -l BUNDLE_SIZE_SERVER (expr (wc -c < $IN/$BUNDLE_NAME_SERVER | tr -d " ") / 1024 / 1024)
-  set -l BUNDLE_SHA256_SERVER (shasum -a 256 -b < $IN/$BUNDLE_NAME_SERVER | awk '{print $1}')
+    if test ! -f "$IN/$BUNDLE_NAME_SERVER"; echo "DMG package '$BUNDLE_NAME_SERVER' is missing"; return 1; end
 
-  set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macos-$ARANGODB_VERSION$tarGzSuffix.tar.gz"
+    set -l BUNDLE_SIZE_SERVER (expr (wc -c < $IN/$BUNDLE_NAME_SERVER | tr -d " ") / 1024 / 1024)
+    set -l BUNDLE_SHA256_SERVER (shasum -a 256 -b < $IN/$BUNDLE_NAME_SERVER | awk '{print $1}')
 
-  if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
+    set -l TARGZ_NAME_SERVER "$ARANGODB_PKG_NAME-macos-$ARANGODB_VERSION$tarGzSuffix.tar.gz"
 
-  set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
-  set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
+    if test ! -f "$IN/$TARGZ_NAME_SERVER"; echo "TAR.GZ '$TARGZ_NAME_SERVER' is missing"; return 1; end
+
+    set -l TARGZ_SIZE_SERVER (expr (wc -c < $IN/$TARGZ_NAME_SERVER | tr -d " ") / 1024 / 1024)
+    set -l TARGZ_SHA256_SERVER (shasum -a 256 -b < $IN/$TARGZ_NAME_SERVER | awk '{print $1}')
+  end
 
   set -l TARGZ_NAME_CLIENT "$ARANGODB_PKG_NAME-client-macos-$ARANGODB_TGZ_UPSTREAM$tarGzSuffix.tar.gz"
   set -l TARGZ_SIZE_CLIENT ""
@@ -1490,23 +1492,23 @@ function buildBundleSnippet
 
   and if test -f $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-bundle.json.in
       sed -e "s|@BUNDLE_NAME_SERVER@|$BUNDLE_NAME_SERVER|g" \
-	  -e "s|@BUNDLE_SIZE_SERVER@|$BUNDLE_SIZE_SERVER|g" \
-	  -e "s|@BUNDLE_SHA256_SERVER@|$BUNDLE_SHA256_SERVER|g" \
-	  -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
-	  -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
-	  -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
-	  -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
-	  -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
-	  -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
-	  -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
-	  -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
-	  -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-	  -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
-	  -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
-	  -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-	  -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
-	  -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
-	  < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-bundle.json.in > $m
+          -e "s|@BUNDLE_SIZE_SERVER@|$BUNDLE_SIZE_SERVER|g" \
+          -e "s|@BUNDLE_SHA256_SERVER@|$BUNDLE_SHA256_SERVER|g" \
+          -e "s|@TARGZ_NAME_SERVER@|$TARGZ_NAME_SERVER|g" \
+          -e "s|@TARGZ_SIZE_SERVER@|$TARGZ_SIZE_SERVER|g" \
+          -e "s|@TARGZ_SHA256_SERVER@|$TARGZ_SHA256_SERVER|g" \
+          -e "s|@TARGZ_NAME_CLIENT@|$TARGZ_NAME_CLIENT|g" \
+          -e "s|@TARGZ_SIZE_CLIENT@|$TARGZ_SIZE_CLIENT|g" \
+          -e "s|@TARGZ_SHA256_CLIENT@|$TARGZ_SHA256_CLIENT|g" \
+          -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+          -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+          -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+          -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+          -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+          -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+          -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+          -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+          < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-bundle.json.in > $m
   end
 
   and echo "MacOSX Bundle Snippet: $n"
