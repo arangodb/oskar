@@ -4,7 +4,7 @@ MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 ARG ARCH "x86_64"
 
 RUN apk update && \
-    apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool nodejs npm && apk add g++ prometheus bash py3-psutil
+    apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev libexecinfo-dev libexecinfo file libltdl zlib-dev curl coreutils texinfo libexecinfo-static gcovr py-setuptools valgrind libtool nodejs npm && apk add g++ prometheus bash py3-psutil liburing-dev
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
