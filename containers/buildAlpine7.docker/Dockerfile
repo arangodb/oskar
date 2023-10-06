@@ -1,4 +1,4 @@
-FROM alpine:3.17
+FROM alpine:3.18
 MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 ARG ARCH "x86_64"
@@ -17,7 +17,7 @@ RUN [ "/tools/install-openssl.sh", "3.1", "2" ]
 COPY ./tools/install-openldap.sh /tools/
 RUN [ "/tools/install-openldap.sh", "3.1.2" ]
 
-RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.3.1/sccache-v0.3.1-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl
+RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl
 
 RUN apk add py3-pip && pip install gcovr==5 && apk del py3-pip
 

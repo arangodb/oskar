@@ -98,7 +98,7 @@ function compiler
     case 11.2.1_git20220219-r2
       set -gx COMPILER_VERSION $cversion
 
-    case 12.2.1_git20220924-r4
+    case 12.2.1_git20220924-r10
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -150,7 +150,7 @@ function findBuildImage
       case 11.2.1_git20220219-r2
         echo $UBUNTUBUILDIMAGE6
 
-      case 12.2.1_git20220924-r4
+      case 12.2.1_git20220924-r10
         echo $UBUNTUBUILDIMAGE7
 
       case '*'
@@ -175,7 +175,7 @@ function findStaticBuildImage
       case 11.2.1_git20220219-r2
         echo $ALPINEBUILDIMAGE6
 
-      case 12.2.1_git20220924-r4
+      case 12.2.1_git20220924-r10
         echo $ALPINEBUILDIMAGE7
 
       case '*'
@@ -200,7 +200,7 @@ function findBuildScript
       case 11.2.1_git20220219-r2
         echo buildArangoDB6.fish
 
-      case 12.2.1_git20220924-r4
+      case 12.2.1_git20220924-r10
         echo buildArangoDB7.fish
 
       case '*'
@@ -225,7 +225,7 @@ function findStaticBuildScript
       case 11.2.1_git20220219-r2
         echo buildAlpine6.fish
 
-      case 12.2.1_git20220924-r4
+      case 12.2.1_git20220924-r10
         echo buildAlpine7.fish
 
       case '*'
