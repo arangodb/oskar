@@ -8,6 +8,9 @@
     (SIMD extension). A system with Little Endian byte order is required.
   </p>
   <p>
+    The operating system needs to use a page size of 4096 bytes or less.
+  </p>
+  <p>
     We provide a single package containing the server and the client tools. For
     a standard server setup, download the <strong>Server</strong> package and
     install it using the package manager. You do not need the separate client
