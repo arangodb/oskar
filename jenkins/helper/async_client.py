@@ -164,24 +164,7 @@ def convert_result(result_array):
     return result
 
 def add_message_to_report(params, string, print_it = True, add_to_error = False):
-    """ add a message from python to the report strings/files + print it """
-    oskar = 'OSKAR'
-    count = int(80 / len(oskar))
-    datestr = f'  {datetime.now()} - '
-    offset = 80 - (len(string) + len(datestr) + 2 * len(oskar))
-    if print_it:
-        print(string)
-    if add_to_error:
-        params['error'] += 'async_client.py: ' + string + '\n'
-    if isinstance(params['output'], list):
-        params['output'] += \
-            f"{oskar*count}\n{oskar}{datestr}{string}{' '*offset}{oskar}\n{oskar*count}\n"
-    else:
-        params['output'].write(bytearray(
-            f"{oskar*count}\n{oskar}{datestr}{string}{' '*offset}{oskar}\n{oskar*count}\n",
-            "utf-8"))
-        params['output'].flush()
-    sys.stdout.flush()
+    """ return message + \n """
     return string + '\n'
 
 def kill_children(identifier, params, children):
