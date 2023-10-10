@@ -68,6 +68,8 @@ and copySnippet "$SP_SNIPPETS_CO" "download-docker-community.html" 's/docker-com
 and copySnippet "$SP_SNIPPETS_CO" "download-k8s-community.html" 's/k8s-community/k8s/'
 and copySnippet "$SP_SNIPPETS_CO" "download-source.html"
 and copySnippet "$SP_SNIPPETS_CO" "download-windows*-community.html" 's/windows.*-community/windows/'
+and cp $WS_SNIPPETS/meta-*-community*.json $SP_SNIPPETS_CO
+and cp $WS_SNIPPETS/meta-source.json $SP_SNIPPETS_CO
 
 and copySnippet "$SP_SNIPPETS_EN" "download-arangodb3e-debian*.html" 's/arangodb3e-debian/debian/'
 and copySnippet "$SP_SNIPPETS_EN" "download-arangodb3e-debian*.html" 's/arangodb3e-debian/ubuntu/'
@@ -81,6 +83,7 @@ and copySnippet "$SP_SNIPPETS_EN" "download-arangodb3e-macosx*.html" 's/arangodb
 and copySnippet "$SP_SNIPPETS_EN" "download-docker-enterprise.html" 's/docker-enterprise/docker/'
 and copySnippet "$SP_SNIPPETS_EN" "download-k8s-enterprise.html" 's/k8s-enterprise/k8s/'
 and copySnippet "$SP_SNIPPETS_EN" "download-windows*-enterprise.html" 's/windows.*-enterprise/windows/'
+and cp $WS_SNIPPETS/meta-*-enterprise*.json $SP_SNIPPETS_EN
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; unlockDirectory
