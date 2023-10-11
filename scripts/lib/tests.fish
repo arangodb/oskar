@@ -21,6 +21,7 @@ set -e UBSAN_OPTIONS
 set -e TSAN_OPTIONS  
 
 # Enable full SAN mode
+# This also has to be in runRTAtest.fish
 if not test -z $SAN; and test $SAN = "On"
   echo "Use SAN mode: $SAN_MODE"
 
