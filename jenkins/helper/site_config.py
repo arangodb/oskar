@@ -220,7 +220,7 @@ class SiteConfig:
         self.portbase = 7000
         if 'PORTBASE' in os.environ:
             self.portbase = int(os.environ['PORTBASE'])
-        self.slot_memory = round(psutil.virtual_memory().total / self.available_slots)
+        self.slot_memory = round((1.1 * psutil.virtual_memory().total) / self.available_slots)
 
     def is_instrumented(self):
         """ check whether we run an instrumented build """
