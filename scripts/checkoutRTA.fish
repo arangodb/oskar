@@ -4,7 +4,7 @@ ssh -o StrictHostKeyChecking=no -T git@github.com
 cd $INNERWORKDIR
 and git config --global http.postBuffer 524288000
 and git config --global https.postBuffer 524288000
-and git config --global pull.rebase true
+# and git config --global pull.rebase true
 and if test ! -d release-test-automation/.git
   rm -rf release-test-automation
 end
