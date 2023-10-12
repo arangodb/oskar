@@ -29,15 +29,15 @@ if test "$ASAN" = "true"
       set -xg UBSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log:print_stacktrace=1"
 
       # suppressions
-      if test -f $INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt
+      if test -f $WORKDIR/ArangoDB/asan_arangodb_suppressions.txt
         set ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt:print_suppressions=0"
       end
 
-      if test -f $INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
+      if test -f $WORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
         set LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt:print_suppressions=0"
       end
 
-      if test -f $INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
+      if test -f $WORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
         set UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt:print_suppressions=0"
       end
 
@@ -49,7 +49,7 @@ if test "$ASAN" = "true"
       set -xg TSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/tsan.log:detect_deadlocks=true:second_deadlock_stack=1"
 
       # suppressions
-      if test -f $INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
+      if test -f $WORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
         set TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0"
       end
 
