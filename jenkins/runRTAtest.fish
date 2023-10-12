@@ -4,7 +4,7 @@ source jenkins/helper/jenkins.fish
 cleanPrepareLockUpdateClear2
 TT_init
 set RTA_EDITION "C"
-. ../scripts/lib/sanFlags.fish
+source scripts/lib/sanFlags.fish
 
 and eval $EDITION
 and eval $TEST_SUITE
