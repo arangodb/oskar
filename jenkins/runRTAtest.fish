@@ -4,13 +4,13 @@ source jenkins/helper/jenkins.fish
 cleanPrepareLockUpdateClear2
 TT_init
 set RTA_EDITION "C"
-source scripts/lib/sanFlags.fish
 
 and eval $EDITION
 and eval $TEST_SUITE
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
+and source scripts/lib/sanFlags.fish
 
 and pingDetails
 and TT_setup

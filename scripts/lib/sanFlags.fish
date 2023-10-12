@@ -8,7 +8,7 @@ set -e TSAN_OPTIONS
 # This also has to be in runRTAtest.fish
 if not test -z $SAN; and test $SAN = "On"
   echo "Use SAN mode: $SAN_MODE"
-
+  sanOn
   set common_options "log_exe_name=true"
 
   switch "$SAN_MODE"
