@@ -10,8 +10,7 @@ and eval $TEST_SUITE
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
-and source scripts/lib/sanFlags.fish
-
+and buildSanFlags
 and pingDetails
 and TT_setup
 and oskarCompile

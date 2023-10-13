@@ -13,8 +13,7 @@ end
 # Turn off internal crash handler for tests that don''t specify it explicitly
 # Meaningful for ArangoDB 3.7+ versions only
 # set -xg ARANGODB_OVERRIDE_CRASH_HANDLER "Off"
-source scripts/lib/sanFlags.fish
-
+buildSanFlags
 set -xg GCOV_PREFIX /work/gcov
 set -xg GCOV_PREFIX_STRIP 3
 
