@@ -1754,15 +1754,15 @@ function buildSanFlags
           set -xg UBSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log:print_stacktrace=1"
 
           # suppressions
-          if test -f $WORKDIR/ArangoDB/asan_arangodb_suppressions.txt
+          if test -f "$WORKDIR/ArangoDB/asan_arangodb_suppressions.txt"
             set -xg ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt:print_suppressions=0"
           end
 
-          if test -f $WORKDIR/ArangoDB/lsan_arangodb_suppressions.txt
+          if test -f "$WORKDIR/ArangoDB/lsan_arangodb_suppressions.txt"
             set -xg LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt:print_suppressions=0"
           end
 
-          if test -f $WORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt
+          if test -f "$WORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt"
             set -xg UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt:print_suppressions=0"
           end
 
@@ -1776,7 +1776,7 @@ function buildSanFlags
           # suppressions
           pwd
           echo "$WORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
-          if test -f $WORKDIR/ArangoDB/tsan_arangodb_suppressions.txt
+          if test -f "$WORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
             set -xg TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0"
           end
 
