@@ -1775,7 +1775,7 @@ function buildSanFlags
 
           # suppressions
           pwd
-          echo "$WORKDIR/ArangoDB/tsan_arangodb_suppressions.txt"
+          echo "$WORKDIR/work/ArangoDB/tsan_arangodb_suppressions.txt"
           if test -f "$WORKDIR/work/ArangoDB/tsan_arangodb_suppressions.txt"
             set -xg TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0"
           end
