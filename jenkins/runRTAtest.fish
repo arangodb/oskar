@@ -10,7 +10,10 @@ and eval $TEST_SUITE
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
-and buildSanFlags
+if test "$ASAN" = "true"
+   sanOn
+   and buildSanFlags "$WORKDIR/work/ArangoDB"
+end
 and pingDetails
 and TT_setup
 and oskarCompile

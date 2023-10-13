@@ -1728,7 +1728,7 @@ function transformK8SSnippet
   and echo "Kubernetes Snippet: $n"
 end
 
-function buildSanFlags
+function buildSanFlags -v SRCDIR
     # Clear sanitizers options
     set -e ASAN_OPTIONS
     set -e LSAN_OPTIONS
@@ -1737,9 +1737,8 @@ function buildSanFlags
 
     # Enable full SAN mode
     # This also has to be in runRTAtest.fish
-    if not test -z "$SAN"; and test "$SAN" = "true"
+    if not test -z "$SAN"; and test "$SAN" = "on"
       echo "Use SAN mode: $SAN_MODE"
-      sanOn
       set common_options "log_exe_name=true"
 
       switch "$SAN_MODE"
@@ -1754,15 +1753,15 @@ function buildSanFlags
           set -xg UBSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log:print_stacktrace=1"
 
           # suppressions
-          if test -f "$WORKDIR/work/ArangoDB/asan_arangodb_suppressions.txt"
+          if test -f "$SRCDIR/asan_arangodb_suppressions.txt"
             set -xg ASAN_OPTIONS "$ASAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/asan_arangodb_suppressions.txt:print_suppressions=0"
           end
 
-          if test -f "$WORKDIR/work/ArangoDB/lsan_arangodb_suppressions.txt"
+          if test -f "$SRCDIR/lsan_arangodb_suppressions.txt"
             set -xg LSAN_OPTIONS "$LSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/lsan_arangodb_suppressions.txt:print_suppressions=0"
           end
 
-          if test -f "$WORKDIR/work/ArangoDB/ubsan_arangodb_suppressions.txt"
+          if test -f "$SRCDIR/ubsan_arangodb_suppressions.txt"
             set -xg UBSAN_OPTIONS "$UBSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/ubsan_arangodb_suppressions.txt:print_suppressions=0"
           end
 
@@ -1775,8 +1774,8 @@ function buildSanFlags
 
           # suppressions
           pwd
-          echo "$WORKDIR/work/ArangoDB/tsan_arangodb_suppressions.txt"
-          if test -f "$WORKDIR/work/ArangoDB/tsan_arangodb_suppressions.txt"
+          echo "$SRCDIR/tsan_arangodb_suppressions.txt"
+          if test -f "$SRCDIR/tsan_arangodb_suppressions.txt"
             set -xg TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0"
           end
 
