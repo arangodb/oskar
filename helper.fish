@@ -1728,7 +1728,7 @@ function transformK8SSnippet
   and echo "Kubernetes Snippet: $n"
 end
 
-function buildSanFlags -v SRCDIR
+function buildSanFlags --argument SRCDIR
     # Clear sanitizers options
     set -e ASAN_OPTIONS
     set -e LSAN_OPTIONS
@@ -1738,7 +1738,7 @@ function buildSanFlags -v SRCDIR
     echo $SRCDIR
     # Enable full SAN mode
     # This also has to be in runRTAtest.fish
-    if not test -z "$SAN"; and test "$SAN" = "on"
+    if not test -z "$SAN"; and test "$SAN" = "On"
       echo "Use SAN mode: $SAN_MODE"
       set common_options "log_exe_name=true"
 
