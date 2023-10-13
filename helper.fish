@@ -1734,7 +1734,8 @@ function buildSanFlags -v SRCDIR
     set -e LSAN_OPTIONS
     set -e UBSAN_OPTIONS
     set -e TSAN_OPTIONS
-
+    echo $SAN
+    echo $SRCDIR
     # Enable full SAN mode
     # This also has to be in runRTAtest.fish
     if not test -z "$SAN"; and test "$SAN" = "on"

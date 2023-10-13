@@ -11,6 +11,7 @@ and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
 if test "$ASAN" = "true"
+   echo "San build"
    sanOn
    and buildSanFlags "$WORKDIR/work/ArangoDB"
 end
