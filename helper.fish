@@ -1,4 +1,3 @@
-
 set -gx KEYNAME 115E1684
 
 function lockDirectory
