@@ -20,9 +20,9 @@ RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache
 
 COPY ./tools/* /tools/
 
-RUN [ "/tools/install.sh", "3.0", ".10" ]
+RUN [ "/tools/install.sh", "3.0", ".11" ]
 
-RUN [ "/tools/install.sh", "3.1", ".2" ]
+RUN [ "/tools/install.sh", "3.1", ".3" ]
 
 COPY ./scripts /scripts
 
