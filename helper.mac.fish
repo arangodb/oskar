@@ -498,9 +498,13 @@ function setupComponents
   cleanupThirdParty
   if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
     downloadStarter
-    and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
-    and downloadSyncer
-    and copyRclone "macos"
+    if test "$ENTERPRISEEDITION" = "On"
+      set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
+      and downloadSyncer
+      if test "$USE_RCLONE" = "true"
+        copyRclone "macos"
+      end
+    end
   else
     set -xg USE_RCLONE false
   end
