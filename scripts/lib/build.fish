@@ -211,10 +211,10 @@ function runCmake
   end
 
   if test "$SHOW_DETAILS" = "On"
-    eval cmake $FULLARGS -DVERBOSE=On .. 2>&1
+    eval "cmake $FULLARGS -DVERBOSE=On .. 2>&1"
   else
     echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
-    eval cmake $FULLARGS -DVERBOSE=On .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1
+    eval "cmake $FULLARGS -DVERBOSE=On .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1"
   end
 
 #  if test "$FORCE_DISABLE_AVX" = "On"
