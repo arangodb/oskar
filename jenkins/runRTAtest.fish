@@ -1,6 +1,5 @@
 #!/usr/bin/env fish
 source jenkins/helper/jenkins.fish
-source scripts/lib/buildSanFlags.fish
 
 cleanPrepareLockUpdateClear2
 TT_init

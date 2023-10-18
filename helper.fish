@@ -2248,7 +2248,7 @@ end
 ## #############################################################################
 ## include the specifics for the platform
 ## #############################################################################
-
+source scripts/lib/buildSanFlags.fish
 switch (uname)
   case Darwin ; source helper.mac.fish
   case Windows ; source helper.windows.fish

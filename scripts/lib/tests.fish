@@ -1,6 +1,6 @@
 #!/usr/bin/env false
 
-source scripts/lib/buildSanFlags.fish
+source $SCRIPTSDIR/lib/buildSanFlags.fish
 if test -z "$PARALLELISM"
   set -g PARALLELISM 64
 end
