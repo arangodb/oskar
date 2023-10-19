@@ -2255,6 +2255,8 @@ switch (uname)
   case '*' ; source helper.linux.fish
 end
 
+source $WORKDIR/scripts/lib/buildSanFlags.fish
+
 initSourceInfo
 
 if isatty 1
