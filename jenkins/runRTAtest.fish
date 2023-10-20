@@ -27,9 +27,9 @@ if test "$ENTERPRISEEDITION" = "On"
    set RTA_EDITION "EP"
 end
 if test "$MODE" = "upgrade"
-  and bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $argv
+   bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $argv
 else
-  and bash -x ./jenkins/oskar_tar_test.sh --edition $RTA_EDITION $argv
+   bash -x ./jenkins/oskar_tar_test.sh --edition $RTA_EDITION $argv
 end
 set -l s $status
 
