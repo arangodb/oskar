@@ -29,7 +29,11 @@ end
 if test "$MODE" = "upgrade"
    bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $argv
 else
-   bash -x ./jenkins/oskar_tar_test.sh --edition $RTA_EDITION $argv
+   set EPFLAG ""
+   if test "$RTA_EDITON != "C"
+       set EPFLAG "--enterprise"
+   end
+   bash -x ./jenkins/oskar_tar_test.sh $EPFLAG $argv
 end
 set -l s $status
 
