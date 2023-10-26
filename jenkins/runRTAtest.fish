@@ -19,8 +19,8 @@ if test "$BUILD_MODE" = "debug"
    echo "switching to debug build"
    debugMode
 end
-if test "$BUILD_MODE" = "debug"
-   echo "switching to debug build"
+if test "$BUILD_MODE" = "release"
+   echo "switching to release build"
    releaseMode
 end
 and pingDetails
