@@ -15,6 +15,10 @@ if test "$ASAN" = "true"
    sanOn
    and buildSanFlags "$WORKDIR/work/ArangoDB"
 end
+if test "$DEBUG_BUILD = "true"
+   echo "switching to debug build"
+   debugMode
+end
 and pingDetails
 and TT_setup
 and oskarCompile
