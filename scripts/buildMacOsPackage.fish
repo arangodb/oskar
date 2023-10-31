@@ -80,85 +80,33 @@ function codeSignApp
   and codesign $CODESIGN_OPTS $APPNAME
 end
 
-set -g UPLOAD_LOG $INNERWORKDIR/mac_upload.log
-set -g PROGRESS_LOG $INNERWORKDIR/mac_progress.log
 set -g RESULT_LOG $INNERWORKDIR/mac_result.log
 
-rm -f $UPLOAD_LOG $PROGRESS_LOG $RESULT_LOG
+rm -f $RESULT_LOG
 
 function uploadApp
   fish -c "while true; sleep 60; echo Uploading == (date) ==; end" &
   set ep (jobs -p | tail -1)
   and zip -q -r $APPNAME.zip $APPNAME
-  and xcrun altool --notarize-app -t osx -f $APPNAME.zip --primary-bundle-id org.arangodb.ArangoDB-CLI -u $NOTARIZE_USER -p $NOTARIZE_PASSWORD > $UPLOAD_LOG
+  and xcrun notarytool submit \
+        --apple-id $NOTARIZE_USER \
+	--team-id W7UC4UQXPV \
+	--password $NOTARIZE_PASSWORD \
+	--wait \
+	$APPNAME.zip \
+	> $RESULT_LOG
   and begin
     kill $ep
     true
   end
   or begin kill $ep; exit 1; end
 
-  if fgrep -q 'No errors uploading' $UPLOAD_LOG
-    set -g UPLOAD_ID (fgrep 'RequestUUID' $UPLOAD_LOG | awk '{print $3}')
-
-    if test -z "$UPLOAD_ID"
-      echo "Cannot extract upload up"
-      cat $UPLOAD_LOG
-      return 1
-    end
-
-    echo "Upload ID: $UPLOAD_ID"
-
+  if fgrep -q '  status: Accepted' $RESULT_LOG
     return 0
   else
-    echo "Uploading failed:"
-    cat $UPLOAD_LOG
+    echo "Notarize failed:"
+    cat $RESULT_LOG
     return 1
-  end
-end
-
-function waitForProgress
-  sleep 60
-  xcrun altool --notarization-info $UPLOAD_ID -u $NOTARIZE_USER -p $NOTARIZE_PASSWORD > $PROGRESS_LOG
-
-  while fgrep -q 'No errors getting notarization info' $PROGRESS_LOG;
-    if not fgrep -q 'Status: in progress' $PROGRESS_LOG
-      return 0
-    end
-
-    date
-    fgrep "Status:" $PROGRESS_LOG
-    sleep 60
-    xcrun altool --notarization-info $UPLOAD_ID -u $NOTARIZE_USER -p $NOTARIZE_PASSWORD > $PROGRESS_LOG
-  end
-
-  echo "Cannot get update info"
-  cat $PROGRESS_LOG
-  return 1
-end
-
-function getLogFile
-  set logfile (fgrep LogFileURL: $PROGRESS_LOG  | awk '{print $2}')
-  and test -n "$logfile"
-  or begin
-    echo "cannot extract log file url"
-    cat $PROGRESS_LOG
-    return 1
-  end
-
-  curl "$logfile" > $RESULT_LOG
-end
-
-function checkNotarization
-  if not fgrep -q 'Status: success' $PROGRESS_LOG
-    echo "Notarization failed"
-    and cat $PROGRESS_LOG
-    and getLogFile
-    and cat $RESULT_LOG
-    return 1
-  else
-    echo "Notarization succeeded"
-    and getLogFile
-    return 0
   end
 end
 
@@ -201,8 +149,6 @@ and setupApp
 and codeSignApp
 and if test $NOTARIZE_APP = On
   uploadApp
-  and waitForProgress
-  and checkNotarization
   and stapleApp
 end
 and createDmg
