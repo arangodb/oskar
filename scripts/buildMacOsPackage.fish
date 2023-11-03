@@ -107,7 +107,7 @@ function uploadApp
     end
     or begin
       sleep 600
-      and echo "starting try #2 of notary tool"
+      and echo "starting try #3 of notary tool"
       and notarytool
     end
   end
