@@ -84,17 +84,33 @@ set -g RESULT_LOG $INNERWORKDIR/mac_result.log
 
 rm -f $RESULT_LOG
 
+function notarytool
+  xcrun notarytool submit \
+	  --apple-id $NOTARIZE_USER \
+	  --team-id W7UC4UQXPV \
+	  --password $NOTARIZE_PASSWORD \
+	  --wait \
+	  $APPNAME.zip \
+	  > $RESULT_LOG
+end
+
 function uploadApp
   fish -c "while true; sleep 60; echo Uploading == (date) ==; end" &
   set ep (jobs -p | tail -1)
   and zip -q -r $APPNAME.zip $APPNAME
-  and xcrun notarytool submit \
-        --apple-id $NOTARIZE_USER \
-	--team-id W7UC4UQXPV \
-	--password $NOTARIZE_PASSWORD \
-	--wait \
-	$APPNAME.zip \
-	> $RESULT_LOG
+  and begin
+    notarytool
+    or begin
+      sleep 600
+      and echo "starting try #2 of notary tool"
+      and notarytool
+    end
+    or begin
+      sleep 600
+      and echo "starting try #2 of notary tool"
+      and notarytool
+    end
+  end
   and begin
     kill $ep
     true
