@@ -245,10 +245,10 @@ function findStaticBuildScript
         echo buildAlpine7.fish
 
       case 13.2.1_git20231014
-        echo buildAlpaquito1.fish
+        echo buildAlpaquita1.fish
 
       case clang16.0.6
-        echo buildAlpaquito2.fish
+        echo buildAlpaquita2.fish
 
       case '*'
         echo "unknown compiler version $version"
