@@ -13,6 +13,6 @@ Open this in a browser and you get a file named `apk_for_alpaquita.tar.gz`.
 Extract this file in this directory and then the following Docker build
 command will work:
 
-    docker build -t docker build -t arangodb/alpaquitabuildimage1-x86_64:1 .
+    docker build -t arangodb/alpaquitabuildimage1-x86_64:1 .
 
 should work.
