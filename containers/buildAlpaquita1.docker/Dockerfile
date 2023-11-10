@@ -6,9 +6,13 @@ ARG ARCH="x86_64"
 
 COPY ./scripts /scripts
 
-RUN /scripts/install-alpine318-repository.sh
+# First as far as possible from Alpaquita:
 
-RUN apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev file libltdl zlib-dev curl coreutils texinfo gcovr py-setuptools valgrind libtool nodejs npm py3-psutil && apk add g++ prometheus bash liburing-dev clang clang16 clang16-static clang16-dev clang16-analyzer lld llvm16
+RUN apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev mandoc gdb openssh db-dev file libltdl zlib-dev curl coreutils texinfo py-setuptools libtool nodejs npm py3-psutil && apk add g++ bash liburing-dev clang clang16 clang16-static clang16-dev clang16-analyzer llvm16
+
+# Now some more from Alpine 3.18:
+RUN /scripts/install-alpine318-repository.sh
+RUN apk ctags fish gcovr valgrind prometheus lld
 
 RUN apk add py3-pip && pip3 install PyYAML --break-system-packages && apk del py3-pip
 
