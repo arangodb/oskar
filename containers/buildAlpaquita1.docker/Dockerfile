@@ -33,4 +33,6 @@ RUN git config --global --add safe.directory '*'
 
 RUN apk add clang clang16 clang16-static clang16-dev clang16-analyzer
 
+RUN /scripts/install-lld.fish
+
 CMD [ "/usr/bin/fish" ]

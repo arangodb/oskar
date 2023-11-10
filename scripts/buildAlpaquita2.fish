@@ -45,13 +45,13 @@ set -g FULLARGS $argv \
  -DCMAKE_CXX_COMPILER_AR=/usr/bin/ar \
  -DCMAKE_CXX_COMPILER_RANLIB=/usr/bin/ranlib
 
-echo Habakuk1: $FULLARGS
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector -fuse-ld=lld " \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
 end
@@ -60,7 +60,6 @@ if test "$BUILD_SEPP" = "On"
   set -g FULLARGS $FULLARGS -DBUILD_SEPP=ON
 end
 
-echo Habakuk2: $FULLARGS
 if test "$SAN" = "On"
   echo "SAN is not support in this environment"
   exit 1
@@ -91,7 +90,6 @@ if test "$MINIMAL_DEBUG_INFO" = "On"
     -DUSE_MINIMAL_DEBUGINFO=On
 end
 
-echo Habakuk3: $FULLARGS
 setupCcacheBinPath alpine
 and setupCcache alpine
 and cleanBuildDirectory
