@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+# This is for clang16.0.6 builds on Alpaquita linux
+
 source ./scripts/lib/build.fish
 
 if test "$PARALLELISM" = ""
@@ -25,8 +27,6 @@ end
 echo "Using openssl version $OPENSSL_VERSION"
 
 set -l pie ""
-#set -l pie "-fpic -fPIC -fpie -fPIE -static-pie"
-#set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
@@ -37,17 +37,18 @@ set -g FULLARGS $argv \
  -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib \
  -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL \
- -DBUILD_REPO_INFO=$BUILD_REPO_INFO \
- -DCMAKE_ASM_COMPILER_AR=/usr/bin/ar \
- -DCMAKE_ASM_COMPILER_RANLIB=/usr/bin/ranlib \
- -DCMAKE_C_COMPILER_AR=/usr/bin/ar \
- -DCMAKE_C_COMPILER_RANLIB=/usr/bin/ranlib \
- -DCMAKE_CXX_COMPILER_AR=/usr/bin/ar \
- -DCMAKE_CXX_COMPILER_RANLIB=/usr/bin/ranlib
+ -DBUILD_REPO_INFO=$BUILD_REPO_INFO
+# -DCMAKE_ASM_COMPILER_AR=/usr/bin/ar \
+# -DCMAKE_ASM_COMPILER_RANLIB=/usr/bin/ranlib \
+# -DCMAKE_C_COMPILER_AR=/usr/bin/ar \
+# -DCMAKE_C_COMPILER_RANLIB=/usr/bin/ranlib \
+# -DCMAKE_CXX_COMPILER_AR=/usr/bin/ar \
+# -DCMAKE_CXX_COMPILER_RANLIB=/usr/bin/ranlib
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector -fuse-ld=lld" \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
 else
   set -g FULLARGS $FULLARGS \
     -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector -fuse-ld=lld " \
