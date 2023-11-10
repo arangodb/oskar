@@ -1,18 +1,9 @@
 # Building the Alpaquita build image
 
 Alpaquita is missing some apk packages which we need.
-These can be built on Alpaquita with abuild, but this process is not
-yet automatized. For now, you need the folder `apk` in this directory
-with these packages. We do not want to commit these to the oskar
-repository. Therefore, you need to download an archive with the
-needed packages from here:
 
-    https://e.pcloud.link/publink/show?code=XZFnGsZuAQrStCMMHhBrCLEA1RS2VWzUUBk
+This Dockerfile will simply grab them from the Alpine 3.18 repositories.
 
-Open this in a browser and you get a file named `apk_for_alpaquita.tar.gz`.
-Extract this file in this directory and then the following Docker build
-command will work:
+To build this image, just do:
 
     docker build -t arangodb/alpaquitabuildimage1-x86_64:1 .
-
-should work.
