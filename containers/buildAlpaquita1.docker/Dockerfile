@@ -8,7 +8,7 @@ COPY ./scripts /scripts
 
 RUN /scripts/install-alpine318-repository.sh
 
-RUN apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev file libltdl zlib-dev curl coreutils texinfo gcovr py-setuptools valgrind libtool nodejs npm py3-psutil && apk add g++ prometheus bash liburing-dev clang clang16 clang16static clang16-dev clang16-analyzer lld
+RUN apk add groff bison flex make cmake ccache python3 git linux-headers vim boost-dev ctags mandoc gdb fish openssh db-dev file libltdl zlib-dev curl coreutils texinfo gcovr py-setuptools valgrind libtool nodejs npm py3-psutil && apk add g++ prometheus bash liburing-dev clang clang16 clang16-static clang16-dev clang16-analyzer lld
 
 RUN apk add py3-pip && pip3 install PyYAML --break-system-packages && apk del py3-pip
 
