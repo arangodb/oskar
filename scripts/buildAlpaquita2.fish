@@ -62,7 +62,7 @@ if test "$BUILD_SEPP" = "On"
 end
 
 if test "$SAN" = "On"
-  echo "SAN is not support in this environment"
+  echo "SAN is not supported in this environment"
   exit 1
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
