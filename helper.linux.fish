@@ -49,9 +49,9 @@ set -gx ALPINEBUILDIMAGE7_NAME arangodb/alpinebuildarangodb7-$ARCH
 set -gx ALPINEBUILDIMAGE7_TAG 4
 set -gx ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:$ALPINEBUILDIMAGE7_TAG
 
-set -gx ALPAQUITABUILDIMAGE1_NAME arangodb/alpaquitabuildimage1-$ARCH
-set -gx ALPAQUITABUILDIMAGE1_TAG 1
-set -gx ALPAQUITABUILDIMAGE1 $ALPAQUITABUILDIMAGE1_NAME:$ALPAQUITABUILDIMAGE1_TAG
+set -gx ALPINEPERFBUILDIMAGE1_NAME arangodb/alpineperfbuildarangodb1-$ARCH
+set -gx ALPINEPERFBUILDIMAGE1_TAG 1
+set -gx ALPINEPERFBUILDIMAGE1 $ALPINEPERFBUILDIMAGE1_NAME:$ALPINEPERFBUILDIMAGE1_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
@@ -103,9 +103,6 @@ function compiler
       set -gx COMPILER_VERSION $cversion
 
     case 12.2.1_git20220924-r4
-      set -gx COMPILER_VERSION $cversion
-
-    case 13.2.1_git20231014
       set -gx COMPILER_VERSION $cversion
 
     case clang16.0.6
@@ -188,11 +185,8 @@ function findStaticBuildImage
       case 12.2.1_git20220924-r4
         echo $ALPINEBUILDIMAGE7
 
-      case 13.2.1_git20231014
-        echo $ALPAQUITABUILDIMAGE1
-
       case clang16.0.6
-        echo $ALPAQUITABUILDIMAGE1
+        echo $ALPINEPERFBUILDIMAGE1
 
       case '*'
         echo "unknown compiler version $version"
@@ -244,11 +238,8 @@ function findStaticBuildScript
       case 12.2.1_git20220924-r4
         echo buildAlpine7.fish
 
-      case 13.2.1_git20231014
-        echo buildAlpaquita1.fish
-
       case clang16.0.6
-        echo buildAlpaquita2.fish
+        echo buildAlpinePerf1.fish
 
       case '*'
         echo "unknown compiler version $version"
