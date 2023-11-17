@@ -1456,7 +1456,7 @@ function buildDockerLocal
   popd
 
   pushd $containerpath
-  and eval "docker build --pull ."
+  and eval "docker build --pull . 2>&1"
   or begin ; popd ; return 1 ; end
   popd
 end
