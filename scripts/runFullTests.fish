@@ -101,7 +101,7 @@ switch $TESTSUITE
     set suiteRunner "launchClusterTests"
   case "single_cluster"
     resetLaunch 4
-    set -xg timeLimit 25200
+    set -xg timeLimit 30000
     set suiteRunner "launchSingleClusterTests"
   case "single"
     resetLaunch 1
@@ -139,10 +139,6 @@ if test "$SAN" = "On"
       echo Unknown SAN mode $SAN_MODE
       set -g result BAD
       exit 1
-  end
-else
-  if test "$COVERAGE" = "On"
-    set timeLimit (math $timeLimit \* 2)
   end
 end
 
