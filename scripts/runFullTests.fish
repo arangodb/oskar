@@ -140,6 +140,10 @@ if test "$SAN" = "On"
       set -g result BAD
       exit 1
   end
+else
+  if test "$COVERAGE" = "On"
+    set timeLimit (math $timeLimit \* 2)
+  end
 end
 
 eval "$suiteRunner"
