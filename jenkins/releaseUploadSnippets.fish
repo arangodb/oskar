@@ -44,8 +44,20 @@ function upload
   end
 end
 
+function uploadMeta
+  cd /mnt/buildfiles/stage2
+  and if test "$RELEASE_IS_HEAD" = "true"
+        echo "Skipping COMMUNITY meta.json"
+      else
+        echo "Copying COMMUNITY meta.json"
+        and gsutil rsync -c -r $ARANGODB_PACKAGES/snippets/Community/meta.json gs://download.arangodb.com/meta-community.json
+      end
+  and gsutil rsync -c -r $ARANGODB_PACKAGES/snippets/Enterprise/meta.json gs://download.arangodb.com/meta-enterprise-$ARANGODB_PACKAGES.json
+end
+
 # there might be internet hickups
-upload
+# upload
+uploadMeta
 
 set -l s $status
 unlockDirectory
