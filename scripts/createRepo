@@ -175,7 +175,7 @@ create_repo_deb(){
 
     #sign release
     echo "sign release"
-        gpg2 --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
+    gpg2 --homedir /root/.gnupg-old --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
          --passphrase-fd 0 --yes -abs -u "$KEYNAME" \
          -o Release.gpg Release <<<"arangodb" || ferr "failed to sign Release"
 
@@ -213,9 +213,14 @@ create_repo_rpm(){
     echo
 
     ensure createrepo --update --verbose "$repo" || ferr "failed to create repo"
-    gpg2 --no-permission-warning --armor --export info@arangodb.com  > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
+
+    gpg2 --homedir /root/.gnupg-old --no-permission-warning --armor --export info@arangodb.com  > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
     rm -fr "$repo/repodata/repomd.xml.asc" || ferr "failed to delete old signature"
-    gpg2 --no-permission-warning -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
+    gpg2 --homedir /root/.gnupg-old --no-permission-warning -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
+
+    gpg2 --no-permission-warning --armor --export admin@arangodb.com  > "$repo/repodata/repomd256.xml.key" || ferr "failed to export repomd256.xml.key"
+    rm -fr "$repo/repodata/repomd256.xml.asc" || ferr "failed to delete old signature 256"
+    gpg2 --no-permission-warning -a --detach-sign "$repo/repodata/repomd256.xml" || ferr "failed to export repomd256.xml"
 
     cat <<EOF > "${repo}/arangodb.repo"
 [arangodb]
@@ -224,6 +229,7 @@ type=rpm-md
 baseurl=$url
 gpgcheck=1
 gpgkey=$url/repodata/repomd.xml.key
+       $url/repodata/repomd256.xml.key
 enabled=1
 EOF
 
