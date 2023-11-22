@@ -95,7 +95,7 @@ and begin
         echo ","
       end
       echo \"serial\": \"(date +%s)\" "}"
-    end | jq . > $SP_SNIPPETS_EN/meta.json
+    end | jq . > $SP_SNIPPETS_CO/meta.json
 
 and echo "========== CREATE META-DATA ENTERPRISE =========="
 and begin
