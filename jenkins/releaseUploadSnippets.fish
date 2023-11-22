@@ -50,9 +50,9 @@ function uploadMeta
         echo "Skipping COMMUNITY meta.json"
       else
         echo "Copying COMMUNITY meta.json"
-        and gsutil rsync -c -r $ARANGODB_PACKAGES/snippets/Community/meta.json gs://download.arangodb.com/meta-community.json
+        and gsutil cp $ARANGODB_PACKAGES/snippets/Community/meta.json gs://download.arangodb.com/meta-community.json
       end
-  and gsutil rsync -c -r $ARANGODB_PACKAGES/snippets/Enterprise/meta.json gs://download.arangodb.com/meta-enterprise-$ARANGODB_PACKAGES.json
+  and gsutil cp $ARANGODB_PACKAGES/snippets/Enterprise/meta.json gs://download.arangodb.com/meta-enterprise-$ARANGODB_PACKAGES.json
 end
 
 # there might be internet hickups
