@@ -157,7 +157,7 @@ function findBuildImage
       case 11.2.1_git20220219-r2
         echo $UBUNTUBUILDIMAGE6
 
-      case 12.2.1_git20220924-r4
+      case clang16.0.6
         echo $UBUNTUBUILDIMAGE7
 
       case '*'
@@ -182,7 +182,7 @@ function findStaticBuildImage
       case 11.2.1_git20220219-r2
         echo $ALPINEBUILDIMAGE6
 
-      case 12.2.1_git20220924-r4
+      case clang16.0.6
         echo $ALPINEBUILDIMAGE7
 
       case clang16.0.6
@@ -210,7 +210,7 @@ function findBuildScript
       case 11.2.1_git20220219-r2
         echo buildArangoDB6.fish
 
-      case 12.2.1_git20220924-r4
+      case clang16.0.6
         echo buildArangoDB7.fish
 
       case '*'
@@ -235,7 +235,7 @@ function findStaticBuildScript
       case 11.2.1_git20220219-r2
         echo buildAlpine6.fish
 
-      case 12.2.1_git20220924-r4
+      case clang16.0.6
         echo buildAlpine7.fish
 
       case clang16.0.6
@@ -262,10 +262,14 @@ function findRequiredCompiler
   #  return 0
   #end
 
-  set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  set -l v (fgrep CLANG_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
   if test "$v" = ""
-    echo "$f: no GCC_LINUX specified, using 9.3.0-r2"
+    set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  end
+
+  if test "$v" = ""
+    echo "$f: no CLANG_LINUX or GCC_LINUX specified, using g++ 9.3.0-r2"
     compiler 9.3.0-r2
   else
     echo "Using compiler '$v' from '$f'"

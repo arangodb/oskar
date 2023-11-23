@@ -20,6 +20,8 @@ cd /tmp
 curl -O https://www.openssl.org/source/${OLD}openssl-$OPENSSLVERSION.tar.gz
 tar xzvf openssl-$OPENSSLVERSION.tar.gz
 cd openssl-$OPENSSLVERSION
+export CC=clang-16
+export CXX=clang++-16
 ./config --prefix=/opt/openssl-$OPENSSLPATH no-async no-shared
 make build_libs
 make install_dev

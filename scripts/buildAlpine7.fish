@@ -1,4 +1,6 @@
 #!/usr/bin/env fish
+# This is for clang16.0.6 builds on Alpaquita linux
+
 source ./scripts/lib/build.fish
 
 if test "$PARALLELISM" = ""
@@ -7,26 +9,24 @@ end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-  set -xg COMPILER_VERSION 12.2.1
+  set -xg COMPILER_VERSION clang16.0.6
 end
 echo "Using compiler version $COMPILER_VERSION"
 
-if test "$COMPILER_VERSION" = "12.2.1"
-  set -xg CC_NAME gcc
-  set -xg CXX_NAME g++
+if test "$COMPILER_VERSION" = "clang16.0.6"
+  set -xg CC_NAME clang
+  set -xg CXX_NAME clang++
 else
   set -xg CC_NAME gcc-$COMPILER_VERSION
   set -xg CXX_NAME g++-$COMPILER_VERSION
 end
 
 if test "$OPENSSL_VERSION" = ""
-  set -xg OPENSSL_VERSION 3.0
+  set -xg OPENSSL_VERSION 3.1
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
 set -l pie ""
-#set -l pie "-fpic -fPIC -fpie -fPIE -static-pie"
-set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
@@ -41,10 +41,12 @@ set -g FULLARGS $argv \
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector -fuse-ld=lld" \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector -fuse-ld=lld " \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
 end
@@ -54,7 +56,7 @@ if test "$BUILD_SEPP" = "On"
 end
 
 if test "$SAN" = "On"
-  echo "SAN is not support in this environment"
+  echo "SAN is not supported in this environment"
   exit 1
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
