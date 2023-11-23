@@ -845,8 +845,7 @@ function buildTarGzPackageHelper
   if test "$s" -eq 0
     rm -rf "$name-client-$os-$v$arch"
     and cp -a "$name-$v$arch" "$name-client-$os-$v$arch"
-    and mv "$name-client-$os-$v$arch/bin/README" "$name-client-$os-$v$arch/README"
-    and cp bin/README.$os.client ./README
+    and cp "$name-client-$os-$v$arch/bin/README.$os.client" "$name-client-$os-$v$arch/README"
     and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
     and rm -rf "$name-client-$os-$v$arch/README.bak"
     and tar czvf "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" \
