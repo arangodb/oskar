@@ -822,7 +822,7 @@ function buildTarGzPackageHelper
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
-  and cp bin/README ./README
+  and cp bin/README.$os.server ./README
   and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
   and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
@@ -835,7 +835,7 @@ function buildTarGzPackageHelper
   if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10; and test "$PLATFORM" = "darwin"; or test "$PLATFORM" = "linux"
     rm -rf "$name-$os-$v$arch"
     and cp -a "$name-$v$arch" "$name-$os-$v$arch"
-    and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README" --exclude "var" "$name-$os-$v$arch"
+    and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README*" --exclude "var" "$name-$os-$v$arch"
     and rm -rf "$name-$os-$v$arch"
   else
     rm -rf "$name-$os-$v$arch" "$WORKDIR/work/$name-$os-$v$arch.tar.gz"
@@ -846,9 +846,11 @@ function buildTarGzPackageHelper
     rm -rf "$name-client-$os-$v$arch"
     and cp -a "$name-$v$arch" "$name-client-$os-$v$arch"
     and mv "$name-client-$os-$v$arch/bin/README" "$name-client-$os-$v$arch/README"
+    and cp bin/README.$os.client ./README
     and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
     and rm -rf "$name-client-$os-$v$arch/README.bak"
     and tar czvf "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" \
+      --exclude "bin/README*"
       --exclude "etc" \
       --exclude "var" \
       --exclude "*.initd" \
