@@ -85,6 +85,30 @@ and copySnippet "$SP_SNIPPETS_EN" "download-k8s-enterprise.html" 's/k8s-enterpri
 and copySnippet "$SP_SNIPPETS_EN" "download-windows*-enterprise.html" 's/windows.*-enterprise/windows/'
 and cp $WS_SNIPPETS/meta-*-enterprise*.json $SP_SNIPPETS_EN
 
+and echo "========== CREATE META-DATA COMMUNITY =========="
+and begin
+      echo "{"
+      for file in (ls -1 $SP_SNIPPETS_CO/meta-*json | sort)
+        set key (echo $file | sed -e 's:.*/meta-\(.*\).json:\1:')
+        echo \"$key\":
+        cat $file
+        echo ","
+      end
+      echo \"serial\": \"(date +%s)\" "}"
+    end | jq . > $SP_SNIPPETS_CO/meta.json
+
+and echo "========== CREATE META-DATA ENTERPRISE =========="
+and begin
+      echo "{"
+      for file in (ls -1 $SP_SNIPPETS_EN/meta-*json | sort)
+        set key (echo $file | sed -e 's:.*/meta-\(.*\).json:\1:')
+        echo \"$key\":
+        cat $file
+        echo ","
+      end
+      echo \"serial\": \"(date +%s)\" "}"
+    end | jq . > $SP_SNIPPETS_EN/meta.json
+
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; unlockDirectory
 exit $s
