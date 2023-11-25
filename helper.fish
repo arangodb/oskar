@@ -849,7 +849,7 @@ function buildTarGzPackageHelper
     and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
     and rm -rf "$name-client-$os-$v$arch/README.bak"
     and tar czvf "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" \
-      --exclude "bin/README*"
+      --exclude "bin/README*" \
       --exclude "etc" \
       --exclude "var" \
       --exclude "*.initd" \
