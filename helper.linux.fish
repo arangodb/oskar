@@ -1426,6 +1426,16 @@ end
 
 function buildDockerLocal
   findArangoDBVersion ; or return 1
+
+  set -l imagename $argv[1]
+  if test "$imagename" = ""
+    set -l edition "arangodb"
+    if test "$ENTERPRISEEDITION" = "On"
+      set edition "enterprise"
+    end
+    set imagename "arangodb/$edition-local:"(date +%Y%m%d%H%M%S)
+  end
+
   set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
   pushd $WORKDIR/work/ArangoDB/build/install
 
@@ -1444,7 +1454,8 @@ function buildDockerLocal
   popd
 
   pushd $containerpath
-  and eval "docker build --pull . 2>&1"
+  set -l tag (date +%Y%m%d%H%M%S)
+  and eval "docker build -t $imagename --pull . 2>&1"
   or begin ; popd ; return 1 ; end
   popd
 end

@@ -32,16 +32,14 @@ and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter
-and if test (string match -r '[0-9]+' (docker version --format '{{.Server.Version}}')) -ge 20 
-      buildDockerLocal | tee ./buildDocker.log; and grep -oP "^.*writing image.*:\K[a-h0-9]*(?=.*done)" ./buildDocker.log >> $WORKSPACE/imagenames.log
-    else
-      buildDockerLocal | tee ./buildDocker.log; and grep -oP "Successfully built \K[0-9a-f]*" ./buildDocker.log >> $WORKSPACE/imagenames.log
-end
+and set imagename "arangodb/arangodb-local:"(date +%Y%m%d%H%M%S)
+and buildDockerLocal $imagename
 
 if test $status -ne 0
   echo Production of Community image failed, giving up...
   moveResultsToWorkspace; exit 1
 end
+echo $imagename >> $WORKSPACE/imagenames.log
 
 enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
@@ -49,10 +47,12 @@ and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter
 and downloadSyncer
-and buildDockerLocal | tee ./buildDocker.log; and grep -oP "Successfully built \K[0-9a-f]*" ./buildDocker.log >> $WORKSPACE/imagenames.log 
+and set imagename "arangodb/enterprise-local:"(date +%Y%m%d%H%M%S)
+and buildDockerLocal $imagename
 
 if test $status -ne 0
   echo Production of Enterprise image failed, giving up...
   moveResultsToWorkspace; exit 1
 end
+echo $imagename >> $WORKSPACE/imagenames.log
 
