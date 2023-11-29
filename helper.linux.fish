@@ -928,7 +928,9 @@ function buildTarGzServerLinuxTestPackage
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
-  and mv bin/README .
+  and cp bin/README.linux.server ./README
+  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
+  and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v"
   and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
@@ -937,7 +939,7 @@ function buildTarGzServerLinuxTestPackage
 
   rm -rf "$name-linux-$v"
   and ln -s "$name-$v" "$name-linux-$v"
-  and tar -c -z -f "$WORKDIR/work/$name-linux-$v.tar.gz" -h --exclude "etc" --exclude "var" "$name-linux-$v"
+  and tar -c -z -f "$WORKDIR/work/$name-linux-$v.tar.gz" -h --exclude "etc" --exclude "var" --exclude "bin/README*" "$name-linux-$v"
   and rm -rf "$name-linux-$v"
   set s $status
 
