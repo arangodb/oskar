@@ -662,9 +662,7 @@ function signSourcePackage
   pushd $WORKDIR/work
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
-        -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg-old \
-        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
-        -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
+        -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg \
 	(findBuildImage) $SCRIPTSDIR/signFile.fish \
 	/work/ArangoDB-$SOURCE_TAG.tar.gz \
 	/work/ArangoDB-$SOURCE_TAG.tar.bz2 \
