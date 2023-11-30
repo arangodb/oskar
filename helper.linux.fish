@@ -660,6 +660,7 @@ function signSourcePackage
   set -l SOURCE_TAG $argv[1]
 
   pushd $WORKDIR/work
+  and ls -l $WORKSPACE/signing-keys/.gnupg3
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
         -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg \
