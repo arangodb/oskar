@@ -3,7 +3,7 @@ source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear2
 TT_init
-set RTA_EDITION "C,Cr2"
+set -xg RTA_EDITION "C,Cr2"
 
 and eval $EDITION
 and eval $TEST_SUITE
@@ -32,9 +32,9 @@ and downloadAuxBinariesToBuildBin
 and checkoutRTA
 and cd work/release-test-automation/
 if test "$ENTERPRISEEDITION" = "On"
-   set RTA_EDITION "EP,EPr2"
+   set -xg RTA_EDITION "EP,EPr2"
 end
-and bash -x ./jenkins/oskar_tar.sh --edition $RTA_EDITION $argv
+and bash -x ./jenkins/oskar_tar.sh $argv
 
 set -l s $status
 
