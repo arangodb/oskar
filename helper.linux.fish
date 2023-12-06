@@ -31,6 +31,10 @@ set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7-$ARCH
 set -gx UBUNTUBUILDIMAGE7_TAG 4
 set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
 
+set -gx UBUNTUBUILDIMAGE8_NAME neunhoef/ubuntubuildarangodb8-$ARCH
+set -gx UBUNTUBUILDIMAGE8_TAG 1
+set -gx UBUNTUBUILDIMAGE8 $UBUNTUBUILDIMAGE8_NAME:$UBUNTUBUILDIMAGE8_TAG
+
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
@@ -104,6 +108,9 @@ function compiler
 
     case 12.2.1_git20220924-r4
       set -gx COMPILER_VERSION $cversion
+
+    case 13.2.0
+      set -xg COMPILER_VERSION $cversion
 
     case clang16.0.6
       set -gx COMPILER_VERSION $cversion
@@ -182,11 +189,11 @@ function findStaticBuildImage
       case 11.2.1_git20220219-r2
         echo $ALPINEBUILDIMAGE6
 
-      case clang16.0.6
-        echo $ALPINEBUILDIMAGE7
+      case 13.2.0
+        echo $UBUNTUBUILDIMAGE8
 
       case clang16.0.6
-        echo $ALPINEPERFBUILDIMAGE1
+        echo $UBUNTUBUILDIMAGE8
 
       case '*'
         echo "unknown compiler version $version"
@@ -210,8 +217,11 @@ function findBuildScript
       case 11.2.1_git20220219-r2
         echo buildArangoDB6.fish
 
+      case 13.2.0
+        echo buildArangoDB8.fish
+
       case clang16.0.6
-        echo buildArangoDB7.fish
+        echo buildArangoDB8.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -235,11 +245,11 @@ function findStaticBuildScript
       case 11.2.1_git20220219-r2
         echo buildAlpine6.fish
 
-      case clang16.0.6
-        echo buildAlpine7.fish
+      case 13.2.0
+        echo buildArangoDB8.fish
 
       case clang16.0.6
-        echo buildAlpinePerf1.fish
+        echo buildArangoDB8.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -265,7 +275,9 @@ function findRequiredCompiler
   set -l v (fgrep CLANG_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
   if test "$v" = ""
-    set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+    set v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  else 
+    set v "clang$v"
   end
 
   if test "$v" = ""
@@ -406,6 +418,7 @@ function buildArangoDB
   and findRequiredOpenSSL
   and findDefaultArchitecture
   and findUseARM
+  and set -xg STATIC_EXECUTABLES Off
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -435,6 +448,7 @@ function buildStaticArangoDB
   and findRequiredOpenSSL
   and findDefaultArchitecture
   and findUseARM
+  and set -xg STATIC_EXECUTABLES On
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -1835,6 +1849,7 @@ function runInContainer
              -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
              -e SKIP_MAKE="$SKIP_MAKE" \
              -e SSH_AUTH_SOCK=/ssh-agent \
+             -e STATIC_EXECUTABLES="$STATIC_EXECUTABLES" \
              -e STORAGEENGINE="$STORAGEENGINE" \
              -e TEST="$TEST" \
              -e TESTSUITE="$TESTSUITE" \
