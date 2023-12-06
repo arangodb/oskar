@@ -25,7 +25,7 @@ if [ "$OPENSSLBRANCH" != "3.1" ]; then
 fi;
 
 export OPENSSLPATH=`echo $OPENSSLVERSION | sed 's/\.[0-9]*$//g'`
-["$ARCH" = "x86_64" -a ${OPENSSLPATH:0:1} = "3"] && X86_64_SUFFIX=64
+[ "$ARCH" = "x86_64" -a ${OPENSSLPATH:0:1} = "3" ] && X86_64_SUFFIX=64
 
 cd /tmp
 curl -O https://www.openssl.org/source/openssl-$OPENSSLVERSION.tar.gz
