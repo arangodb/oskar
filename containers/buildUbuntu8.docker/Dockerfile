@@ -16,6 +16,18 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y libgd3 linux-libc
 COPY --from=glibcdebs /root/debs /debs
 RUN dpkg -i /debs/*.deb
 
+# Now build V8:
+
+FROM ubuntu:23.10 as v81
+
+COPY ./tools/build_v8.sh /tools/build_v8.sh
+RUN /tools/build_v8.sh
+
+FROM v81 as v8
+
+COPY ./tools/install_v8.sh /tools/install_v8.sh
+RUN /tools/install_v8.sh
+
 # Finally, build the actual build image based on the above preparation:
 
 FROM prepare
@@ -41,6 +53,11 @@ RUN apt-get update --fix-missing && apt-get install -y build-essential gcc-${COM
 # sccache for cloud compiler cache:
 
 RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.3.1/sccache-v0.3.1-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl
+
+# Fetch V8:
+COPY --from=v8 /opt/lib /opt/lib
+COPY --from=v8 /opt/include /opt/include
+COPY --from=v8 /opt/third_party /opt/third_party
 
 # Build openssl and openldap libraries in specific versions and with static
 # libraries, install with prefix /opt:
