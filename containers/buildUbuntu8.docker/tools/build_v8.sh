@@ -9,6 +9,7 @@ git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 export PATH=/opt/v8/depot_tools:$PATH
 fetch v8
 cd v8
+git checkout 12.1.165
 tools/dev/v8gen.py x64.release.sample
 cat <<EOF > out.gn/x64.release.sample/args.gn
 check_always_on = true
