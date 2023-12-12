@@ -76,6 +76,6 @@ RUN LC_ALL="C" update-ccache-symlinks
 
 RUN git config --global --add safe.directory '*'
 
-RUN apt-get install -y python3-pip && pip3 install py7zr psutil --break-system-packages
+RUN apt-get install -y python3-pip && pip3 install py7zr psutil cppcheck-junit --break-system-packages
 
 CMD [ "/usr/bin/fish" ]
