@@ -31,7 +31,7 @@ set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7-$ARCH
 set -gx UBUNTUBUILDIMAGE7_TAG 4
 set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
 
-set -gx UBUNTUBUILDIMAGE8_NAME arangodb/ubuntubuildarangodb8-$ARCH
+set -gx UBUNTUBUILDIMAGE8_NAME neunhoef/ubuntubuildarangodb8
 set -gx UBUNTUBUILDIMAGE8_TAG 1
 set -gx UBUNTUBUILDIMAGE8 $UBUNTUBUILDIMAGE8_NAME:$UBUNTUBUILDIMAGE8_TAG
 
@@ -164,8 +164,11 @@ function findBuildImage
       case 11.2.1_git20220219-r2
         echo $UBUNTUBUILDIMAGE6
 
+      case 13.2.0
+        echo $UBUNTUBUILDIMAGE8
+
       case clang16.0.6
-        echo $UBUNTUBUILDIMAGE7
+        echo $UBUNTUBUILDIMAGE8
 
       case '*'
         echo "unknown compiler version $version"

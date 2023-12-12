@@ -1,4 +1,4 @@
-IMAGE = arangodb/ubuntubuildarangodb8
+IMAGE = neunhoef/ubuntubuildarangodb8
 TAG = 1
 
 all: amd64 manifest
