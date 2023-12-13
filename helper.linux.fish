@@ -24,11 +24,11 @@ set -gx UBUNTUBUILDIMAGE5_TAG 17
 set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
 
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
-set -gx UBUNTUBUILDIMAGE6_TAG 12
+set -gx UBUNTUBUILDIMAGE6_TAG 13
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
 set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7-$ARCH
-set -gx UBUNTUBUILDIMAGE7_TAG 4
+set -gx UBUNTUBUILDIMAGE7_TAG 5
 set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
 
 set -gx UBUNTUBUILDIMAGE8_NAME neunhoef/ubuntubuildarangodb8
@@ -46,11 +46,11 @@ set -gx ALPINEBUILDIMAGE5_TAG 16
 set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
 
 set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
-set -gx ALPINEBUILDIMAGE6_TAG 11
+set -gx ALPINEBUILDIMAGE6_TAG 12
 set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
 
 set -gx ALPINEBUILDIMAGE7_NAME arangodb/alpinebuildarangodb7-$ARCH
-set -gx ALPINEBUILDIMAGE7_TAG 4
+set -gx ALPINEBUILDIMAGE7_TAG 5
 set -gx ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:$ALPINEBUILDIMAGE7_TAG
 
 set -gx ALPINEPERFBUILDIMAGE1_NAME arangodb/alpineperfbuildimage1-$ARCH
@@ -694,11 +694,10 @@ function signSourcePackage
   set -l SOURCE_TAG $argv[1]
 
   pushd $WORKDIR/work
+  and ls -l $WORKSPACE/signing-keys/.gnupg3
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
-        -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg-old \
-        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
-        -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
+        -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg \
 	(findBuildImage) $SCRIPTSDIR/signFile.fish \
 	/work/ArangoDB-$SOURCE_TAG.tar.gz \
 	/work/ArangoDB-$SOURCE_TAG.tar.bz2 \
@@ -962,7 +961,9 @@ function buildTarGzServerLinuxTestPackage
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
-  and mv bin/README .
+  and cp bin/README.linux.server ./README
+  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
+  and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v"
   and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
@@ -971,7 +972,7 @@ function buildTarGzServerLinuxTestPackage
 
   rm -rf "$name-linux-$v"
   and ln -s "$name-$v" "$name-linux-$v"
-  and tar -c -z -f "$WORKDIR/work/$name-linux-$v.tar.gz" -h --exclude "etc" --exclude "var" "$name-linux-$v"
+  and tar -c -z -f "$WORKDIR/work/$name-linux-$v.tar.gz" -h --exclude "etc" --exclude "var" --exclude "bin/README*" "$name-linux-$v"
   and rm -rf "$name-linux-$v"
   set s $status
 
@@ -1460,6 +1461,16 @@ end
 
 function buildDockerLocal
   findArangoDBVersion ; or return 1
+
+  set -l imagename $argv[1]
+  if test "$imagename" = ""
+    set -l edition "arangodb"
+    if test "$ENTERPRISEEDITION" = "On"
+      set edition "enterprise"
+    end
+    set imagename "arangodb/$edition-local:"(date +%Y%m%d%H%M%S)
+  end
+
   set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
   pushd $WORKDIR/work/ArangoDB/build/install
 
@@ -1478,7 +1489,8 @@ function buildDockerLocal
   popd
 
   pushd $containerpath
-  and eval "docker build --pull . 2>&1"
+  set -l tag (date +%Y%m%d%H%M%S)
+  and eval "docker build -t $imagename --pull . 2>&1"
   or begin ; popd ; return 1 ; end
   popd
 end

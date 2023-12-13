@@ -268,7 +268,7 @@ def main():
 
     print('create a symlink into the jemalloc source:')
     jmdir = sourcedir / '3rdParty' / 'jemalloc' / 'jemalloc' / 'include'
-    if not jmdir.existst():
+    if not jmdir.exists():
         jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
     (sourcedir / 'include').symlink_to(jmdir)
 
