@@ -12,14 +12,16 @@ cd v8
 git checkout 12.1.165
 tools/dev/v8gen.py x64.release.sample
 cat <<EOF > out.gn/x64.release.sample/args.gn
-check_always_on = true
+dcheck_always_on = true
 is_component_build = false
 is_debug = false
 target_cpu = "x64"
 use_custom_libcxx = false
 v8_monolithic = true
 v8_use_external_startup_data = false
-v8_enable_v8checks = true
+v8_enable_v8_checks = true
+v8_optimized_debug = true
+v8_enable_webassembly = false
 EOF
 gn gen out.gn/x64.release.sample
 ninja -C out.gn/x64.release.sample v8_monolith
