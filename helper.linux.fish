@@ -1568,9 +1568,9 @@ function buildUbuntuBuildImage7
   and cd $WORKDIR/containers/buildUbuntu7.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 -f ./Dockerfile"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 -f ./Dockerfile ."
         case "aarch64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 -f ./Dockerfile.arm64"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 -f ./Dockerfile.arm64 ."
         case '*'
           echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE7"
           exit 1
