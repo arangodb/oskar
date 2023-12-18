@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Set links for GCC
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${COMPILER_VERSION} 10 \
@@ -25,12 +25,14 @@ if [ "$OPENSSLBRANCH" != "3.1" ]; then
 fi;
 
 export OPENSSLPATH=`echo $OPENSSLVERSION | sed 's/\.[0-9]*$//g'`
+[ "$ARCH" = "x86_64" -a ${OPENSSLPATH:0:1} = "3" ] && X86_64_SUFFIX=64
+
 cd /tmp
 curl -O https://www.openssl.org/source/openssl-$OPENSSLVERSION.tar.gz
 tar xzf openssl-$OPENSSLVERSION.tar.gz
 cd openssl-$OPENSSLVERSION
-./config --prefix=/opt/openssl-$OPENSSLPATH no-async no-dso
-make
+./config --prefix=/opt no-async no-dso
+make -j64
 make install_dev
 cd /tmp
 rm -rf openssl-$OPENSSLVERSION.tar.gz openssl-$OPENSSLVERSION
@@ -41,9 +43,9 @@ cd /tmp
 curl -O ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-$OPENLDAPVERSION.tgz
 tar xzf openldap-$OPENLDAPVERSION.tgz
 cd openldap-$OPENLDAPVERSION
-CPPFLAGS=-I/opt/openssl-$OPENSSLPATH/include \
-LDFLAGS=-L/opt/openssl-$OPENSSLPATH/lib64 \
-./configure -prefix=/opt/openssl-$OPENSSLPATH --enable-static
+CPPFLAGS=-I/opt/include \
+LDFLAGS="-L/opt/lib$X86_64_SUFFIX" \
+./configure -prefix=/opt --enable-static
 make depend && make -j64
 make install
 cd /tmp

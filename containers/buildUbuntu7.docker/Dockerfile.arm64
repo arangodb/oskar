@@ -20,13 +20,13 @@ RUN dpkg -i /debs/*.deb
 
 FROM ubuntu:23.10 as v81
 
-COPY ./tools/build_v8.sh /tools/build_v8.sh
-RUN /tools/build_v8.sh
+COPY ./tools/build_v8_arm64.sh /tools/build_v8_arm64.sh
+RUN /tools/build_v8_arm64.sh
 
 FROM v81 as v8
 
-COPY ./tools/install_v8.sh /tools/install_v8.sh
-RUN /tools/install_v8.sh
+COPY ./tools/install_v8_arm64.sh /tools/install_v8_arm64.sh
+RUN /tools/install_v8_arm64.sh
 
 # Finally, build the actual build image based on the above preparation:
 
@@ -34,7 +34,7 @@ FROM prepare
 
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
-ARG ARCH="x86_64"
+ARG ARCH="aarch64"
 
 # We provide gcc 13.2.0 as well as clang 16.0.6 from Ubunutu 23.10
 
