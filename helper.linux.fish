@@ -32,6 +32,7 @@ set -gx UBUNTUBUILDIMAGE7_TAG 6
 set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
+set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
 
 set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
 set -gx ALPINEBUILDIMAGE4_TAG 24
@@ -275,7 +276,7 @@ function findRequiredCompiler
 
   if test "$v" = ""
     set v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
-  else 
+  else
     set v "clang$v"
   end
 
@@ -690,7 +691,6 @@ function signSourcePackage
   set -l SOURCE_TAG $argv[1]
 
   pushd $WORKDIR/work
-  and ls -l $WORKSPACE/signing-keys/.gnupg3
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
         -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg \
@@ -1389,7 +1389,6 @@ function buildDockerImage
   findArangoDBVersion ; or return 1
   set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
-  echo ContainerPath: "$containerpath"
 
   if not test -d $containerpath
     set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
@@ -1500,13 +1499,14 @@ function createRepositories
   findArangoDBVersion
 
   pushd $WORKDIR
-  runInContainer \
+  and runInContainer \
       -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
+      -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg-old \
       -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
       -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
       -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
       -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
-      $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/createAll
+      -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1592,6 +1592,20 @@ end
 function pushUbuntuPackagingImage ; docker push $UBUNTUPACKAGINGIMAGE ; end
 
 function pullUbuntuPackagingImage ; docker pull $UBUNTUPACKAGINGIMAGE ; end
+
+function buildUbuntuPackagingImage2
+  pushd $WORKDIR
+  and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging2.docker/scripts
+  and cd $WORKDIR/containers/buildUbuntuPackaging2.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUPACKAGINGIMAGE2 ."
+  and rm -f $WORKDIR/containers/buildUbuntuPackaging2.docker/scripts/*.fish
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushUbuntuPackagingImage2 ; docker push $UBUNTUPACKAGINGIMAGE2 ; end
+
+function pullUbuntuPackagingImage2 ; docker pull $UBUNTUPACKAGINGIMAGE2 ; end
 
 function buildAlpineBuildImage4
   pushd $WORKDIR
@@ -2139,6 +2153,7 @@ function updateOskar
   and pullAlpineBuildImage7
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
+  and pullUbuntuPackagingImage2
   and pullCentosPackagingImage
   and pullCppcheckImage
   and pullLdapImage
