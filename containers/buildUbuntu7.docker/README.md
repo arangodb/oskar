@@ -12,7 +12,19 @@ which have the option to use an external v8 engine.
 Simply run
 
 ```
-docker build -t arangodb/ubuntubuildarangodb8-x86_64:1 .
+make amd64
 ```
 
-Note that this currently only works on the x86_64 architecture.
+on an `x86_64` machine and then
+
+```
+make arm64
+```
+
+on an `arm64` machine and then finally do
+
+```
+make manifest
+```
+
+and follow the instructions on the screen to push the manifest.
