@@ -27,13 +27,9 @@ set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
 set -gx UBUNTUBUILDIMAGE6_TAG 13
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
-set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7-$ARCH
-set -gx UBUNTUBUILDIMAGE7_TAG 5
+set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7
+set -gx UBUNTUBUILDIMAGE7_TAG 6
 set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
-
-set -gx UBUNTUBUILDIMAGE8_NAME neunhoef/ubuntubuildarangodb8
-set -gx UBUNTUBUILDIMAGE8_TAG 1
-set -gx UBUNTUBUILDIMAGE8 $UBUNTUBUILDIMAGE8_NAME:$UBUNTUBUILDIMAGE8_TAG
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 
@@ -165,10 +161,10 @@ function findBuildImage
         echo $UBUNTUBUILDIMAGE6
 
       case 13.2.0
-        echo $UBUNTUBUILDIMAGE8
+        echo $UBUNTUBUILDIMAGE7
 
       case clang16.0.6
-        echo $UBUNTUBUILDIMAGE8
+        echo $UBUNTUBUILDIMAGE7
 
       case '*'
         echo "unknown compiler version $version"
@@ -193,10 +189,10 @@ function findStaticBuildImage
         echo $ALPINEBUILDIMAGE6
 
       case 13.2.0
-        echo $UBUNTUBUILDIMAGE8
+        echo $UBUNTUBUILDIMAGE7
 
       case clang16.0.6
-        echo $UBUNTUBUILDIMAGE8
+        echo $UBUNTUBUILDIMAGE7
 
       case '*'
         echo "unknown compiler version $version"
@@ -221,10 +217,10 @@ function findBuildScript
         echo buildArangoDB6.fish
 
       case 13.2.0
-        echo buildArangoDB8.fish
+        echo buildArangoDB7.fish
 
       case clang16.0.6
-        echo buildArangoDB8.fish
+        echo buildArangoDB7.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -249,10 +245,10 @@ function findStaticBuildScript
         echo buildAlpine6.fish
 
       case 13.2.0
-        echo buildArangoDB8.fish
+        echo buildArangoDB7.fish
 
       case clang16.0.6
-        echo buildArangoDB8.fish
+        echo buildArangoDB7.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -1393,6 +1389,7 @@ function buildDockerImage
   findArangoDBVersion ; or return 1
   set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
+  echo ContainerPath: "$containerpath"
 
   if not test -d $containerpath
     set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
