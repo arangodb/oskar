@@ -11,7 +11,7 @@ manifest:
 	./build-manifest.sh ${IMAGE} ${TAG}
 
 arm64:
-	docker build -t ${IMAGE}-arm64:${TAG} -f Dockerfile.arm64 .
-	docker push ${IMAGE}-arm64:${TAG}
+	docker build -t ${IMAGE}-aarch64:${TAG} -f Dockerfile.arm64 .
+	docker push ${IMAGE}-aarch64:${TAG}
 
 
