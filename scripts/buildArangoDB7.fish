@@ -18,11 +18,11 @@ end
 echo "Using compiler version $COMPILER_VERSION"
 
 if test "$COMPILER_VERSION" = "clang16.0.6"
-  set -xg CC_NAME clang-16
-  set -xg CXX_NAME clang++-16
+  set -xg CC_NAME clang
+  set -xg CXX_NAME clang++
 else if test "$COMPILER_VERSION" = "13.2.0"
-  set -xg CC_NAME gcc-13
-  set -xg CXX_NAME g++-13
+  set -xg CC_NAME gcc
+  set -xg CXX_NAME g++
 else
   set -xg CC_NAME gcc-$COMPILER_VERSION
   set -xg CXX_NAME g++-$COMPILER_VERSION
