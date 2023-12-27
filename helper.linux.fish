@@ -1580,9 +1580,9 @@ function buildUbuntuBuildImageDevel
 end
 
 function pushUbuntuBuildImageDevel
-  docker tag $UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:latest
+  docker tag $UBUNATUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:latest-$ARCH
   and docker push $UBUNTUBUILDIMAGE_DEVEL
-  and docker push $UBUNTUBUILDIMAGE_DEVEL_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE_DEVEL_NAME:latest-$ARCH
 end
 
 function pullUbuntuBuildImageDevel ; docker pull $UBUNTUBUILDIMAGE_DEVEL ; end
