@@ -27,9 +27,9 @@ set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
 set -gx UBUNTUBUILDIMAGE6_TAG 13
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
-set -gx UBUNTUBUILDIMAGE-DEVEL_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE-DEVEL_TAG oskar-20231227
-set -gx UBUNTUBUILDIMAGE-DEVEL $UBUNTUBUILDIMAGE-DEVEL_NAME:$UBUNTUBUILDIMAGE-DEVEL_TAG-$ARCH
+set -gx UBUNTUBUILDIMAGE_DEVEL_NAME arangodb/ubuntubuildarangodb-devel
+set -gx UBUNTUBUILDIMAGE_DEVEL_TAG oskar-20231227
+set -gx UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:$UBUNTUBUILDIMAGE_DEVEL_TAG-$ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
@@ -162,10 +162,10 @@ function findBuildImage
         echo $UBUNTUBUILDIMAGE6
 
       case 13.2.0
-        echo $UBUNTUBUILDIMAGE-DEVEL
+        echo $UBUNTUBUILDIMAGE_DEVEL
 
       case clang16.0.6
-        echo $UBUNTUBUILDIMAGE-DEVEL
+        echo $UBUNTUBUILDIMAGE_DEVEL
 
       case '*'
         echo "unknown compiler version $version"
@@ -190,10 +190,10 @@ function findStaticBuildImage
         echo $ALPINEBUILDIMAGE6
 
       case 13.2.0
-        echo $UBUNTUBUILDIMAGE-DEVEL
+        echo $UBUNTUBUILDIMAGE_DEVEL
 
       case clang16.0.6
-        echo $UBUNTUBUILDIMAGE-DEVEL
+        echo $UBUNTUBUILDIMAGE_DEVEL
 
       case '*'
         echo "unknown compiler version $version"
@@ -1568,11 +1568,11 @@ function buildUbuntuBuildImageDevel
   and cd $WORKDIR/containers/buildUbuntuDevel.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE-DEVEL -f ./Dockerfile ."
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_DEVEL -f ./Dockerfile ."
         case "aarch64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE-DEVEL -f ./Dockerfile.arm64 ."
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_DEVEL -f ./Dockerfile.arm64 ."
         case '*'
-          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE-DEVEL"
+          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_DEVEL"
           exit 1
       end
   or begin ; popd ; return 1 ; end
@@ -1580,12 +1580,12 @@ function buildUbuntuBuildImageDevel
 end
 
 function pushUbuntuBuildImageDevel
-  docker tag $UBUNTUBUILDIMAGE-DEVEL $UBUNTUBUILDIMAGE-DEVEL_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE-DEVEL
-  and docker push $UBUNTUBUILDIMAGE-DEVEL_NAME:latest
+  docker tag $UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE_DEVEL
+  and docker push $UBUNTUBUILDIMAGE_DEVEL_NAME:latest
 end
 
-function pullUbuntuBuildImageDevel ; docker pull $UBUNTUBUILDIMAGE-DEVEL ; end
+function pullUbuntuBuildImageDevel ; docker pull $UBUNTUBUILDIMAGE_DEVEL ; end
 
 function buildUbuntuPackagingImage
   pushd $WORKDIR
