@@ -27,9 +27,9 @@ set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
 set -gx UBUNTUBUILDIMAGE6_TAG 13
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
-set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7-$ARCH
-set -gx UBUNTUBUILDIMAGE7_TAG 6
-set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
+set -gx UBUNTUBUILDIMAGE-DEVEL_NAME arangodb/ubuntubuildarangodb-devel
+set -gx UBUNTUBUILDIMAGE-DEVEL_TAG oskar-20231227
+set -gx UBUNTUBUILDIMAGE-DEVEL $UBUNTUBUILDIMAGE-DEVEL_NAME:$UBUNTUBUILDIMAGE-DEVEL_TAG-$ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
@@ -162,10 +162,10 @@ function findBuildImage
         echo $UBUNTUBUILDIMAGE6
 
       case 13.2.0
-        echo $UBUNTUBUILDIMAGE7
+        echo $UBUNTUBUILDIMAGE-DEVEL
 
       case clang16.0.6
-        echo $UBUNTUBUILDIMAGE7
+        echo $UBUNTUBUILDIMAGE-DEVEL
 
       case '*'
         echo "unknown compiler version $version"
@@ -190,10 +190,10 @@ function findStaticBuildImage
         echo $ALPINEBUILDIMAGE6
 
       case 13.2.0
-        echo $UBUNTUBUILDIMAGE7
+        echo $UBUNTUBUILDIMAGE-DEVEL
 
       case clang16.0.6
-        echo $UBUNTUBUILDIMAGE7
+        echo $UBUNTUBUILDIMAGE-DEVEL
 
       case '*'
         echo "unknown compiler version $version"
@@ -1563,29 +1563,29 @@ end
 
 function pullUbuntuBuildImage6 ; docker pull $UBUNTUBUILDIMAGE6 ; end
 
-function buildUbuntuBuildImage7
+function buildUbuntuBuildImageDevel
   pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu7.docker
+  and cd $WORKDIR/containers/buildUbuntuDevel.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 -f ./Dockerfile ."
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE-DEVEL -f ./Dockerfile ."
         case "aarch64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 -f ./Dockerfile.arm64 ."
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE-DEVEL -f ./Dockerfile.arm64 ."
         case '*'
-          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE7"
+          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE-DEVEL"
           exit 1
       end
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushUbuntuBuildImage7
-  docker tag $UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE7
-  and docker push $UBUNTUBUILDIMAGE7_NAME:latest
+function pushUbuntuBuildImageDevel
+  docker tag $UBUNTUBUILDIMAGE-DEVEL $UBUNTUBUILDIMAGE-DEVEL_NAME:latest
+  and docker push $UBUNTUBUILDIMAGE-DEVEL
+  and docker push $UBUNTUBUILDIMAGE-DEVEL_NAME:latest
 end
 
-function pullUbuntuBuildImage7 ; docker pull $UBUNTUBUILDIMAGE7 ; end
+function pullUbuntuBuildImageDevel ; docker pull $UBUNTUBUILDIMAGE-DEVEL ; end
 
 function buildUbuntuPackagingImage
   pushd $WORKDIR
@@ -1749,8 +1749,8 @@ function remakeImages
   pushUbuntuBuildImage5 ; or set -l s 1
   buildUbuntuBuildImage6 ; or set -l s 1
   pushUbuntuBuildImage6 ; or set -l s 1
-  buildUbuntuBuildImage7 ; or set -l s 1
-  pushUbuntuBuildImage7 ; or set -l s 1
+  buildUbuntuBuildImageDevel ; or set -l s 1
+  pushUbuntuBuildImageDevel ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
   buildAlpineBuildImage5 ; or set -l s 1
@@ -1780,8 +1780,8 @@ function remakeBuildImages
   pushUbuntuBuildImage5 ; or set -l s 1
   buildUbuntuBuildImage6 ; or set -l s 1
   pushUbuntuBuildImage6 ; or set -l s 1
-  buildUbuntuBuildImage7 ; or set -l s 1
-  pushUbuntuBuildImage7 ; or set -l s 1
+  buildUbuntuBuildImageDevel ; or set -l s 1
+  pushUbuntuBuildImageDevel ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
   buildAlpineBuildImage5 ; or set -l s 1
@@ -2106,8 +2106,8 @@ function pushOskar
   and buildUbuntuBuildImage6
   and pushUbuntuBuildImage6
 
-  and buildUbuntuBuildImage7
-  and pushUbuntuBuildImage7
+  and buildUbuntuBuildImageDevel
+  and pushUbuntuBuildImageDevel
 
   and buildAlpineBuildImage4
   and pushAlpineBuildImage4
@@ -2154,7 +2154,7 @@ function updateOskar
   and pullUbuntuBuildImage4
   and pullUbuntuBuildImage5
   and pullUbuntuBuildImage6
-  and pullUbuntuBuildImage7
+  and pullUbuntuBuildImageDevel
   and pullAlpineBuildImage4
   and pullAlpineBuildImage5
   and pullAlpineBuildImage6
