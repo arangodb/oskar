@@ -224,10 +224,10 @@ function findBuildScript
         echo buildArangoDB6.fish
 
       case 13.2.0
-        echo buildArangoDevel.fish
+        echo buildArangoDBDevel.fish
 
       case clang16.0.6
-        echo buildArangoDevel.fish
+        echo buildArangoDBDevel.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -252,10 +252,10 @@ function findStaticBuildScript
         echo buildAlpine6.fish
 
       case 13.2.0
-        echo buildArangoDevel.fish
+        echo buildArangoDBDevel.fish
 
       case clang16.0.6
-        echo buildArangoDevel.fish
+        echo buildArangoDBDevel.fish
 
       case '*'
         echo "unknown compiler version $version"
