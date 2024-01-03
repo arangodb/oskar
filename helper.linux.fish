@@ -28,7 +28,7 @@ set -gx UBUNTUBUILDIMAGE6_TAG 13
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
 set -gx UBUNTUBUILDIMAGE_DEVEL_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE_DEVEL_TAG oskar-20231227
+set -gx UBUNTUBUILDIMAGE_DEVEL_TAG 0
 set -gx UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:$UBUNTUBUILDIMAGE_DEVEL_TAG-$ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
@@ -218,10 +218,10 @@ function findBuildScript
         echo buildArangoDB6.fish
 
       case 13.2.0
-        echo buildArangoDB7.fish
+        echo buildArangoDevel.fish
 
       case clang16.0.6
-        echo buildArangoDB7.fish
+        echo buildArangoDevel.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -246,10 +246,10 @@ function findStaticBuildScript
         echo buildAlpine6.fish
 
       case 13.2.0
-        echo buildArangoDB7.fish
+        echo buildArangoDevel.fish
 
       case clang16.0.6
-        echo buildArangoDB7.fish
+        echo buildArangoDevel.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -1568,7 +1568,7 @@ function buildUbuntuBuildImageDevel
   and cd $WORKDIR/containers/buildUbuntuDevel.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_DEVEL -f ./Dockerfile ."
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_DEVEL -f ./Dockerfile.x86-64 ."
         case "aarch64"
           eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_DEVEL -f ./Dockerfile.arm64 ."
         case '*'
