@@ -1940,10 +1940,10 @@ function interactiveContainer
   end
 
   docker run -it --rm --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
-    -v $WORKDIR/work:$INNERWORKDIR \
+    -v $WORKDIR/work/:$INNERWORKDIR \
     -v $SSH_AUTH_SOCK:/ssh-agent \
     -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
-    -v "$WORKDIR/scripts":"/scripts" \
+    -v "$WORKDIR/scripts/":"/scripts" \
     -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
     -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
     -e ARANGODB_REPO="$ARANGODB_REPO" \
@@ -1961,6 +1961,7 @@ function interactiveContainer
     -e COVERAGE="$COVERAGE" \
     -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
     -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
+    -e FORCE_DISABLE_AVX="$FORCE_DISABLE_AVX" \
     -e GID=(id -g) \
     -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
     -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
@@ -1996,6 +1997,7 @@ function interactiveContainer
     -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
     -e SKIP_MAKE="$SKIP_MAKE" \
     -e SSH_AUTH_SOCK=/ssh-agent \
+    -e STATIC_EXECUTABLES="$STATIC_EXECUTABLES" \
     -e STORAGEENGINE="$STORAGEENGINE" \
     -e TEST="$TEST" \
     -e TESTSUITE="$TESTSUITE" \
