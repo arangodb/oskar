@@ -18,7 +18,7 @@ set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 if test "$ARCH" = "aarch64"
   set -xg UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH "arm64v8"
 else
-  set -xg UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH "x86-64"
+  set -xg UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH "x86_64"
 end
 
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
