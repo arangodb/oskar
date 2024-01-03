@@ -15,6 +15,12 @@ set -gx DUMPDEVICE "lo"
 
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
+if test "$ARCH" = "aarch64"
+  set -xg UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH "arm64v8"
+else
+  set -xg UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH "x86_64"
+end
+
 set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
 set -gx UBUNTUBUILDIMAGE4_TAG 21
 set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
@@ -27,9 +33,9 @@ set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
 set -gx UBUNTUBUILDIMAGE6_TAG 13
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
-set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7-$ARCH
-set -gx UBUNTUBUILDIMAGE7_TAG 5
-set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
+set -gx UBUNTUBUILDIMAGE_DEVEL_NAME arangodb/ubuntubuildarangodb-devel
+set -gx UBUNTUBUILDIMAGE_DEVEL_TAG 0
+set -gx UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:$UBUNTUBUILDIMAGE_DEVEL_TAG-$UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
@@ -49,6 +55,10 @@ set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
 set -gx ALPINEBUILDIMAGE7_NAME arangodb/alpinebuildarangodb7-$ARCH
 set -gx ALPINEBUILDIMAGE7_TAG 5
 set -gx ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:$ALPINEBUILDIMAGE7_TAG
+
+set -gx ALPINEPERFBUILDIMAGE1_NAME arangodb/alpineperfbuildimage1-$ARCH
+set -gx ALPINEPERFBUILDIMAGE1_TAG 1
+set -gx ALPINEPERFBUILDIMAGE1 $ALPINEPERFBUILDIMAGE1_NAME:$ALPINEPERFBUILDIMAGE1_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
@@ -102,6 +112,12 @@ function compiler
     case 12.2.1_git20220924-r4
       set -gx COMPILER_VERSION $cversion
 
+    case 13.2.0
+      set -xg COMPILER_VERSION $cversion
+
+    case clang16.0.6
+      set -gx COMPILER_VERSION $cversion
+
     case '*'
       echo "unknown compiler version $cversion"
   end
@@ -151,8 +167,11 @@ function findBuildImage
       case 11.2.1_git20220219-r2
         echo $UBUNTUBUILDIMAGE6
 
-      case 12.2.1_git20220924-r4
-        echo $UBUNTUBUILDIMAGE7
+      case 13.2.0
+        echo $UBUNTUBUILDIMAGE_DEVEL
+
+      case clang16.0.6
+        echo $UBUNTUBUILDIMAGE_DEVEL
 
       case '*'
         echo "unknown compiler version $version"
@@ -176,8 +195,11 @@ function findStaticBuildImage
       case 11.2.1_git20220219-r2
         echo $ALPINEBUILDIMAGE6
 
-      case 12.2.1_git20220924-r4
-        echo $ALPINEBUILDIMAGE7
+      case 13.2.0
+        echo $UBUNTUBUILDIMAGE_DEVEL
+
+      case clang16.0.6
+        echo $UBUNTUBUILDIMAGE_DEVEL
 
       case '*'
         echo "unknown compiler version $version"
@@ -201,8 +223,11 @@ function findBuildScript
       case 11.2.1_git20220219-r2
         echo buildArangoDB6.fish
 
-      case 12.2.1_git20220924-r4
-        echo buildArangoDB7.fish
+      case 13.2.0
+        echo buildArangoDBDevel.fish
+
+      case clang16.0.6
+        echo buildArangoDBDevel.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -226,8 +251,11 @@ function findStaticBuildScript
       case 11.2.1_git20220219-r2
         echo buildAlpine6.fish
 
-      case 12.2.1_git20220924-r4
-        echo buildAlpine7.fish
+      case 13.2.0
+        echo buildArangoDBDevel.fish
+
+      case clang16.0.6
+        echo buildArangoDBDevel.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -250,10 +278,16 @@ function findRequiredCompiler
   #  return 0
   #end
 
-  set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  set -l v (fgrep CLANG_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
   if test "$v" = ""
-    echo "$f: no GCC_LINUX specified, using 9.3.0-r2"
+    set v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  else
+    set v "clang$v"
+  end
+
+  if test "$v" = ""
+    echo "$f: no CLANG_LINUX or GCC_LINUX specified, using g++ 9.3.0-r2"
     compiler 9.3.0-r2
   else
     echo "Using compiler '$v' from '$f'"
@@ -390,6 +424,7 @@ function buildArangoDB
   and findRequiredOpenSSL
   and findDefaultArchitecture
   and findUseARM
+  and set -xg STATIC_EXECUTABLES Off
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -419,6 +454,7 @@ function buildStaticArangoDB
   and findRequiredOpenSSL
   and findDefaultArchitecture
   and findUseARM
+  and set -xg STATIC_EXECUTABLES On
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
   set -l s $status
   if test $s -ne 0
@@ -1533,21 +1569,29 @@ end
 
 function pullUbuntuBuildImage6 ; docker pull $UBUNTUBUILDIMAGE6 ; end
 
-function buildUbuntuBuildImage7
+function buildUbuntuBuildImageDevel
   pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu7.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 ."
+  and cd $WORKDIR/containers/buildUbuntuDevel.docker
+  and switch "$ARCH"
+        case "x86_64"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_DEVEL -f ./Dockerfile.x86-64 ."
+        case "aarch64"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_DEVEL -f ./Dockerfile.arm64 ."
+        case '*'
+          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_DEVEL"
+          exit 1
+      end
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushUbuntuBuildImage7
-  docker tag $UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE7
-  and docker push $UBUNTUBUILDIMAGE7_NAME:latest
+function pushUbuntuBuildImageDevel
+  docker tag $UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:latest-$ARCH
+  and docker push $UBUNTUBUILDIMAGE_DEVEL
+  and docker push $UBUNTUBUILDIMAGE_DEVEL_NAME:latest-$ARCH
 end
 
-function pullUbuntuBuildImage7 ; docker pull $UBUNTUBUILDIMAGE7 ; end
+function pullUbuntuBuildImageDevel ; docker pull $UBUNTUBUILDIMAGE_DEVEL ; end
 
 function buildUbuntuPackagingImage
   pushd $WORKDIR
@@ -1711,8 +1755,8 @@ function remakeImages
   pushUbuntuBuildImage5 ; or set -l s 1
   buildUbuntuBuildImage6 ; or set -l s 1
   pushUbuntuBuildImage6 ; or set -l s 1
-  buildUbuntuBuildImage7 ; or set -l s 1
-  pushUbuntuBuildImage7 ; or set -l s 1
+  buildUbuntuBuildImageDevel ; or set -l s 1
+  pushUbuntuBuildImageDevel ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
   buildAlpineBuildImage5 ; or set -l s 1
@@ -1742,8 +1786,8 @@ function remakeBuildImages
   pushUbuntuBuildImage5 ; or set -l s 1
   buildUbuntuBuildImage6 ; or set -l s 1
   pushUbuntuBuildImage6 ; or set -l s 1
-  buildUbuntuBuildImage7 ; or set -l s 1
-  pushUbuntuBuildImage7 ; or set -l s 1
+  buildUbuntuBuildImageDevel ; or set -l s 1
+  pushUbuntuBuildImageDevel ; or set -l s 1
   buildAlpineBuildImage4 ; or set -l s 1
   pushAlpineBuildImage4 ; or set -l s 1
   buildAlpineBuildImage5 ; or set -l s 1
@@ -1845,6 +1889,7 @@ function runInContainer
              -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
              -e SKIP_MAKE="$SKIP_MAKE" \
              -e SSH_AUTH_SOCK=/ssh-agent \
+             -e STATIC_EXECUTABLES="$STATIC_EXECUTABLES" \
              -e STORAGEENGINE="$STORAGEENGINE" \
              -e TEST="$TEST" \
              -e TESTSUITE="$TESTSUITE" \
@@ -1901,10 +1946,10 @@ function interactiveContainer
   end
 
   docker run -it --rm --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
-    -v $WORKDIR/work:$INNERWORKDIR \
+    -v $WORKDIR/work/:$INNERWORKDIR \
     -v $SSH_AUTH_SOCK:/ssh-agent \
     -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
-    -v "$WORKDIR/scripts":"/scripts" \
+    -v "$WORKDIR/scripts/":"/scripts" \
     -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
     -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
     -e ARANGODB_REPO="$ARANGODB_REPO" \
@@ -1922,6 +1967,7 @@ function interactiveContainer
     -e COVERAGE="$COVERAGE" \
     -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
     -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
+    -e FORCE_DISABLE_AVX="$FORCE_DISABLE_AVX" \
     -e GID=(id -g) \
     -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
     -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
@@ -1957,6 +2003,7 @@ function interactiveContainer
     -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
     -e SKIP_MAKE="$SKIP_MAKE" \
     -e SSH_AUTH_SOCK=/ssh-agent \
+    -e STATIC_EXECUTABLES="$STATIC_EXECUTABLES" \
     -e STORAGEENGINE="$STORAGEENGINE" \
     -e TEST="$TEST" \
     -e TESTSUITE="$TESTSUITE" \
@@ -2067,8 +2114,8 @@ function pushOskar
   and buildUbuntuBuildImage6
   and pushUbuntuBuildImage6
 
-  and buildUbuntuBuildImage7
-  and pushUbuntuBuildImage7
+  and buildUbuntuBuildImageDevel
+  and pushUbuntuBuildImageDevel
 
   and buildAlpineBuildImage4
   and pushAlpineBuildImage4
@@ -2115,7 +2162,7 @@ function updateOskar
   and pullUbuntuBuildImage4
   and pullUbuntuBuildImage5
   and pullUbuntuBuildImage6
-  and pullUbuntuBuildImage7
+  and pullUbuntuBuildImageDevel
   and pullAlpineBuildImage4
   and pullAlpineBuildImage5
   and pullAlpineBuildImage6

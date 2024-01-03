@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+# This is for static gcc13.2.0 and clang16.0.6 builds on Ubuntu
 source ./scripts/lib/build.fish
 
 if test "$PARALLELISM" = ""
@@ -12,11 +13,14 @@ end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-  set -xg COMPILER_VERSION 12.2.1
+  set -xg COMPILER_VERSION clang16.0.6
 end
 echo "Using compiler version $COMPILER_VERSION"
 
-if test "$COMPILER_VERSION" = "12.2.1"
+if test "$COMPILER_VERSION" = "clang16.0.6"
+  set -xg CC_NAME clang
+  set -xg CXX_NAME clang++
+else if test "$COMPILER_VERSION" = "13.2.0"
   set -xg CC_NAME gcc
   set -xg CXX_NAME g++
 else
@@ -25,33 +29,39 @@ else
 end
 
 if test "$OPENSSL_VERSION" = ""
-  set -xg OPENSSL_VERSION 3.0
+  set -xg OPENSSL_VERSION 3.1
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
-[ "$ARCH" = "x86_64" -a "${OPENSSLPATH:0:1}" = "3" ] && X86_64_SUFFIX="64"
+if test "$ARCH" = "x86_64" -a (string sub -s 1 -l 1 "$OPENSSLPATH") = "3" 
+  set -xg X86_64_SUFFIX "64"
+end
 
 set -l pie ""
-#set -l pie "-fpic -fPIC -fpie -fPIE"
-set -l inline "--param inline-min-speedup=5 --param inline-unit-growth=100 --param early-inlining-insns=30"
+
+if test "$STATIC_EXECUTABLES" = ""
+  set -xg STATIC_EXECUTABLES On
+end
 
 set -g FULLARGS $argv \
  -DCMAKE_BUILD_TYPE=$BUILDMODE \
  -DCMAKE_INSTALL_PREFIX=/ \
- -DSTATIC_EXECUTABLES=Off \
+ -DSTATIC_EXECUTABLES=$STATIC_EXECUTABLES \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
- -DCMAKE_LIBRARY_PATH=/opt/openssl-$OPENSSL_VERSION/lib$X86_64_SUFFIX \
- -DOPENSSL_ROOT_DIR=/opt/openssl-$OPENSSL_VERSION \
+ -DCMAKE_LIBRARY_PATH="/opt/lib$X86_64_SUFFIX;/opt/lib" \
+ -DOPENSSL_ROOT_DIR=/opt \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL \
  -DBUILD_REPO_INFO=$BUILD_REPO_INFO
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie -fno-stack-protector"
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie -fno-stack-protector -fuse-ld=lld" \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id $pie $inline -fno-stack-protector" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld " \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
 end
@@ -60,15 +70,9 @@ if test "$BUILD_SEPP" = "On"
   set -g FULLARGS $FULLARGS -DBUILD_SEPP=ON
 end
 
-#if test "$PLATFORM" = "linux"
-#  set -g FULLARGS $FULLARGS \
-#   -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold \
-#   -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold
-#end
-
 if test "$SAN" = "On"
-  set -xg CC_NAME clang
-  set -xg CXX_NAME clang++
+  set -xg CC_NAME clang-16
+  set -xg CXX_NAME clang++-16
   # Suppress leaks detection only during building
   set -gx SAN_OPTIONS "detect_leaks=0"
   set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak -fsanitize-address-use-after-return=never"
