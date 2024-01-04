@@ -84,9 +84,16 @@ if test "$SAN" = "On"
    -DCMAKE_C_FLAGS="-pthread $SANITIZERS -fno-sanitize=alignment" \
    -DCMAKE_CXX_FLAGS="-pthread $SANITIZERS -fno-sanitize=vptr -fno-sanitize=alignment" \
    -DBASE_LIBS="-pthread"
+#else if test "$COVERAGE" = "On"
+#  echo "COVERAGE is not supported in this environment!"
+#  exit 1
 else if test "$COVERAGE" = "On"
-  echo "COVERAGE is not support in this environment!"
-  exit 1
+  echo "Building with Coverage"
+  set -g FULLARGS $FULLARGS \
+    -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
+    -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
+    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
+    -DUSE_COVERAGE=ON
 else
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=$JEMALLOC_OSKAR
