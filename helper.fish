@@ -493,7 +493,7 @@ function oskarCompile
   showRepository
   set -x NOSTRIP 1
   
-  if test "$SAN" = "On"
+  if test "$SAN" = "On"; and test "buildArangoDBDevel.fish" != (findBuildScript)
     buildArangoDB -DUSE_FAILURE_TESTS=On ; or return $status
   else
     buildStaticArangoDB -DUSE_FAILURE_TESTS=On ; or return $status

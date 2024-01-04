@@ -71,8 +71,6 @@ if test "$BUILD_SEPP" = "On"
 end
 
 if test "$SAN" = "On"
-  set -xg CC_NAME clang-16
-  set -xg CXX_NAME clang++-16
   # Suppress leaks detection only during building
   set -gx SAN_OPTIONS "detect_leaks=0"
   set -l SANITIZERS "-fsanitize=address -fsanitize=undefined -fsanitize=float-divide-by-zero -fsanitize=leak -fsanitize-address-use-after-return=never"
