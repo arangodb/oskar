@@ -128,12 +128,13 @@ function downloadOpenSSL
   set -l directory $WORKDIR/work/openssl
   set -l url https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz  
   mkdir -p $directory
-  cd $directory
+  pushd $directory
   echo "Downloading sources to $directory from URL: $url"
   curl -LO $url
   rm -rf openssl-$OPENSSL_VERSION
   tar -xzvf openssl-$OPENSSL_VERSION.tar.gz
   set -xg OPENSSL_SOURCE_DIR "$directory/openssl-$OPENSSL_VERSION"
+  popd
 end
 
 function buildOpenSSL
@@ -167,7 +168,6 @@ function buildOpenSSL
       echo "Executing: $cmd"
       eval $cmd
       make
-      make test
       make install_dev
     end
   end
@@ -236,7 +236,7 @@ function checkOskarOpenSSL
     false
     return 1
   end
-  set -l cmd "$executable version | grep -m 1 -o \"[0-9]\.[0-9]\.[0-9][a-z]*\" | head -1"
+  set -l cmd "$executable version | grep -m 1 -o \"[0-9]\.[0-9]\.[0-9]*[a-z]*\" | head -1"
   set -l output (eval "arch -$ARCH $cmd")
   if test "$output" = "$OPENSSL_VERSION"
     echo "Found OpenSSL $OPENSSL_VERSION"
@@ -288,7 +288,7 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -E -o "[0-9]\.[0-9]\.[0-9][a-z]?")
+  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -E -o "[0-9]\.[0-9]\.[0-9]*[a-z]?")
 
   if test "$v" = ""
     echo "$f: no OPENSSL_MACOS specified, using 1.1.1t"
@@ -396,6 +396,7 @@ function switchBranches
   and findDefaultArchitecture
   and findRequiredCompiler
   and findUseARM
+  and findArangoDBVersion
 end
 
 function clearWorkdir
@@ -493,17 +494,55 @@ function downloadSyncer
   and convertSItoJSON
 end
 
+function setupComponents
+  cleanupThirdParty
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+    downloadStarter
+    if test "$ENTERPRISEEDITION" = "On"
+      set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
+      and downloadSyncer
+      if test "$USE_RCLONE" = "true"
+        copyRclone "macos"
+      end
+    end
+  else
+    set -xg USE_RCLONE false
+  end
+
+  return 0
+end
+
+function setupPackaging
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+    set -xg PACKAGING_OPTIONS "-DPACKAGING=Bundle -DPACKAGE_TARGET_DIR=$INNERWORKDIR -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb"
+    if test "$ENTERPRISEEDITION" = "On"
+      if test "$USE_RCLONE" = "true"
+        set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
+      end
+      set -xg PACKAGING_OPTIONS "$PACKAGING_OPTIONS -DTHIRDPARTY_SBIN=$THIRDPARTY_SBIN_LIST"
+    end
+  else
+    set -xg PACKAGING_OPTIONS ""
+  end
+
+  return 0
+end
+
 function buildPackage
   # This assumes that a build has already happened
 
   if test "$ENTERPRISEEDITION" = "On"
-    echo Building enterprise edition MacOs bundle...
+    echo Building enterprise edition macOs bundle...
   else
-    echo Building community edition MacOs bundle...
+    echo Building community edition macOs bundle...
   end
 
-  runLocal $SCRIPTSDIR/buildMacOsPackage.fish $ARANGODB_PACKAGES
-  and buildTarGzPackage
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+    runLocal $SCRIPTSDIR/buildMacOsPackage.fish $ARANGODB_PACKAGES
+    and buildTarGzPackage
+  else
+    buildTarGzPackage
+  end
 end
 
 function cleanupThirdParty
@@ -524,20 +563,9 @@ function buildEnterprisePackage
   and releaseMode
   and enterprise
   and set -xg NOSTRIP 1
-  and cleanupThirdParty
-  and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
-  and downloadStarter
-  and downloadSyncer
-  and copyRclone "macos"
-  and if test "$USE_RCLONE" = "true"
-    set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
-  end
-  and buildArangoDB \
-      -DPACKAGING=Bundle \
-      -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DTHIRDPARTY_SBIN=$THIRDPARTY_SBIN_LIST \
-      -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
-      -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
+  and setupComponents
+  and setupPackaging
+  and buildArangoDB $PACKAGING_OPTIONS -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
 
   if test $status != 0
@@ -554,13 +582,9 @@ function buildCommunityPackage
   and releaseMode
   and community
   and set -xg NOSTRIP 1
-  and cleanupThirdParty
-  and downloadStarter
-  and buildArangoDB \
-      -DPACKAGING=Bundle \
-      -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
-      -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
+  and setupComponents
+  and setupPackaging
+  and buildArangoDB $PACKAGING_OPTIONS -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
 
   if test $status != 0
@@ -570,18 +594,30 @@ function buildCommunityPackage
 end
 
 function buildTarGzPackage
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 11
+    set -xg MAKE_INSTALL_COMPONENTS '-C client-tools'
+  else
+    set -xg MAKE_INSTALL_COMPONENTS ""
+  end
   pushd $INNERWORKDIR/ArangoDB/build
+  echo (pwd)
+  echo (ls -l client-tools)
   and rm -rf install
-  and make install DESTDIR=install
+  and echo "make $MAKE_INSTALL_COMPONENTS install DESTDIR="(pwd)"/install"
+  and eval make $MAKE_INSTALL_COMPONENTS install VERBOSE=1 DESTDIR=(pwd)/install
   and makeJsSha1Sum (pwd)/install/opt/arangodb/share/arangodb3/js
   and if test "$ENTERPRISEEDITION" = "On"
-        pushd install/opt/arangodb/bin
-        ln -s ../sbin/arangosync
-        popd
+        if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+          pushd install/opt/arangodb/bin
+          ln -s ../sbin/arangosync
+          popd
+        end
       end
   and mkdir -p install/usr
   and mv install/opt/arangodb/bin install/usr
-  and mv install/opt/arangodb/sbin install/usr
+  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+        mv install/opt/arangodb/sbin install/usr
+      end
   and mv install/opt/arangodb/share install/usr
   and mv install/opt/arangodb/etc install
   and rm -rf install/opt

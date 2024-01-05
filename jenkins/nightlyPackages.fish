@@ -50,6 +50,7 @@ function copyPackagesToStage2
     and mkdir -p $DST/MacOSX/$ARCH
     and chmod 777 $DST/MacOSX/$ARCH
     or return 1
+    cd "$WORKDIR"
     echo "Current dir:" (pwd)
     for pattern in "arangodb3*-*.dmg" "arangodb3*-mac*-*.tar.gz" "sourceInfo.*"
       set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)

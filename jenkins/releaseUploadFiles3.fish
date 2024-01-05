@@ -38,8 +38,8 @@ or upload
 or upload
 
 # there might be internet hickups
-uploadWindowsSymbols
-or uploadWindowsSymbols
+#uploadWindowsSymbols
+#or uploadWindowsSymbols
 
 set -l s $status
 unlockDirectory

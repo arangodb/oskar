@@ -267,7 +267,9 @@ def main():
             shutil.copy2(source, path / filename)
 
     print('create a symlink into the jemalloc source:')
-    jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
+    jmdir = sourcedir / '3rdParty' / 'jemalloc' / 'jemalloc' / 'include'
+    if not jmdir.exists():
+        jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
     (sourcedir / 'include').symlink_to(jmdir)
 
     xmlfile = coverage_dir / 'coverage.xml'

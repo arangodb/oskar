@@ -10,6 +10,7 @@ import signal
 import sys
 import time
 from threading  import Thread, Lock
+import traceback
 from multiprocessing import Process
 import zipfile
 
@@ -111,9 +112,10 @@ def testing_runner(testing_instance, this, arangosh):
         except FileExistsError as ex:
             print(f"can't expand the temp directory {ex} to {final_name}")
     except Exception as ex:
+        stack = ''.join(traceback.TracebackException.from_exception(ex).format())
         this.crashed = True
         this.success = False
-        this.summary = f"Python exception caught during test execution: {ex}"
+        this.summary = f"Python exception caught during test execution: {ex}\n{stack}"
         this.finish = datetime.now(tz=None)
         this.delta = this.finish - this.start
         this.delta_seconds = this.delta.total_seconds()
@@ -458,7 +460,10 @@ class TestingRunner():
         if len(core_files_list) == 0 or core_max_count <= 0:
             print(f'Coredumps are not collected: {str(len(core_files_list))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
             return
-
+        if not self.crashed or self.success:
+            self.append_report_txt("non captured crash reports found; please inspect the tests to find out who created them.")
+        self.crashed = True
+        self.success = False
         core_zip_dir = get_workspace() / 'coredumps'
         core_zip_dir.mkdir(parents=True, exist_ok=True)
 

@@ -96,6 +96,7 @@ known_flags = {
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
     "!windows": "test is excluded from ps1 output",
+    "!circleci": "test is excluded on CircleCI",
     "!mac": "test is excluded when launched on MacOS",
     "!arm": "test is excluded when launched on Arm Linux/MacOS hosts",
     "!coverage": "test is excluded when coverage scenario are ran",

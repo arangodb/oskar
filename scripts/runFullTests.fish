@@ -16,8 +16,13 @@ end
 function launchSingleTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full "$ENTERPRISE_ARG"
-  and set -xg result "GOOD"
-  or set -xg result "BAD"
+  set x $status
+  if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $x"
+   end
 end
 
 ################################################################################
@@ -26,8 +31,13 @@ end
 
 function launchGTest
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest "$ENTERPRISE_ARG"
-  and set -xg result "GOOD"
-  or set -xg result "BAD"
+  set x $status
+  if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $x"
+   end
 end
 
 ################################################################################
@@ -37,8 +47,13 @@ end
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full "$ENTERPRISE_ARG"
-  and set -xg result "GOOD"
-  or set -xg result "BAD"
+  set x $status
+  if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $x"
+   end
 end
 
 ################################################################################
@@ -48,8 +63,13 @@ end
 function launchSingleClusterTests
   echo "Using test definitions from arangodb repo"
   python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster --full "$ENTERPRISE_ARG"
-  and set -xg result "GOOD"
-  or set -xg result "BAD"
+  set x $status
+  if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $x"
+   end
 end
 
 ################################################################################
@@ -81,7 +101,7 @@ switch $TESTSUITE
     set suiteRunner "launchClusterTests"
   case "single_cluster"
     resetLaunch 4
-    set -xg timeLimit 25200
+    set -xg timeLimit 60000
     set suiteRunner "launchSingleClusterTests"
   case "single"
     resetLaunch 1

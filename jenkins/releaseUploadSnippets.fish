@@ -44,8 +44,26 @@ function upload
   end
 end
 
+set META kmajv4agbby8qytdoqnqxeb904vbd5zk1mpq.arangodb.com
+
+rm -f /tmp/index.html
+echo "<html><body></body></html>" > /tmp/index.html
+
+function uploadMeta
+  cd /mnt/buildfiles/stage2
+  and if test "$RELEASE_IS_HEAD" = "true"
+        echo "Copying COMMUNITY meta.json"
+        and gsutil cp $ARANGODB_PACKAGES/snippets/Community/meta.json gs://$META/wpv0cu548xhrw6h5carxr7s0rt8an71388mvx05znw/meta-community.json
+      else
+        echo "Skipping COMMUNITY meta.json"
+      end
+  and gsutil cp $ARANGODB_PACKAGES/snippets/Enterprise/meta.json gs://$META/wpv0cu548xhrw6h5carxr7s0rt8an71388mvx05znw/meta-enterprise-$ARANGODB_PACKAGES.json
+  and gsutil cp /tmp/index.html gs://$META/index.html
+end
+
 # there might be internet hickups
-upload
+# upload
+uploadMeta
 
 set -l s $status
 unlockDirectory

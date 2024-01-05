@@ -211,8 +211,10 @@ function runCmake
   end
 
   if test "$SHOW_DETAILS" = "On"
+    echo "cmake $FULLARGS -DVERBOSE=On .. 2>&1"
     cmake $FULLARGS -DVERBOSE=On .. 2>&1
   else
+    echo "cmake $FULLARGS -DVERBOSE=On .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1"
     echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
     cmake $FULLARGS -DVERBOSE=On .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1
   end

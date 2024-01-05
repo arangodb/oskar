@@ -211,9 +211,24 @@ def kill_children(identifier, params, children):
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
+        except psutil.AccessDenied:
+            pass
     print_log(f"{identifier}: Waiting for the children to terminate {killed} {len(children)}",
               params)
-    psutil.wait_procs(children, timeout=20)
+    try:
+        psutil.wait_procs(children, timeout=20)
+    except psutil.TimeoutExpired:
+        pass
+    except FileNotFoundError:
+        pass
+    except AttributeError:
+        pass
+    except ProcessLookupError:
+        pass
+    except psutil.NoSuchProcess:
+        pass
+    except psutil.AccessDenied:
+        pass
     return err
 
 class CliExecutionException(Exception):
