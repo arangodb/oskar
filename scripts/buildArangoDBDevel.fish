@@ -82,9 +82,6 @@ if test "$SAN" = "On"
    -DCMAKE_C_FLAGS="-pthread $SANITIZERS -fno-sanitize=alignment" \
    -DCMAKE_CXX_FLAGS="-pthread $SANITIZERS -fno-sanitize=vptr -fno-sanitize=alignment" \
    -DBASE_LIBS="-pthread"
-#else if test "$COVERAGE" = "On"
-#  echo "COVERAGE is not supported in this environment!"
-#  exit 1
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \
