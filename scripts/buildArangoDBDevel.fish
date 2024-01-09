@@ -84,6 +84,8 @@ if test "$SAN" = "On"
    -DBASE_LIBS="-pthread"
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
+  set -xg CC_NAME gcc
+  set -xg CXX_NAME g++
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
     -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
