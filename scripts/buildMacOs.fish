@@ -44,6 +44,11 @@ set -xg FULLARGS \
  -DBUILD_REPO_INFO=$BUILD_REPO_INFO $argv
 
 if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 11
+  set -xg FULLARGS $FULLARGS \
+    -DUSE_FRONTEND=Off
+end
+
+if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 11
   set -xg MAKE_TARGETS client-tools
 #else
 #  set -xg FULLARGS "$FULLARGS -DPACKAGING=Bundle"
