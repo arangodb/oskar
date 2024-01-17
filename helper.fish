@@ -820,12 +820,12 @@ function buildTarGzPackageHelper
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and cp bin/README.$os.server ./README
-  and sed -i '' -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
+  and sed -i'' -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
   and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
         if test "$PLATFORM" = "linux"
-          sed -i ''-E '/^Active Failover/,/^\Cluster/{{/^\Cluster$/!d}}' README
+          sed -i'' -E '/^Active Failover/,/^\Cluster/{{/^\Cluster$/!d}}' README
         else if test "$PLATFORM" = "darwin"
-          sed -i '' -E '/^Active Failover/,/^\Cluster/{{/^\Cluster$/!d;};}' README
+          sed -i'' -E '/^Active Failover/,/^\Cluster/{{/^\Cluster$/!d;};}' README
         end
       end
   and prepareInstall $WORKDIR/work/targz
