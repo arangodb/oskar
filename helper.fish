@@ -810,6 +810,9 @@ function buildTarGzPackageHelper
     end
   end
 
+  set -l suffix ""
+  test $PLATFORM = "darwin"; and set suffix ".bak"
+
   pushd $WORKDIR/work
   and rm -rf targz
   and mkdir targz
@@ -820,14 +823,15 @@ function buildTarGzPackageHelper
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and cp bin/README.$os.server ./README
-  and sed -i'' -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
+  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
   and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
         if test "$PLATFORM" = "linux"
-          sed -i'' -E '/^Active Failover/,/^\Cluster/{{/^\Cluster$/!d}}' README
+          sed -i$suffix -E '/^Active Failover/,/^\Cluster/{{/^\Cluster$/!d}}' README
         else if test "$PLATFORM" = "darwin"
-          sed -i'' -E '/^Active Failover/,/^\Cluster/{{/^\Cluster$/!d;};}' README
+          sed -i$suffix -E '/^Active Failover/,/^\Cluster/{{/^\Cluster$/!d;};}' README
         end
       end
+  and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v$arch"
   and cp -a $WORKDIR/work/targz "$WORKDIR/work/$name-$v$arch"
