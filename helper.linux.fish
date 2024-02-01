@@ -2190,15 +2190,17 @@ function downloadStarter
 end
 
 function downloadSyncer
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+    if test "$DOWNLOAD_SYNC_USER" = ""
+      echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+      return 1
+    end
+    mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+    and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+    and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+    and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+    and convertSItoJSON
   end
-  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-  and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
-  and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-  and convertSItoJSON
 end
 
 function downloadAuxBinariesToBuildBin
@@ -2206,7 +2208,9 @@ function downloadAuxBinariesToBuildBin
      copyRclone linux
      and cp work/ArangoDB/build/install/usr/sbin/rclone-arangodb work/ArangoDB/build/bin/
      and downloadSyncer
-     and cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+     and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+           cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+         end
   end
   and downloadStarter
   and cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/

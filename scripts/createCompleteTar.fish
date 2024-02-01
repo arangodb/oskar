@@ -45,11 +45,13 @@ function checkoutStarter
 end
 
 function checkoutSyncer
-  echo "Checkout ArangoDB Syncer $SYNCER_REV"
-  pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch $SYNCER_REV ssh://git@github.com/arangodb/arangosync arangosync-$SYNCER_REV
-  or begin popd; return 1; end
-  popd
+  if test -n "$SYNCER_REV"
+    echo "Checkout ArangoDB Syncer $SYNCER_REV"
+    pushd $INNERWORKDIR/CompleteTar
+    and git clone --progress --single-branch --branch $SYNCER_REV ssh://git@github.com/arangodb/arangosync arangosync-$SYNCER_REV
+    or begin popd; return 1; end
+    popd
+    end
 end
 
 function checkoutOskar

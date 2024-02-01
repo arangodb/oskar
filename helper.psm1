@@ -1090,31 +1090,34 @@ Function downloadStarter
 
 Function downloadSyncer
 {
-    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    If (-Not($env:DOWNLOAD_SYNC_USER))
+    If ($global:ARANGODB_VERSION_MAJOR -eq 3 -And $global:ARANGODB_VERSION_MINOR -lt 12)
     {
-        Write-Host "Need environment variable set!"
-    }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+(-preview-[0-9]+)?)|latest' | Out-Null
-    $SYNCER_REV = $Matches[0]
-    If ($SYNCER_REV -eq "latest")
-    {
-        $JSON = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/latest" | ConvertFrom-Json
-        $SYNCER_REV = $JSON.name
-    }
-    $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
-    $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
-    Write-Host "Download: Syncer $SYNCER_REV"
-    curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
-    If (Select-String -Path "$global:ARANGODIR\build\arangosync.exe" -Pattern '"message": "Not Found"')
-    {
-        Write-Host "Download: Syncer FAILED!"
-        $global:ok = $false
-    }
-    Else
-    {
-        setupSourceInfo "Syncer" $SYNCER_REV
+        Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        If (-Not($env:DOWNLOAD_SYNC_USER))
+        {
+            Write-Host "Need environment variable set!"
+        }
+        (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+(-preview-[0-9]+)?)|latest' | Out-Null
+        $SYNCER_REV = $Matches[0]
+        If ($SYNCER_REV -eq "latest")
+        {
+            $JSON = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/latest" | ConvertFrom-Json
+            $SYNCER_REV = $JSON.name
+        }
+        $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
+        $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
+        Write-Host "Download: Syncer $SYNCER_REV"
+        curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
+        If (Select-String -Path "$global:ARANGODIR\build\arangosync.exe" -Pattern '"message": "Not Found"')
+        {
+            Write-Host "Download: Syncer FAILED!"
+            $global:ok = $false
+        }
+        Else
+        {
+            setupSourceInfo "Syncer" $SYNCER_REV
+        }
     }
 }
 
@@ -1593,10 +1596,13 @@ Function configureWindows
           {
               return
           }
-          copyRclone
-          $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
+          If ($global:ARANGODB_VERSION_MAJOR -eq 3 -And $global:ARANGODB_VERSION_MINOR -lt 12)
+          {
+              $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
+          }
           If ($global:USE_RCLONE -eq "true")
           {
+              copyRclone
               $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
           }
           Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
