@@ -55,26 +55,15 @@ set -g FULLARGS $argv \
  -DBUILD_REPO_INFO=$BUILD_REPO_INFO
 
 if test "$MAINTAINER" = "On"
-    if test "$COVERAGE" = "Off"
-      set -g FULLARGS $FULLARGS \
-        -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld " \
-        -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
-    else
-      set -g FULLARGS $FULLARGS \
-        -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie -fno-stack-protector"
-    end
+  set -g FULLARGS $FULLARGS \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie -fno-stack-protector -fuse-ld=lld" \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
 else
   set -g FULLARGS $FULLARGS \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld " \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
-  if test "$COVERAGE" = "Off"
-    set -g FULLARGS $FULLARGS \
-      -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld " \
-      -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
-  else
-    set -g FULLARGS $FULLARGS \
-      -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector"
-  end
 end
 
 if test "$BUILD_SEPP" = "On"
@@ -95,8 +84,6 @@ if test "$SAN" = "On"
    -DBASE_LIBS="-pthread"
 else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
-  set -xg CC_NAME gcc
-  set -xg CXX_NAME g++
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
     -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
