@@ -89,7 +89,8 @@ else if test "$COVERAGE" = "On"
     -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage --coverage" \
     -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage --coverage" \
     -DCMAKE_LD_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage --coverage" \
-    -DUSE_COVERAGE=ON
+    -DUSE_COVERAGE=ON \
+   -DV8_LDFLAGS=--coverage
 else
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=$JEMALLOC_OSKAR
