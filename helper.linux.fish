@@ -331,21 +331,21 @@ set -gx LDAPHOST "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
 set -gx LDAPHOST2 "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
 
 function stopLdapServer
-  docker stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
-  and docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
-  docker stop "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
-  and docker rm "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
-  docker network rm "$LDAPNETWORK$LDAPEXT"
-  echo "LDAP servers stopped"
-  true
+#  docker stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+#  and docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+#  docker stop "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
+#  and docker rm "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
+#  docker network rm "$LDAPNETWORK$LDAPEXT"
+#  echo "LDAP servers stopped"
+#  true
 end
 
 function launchLdapServer
-  stopLdapServer
-  and docker network create "$LDAPNETWORK$LDAPEXT"
-  and docker run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
-  and docker run -d --name "$LDAPHOST2" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
-  and echo "LDAP servers launched"
+#  stopLdapServer
+#  and docker network create "$LDAPNETWORK$LDAPEXT"
+#  and docker run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
+#  and docker run -d --name "$LDAPHOST2" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
+#  and echo "LDAP servers launched"
 end
 
 ## #############################################################################
@@ -502,9 +502,9 @@ function oskarFull
     launchLdapServer
     and if test "$SAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
+      runInContainer  --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     end
     set s $status
   else

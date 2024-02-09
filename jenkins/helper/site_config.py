@@ -13,6 +13,8 @@ import psutil
 from socket_counter import get_socket_count
 
 IS_COVERAGE = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
+if IS_COVERAGE:
+    GCOV_PREFIX = os.environ['GCOV_PREFIX']
 IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""

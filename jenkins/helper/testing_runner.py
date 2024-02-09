@@ -21,8 +21,9 @@ from socket_counter import get_socket_count
 # pylint: disable=line-too-long disable=broad-except
 from arangosh import ArangoshExecutor
 from test_config import get_priority, TestConfig
-from site_config import TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace
+from site_config import SiteConfig, TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace, IS_COVERAGE, GCOV_PREFIX
 from tools.killall import list_all_processes, kill_all_arango_processes
+from aggregate_coverage import combine_coverage_dirs_multi
 
 MAX_COREFILES_SINGLE=4
 MAX_COREFILES_CLUSTER=15
@@ -65,6 +66,11 @@ def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
     try:
         this.start = datetime.now(tz=None)
+        this.gcov_prefix = None
+        if IS_COVERAGE:
+            this.gcov_prefix =  (Path(GCOV_PREFIX) /
+                                 this.name_enum.replace(' ', '_'))
+            this.gcov_prefix.mkdir()
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
@@ -72,6 +78,7 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.log_file,
                                    this.name_enum,
                                    this.temp_dir,
+                                   str(this.gcov_prefix),
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
@@ -116,10 +123,24 @@ def testing_runner(testing_instance, this, arangosh):
         this.crashed = True
         this.success = False
         this.summary = f"Python exception caught during test execution: {ex}\n{stack}"
+        print(this.summary)
         this.finish = datetime.now(tz=None)
         this.delta = this.finish - this.start
         this.delta_seconds = this.delta.total_seconds()
     finally:
+        print('finally')
+        try:
+            if this.gcov_prefix is not None:
+                print("re-nicing")
+                os.nice(19)
+                gcov_dir = Path(this.gcov_prefix)
+                cfg = SiteConfig(gcov_dir)
+                print("go")
+                (coverage_dir, result_dir) = combine_coverage_dirs_multi(cfg, gcov_dir)
+        except Exception as ex:
+            print(ex)
+            print(traceback.format_exc())
+            raise ex
         with arangosh.slot_lock:
             testing_instance.running_suites.remove(this.name_enum)
         testing_instance.done_job(this.parallelity)

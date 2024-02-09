@@ -86,9 +86,9 @@ else if test "$COVERAGE" = "On"
   echo "Building with Coverage"
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-    -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage --coverage" \
-    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage --coverage" \
-    -DCMAKE_LD_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage --coverage" \
+    -DCMAKE_C_FLAGS="$pie  -fprofile-instr-generate -fcoverage-mapping -fno-stack-protector -fprofile-arcs -ftest-coverage --coverage" \
+    -DCMAKE_CXX_FLAGS="$pie  -fprofile-instr-generate -fcoverage-mapping -fno-stack-protector -fprofile-arcs -ftest-coverage --coverage" \
+    -DCMAKE_LD_FLAGS="$pie  -fprofile-instr-generate -fcoverage-mapping -fno-stack-protector -fprofile-arcs -ftest-coverage --coverage" \
     -DUSE_COVERAGE=ON \
    -DV8_LDFLAGS=--coverage
 else
