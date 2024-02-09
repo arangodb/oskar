@@ -24,7 +24,7 @@ SUCCESS = True
 # pylint disable=global-variable-not-assigned
 
 class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
-    """configuration"""
+    """Convert the joint report to the jenkins compatible XML"""
 
     def __init__(self, site_config, rootdir, xmlfile, resultfile, coverage_dir, directories):
         self.job_parameters = [
@@ -76,7 +76,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
         self.xmlfile.write_text(xmltext)
 
 class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
-    """configuration"""
+    """Merge two sets of gcov files"""
 
     def __init__(self, job, site_config):
         self.identifier = job[0]
@@ -117,7 +117,7 @@ JOB_QUEUE = Queue()
 JOB_DONE_QUEUE = Queue()
 
 def gcov_merge_runner(cfg, _):
-    """ thread runner """
+    """ thread runner for merging coverage directories """
     global SLOT_LOCK, SUCCESS
     print('worker thread started')
     while True:
@@ -144,19 +144,16 @@ def launch_worker(cfg):
         worker.start()
     print('thread launched')
 
-def main():
-    """ go """
-    # pylint disable=too-many-locals disable=too-many-statements
-    global SLOT_LOCK, SUCCESS
-    base_dir = Path(sys.argv[1])
-    os.chdir(base_dir)
-    gcov_dir = base_dir / sys.argv[2]
-    cfg = SiteConfig(gcov_dir.resolve())
 
+def combine_coverage_dirs_multi(cfg,
+                                gcov_dir):
+    print(gcov_dir)
+    print('8'*88)
     # Locate all directories containing coverage information;
     coverage_dirs = []
     for subdir in gcov_dir.iterdir():
         if subdir.is_dir() and len(str(subdir.name)) == 32:
+            print(f"adding {subdir}")
             coverage_dirs.append(subdir)
         else:
             print(len(str(subdir.name)))
@@ -170,12 +167,11 @@ def main():
     if combined_dir.exists():
         shutil.rmtree(str(combined_dir))
     combined_dir.mkdir()
-    coverage_dir = base_dir / 'coverage'
-    if coverage_dir.exists():
-        shutil.rmtree(str(coverage_dir))
-    coverage_dir.mkdir()
     count = 0
     jobcount = 0
+    if (len(sub_jobs) == 0):
+        print("failed to locate subjobs in {coverage_dirs}")
+        return ("", "")
     while len(sub_jobs) > 1:
         next_jobs = []
         jobs.append([])
@@ -229,6 +225,21 @@ def main():
         print(f'output {str(last_output)} not there?')
     result_dir = combined_dir / 'result'
     last_output.rename(result_dir)
+    return (coverage_dir, result_dir)
+
+def main():
+    """ go """
+    # pylint disable=too-many-locals disable=too-many-statements
+    global SLOT_LOCK, SUCCESS
+    base_dir = Path(sys.argv[1])
+    coverage_dir = base_dir / 'coverage'
+    if coverage_dir.exists():
+        shutil.rmtree(str(coverage_dir))
+    coverage_dir.mkdir()
+    os.chdir(base_dir)
+    gcov_dir = base_dir / sys.argv[2]
+    cfg = SiteConfig(gcov_dir.resolve())
+    (coverage_dir, result_dir) = combine_coverage_dirs_multi(cfg, gcov_dir)
 
     sourcedir = base_dir / 'ArangoDB'
     # copy the source files from the sourcecode directory
