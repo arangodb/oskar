@@ -309,6 +309,10 @@ class ArangoCLIprogressiveTimeoutExecutor:
         """ hook to implemnet custom environment variable setters """
         return os.environ.copy()
 
+    def post_process_launch(self, process):
+        """ hook to work with the process while it launches """
+        pass
+
     def run_arango_tool_monitored(
             self,
             executable,
@@ -407,11 +411,13 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 target=enqueue_stdout,
                 args=(process.stdout, queue, self.connect_instance, identifier, params),
             )
+            thread1.name=f"readIO {identifier}",
             thread2 = Thread(
                 name="readErrIO {identifier}",
                 target=enqueue_stderr,
                 args=(process.stderr, queue, self.connect_instance, identifier, params),
             )
+            thread2.name="readErrIO {identifier}",
             thread1.start()
             thread2.start()
 
@@ -430,7 +436,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         identifier,
                         str(os.getpid()),
                         str(process.pid)))
-
+            self.post_process_launch(process)
             # read line without blocking
             have_progressive_timeout = False
             tcount = 0

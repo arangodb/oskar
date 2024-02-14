@@ -15,8 +15,8 @@ end
 # Meaningful for ArangoDB 3.7+ versions only
 # set -xg ARANGODB_OVERRIDE_CRASH_HANDLER "Off"
 buildSanFlags "$INNERWORKDIR/ArangoDB"
-set -xg GCOV_PREFIX /work/gcov
-set -xg GCOV_PREFIX_STRIP 3
+set -xg LLVM_PROFILE_FILE /work/gcov
+set -xg LCOV_PREFIX_STRIP 3
 
 function hasLDAPHOST
   test ! -z "$LDAPHOST"

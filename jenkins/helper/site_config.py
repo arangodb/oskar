@@ -14,7 +14,9 @@ from socket_counter import get_socket_count
 
 IS_COVERAGE = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
 if IS_COVERAGE:
-    GCOV_PREFIX = os.environ['GCOV_PREFIX']
+    LLVM_PROFILE_FILE = os.environ['LLVM_PROFILE_FILE']
+else:
+    LLVM_PROFILE_FILE=""
 IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
@@ -156,17 +158,17 @@ class SiteConfig:
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
         self.is_aulsan = self.is_asan and os.environ['SAN_MODE'] == 'AULSan'
-        self.is_gcov = IS_COVERAGE
-        san_gcov_msg = ""
-        if self.is_asan or self.is_gcov:
-            san_gcov_msg = ' - SAN '
+        self.is_lcov = IS_COVERAGE
+        san_lcov_msg = ""
+        if self.is_asan or self.is_lcov:
+            san_lcov_msg = ' - SAN '
             slot_divisor = 4
             if self.is_aulsan:
-                san_gcov_msg = ' - AUL-SAN '
-            elif self.is_gcov:
-                san_gcov_msg = ' - GCOV'
+                san_lcov_msg = ' - AUL-SAN '
+            elif self.is_lcov:
+                san_lcov_msg = ' - LCOV'
                 slot_divisor = 3
-            san_gcov_msg += ' enabled, reducing possible system capacity\n'
+            san_lcov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
             self.available_slots /= slot_divisor
             #self.timeout *= 1.5
@@ -202,7 +204,7 @@ class SiteConfig:
  - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
  - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
  - {socket_count} number of currently active tcp sockets
-{san_gcov_msg}""")
+{san_lcov_msg}""")
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
