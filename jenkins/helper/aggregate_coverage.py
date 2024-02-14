@@ -53,7 +53,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
         start = datetime.now()
         try:
             ret = self.run_monitored(
-                "gcovr",
+                "/usr/lib/llvm-16/bin/llvm-profdata", #"gcovr",
                 self.job_parameters,
                 self.params,
                 progressive_timeout=600,
@@ -85,15 +85,20 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         self.params = None
         super().__init__(site_config, None)
 
+    def post_process_launch(self, process):
+        """ hook to work with the process while it launches """
+        print(f"re-nicing {str(process)}")
+        process.nice(-19)
+
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
-        verbose = False
+        verbose = True
         self.params = make_default_params(verbose, 111)
         start = datetime.now()
         try:
             ret = self.run_monitored(
-                "gcov-tool",
+                "/usr/lib/llvm-16/bin/llvm-profdata", # "gcov-tool",
                 self.job_parameters,
                 self.params,
                 progressive_timeout=600,
@@ -107,52 +112,68 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         print(f"done with {self.job[0]} {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']}")
         ret = {}
         ret['error'] = self.params['error']
-        shutil.rmtree(self.job[0])
-        shutil.rmtree(self.job[1])
+        for one_file in [self.job[0], self.job[1]]:
+            print('cleaning up')
+            f = Path(one_file)
+            print(f)
+            if f.is_dir():
+                shutil.rmtree(f)
+            else:
+                print('delete file')
+                f.unlink()
+                print('file gone')
+        print(f"launch(): returning {ret}")
         return ret
 
-SLOT_LOCK = Lock()
-WORKER_ARRAY = []
-JOB_QUEUE = Queue()
-JOB_DONE_QUEUE = Queue()
+COV_SLOT_LOCK = Lock()
+COV_WORKER_ARRAY = []
+COV_JOB_QUEUE = None
+COV_JOB_DONE_QUEUE = None
 
 def gcov_merge_runner(cfg, _):
     """ thread runner for merging coverage directories """
-    global SLOT_LOCK, SUCCESS
+    global COV_SLOT_LOCK, SUCCESS
     print('worker thread started')
     while True:
-        job = JOB_QUEUE.get()
+        job = COV_JOB_QUEUE.get()
         if job[0] == 'done':
             print('worker exiting')
             return
         print(f'thread starting {job}')
         merger = GcovMerger(job, cfg)
         ret = merger.launch()
-        with SLOT_LOCK:
+        with COV_SLOT_LOCK:
             if ret['error'] != '':
                 print(f"marking failure: {ret['error']}")
                 SUCCESS = False
-        JOB_DONE_QUEUE.put((job, ret))
+        print(f"marking job as done {job}")
+        COV_JOB_DONE_QUEUE.put((job, ret))
 
 def launch_worker(cfg):
     """ launch one instance """
-    global SLOT_LOCK
-    with SLOT_LOCK:
-        worker = Thread(target=gcov_merge_runner,
-                        args=(cfg, ''))
-        WORKER_ARRAY.append(worker)
+    global COV_SLOT_LOCK
+    with COV_SLOT_LOCK:
+        worker = Thread(
+            target=gcov_merge_runner,
+            name="gcov_merger",
+            args=(cfg, ''))
+        worker.name="gcov_merger"
+        COV_WORKER_ARRAY.append(worker)
         worker.start()
     print('thread launched')
 
 
 def combine_coverage_dirs_multi(cfg,
                                 gcov_dir):
+    global COV_JOB_QUEUE, COV_JOB_DONE_QUEUE
+    COV_JOB_QUEUE = Queue()
+    COV_JOB_DONE_QUEUE = Queue()
     print(gcov_dir)
     print('8'*88)
     # Locate all directories containing coverage information;
     coverage_dirs = []
     for subdir in gcov_dir.iterdir():
-        if subdir.is_dir() and len(str(subdir.name)) == 32:
+        if len(str(subdir.name)) == 32:
             print(f"adding {subdir}")
             coverage_dirs.append(subdir)
         else:
@@ -189,9 +210,10 @@ def combine_coverage_dirs_multi(cfg,
         sub_jobs = next_jobs
 
     # launch workers
-    worker_count = max_jobs = psutil.cpu_count(logical=False)
+    total_wrk_count = worker_count = max_jobs = psutil.cpu_count(logical=False)
     print(max_jobs)
     max_jobs = max(max_jobs, 10)
+    max_jobs = 1 #####
     while worker_count > 0:
         launch_worker(cfg)
         worker_count -= 1
@@ -200,23 +222,23 @@ def combine_coverage_dirs_multi(cfg,
     for one_job_set in jobs:
         count = 0
         for one_job in one_job_set:
-            JOB_QUEUE.put(one_job)
+            COV_JOB_QUEUE.put(one_job)
             count += 1
         print(f'waiting for jobset {count} to finish')
         while count > 0:
             print('.')
-            JOB_DONE_QUEUE.get()
+            COV_JOB_DONE_QUEUE.get()
             count -= 1
         print('jobset finished')
 
     # terminate workers
     print('sending queue flush command')
-    worker_count = max_jobs * 2
+    worker_count = total_wrk_count * 3
     while worker_count > 0:
-        JOB_QUEUE.put(('done', 'done', 'done'))
+        COV_JOB_QUEUE.put(('done', 'done', 'done'))
         worker_count -= 1
     print('waiting for jobs to exit')
-    for worker in WORKER_ARRAY:
+    for worker in COV_WORKER_ARRAY:
         print('.')
         worker.join()
     print('all workers joined')
@@ -225,12 +247,12 @@ def combine_coverage_dirs_multi(cfg,
         print(f'output {str(last_output)} not there?')
     result_dir = combined_dir / 'result'
     last_output.rename(result_dir)
-    return (coverage_dir, result_dir)
+    return (coverage_dirs, result_dir)
 
 def main():
     """ go """
     # pylint disable=too-many-locals disable=too-many-statements
-    global SLOT_LOCK, SUCCESS
+    global COV_SLOT_LOCK, SUCCESS
     base_dir = Path(sys.argv[1])
     coverage_dir = base_dir / 'coverage'
     if coverage_dir.exists():

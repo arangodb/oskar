@@ -3,6 +3,7 @@
 from datetime import datetime
 import os
 from pathlib import Path
+import hashlib
 import pprint
 import re
 import shutil
@@ -21,7 +22,7 @@ from socket_counter import get_socket_count
 # pylint: disable=line-too-long disable=broad-except
 from arangosh import ArangoshExecutor
 from test_config import get_priority, TestConfig
-from site_config import SiteConfig, TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace, IS_COVERAGE, GCOV_PREFIX
+from site_config import SiteConfig, TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace, IS_COVERAGE, LLVM_PROFILE_FILE
 from tools.killall import list_all_processes, kill_all_arango_processes
 from aggregate_coverage import combine_coverage_dirs_multi
 
@@ -66,11 +67,11 @@ def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
     try:
         this.start = datetime.now(tz=None)
-        this.gcov_prefix = None
+        this.lcov_prefix = None
         if IS_COVERAGE:
-            this.gcov_prefix =  (Path(GCOV_PREFIX) /
+            this.lcov_prefix =  (Path(LLVM_PROFILE_FILE) /
                                  this.name_enum.replace(' ', '_'))
-            this.gcov_prefix.mkdir()
+            this.lcov_prefix.mkdir()
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
@@ -78,7 +79,7 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.log_file,
                                    this.name_enum,
                                    this.temp_dir,
-                                   str(this.gcov_prefix),
+                                   str(this.lcov_prefix),
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
@@ -130,13 +131,16 @@ def testing_runner(testing_instance, this, arangosh):
     finally:
         print('finally')
         try:
-            if this.gcov_prefix is not None:
-                print("re-nicing")
-                os.nice(19)
-                gcov_dir = Path(this.gcov_prefix)
-                cfg = SiteConfig(gcov_dir)
-                print("go")
-                (coverage_dir, result_dir) = combine_coverage_dirs_multi(cfg, gcov_dir)
+            with arangosh.slot_lock:
+                if this.lcov_prefix is not None:
+                    lcov_dir = Path(this.lcov_prefix)
+                    cfg = SiteConfig(lcov_dir)
+                    (coverage_dir, result_dir) = combine_coverage_dirs_multi(cfg, lcov_dir)
+                    hash_str = hashlib.md5(this.name_enum.encode()).hexdigest()
+                    target_dir = Path(LLVM_PROFILE_FILE) / hash_str
+                    print(f'renaming {str(result_dir)} -> {target_dir}')
+                    result_dir.rename(target_dir)
+                    shutil.rmtree(str(this.lcov_prefix))
         except Exception as ex:
             print(ex)
             print(traceback.format_exc())
@@ -224,6 +228,7 @@ class TestingRunner():
             self.running_suites.append(this.name_enum)
 
         worker = Thread(target=testing_runner,
+                        name="testing runner",
                         args=(self,
                               this,
                               self.arangosh))
