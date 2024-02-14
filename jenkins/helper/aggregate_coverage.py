@@ -164,7 +164,8 @@ def launch_worker(cfg):
 
 
 def combine_coverage_dirs_multi(cfg,
-                                gcov_dir):
+                                gcov_dir,
+                                slot_count):
     global COV_JOB_QUEUE, COV_JOB_DONE_QUEUE
     COV_JOB_QUEUE = Queue()
     COV_JOB_DONE_QUEUE = Queue()
@@ -210,7 +211,7 @@ def combine_coverage_dirs_multi(cfg,
         sub_jobs = next_jobs
 
     # launch workers
-    total_wrk_count = worker_count = max_jobs = psutil.cpu_count(logical=False)
+    total_wrk_count = worker_count = max_jobs = slot_count
     print(max_jobs)
     max_jobs = max(max_jobs, 10)
     max_jobs = 1 #####
@@ -261,7 +262,10 @@ def main():
     os.chdir(base_dir)
     gcov_dir = base_dir / sys.argv[2]
     cfg = SiteConfig(gcov_dir.resolve())
-    (coverage_dir, result_dir) = combine_coverage_dirs_multi(cfg, gcov_dir)
+    (coverage_dir, result_dir) = combine_coverage_dirs_multi(
+        cfg,
+        gcov_dir,
+        psutil.cpu_count(logical=False))
 
     sourcedir = base_dir / 'ArangoDB'
     # copy the source files from the sourcecode directory
