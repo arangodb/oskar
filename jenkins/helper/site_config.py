@@ -167,7 +167,7 @@ class SiteConfig:
                 san_lcov_msg = ' - AUL-SAN '
             elif self.is_lcov:
                 san_lcov_msg = ' - LCOV'
-                slot_divisor = 3
+                slot_divisor = 2
             san_lcov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
             self.available_slots /= slot_divisor

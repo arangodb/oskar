@@ -22,7 +22,7 @@ from socket_counter import get_socket_count
 # pylint: disable=line-too-long disable=broad-except
 from arangosh import ArangoshExecutor
 from test_config import get_priority, TestConfig
-from site_config import SiteConfig, TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace, IS_COVERAGE, LLVM_PROFILE_FILE
+from site_config import TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace, IS_COVERAGE, LLVM_PROFILE_FILE
 from tools.killall import list_all_processes, kill_all_arango_processes
 from aggregate_coverage import combine_coverage_dirs_multi
 
@@ -72,6 +72,8 @@ def testing_runner(testing_instance, this, arangosh):
         if IS_COVERAGE:
             this.lcov_prefix =  (Path(LLVM_PROFILE_FILE) /
                                  this.name_enum.replace(' ', '_'))
+            if this.lcov_prefix.exists():
+                shutil.rmtree(str(this.lcov_prefix))
             this.lcov_prefix.mkdir()
         ret = arangosh.run_testing(this.suite,
                                    this.args,
@@ -135,8 +137,7 @@ def testing_runner(testing_instance, this, arangosh):
             with COVERAGE_LOCK:
                 if this.lcov_prefix is not None:
                     lcov_dir = Path(this.lcov_prefix)
-                    cfg = SiteConfig(lcov_dir)
-                    (_, result_dir) = combine_coverage_dirs_multi(cfg, lcov_dir, this.parallelity)
+                    (_, result_dir) = combine_coverage_dirs_multi(this.cfg, lcov_dir, this.parallelity)
                     hash_str = hashlib.md5(this.name_enum.encode()).hexdigest()
                     target_dir = Path(LLVM_PROFILE_FILE) / hash_str
                     print(f'renaming {str(result_dir)} -> {target_dir}')
@@ -224,6 +225,7 @@ class TestingRunner():
         this.name_enum = f"{this.name} {str(counter)}"
         print(f"launching {this.name_enum}")
         pp.pprint(this)
+        this.cfg = self.cfg
 
         with self.slot_lock:
             self.running_suites.append(this.name_enum)
