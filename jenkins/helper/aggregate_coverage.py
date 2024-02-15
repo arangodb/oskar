@@ -262,7 +262,7 @@ def main():
     os.chdir(base_dir)
     gcov_dir = base_dir / sys.argv[2]
     cfg = SiteConfig(gcov_dir.resolve())
-    (coverage_dir, result_dir) = combine_coverage_dirs_multi(
+    (coverage_dirs, result_dir) = combine_coverage_dirs_multi(
         cfg,
         gcov_dir,
         psutil.cpu_count(logical=False))
@@ -281,7 +281,7 @@ def main():
         srcdir = sourcedir / copy_dir
         if srcdir.exists():
             baselen = len(str(srcdir))
-            dstdir = result_dir / copy_dir
+            dstdir = coverage_dir / copy_dir
             print(f"Copy {str(srcdir)} => {str(dstdir)}")
 
             for root, _, files in os.walk(srcdir):
@@ -296,7 +296,7 @@ def main():
     buildir = sourcedir / 'build'
     baselen = len(str(buildir))
     for root, _, files in os.walk(buildir):
-        subdir = str(result_dir) + root[baselen:]
+        subdir = str(coverage_dir) + root[baselen:]
         path = Path(subdir)
         path.mkdir(parents=True, exist_ok=True)
         for filename in fnmatch.filter(files, '*.gcno'):
@@ -309,8 +309,8 @@ def main():
         jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
     (sourcedir / 'include').symlink_to(jmdir)
 
-    xmlfile = result_dir / 'coverage.xml'
-    resultfile = result_dir / 'summary.txt'
+    xmlfile = coverage_dir / 'coverage.xml'
+    resultfile = coverage_dir / 'summary.txt'
     gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
         Path('build'),
         Path('build') / '3rdParty' / 'libunwind'/ 'v*',
