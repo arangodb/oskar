@@ -138,10 +138,13 @@ def testing_runner(testing_instance, this, arangosh):
                 if this.lcov_prefix is not None:
                     lcov_dir = Path(this.lcov_prefix)
                     (_, result_dir) = combine_coverage_dirs_multi(this.cfg, lcov_dir, this.parallelity)
-                    hash_str = hashlib.md5(this.name_enum.encode()).hexdigest()
-                    target_dir = Path(LLVM_PROFILE_FILE) / hash_str
-                    print(f'renaming {str(result_dir)} -> {target_dir}')
-                    result_dir.rename(target_dir)
+                    if result_dir is None:
+                        print("combining coverage failed!")
+                    else:
+                        hash_str = hashlib.md5(this.name_enum.encode()).hexdigest()
+                        target_dir = Path(LLVM_PROFILE_FILE) / hash_str
+                        print(f'renaming {str(result_dir)} -> {target_dir}')
+                        result_dir.rename(target_dir)
                     shutil.rmtree(str(this.lcov_prefix))
         except Exception as ex:
             print(ex)
