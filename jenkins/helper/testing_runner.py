@@ -35,6 +35,7 @@ MAX_COREFILE_SIZE_MB=850
 if 'MAX_CORESIZE' in os.environ:
     MAX_COREFILE_SIZE_MB=int(os.environ['MAX_CORESIZE'])
 
+COVERAGE_LOCK = Lock()
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -131,11 +132,11 @@ def testing_runner(testing_instance, this, arangosh):
     finally:
         print('finally')
         try:
-            with arangosh.slot_lock:
+            with COVERAGE_LOCK:
                 if this.lcov_prefix is not None:
                     lcov_dir = Path(this.lcov_prefix)
                     cfg = SiteConfig(lcov_dir)
-                    (coverage_dir, result_dir) = combine_coverage_dirs_multi(cfg, lcov_dir, this.parallelity)
+                    (_, result_dir) = combine_coverage_dirs_multi(cfg, lcov_dir, this.parallelity)
                     hash_str = hashlib.md5(this.name_enum.encode()).hexdigest()
                     target_dir = Path(LLVM_PROFILE_FILE) / hash_str
                     print(f'renaming {str(result_dir)} -> {target_dir}')
