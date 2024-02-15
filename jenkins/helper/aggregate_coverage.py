@@ -246,7 +246,7 @@ def combine_coverage_dirs_multi(cfg,
     sys.stdout.flush()
     if not last_output.exists():
         print(f'output {str(last_output)} not there?')
-    result_dir = combined_dir / 'result'
+    result_dir = combined_dir / 'coverage_result'
     last_output.rename(result_dir)
     return (coverage_dirs, result_dir)
 
@@ -259,7 +259,6 @@ def main():
     if coverage_dir.exists():
         shutil.rmtree(str(coverage_dir))
     coverage_dir.mkdir()
-    os.chdir(base_dir)
     gcov_dir = base_dir / sys.argv[2]
     cfg = SiteConfig(gcov_dir.resolve())
     (coverage_dirs, result_dir) = combine_coverage_dirs_multi(
@@ -267,6 +266,7 @@ def main():
         gcov_dir,
         psutil.cpu_count(logical=False))
 
+    os.chdir(base_dir)
     sourcedir = base_dir / 'ArangoDB'
     # copy the source files from the sourcecode directory
     for copy_dir in [
