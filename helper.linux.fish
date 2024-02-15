@@ -22,7 +22,7 @@ else
 end
 
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
-set -gx UBUNTUBUILDIMAGE6_TAG 13
+set -gx UBUNTUBUILDIMAGE6_TAG 14
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
 set -gx UBUNTUBUILDIMAGE_DEVEL_NAME arangodb/ubuntubuildarangodb-devel
@@ -33,7 +33,7 @@ set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
 
 set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
-set -gx ALPINEBUILDIMAGE6_TAG 12
+set -gx ALPINEBUILDIMAGE6_TAG 13
 set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
 
 set -gx ALPINEPERFBUILDIMAGE1_NAME arangodb/alpineperfbuildimage1-$ARCH
