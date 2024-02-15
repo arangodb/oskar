@@ -74,7 +74,7 @@ def testing_runner(testing_instance, this, arangosh):
                                  this.name_enum.replace(' ', '_'))
             if this.lcov_prefix.exists():
                 shutil.rmtree(str(this.lcov_prefix))
-            this.lcov_prefix.mkdir()
+            this.lcov_prefix.mkdir(parents=True)
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
