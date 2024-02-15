@@ -296,7 +296,7 @@ def main():
     buildir = sourcedir / 'build'
     baselen = len(str(buildir))
     for root, _, files in os.walk(buildir):
-        subdir = str(coverage_dir) + root[baselen:]
+        subdir = str(result_dir) + root[baselen:]
         path = Path(subdir)
         path.mkdir(parents=True, exist_ok=True)
         for filename in fnmatch.filter(files, '*.gcno'):
