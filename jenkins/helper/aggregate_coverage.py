@@ -281,7 +281,7 @@ def main():
         srcdir = sourcedir / copy_dir
         if srcdir.exists():
             baselen = len(str(srcdir))
-            dstdir = coverage_dir / copy_dir
+            dstdir = result_dir / copy_dir
             print(f"Copy {str(srcdir)} => {str(dstdir)}")
 
             for root, _, files in os.walk(srcdir):
@@ -309,8 +309,8 @@ def main():
         jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
     (sourcedir / 'include').symlink_to(jmdir)
 
-    xmlfile = coverage_dir / 'coverage.xml'
-    resultfile = coverage_dir / 'summary.txt'
+    xmlfile = result_dir / 'coverage.xml'
+    resultfile = result_dir / 'summary.txt'
     gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
         Path('build'),
         Path('build') / '3rdParty' / 'libunwind'/ 'v*',
