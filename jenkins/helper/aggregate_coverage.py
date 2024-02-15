@@ -193,7 +193,7 @@ def combine_coverage_dirs_multi(cfg,
     jobcount = 0
     if (len(sub_jobs) == 0):
         print("failed to locate subjobs in {coverage_dirs}")
-        return ("", "")
+        return (None, None)
     while len(sub_jobs) > 1:
         next_jobs = []
         jobs.append([])
