@@ -635,7 +635,7 @@ end
 function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
-  and runInContainer (findStaticBuildImage) python3 -E LLVM_PROFILE_FILE=/work/gcov/ "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
+  and runInContainer (findStaticBuildImage) -E LLVM_PROFILE_FILE=/work/gcov/ python3 "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
   return $status
 end
 
