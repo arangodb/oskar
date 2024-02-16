@@ -90,10 +90,6 @@ rm -f %{buildroot}/README
 mkdir /tmp/sbin /tmp/bin
 # arangodb
 mv %{buildroot}/usr/bin/arangodb /tmp/bin
-# arangosync
-if [ -x %{buildroot}/usr/sbin/arangosync ] ; then
-  mv %{buildroot}/usr/sbin/arangosync /tmp/sbin
-fi
 # arangod
 @RPM_STRIP_EXCEPT_ARANGOD@mv %{buildroot}/usr/sbin/arangod /tmp/sbin
 # or all binaries

@@ -381,7 +381,7 @@ else ; set -gx ARANGODB_DOCS_BRANCH $ARANGODB_DOCS_BRANCH ; end
 
 function findRcloneVersion
   set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
-  set -xg RCLONE_VERSION "1.51.0"
+  set -xg RCLONE_VERSION "1.59.0"
 
   test -f $f
   and begin

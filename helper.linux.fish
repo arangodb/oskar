@@ -21,16 +21,8 @@ else
   set -xg UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH "x86_64"
 end
 
-set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 21
-set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
-
-set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 17
-set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
-
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
-set -gx UBUNTUBUILDIMAGE6_TAG 13
+set -gx UBUNTUBUILDIMAGE6_TAG 14
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
 set -gx UBUNTUBUILDIMAGE_DEVEL_NAME arangodb/ubuntubuildarangodb-devel
@@ -40,21 +32,9 @@ set -gx UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:$UBUNTUBUILDIMAGE_DE
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
 
-set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 24
-set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
-
-set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
-set -gx ALPINEBUILDIMAGE5_TAG 16
-set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
-
 set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
-set -gx ALPINEBUILDIMAGE6_TAG 12
+set -gx ALPINEBUILDIMAGE6_TAG 13
 set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
-
-set -gx ALPINEBUILDIMAGE7_NAME arangodb/alpinebuildarangodb7-$ARCH
-set -gx ALPINEBUILDIMAGE7_TAG 5
-set -gx ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:$ALPINEBUILDIMAGE7_TAG
 
 set -gx ALPINEPERFBUILDIMAGE1_NAME arangodb/alpineperfbuildimage1-$ARCH
 set -gx ALPINEPERFBUILDIMAGE1_TAG 1
@@ -97,15 +77,6 @@ function compiler
   end
 
   switch $cversion
-    case 9.3.0-r0
-      set -gx COMPILER_VERSION $cversion
-
-    case 9.3.0-r2
-      set -gx COMPILER_VERSION $cversion
-
-    case 10.2.1_pre1-r3
-      set -gx COMPILER_VERSION $cversion
-
     case 11.2.1_git20220219-r2
       set -gx COMPILER_VERSION $cversion
 
@@ -132,19 +103,13 @@ function opensslVersion
   end
 
   switch $oversion
-    case '1.0.0'
-      set -gx OPENSSL_VERSION $oversion
-
-    case '1.1.0'
-      set -gx OPENSSL_VERSION $oversion
-
-    case '1.1.1'
-      set -gx OPENSSL_VERSION $oversion
-
     case '3.0'
       set -gx OPENSSL_VERSION $oversion
 
     case '3.1'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '3.2'
       set -gx OPENSSL_VERSION $oversion
 
     case '*'
@@ -154,16 +119,9 @@ end
 
 function findBuildImage
   if test "$COMPILER_VERSION" = ""
-      echo $UBUNTUBUILDIMAGE4
+      echo $UBUNTUBUILDIMAGE6
   else
     switch $COMPILER_VERSION
-
-      case 9.3.0-r2
-        echo $UBUNTUBUILDIMAGE4
-
-      case 10.2.1_pre1-r3
-        echo $UBUNTUBUILDIMAGE5
-
       case 11.2.1_git20220219-r2
         echo $UBUNTUBUILDIMAGE6
 
@@ -182,16 +140,9 @@ end
 
 function findStaticBuildImage
   if test "$COMPILER_VERSION" = ""
-      echo $ALPINEBUILDIMAGE4
+      echo $ALPINEBUILDIMAGE6
   else
     switch $COMPILER_VERSION
-
-      case 9.3.0-r2
-        echo $ALPINEBUILDIMAGE4
-
-      case 10.2.1_pre1-r3
-        echo $ALPINEBUILDIMAGE5
-
       case 11.2.1_git20220219-r2
         echo $ALPINEBUILDIMAGE6
 
@@ -210,16 +161,9 @@ end
 
 function findBuildScript
   if test "$COMPILER_VERSION" = ""
-      echo buildArangoDB4.fish
+      echo buildArangoDB6.fish
   else
     switch $COMPILER_VERSION
-
-      case 9.3.0-r2
-        echo buildArangoDB4.fish
-
-      case 10.2.1_pre1-r3
-        echo buildArangoDB5.fish
-
       case 11.2.1_git20220219-r2
         echo buildArangoDB6.fish
 
@@ -238,16 +182,9 @@ end
 
 function findStaticBuildScript
   if test "$COMPILER_VERSION" = ""
-      echo buildAlpine4.fish
+      echo buildAlpine6.fish
   else
     switch $COMPILER_VERSION
-
-      case 9.3.0-r2
-        echo buildAlpine4.fish
-
-      case 10.2.1_pre1-r3
-        echo buildAlpine5.fish
-
       case 11.2.1_git20220219-r2
         echo buildAlpine6.fish
 
@@ -287,8 +224,8 @@ function findRequiredCompiler
   end
 
   if test "$v" = ""
-    echo "$f: no CLANG_LINUX or GCC_LINUX specified, using g++ 9.3.0-r2"
-    compiler 9.3.0-r2
+    echo "$f: no CLANG_LINUX or GCC_LINUX specified, using g++ 11.2.1_git20220219-r2"
+    compiler 11.2.1_git20220219-r2
   else
     echo "Using compiler '$v' from '$f'"
     compiler $v
@@ -312,8 +249,8 @@ function findRequiredOpenSSL
   set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o '^[0-2]\.[0-2]\.[0-2]\|^[3-9]\.[0-9]')
 
   if test "$v" = ""
-    echo "$f: no OPENSSL_LINUX specified, using 1.1.1"
-    opensslVersion 1.1.1
+    echo "$f: no OPENSSL_LINUX specified, using 3.0"
+    opensslVersion 3.0
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
@@ -1521,38 +1458,6 @@ end
 ## build and packaging images
 ## #############################################################################
 
-function buildUbuntuBuildImage4
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu4.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE4 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushUbuntuBuildImage4
-  docker tag $UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE4
-  and docker push $UBUNTUBUILDIMAGE4_NAME:latest
-end
-
-function pullUbuntuBuildImage4 ; docker pull $UBUNTUBUILDIMAGE4 ; end
-
-function buildUbuntuBuildImage5
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu5.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE5 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushUbuntuBuildImage5
-  docker tag $UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE5
-  and docker push $UBUNTUBUILDIMAGE5_NAME:latest
-end
-
-function pullUbuntuBuildImage5 ; docker pull $UBUNTUBUILDIMAGE5 ; end
-
 function buildUbuntuBuildImage6
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntu6.docker
@@ -1621,38 +1526,6 @@ function pushUbuntuPackagingImage2 ; docker push $UBUNTUPACKAGINGIMAGE2 ; end
 
 function pullUbuntuPackagingImage2 ; docker pull $UBUNTUPACKAGINGIMAGE2 ; end
 
-function buildAlpineBuildImage4
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine4.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE4 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushAlpineBuildImage4
-  docker tag $ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:latest
-  and docker push $ALPINEBUILDIMAGE4
-  and docker push $ALPINEBUILDIMAGE4_NAME:latest
-end
-
-function pullAlpineBuildImage4 ; docker pull $ALPINEBUILDIMAGE4 ; end
-
-function buildAlpineBuildImage5
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine5.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE5 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushAlpineBuildImage5
-  docker tag $ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:latest
-  and docker push $ALPINEBUILDIMAGE5
-  and docker push $ALPINEBUILDIMAGE5_NAME:latest
-end
-
-function pullAlpineBuildImage5 ; docker pull $ALPINEBUILDIMAGE5 ; end
-
 function buildAlpineBuildImage6
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildAlpine6.docker
@@ -1668,22 +1541,6 @@ function pushAlpineBuildImage6
 end
 
 function pullAlpineBuildImage6 ; docker pull $ALPINEBUILDIMAGE6 ; end
-
-function buildAlpineBuildImage7
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine7.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE7 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushAlpineBuildImage7
-  docker tag $ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:latest
-  and docker push $ALPINEBUILDIMAGE7
-  and docker push $ALPINEBUILDIMAGE7_NAME:latest
-end
-
-function pullAlpineBuildImage7 ; docker pull $ALPINEBUILDIMAGE6 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
@@ -1749,22 +1606,12 @@ function pullLdapImage ; docker pull $LDAPIMAGE ; end
 function remakeImages
   set -l s 0
 
-  buildUbuntuBuildImage4 ; or set -l s 1
-  pushUbuntuBuildImage4 ; or set -l s 1
-  buildUbuntuBuildImage5 ; or set -l s 1
-  pushUbuntuBuildImage5 ; or set -l s 1
   buildUbuntuBuildImage6 ; or set -l s 1
   pushUbuntuBuildImage6 ; or set -l s 1
   buildUbuntuBuildImageDevel ; or set -l s 1
   pushUbuntuBuildImageDevel ; or set -l s 1
-  buildAlpineBuildImage4 ; or set -l s 1
-  pushAlpineBuildImage4 ; or set -l s 1
-  buildAlpineBuildImage5 ; or set -l s 1
-  pushAlpineBuildImage5 ; or set -l s 1
   buildAlpineBuildImage6 ; or set -l s 1
   pushAlpineBuildImage6 ; or set -l s 1
-  buildAlpineBuildImage7 ; or set -l s 1
-  pushAlpineBuildImage7 ; or set -l s 1
   buildAlpineUtilsImage ; or set -l s 1
   pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
@@ -1780,22 +1627,12 @@ end
 function remakeBuildImages
   set -l s 0
 
-  buildUbuntuBuildImage4 ; or set -l s 1
-  pushUbuntuBuildImage4 ; or set -l s 1
-  buildUbuntuBuildImage5 ; or set -l s 1
-  pushUbuntuBuildImage5 ; or set -l s 1
   buildUbuntuBuildImage6 ; or set -l s 1
   pushUbuntuBuildImage6 ; or set -l s 1
   buildUbuntuBuildImageDevel ; or set -l s 1
   pushUbuntuBuildImageDevel ; or set -l s 1
-  buildAlpineBuildImage4 ; or set -l s 1
-  pushAlpineBuildImage4 ; or set -l s 1
-  buildAlpineBuildImage5 ; or set -l s 1
-  pushAlpineBuildImage5 ; or set -l s 1
   buildAlpineBuildImage6 ; or set -l s 1
   pushAlpineBuildImage6 ; or set -l s 1
-  buildAlpineBuildImage7 ; or set -l s 1
-  pushAlpineBuildImage7 ; or set -l s 1
 
   return $s
 end
@@ -2105,29 +1942,14 @@ function pushOskar
   and source helper.fish
   and git push
 
-  and buildUbuntuBuildImage4
-  and pushUbuntuBuildImage4
-
-  and buildUbuntuBuildImage5
-  and pushUbuntuBuildImage5
-
   and buildUbuntuBuildImage6
   and pushUbuntuBuildImage6
 
   and buildUbuntuBuildImageDevel
   and pushUbuntuBuildImageDevel
 
-  and buildAlpineBuildImage4
-  and pushAlpineBuildImage4
-
-  and buildAlpineBuildImage5
-  and pushAlpineBuildImage5
-
   and buildAlpineBuildImage6
   and pushAlpineBuildImage6
-
-  and buildAlpineBuildImage7
-  and pushAlpineBuildImage7
 
   and buildAlpineUtilsImage
   and pushAlpineUtilsImage
@@ -2159,14 +1981,9 @@ end
 
 function updateOskar
   updateOskarOnly
-  and pullUbuntuBuildImage4
-  and pullUbuntuBuildImage5
   and pullUbuntuBuildImage6
   and pullUbuntuBuildImageDevel
-  and pullAlpineBuildImage4
-  and pullAlpineBuildImage5
   and pullAlpineBuildImage6
-  and pullAlpineBuildImage7
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullUbuntuPackagingImage2
@@ -2190,15 +2007,17 @@ function downloadStarter
 end
 
 function downloadSyncer
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+    if test "$DOWNLOAD_SYNC_USER" = ""
+      echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+      return 1
+    end
+    mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+    and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+    and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+    and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+    and convertSItoJSON
   end
-  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-  and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
-  and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-  and convertSItoJSON
 end
 
 function downloadAuxBinariesToBuildBin
@@ -2206,7 +2025,9 @@ function downloadAuxBinariesToBuildBin
      copyRclone linux
      and cp work/ArangoDB/build/install/usr/sbin/rclone-arangodb work/ArangoDB/build/bin/
      and downloadSyncer
-     and cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+     and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+           cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+         end
   end
   and downloadStarter
   and cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
