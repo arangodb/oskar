@@ -317,7 +317,8 @@ end
 
 function ubiDockerImage ; set -gx DOCKER_DISTRO ubi ; end
 function alpineDockerImage ; set -gx DOCKER_DISTRO "" ; end
-alpineDockerImage
+if test -z "$DOCKER_DISTRO"; alpineDockerImage
+else ; set -gx DOCKER_DISTRO $DOCKER_DISTRO ; end
 
 function skipNondeterministic ; set -gx SKIPNONDETERMINISTIC true ; end
 function includeNondeterministic ; set -gx SKIPNONDETERMINISTIC false ; end
