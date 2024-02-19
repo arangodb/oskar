@@ -103,6 +103,11 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
         ret['error'] = self.params['error']
         return ret
 
+def translate_xml(xmlfile):
+    """ convert the directories inside the xml file """
+    xmltext = xmlfile.read_text(encoding='utf8')
+    xmltext = xmltext.replace('filename="', 'filename="./coverage/')
+    xmlfile.write_text(xmltext)
 
 class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
     """Convert the joint report to the jenkins compatible XML"""
@@ -153,9 +158,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
 
     def translate_xml(self):
         """ convert the directories inside the xml file """
-        xmltext = self.xmlfile.read_text(encoding='utf8')
-        xmltext = xmltext.replace('filename="', 'filename="./coverage/')
-        self.xmlfile.write_text(xmltext)
+        translate_xml(self.xmlfile)
 
 class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     """Merge two sets of gcov files"""
@@ -365,6 +368,7 @@ def main():
     cobertura_xml = coverage_dir / 'coverage.xml'
     print('converting to cobertura report')
     convert_lcov_to_cobertura(cfg, lcov_file, sourcedir, binary, cobertura_xml)
+    translate_xml(cobertura_xml)
     os.chdir(base_dir)
     # copy the source files from the sourcecode directory
     for copy_dir in [
