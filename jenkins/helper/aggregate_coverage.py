@@ -359,7 +359,7 @@ def main():
     lcov_file = gcov_dir / 'coverage.lcov'
     print('converting to lcov file')
     convert_to_lcov_file(cfg, result_dir, lcov_file)
-    cobertura_xml = gcov_dir / 'coverage.xml'
+    cobertura_xml = coverage_dir / 'coverage.xml'
     print('converting to cobertura report')
     convert_lcov_to_cobertura(cfg, lcov_file, sourcedir, binary, cobertura_xml)
     os.chdir(base_dir)
