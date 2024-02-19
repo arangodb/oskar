@@ -37,7 +37,7 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
         self.job_parameters = [
             'export',
             '-format=lcov',
-            'ArangoDB/build/bin/arangod'
+            'ArangoDB/build/bin/arangod',
             f'-instr-profile={str(coverage_file)}'
         ]
         self.params = make_tail_params(verbose, "lcov_convert ", lcov_file)
