@@ -357,8 +357,10 @@ def main():
     sourcedir = base_dir / 'ArangoDB'
     binary = sourcedir / 'build' / 'bin' / 'arangod'
     lcov_file = gcov_dir / 'coverage.lcov'
+    print('converting to lcov file')
     convert_to_lcov_file(cfg, result_dir, lcov_file)
     cobertura_xml = gcov_dir / 'coverage.xml'
+    print('converting to cobertura report')
     convert_lcov_to_cobertura(cfg, lcov_file, sourcedir, binary, cobertura_xml)
     os.chdir(base_dir)
     # copy the source files from the sourcecode directory
@@ -402,19 +404,19 @@ def main():
         jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
     (sourcedir / 'include').symlink_to(jmdir)
 
-    xmlfile = coverage_dir / 'coverage.xml'
-    resultfile = coverage_dir / 'summary.txt'
-    gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
-        Path('build'),
-        Path('build') / '3rdParty' / 'libunwind'/ 'v*',
-        Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
-        Path('3rdParty'),
-        Path('3rdParty') / 'jemalloc' / 'v*',
-        Path('usr'),
-        Path('tests')
-        ])
-    gcovr.launch()
-    gcovr.translate_xml()
+    # xmlfile = coverage_dir / 'coverage.xml'
+    # resultfile = coverage_dir / 'summary.txt'
+    # gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
+    #     Path('build'),
+    #     Path('build') / '3rdParty' / 'libunwind'/ 'v*',
+    #     Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
+    #     Path('3rdParty'),
+    #     Path('3rdParty') / 'jemalloc' / 'v*',
+    #     Path('usr'),
+    #     Path('tests')
+    #     ])
+    # gcovr.launch()
+    # gcovr.translate_xml()
 
     if not SUCCESS:
         os._exit(1)
