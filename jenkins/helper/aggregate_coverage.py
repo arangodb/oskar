@@ -149,8 +149,8 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
                 identifier=binary
             )
         except Exception as ex:
-            print(f'exception in {binary} run {ex}\n{
-            "".join(traceback.TracebackException.from_exception(ex).format()}')
+            print(f'''exception in {binary} run {ex}
+            {"".join(traceback.TracebackException.from_exception(ex).format())}''')
             self.params['error'] += str(ex)
         end = datetime.now()
         print(f'done with {binary} in {end-start}')
