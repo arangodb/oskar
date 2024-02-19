@@ -72,7 +72,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
     def __init__(self, site_config):
         super().__init__(site_config, None)
 
-    def launch(self, lcov_file, source_dir, binary, cobertura_xml):
+    def launch(self, lcov_file, source_dir, binary, cobertura_xml, directories):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ lcov to cobertura xml converter """
         binary="/usr/local/bin/lcov_cobertura"
@@ -87,6 +87,9 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
             '-o', # cobertura.xml
             str(cobertura_xml)
         ]
+        for one_directory in directories:
+            for one_globbed in glob.glob(str(rootdir / one_directory)):
+                self.job_parameters += ['--excludes', str(one_globbed)]
         self.params = make_default_params(verbose, "222")
         print(self.job_parameters)
         start = datetime.now()
@@ -430,7 +433,15 @@ def main():
     # gcovr.translate_xml()
     cobertura_xml = coverage_dir / 'coverage.xml'
     print('converting to cobertura report')
-    convert_lcov_to_cobertura(cfg, lcov_file, sourcedir, binary, cobertura_xml)
+    convert_lcov_to_cobertura(cfg, lcov_file, sourcedir, binary, cobertura_xml, [
+        Path('build'),
+        Path('build') / '3rdParty' / 'libunwind'/ 'v*',
+        Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
+        Path('3rdParty'),
+        Path('3rdParty') / 'jemalloc' / 'v*',
+        Path('usr'),
+        Path('tests')
+    ])
     translate_xml(cobertura_xml)
 
     if not SUCCESS:
