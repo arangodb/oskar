@@ -55,7 +55,8 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
                 identifier=binary
             )
         except Exception as ex:
-            print(f'exception in {binary} run {ex}')
+            print(f'''exception in {binary} run {ex}
+            {"".join(traceback.TracebackException.from_exception(ex).format())}''')
             self.params['error'] += str(ex)
         end = datetime.now()
         print(f'done with {binary} in {end-start}')
@@ -96,7 +97,8 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
                 identifier=binary
             )
         except Exception as ex:
-            print(f'exception in {binary} run {ex}')
+            print(f'''exception in {binary} run {ex}
+            {"".join(traceback.TracebackException.from_exception(ex).format())}''')
             self.params['error'] += str(ex)
         end = datetime.now()
         print(f'done with {binary} in {end-start}')
@@ -193,7 +195,8 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
                 identifier=self.identifier
             )
         except Exception as ex:
-            print(f'exception in {self.job[0]} {self.job[1]}: {ex}')
+            print(f'''exception in {self.job[0]} {self.job[1]}: {ex}
+            {"".join(traceback.TracebackException.from_exception(ex).format())}''')
             self.params['error'] += str(ex)
         end = datetime.now()
         print(f"done with {self.job[0]} {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']}")
