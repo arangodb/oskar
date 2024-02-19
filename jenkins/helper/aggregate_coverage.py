@@ -9,6 +9,7 @@ import shutil
 import sys
 from pathlib import Path
 from threading  import Thread, Lock
+import traceback
 
 import psutil
 from async_client import (
@@ -148,7 +149,8 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
                 identifier=binary
             )
         except Exception as ex:
-            print(f'exception in {binary} run {ex}')
+            print(f'exception in {binary} run {ex}\n{
+            "".join(traceback.TracebackException.from_exception(ex).format()}')
             self.params['error'] += str(ex)
         end = datetime.now()
         print(f'done with {binary} in {end-start}')
