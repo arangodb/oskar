@@ -16,7 +16,7 @@ from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
     make_default_params,
     make_tail_params,
-    tail_line_result,
+    tail_silent_line_result,
     # make_logfile_params
 )
 
@@ -54,7 +54,7 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
                 progressive_timeout=600,
                 deadline_grace_period=30*60,
                 identifier=binary,
-                result_line_handler=tail_line_result,
+                result_line_handler=tail_silent_line_result,
             )
         except Exception as ex:
             print(f'''exception in {binary} run {ex}
