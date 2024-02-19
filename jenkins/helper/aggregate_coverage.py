@@ -76,7 +76,8 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ lcov to cobertura xml converter """
         binary="/usr/local/bin/lcov_cobertura"
-        verbose = True
+        verbose = False # Noisy since payload ends on stdout;
+        # no way to specify a file for the output.
         self.job_parameters = [
             str(lcov_file),
             '-b',
@@ -372,10 +373,6 @@ def main():
     lcov_file = gcov_dir / 'coverage.lcov'
     print('converting to lcov file')
     convert_to_lcov_file(cfg, result_dir, lcov_file)
-    cobertura_xml = coverage_dir / 'coverage.xml'
-    print('converting to cobertura report')
-    convert_lcov_to_cobertura(cfg, lcov_file, sourcedir, binary, cobertura_xml)
-    translate_xml(cobertura_xml)
     os.chdir(base_dir)
     # copy the source files from the sourcecode directory
     for copy_dir in [
@@ -431,6 +428,10 @@ def main():
     #     ])
     # gcovr.launch()
     # gcovr.translate_xml()
+    cobertura_xml = coverage_dir / 'coverage.xml'
+    print('converting to cobertura report')
+    convert_lcov_to_cobertura(cfg, lcov_file, sourcedir, binary, cobertura_xml)
+    translate_xml(cobertura_xml)
 
     if not SUCCESS:
         os._exit(1)
