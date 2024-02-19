@@ -53,7 +53,7 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
                 identifier='llvm-cov'
             )
         except Exception as ex:
-            print('exception in gcovr run')
+            print(f'exception in llvm-cov run {ex}')
             self.params['error'] += str(ex)
         end = datetime.now()
         print(f'done with gcovr in {end-start}')
@@ -93,7 +93,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
                 identifier='lcov_cobertura'
             )
         except Exception as ex:
-            print('exception in gcovr run')
+            print(f'exception in lcov_cobertura run {ex}')
             self.params['error'] += str(ex)
         end = datetime.now()
         print(f'done with gcovr in {end-start}')
