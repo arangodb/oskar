@@ -16,6 +16,7 @@ from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
     make_default_params,
     make_tail_params,
+    tail_line_result,
     # make_logfile_params
 )
 
