@@ -14,6 +14,7 @@ import psutil
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
     make_default_params,
+    make_tail_params,
     # make_logfile_params
 )
 
