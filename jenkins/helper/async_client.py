@@ -70,6 +70,22 @@ def tail_line_result(wait, line, params):
         params['skip_done'] = True
         print(params['prefix'] + 'initial tail done, starting to output')
     return True
+def tail_silent_line_result(wait, line, params):
+    """
+    Keep the line, filter it for leading #,
+    if verbose print the line. else print progress.
+    """
+    # pylint: disable=pointless-statement
+    if params['skip_done']:
+        if isinstance(line, tuple):
+            #print(params['prefix'] + str(line[0], 'utf-8').rstrip())
+            params['output'].write(line[0])
+        return True
+    now = datetime.now()
+    if now - params['last_read'] > timedelta(seconds=1):
+        params['skip_done'] = True
+        #print(params['prefix'] + 'initial tail done, starting to output')
+    return True
 def make_tail_params(verbose, prefix, logfile):
     """ create the structure to work with arrays to output the strings to """
     return {
