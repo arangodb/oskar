@@ -52,7 +52,8 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
                 self.params,
                 progressive_timeout=600,
                 deadline_grace_period=30*60,
-                identifier=binary
+                identifier=binary,
+                result_line_handler=tail_line_result,
             )
         except Exception as ex:
             print(f'''exception in {binary} run {ex}
