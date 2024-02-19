@@ -17,11 +17,89 @@ from async_client import (
     # make_logfile_params
 )
 
-from site_config import SiteConfig, TEMP
+from site_config import SiteConfig
 
 SUCCESS = True
 
 # pylint disable=global-variable-not-assigned
+
+class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
+    """Convert the joint report to the jenkins compatible XML"""
+
+    def __init__(self, site_config):
+        super().__init__(site_config, None)
+
+    def launch(self, coverage_file, lcov_file):
+       # pylint: disable=R0913 disable=R0902 disable=broad-except
+        """ gcov merger """
+        verbose = True
+        self.job_parameters = [
+            'export',
+            '-format=lcov',
+            'ArangoDB/build/bin/arangod'
+            f'-instr-profile={str(coverage_file)}'
+        ]
+        self.params = make_tail_params(verbose, "lcov_convert ", lcov_file)
+        print(self.job_parameters)
+        start = datetime.now()
+        try:
+            ret = self.run_monitored(
+                "/usr/lib/llvm-16/bin/llvm-cov",
+                self.job_parameters,
+                self.params,
+                progressive_timeout=600,
+                deadline_grace_period=30*60,
+                identifier='llvm-cov'
+            )
+        except Exception as ex:
+            print('exception in gcovr run')
+            self.params['error'] += str(ex)
+        end = datetime.now()
+        print(f'done with gcovr in {end-start}')
+        ret = {}
+        ret['error'] = self.params['error']
+        return ret
+
+class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
+    """Convert the joint report to the jenkins compatible XML"""
+
+    def __init__(self, site_config):
+        super().__init__(site_config, None)
+
+    def launch(self, lcov_file, source_dir, binary, cobertura_xml):
+       # pylint: disable=R0913 disable=R0902 disable=broad-except
+        """ lcov to cobertura xml converter """
+        verbose = True
+        self.job_parameters = [
+            str(lcov_file),
+            '-b',
+            str(source_dir), #            /home/willi/oskar/work/ArangoDB/
+            '-e',
+            str(binary),  #ArangoDB/build/bin/arangod
+            '-o', # cobertura.xml
+            str(cobertura_xml)
+        ]
+        self.params = make_default_params(verbose, "222")
+        print(self.job_parameters)
+        start = datetime.now()
+        try:
+            ret = self.run_monitored(
+                "/usr/local/bin/lcov_cobertura",
+                self.job_parameters,
+                self.params,
+                progressive_timeout=600,
+                deadline_grace_period=30*60,
+                identifier='lcov_cobertura'
+            )
+        except Exception as ex:
+            print('exception in gcovr run')
+            self.params['error'] += str(ex)
+        end = datetime.now()
+        print(f'done with gcovr in {end-start}')
+        ret = {}
+        ret['error'] = self.params['error']
+        return ret
+
 
 class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
     """Convert the joint report to the jenkins compatible XML"""
@@ -114,13 +192,13 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         ret['error'] = self.params['error']
         for one_file in [self.job[0], self.job[1]]:
             print('cleaning up')
-            f = Path(one_file)
-            print(f)
-            if f.is_dir():
-                shutil.rmtree(f)
+            cleanup_file = Path(one_file)
+            print(cleanup_file)
+            if cleanup_file.is_dir():
+                shutil.rmtree(cleanup_file)
             else:
                 print('delete file')
-                f.unlink()
+                cleanup_file.unlink()
                 print('file gone')
         print(f"launch(): returning {ret}")
         return ret
@@ -166,6 +244,7 @@ def launch_worker(cfg):
 def combine_coverage_dirs_multi(cfg,
                                 gcov_dir,
                                 slot_count):
+    """ take all coverage databases to be found in one directory and combine them"""
     global COV_JOB_QUEUE, COV_JOB_DONE_QUEUE
     COV_JOB_QUEUE = Queue()
     COV_JOB_DONE_QUEUE = Queue()
@@ -191,7 +270,7 @@ def combine_coverage_dirs_multi(cfg,
     combined_dir.mkdir()
     count = 0
     jobcount = 0
-    if (len(sub_jobs) == 0):
+    if len(sub_jobs) == 0:
         print("failed to locate subjobs in {coverage_dirs}")
         return (None, None)
     while len(sub_jobs) > 1:
@@ -250,10 +329,18 @@ def combine_coverage_dirs_multi(cfg,
     last_output.rename(result_dir)
     return (coverage_dirs, result_dir)
 
+def convert_to_lcov_file(cfg, coverage_file, lcov_file):
+    """ convert the database into an lcov file """
+    cov = LlvmCov(cfg)
+    cov.launch(coverage_file, lcov_file)
+def convert_lcov_to_cobertura(cfg, lcov_file, source_dir, binary, cobertura_xml):
+    """ convert the lcov file to a cobertura xml """
+    cov = LcovCobertura(cfg)
+    cov.launch(lcov_file, source_dir, binary, cobertura_xml)
+
 def main():
     """ go """
     # pylint disable=too-many-locals disable=too-many-statements
-    global COV_SLOT_LOCK, SUCCESS
     base_dir = Path(sys.argv[1])
     coverage_dir = base_dir / 'coverage'
     if coverage_dir.exists():
@@ -266,8 +353,13 @@ def main():
         gcov_dir,
         psutil.cpu_count(logical=False))
 
-    os.chdir(base_dir)
     sourcedir = base_dir / 'ArangoDB'
+    binary = sourcedir / 'build' / 'bin' / 'arangod'
+    lcov_file = gcov_dir / 'coverage.lcov'
+    convert_to_lcov_file(cfg, result_dir, lcov_file)
+    cobertura_xml = gcov_dir / 'coverage.xml'
+    convert_lcov_to_cobertura(cfg, lcov_file, sourcedir, binary, cobertura_xml)
+    os.chdir(base_dir)
     # copy the source files from the sourcecode directory
     for copy_dir in [
             Path('lib'),
@@ -289,7 +381,7 @@ def main():
                 path = Path(subdir)
                 path.mkdir(parents=True, exist_ok=True)
                 for filename in files:
-                    source = (os.path.join(root, filename))
+                    source = os.path.join(root, filename)
                     shutil.copy2(source, path / filename)
 
     print('copy the gcno files from the build directory')
