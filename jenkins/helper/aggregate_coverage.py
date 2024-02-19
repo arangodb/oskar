@@ -34,6 +34,7 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
         verbose = True
+        binary = "/usr/lib/llvm-16/bin/llvm-cov"
         self.job_parameters = [
             'export',
             '-format=lcov',
@@ -45,18 +46,18 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
         start = datetime.now()
         try:
             ret = self.run_monitored(
-                "/usr/lib/llvm-16/bin/llvm-cov",
+                binary,
                 self.job_parameters,
                 self.params,
                 progressive_timeout=600,
                 deadline_grace_period=30*60,
-                identifier='llvm-cov'
+                identifier=binary
             )
         except Exception as ex:
-            print(f'exception in llvm-cov run {ex}')
+            print(f'exception in {binary} run {ex}')
             self.params['error'] += str(ex)
         end = datetime.now()
-        print(f'done with gcovr in {end-start}')
+        print(f'done with {binary} in {end-start}')
         ret = {}
         ret['error'] = self.params['error']
         return ret
@@ -70,6 +71,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self, lcov_file, source_dir, binary, cobertura_xml):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ lcov to cobertura xml converter """
+        binary="/usr/local/bin/lcov_cobertura"
         verbose = True
         self.job_parameters = [
             str(lcov_file),
@@ -85,18 +87,18 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
         start = datetime.now()
         try:
             ret = self.run_monitored(
-                "/usr/local/bin/lcov_cobertura",
+                binary,
                 self.job_parameters,
                 self.params,
                 progressive_timeout=600,
                 deadline_grace_period=30*60,
-                identifier='lcov_cobertura'
+                identifier=binary
             )
         except Exception as ex:
-            print(f'exception in lcov_cobertura run {ex}')
+            print(f'exception in {binary} run {ex}')
             self.params['error'] += str(ex)
         end = datetime.now()
-        print(f'done with gcovr in {end-start}')
+        print(f'done with {binary} in {end-start}')
         ret = {}
         ret['error'] = self.params['error']
         return ret
@@ -126,24 +128,25 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
+        binary = "/usr/lib/llvm-16/bin/llvm-profdata"
         verbose = True
         self.params = make_default_params(verbose, 111)
         print(self.job_parameters)
         start = datetime.now()
         try:
             ret = self.run_monitored(
-                "/usr/lib/llvm-16/bin/llvm-profdata", #"gcovr",
+                binary, #"gcovr",
                 self.job_parameters,
                 self.params,
                 progressive_timeout=600,
                 deadline_grace_period=30*60,
-                identifier='gcovr'
+                identifier=binary
             )
         except Exception as ex:
-            print('exception in gcovr run')
+            print(f'exception in {binary} run {ex}')
             self.params['error'] += str(ex)
         end = datetime.now()
-        print(f'done with gcovr in {end-start}')
+        print(f'done with {binary} in {end-start}')
         ret = {}
         ret['error'] = self.params['error']
         return ret
