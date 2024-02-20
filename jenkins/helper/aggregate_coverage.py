@@ -440,7 +440,7 @@ def main():
                               sourcedir,
                               binary,
                               cobertura_xml,
-                              Path("./"), [
+                              sourcedir, [
                                   Path('build'),
                                   Path('build') / '3rdParty' / 'libunwind'/ 'v*',
                                   Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
