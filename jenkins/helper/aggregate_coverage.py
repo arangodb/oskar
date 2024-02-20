@@ -88,8 +88,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
             str(cobertura_xml)
         ]
         for one_directory in directories:
-            for one_globbed in glob.glob(str(rootdir / one_directory)):
-                self.job_parameters += ['--excludes', str(one_globbed) + "/*"]
+            self.job_parameters += ['--excludes', ".*" + str(one_directory) + ".*"]
         self.params = make_default_params(verbose, "222")
         print(self.job_parameters)
         start = datetime.now()
