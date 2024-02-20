@@ -2033,6 +2033,10 @@ function downloadAuxBinariesToBuildBin
   and cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
 end
 
+function packObjectFiles
+  runInContainer $UBUNTUBUILDIMAGE_DEVEL $SCRIPTSDIR/packObjectFiles.fish
+end
+
 ## #############################################################################
 ## set PARALLELISM in a sensible way
 ## #############################################################################
