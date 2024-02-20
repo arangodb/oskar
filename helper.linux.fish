@@ -847,7 +847,7 @@ end
 ## #############################################################################
 
 function makeTestPackageLinux
-  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = ""
+  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = "" -a "$ARANGODB_VERSION_MAJOR" -eq 3 -a "$ARANGODB_VERSION_MINOR" -lt 12
     echo "Need to set environment variable DOWNLOAD_SYNC_USER for Enterprise package or use Community."
     return 1
   end
