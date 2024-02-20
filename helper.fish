@@ -316,7 +316,8 @@ else
 end
 
 function ubiDockerImage ; set -gx DOCKER_DISTRO ubi ; end
-function alpineDockerImage ; set -gx DOCKER_DISTRO "" ; end
+function alpineDockerImage ; set -gx DOCKER_DISTRO alpine ; end
+function debDockerImage; set -gx DOCKER_DISTRO deb ; end
 if test -z "$DOCKER_DISTRO"; alpineDockerImage
 else ; set -gx DOCKER_DISTRO $DOCKER_DISTRO ; end
 
@@ -1797,7 +1798,7 @@ function showConfig
   echo
   echo 'Package Configuration'
   printf $fmt3 'Stable/preview'     $RELEASE_TYPE       '(stable/preview)'
-  printf $fmt3 'Docker Distro'      $DOCKER_DISTRO      '(alpineDockerImage/ubiDockerImage)'
+  printf $fmt3 'Docker Distro'      $DOCKER_DISTRO      '(alpineDockerImage/ubiDockerImage/debDockerImage)'
   printf $fmt3 'Use GCR Registry'   $GCR_REG            '(gcrRegOn/gcrRegOff)'
   printf $fmt3 'Strip Packages'     $PACKAGE_STRIP      '(packageStripAll/ExceptArangod/None)'
   printf $fmt3 'Minimal Debug Info' $MINIMAL_DEBUG_INFO '(minimalDebugInfoOn/Off)'
@@ -2049,7 +2050,7 @@ function findArangoDBVersion
     end
   end
 
-  if test -n "$DOCKER_DISTRO"
+  if test -n "$DOCKER_DISTRO"; and test "$DOCKER_DISTRO" != "alpine"
     set -xg DOCKER_TAG "$DOCKER_TAG-$DOCKER_DISTRO"
   end
 
