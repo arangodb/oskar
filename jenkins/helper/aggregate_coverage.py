@@ -89,7 +89,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
         ]
         for one_directory in directories:
             for one_globbed in glob.glob(str(rootdir / one_directory)):
-                self.job_parameters += ['--excludes', str(one_globbed)]
+                self.job_parameters += ['--excludes', str(one_globbed) + "/*"]
         self.params = make_default_params(verbose, "222")
         print(self.job_parameters)
         start = datetime.now()
@@ -444,6 +444,7 @@ def main():
                                   Path('build'),
                                   Path('build') / '3rdParty' / 'libunwind'/ 'v*',
                                   Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
+                                  Path('3rdParty') / 'v8-build',
                                   Path('3rdParty'),
                                   Path('3rdParty') / 'jemalloc' / 'v*',
                                   Path('usr'),
