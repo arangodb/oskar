@@ -441,9 +441,7 @@ def main():
                               cobertura_xml,
                               [
                                   '.*build/.*',
-                                  '.*build/3rdParty/libunwind.*',
-                                  '.*3rdParty/.*',
-                                  # '.*usr.*',
+                                  '.*usr.*',
                                   '.*tests/.*'
                               ])
     translate_xml(cobertura_xml)
