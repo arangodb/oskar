@@ -137,7 +137,7 @@ def testing_runner(testing_instance, this, arangosh):
             with COVERAGE_LOCK:
                 if this.lcov_prefix is not None:
                     lcov_dir = Path(this.lcov_prefix)
-                    (_, result_dir) = combine_coverage_dirs_multi(this.cfg, lcov_dir, this.parallelity)
+                    result_dir = combine_coverage_dirs_multi(this.cfg, lcov_dir, this.parallelity)
                     if result_dir is None:
                         print("combining coverage failed!")
                     else:

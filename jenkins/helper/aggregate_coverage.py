@@ -72,7 +72,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
     def __init__(self, site_config):
         super().__init__(site_config, None)
 
-    def launch(self, lcov_file, source_dir, binary, cobertura_xml, directories):
+    def launch(self, lcov_file, source_dir, binary, cobertura_xml, rootdir, directories):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ lcov to cobertura xml converter """
         binary="/usr/local/bin/lcov_cobertura"
@@ -290,7 +290,7 @@ def combine_coverage_dirs_multi(cfg,
     jobcount = 0
     if len(sub_jobs) == 0:
         print("failed to locate subjobs in {coverage_dirs}")
-        return (None, None)
+        return None
     while len(sub_jobs) > 1:
         next_jobs = []
         jobs.append([])
@@ -345,16 +345,16 @@ def combine_coverage_dirs_multi(cfg,
         print(f'output {str(last_output)} not there?')
     result_dir = combined_dir / 'coverage_result'
     last_output.rename(result_dir)
-    return (coverage_dirs, result_dir)
+    return result_dir
 
 def convert_to_lcov_file(cfg, coverage_file, lcov_file):
     """ convert the database into an lcov file """
     cov = LlvmCov(cfg)
     cov.launch(coverage_file, lcov_file)
-def convert_lcov_to_cobertura(cfg, lcov_file, source_dir, binary, cobertura_xml):
+def convert_lcov_to_cobertura(cfg, lcov_file, source_dir, binary, cobertura_xml, rootdir, directories):
     """ convert the lcov file to a cobertura xml """
     cov = LcovCobertura(cfg)
-    cov.launch(lcov_file, source_dir, binary, cobertura_xml)
+    cov.launch(lcov_file, source_dir, binary, cobertura_xml, rootdir, directories)
 
 def main():
     """ go """
@@ -366,7 +366,7 @@ def main():
     coverage_dir.mkdir()
     gcov_dir = base_dir / sys.argv[2]
     cfg = SiteConfig(gcov_dir.resolve())
-    (coverage_dirs, result_dir) = combine_coverage_dirs_multi(
+    result_dir = combine_coverage_dirs_multi(
         cfg,
         gcov_dir,
         psutil.cpu_count(logical=False))
@@ -433,15 +433,19 @@ def main():
     # gcovr.translate_xml()
     cobertura_xml = coverage_dir / 'coverage.xml'
     print('converting to cobertura report')
-    convert_lcov_to_cobertura(cfg, lcov_file, sourcedir, binary, cobertura_xml, [
-        Path('build'),
-        Path('build') / '3rdParty' / 'libunwind'/ 'v*',
-        Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
-        Path('3rdParty'),
-        Path('3rdParty') / 'jemalloc' / 'v*',
-        Path('usr'),
-        Path('tests')
-    ])
+    convert_lcov_to_cobertura(cfg, lcov_file,
+                              sourcedir,
+                              binary,
+                              cobertura_xml,
+                              sourcedir, [
+                                  Path('build'),
+                                  Path('build') / '3rdParty' / 'libunwind'/ 'v*',
+                                  Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
+                                  Path('3rdParty'),
+                                  Path('3rdParty') / 'jemalloc' / 'v*',
+                                  Path('usr'),
+                                  Path('tests')
+                              ])
     translate_xml(cobertura_xml)
 
     if not SUCCESS:
