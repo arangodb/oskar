@@ -85,8 +85,9 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
             '-e',
             str(binary),  #ArangoDB/build/bin/arangod
             '-o', # cobertura.xml
-            str(cobertura_xml)
-            '--excludes', "" + ",".join(excludes)
+            str(cobertura_xml),
+            '--excludes',
+            "" + ",".join(excludes)
         ]
         self.params = make_default_params(verbose, "222")
         print(self.job_parameters)
