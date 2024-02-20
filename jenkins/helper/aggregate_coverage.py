@@ -72,7 +72,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
     def __init__(self, site_config):
         super().__init__(site_config, None)
 
-    def launch(self, lcov_file, source_dir, binary, cobertura_xml, rootdir, directories):
+    def launch(self, lcov_file, source_dir, binary, cobertura_xml, excludes):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ lcov to cobertura xml converter """
         binary="/usr/local/bin/lcov_cobertura"
@@ -86,9 +86,8 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
             str(binary),  #ArangoDB/build/bin/arangod
             '-o', # cobertura.xml
             str(cobertura_xml)
+            '--excludes', "" + ",".join(excludes)
         ]
-        for one_directory in directories:
-            self.job_parameters += ['--excludes', ".*" + str(one_directory) + ".*"]
         self.params = make_default_params(verbose, "222")
         print(self.job_parameters)
         start = datetime.now()
@@ -353,10 +352,10 @@ def convert_to_lcov_file(cfg, coverage_file, lcov_file):
     """ convert the database into an lcov file """
     cov = LlvmCov(cfg)
     cov.launch(coverage_file, lcov_file)
-def convert_lcov_to_cobertura(cfg, lcov_file, source_dir, binary, cobertura_xml, rootdir, directories):
+def convert_lcov_to_cobertura(cfg, lcov_file, source_dir, binary, cobertura_xml, excludes):
     """ convert the lcov file to a cobertura xml """
     cov = LcovCobertura(cfg)
-    cov.launch(lcov_file, source_dir, binary, cobertura_xml, rootdir, directories)
+    cov.launch(lcov_file, source_dir, binary, cobertura_xml, excludes)
 
 def main():
     """ go """
@@ -439,15 +438,12 @@ def main():
                               sourcedir,
                               binary,
                               cobertura_xml,
-                              sourcedir, [
-                                  Path('build'),
-                                  Path('build') / '3rdParty' / 'libunwind'/ 'v*',
-                                  Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
-                                  Path('3rdParty') / 'v8-build',
-                                  Path('3rdParty'),
-                                  Path('3rdParty') / 'jemalloc' / 'v*',
-                                  Path('usr'),
-                                  Path('tests')
+                              [
+                                  '.*build.*',
+                                  '.*build/3rdParty/libunwind.*',
+                                  '.*3rdParty.*',
+                                  '.*usr.*',
+                                  '.*tests.*'
                               ])
     translate_xml(cobertura_xml)
 
