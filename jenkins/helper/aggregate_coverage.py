@@ -440,7 +440,7 @@ def main():
                               binary,
                               cobertura_xml,
                               [
-                                  '.*build/.*',
+                                  '.*3rdParty.*',
                                   '.*usr.*',
                                   '.*tests/.*'
                               ])
