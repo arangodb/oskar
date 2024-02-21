@@ -355,8 +355,12 @@ def combine_coverage_dirs_multi(cfg,
     if not last_output.exists():
         print(f'output {str(last_output)} not there?')
     result_dir = combined_dir / 'coverage_result'
-    last_output.rename(result_dir)
-    return result_dir
+    if last_output.exists():
+        last_output.rename(result_dir)
+        return result_dir
+    SUCCESS=False
+    print("Last output wasn't there: {str(result_dir)}")
+    return None
 
 def convert_to_lcov_file(cfg, coverage_file, lcov_file):
     """ convert the database into an lcov file """
