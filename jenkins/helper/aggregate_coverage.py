@@ -24,7 +24,7 @@ from site_config import SiteConfig
 
 SUCCESS = True
 
-# pylint disable=global-variable-not-assigned
+# pylint disable=global-variable-not-assigned disable=global-statement
 
 class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
     """Convert the joint report to the jenkins compatible XML"""
@@ -141,7 +141,7 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
-        if self.cfg.is_lcov():
+        if self.cfg.is_lcov:
             binary = "/usr/lib/llvm-16/bin/llvm-profdata"
         else:
             binary = "gcovr"
@@ -190,7 +190,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
-        if self.cfg.is_lcov():
+        if self.cfg.is_lcov:
             binary = "/usr/lib/llvm-16/bin/llvm-profdata"
         else:
             binary = "gcov-tool"
@@ -381,7 +381,7 @@ def main():
         psutil.cpu_count(logical=False))
 
     sourcedir = base_dir / 'ArangoDB'
-    if cfg.is_lcov():
+    if cfg.is_lcov:
         binary = sourcedir / 'build' / 'bin' / 'arangod'
         lcov_file = gcov_dir / 'coverage.lcov'
         print('converting to lcov file')
@@ -429,7 +429,7 @@ def main():
     (sourcedir / 'include').symlink_to(jmdir)
 
     cobertura_xml = coverage_dir / 'coverage.xml'
-    if cfg.is_lcov():
+    if cfg.is_lcov:
         print('converting to cobertura report')
         convert_lcov_to_cobertura(cfg, lcov_file,
                                   sourcedir,
@@ -443,7 +443,7 @@ def main():
         translate_xml(cobertura_xml)
     else:
         resultfile = coverage_dir / 'summary.txt'
-        gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
+        gcovr = Gcovr(cfg, sourcedir, cobertura_xml, resultfile, result_dir, [
             Path('build'),
             Path('build') / '3rdParty' / 'libunwind'/ 'v*',
             Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',

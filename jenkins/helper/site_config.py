@@ -243,7 +243,7 @@ class SiteConfig:
 
     def is_instrumented(self):
         """ check whether we run an instrumented build """
-        return self.is_asan or self.is_aulsan or self.is_gcov
+        return self.is_asan or self.is_aulsan or self.is_cov
 
     def get_max(self):
         """ get the maximal value before overlead is triggered """
@@ -255,6 +255,3 @@ class SiteConfig:
         if load[0] > self.overload:
             return f"HIGH LOAD[{load[0]:3.2f} ] "
         return None
-
-    def is_lcov(self):
-        return self.is_lcov
