@@ -81,8 +81,8 @@ def testing_runner(testing_instance, this, arangosh):
         if IS_COVERAGE:
             this.cov_prefix =  (Path(COVERAGE_VALUE) /
                                  this.name_enum.replace(' ', '_'))
-            if this.lcov_prefix.exists():
-                shutil.rmtree(str(this.lcov_prefix))
+            if this.cov_prefix.exists():
+                shutil.rmtree(str(this.cov_prefix))
             this.cov_prefix.mkdir(parents=True)
         ret = arangosh.run_testing(this.suite,
                                    this.args,
@@ -155,7 +155,7 @@ def testing_runner(testing_instance, this, arangosh):
                         target_dir = Path(COVERAGE_VALUE) / hash_str
                         print(f'renaming {str(result_dir)} -> {target_dir}')
                         result_dir.rename(target_dir)
-                    shutil.rmtree(str(this.lcov_prefix))
+                    shutil.rmtree(str(this.cov_prefix))
         except Exception as ex:
             print(ex)
             print(traceback.format_exc())
