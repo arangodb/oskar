@@ -196,6 +196,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             binary = "gcov-tool"
         verbose = True
         self.params = make_default_params(verbose, 111)
+        print([binary] + self.job_parameters)
         start = datetime.now()
         try:
             ret = self.run_monitored(
