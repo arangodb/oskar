@@ -72,7 +72,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
     def __init__(self, site_config):
         super().__init__(site_config, None)
 
-    def launch(self, lcov_file, source_dir, binary, cobertura_xml, excludes):
+    def launch(self, lcov_file, source_dir, coverage_binary, cobertura_xml, excludes):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ lcov to cobertura xml converter """
         binary="/usr/local/bin/lcov_cobertura"
@@ -83,7 +83,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
             '-b',
             str(source_dir), #            /home/willi/oskar/work/ArangoDB/
             '-e',
-            str(binary),  #ArangoDB/build/bin/arangod
+            str(coverage_binary),  #ArangoDB/build/bin/arangod
             '-o', # cobertura.xml
             str(cobertura_xml),
         ]
