@@ -220,10 +220,12 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             print(cleanup_file)
             if cleanup_file.is_dir():
                 shutil.rmtree(cleanup_file)
-            else:
+            elif cleanup_file.exists():
                 print('delete file')
                 cleanup_file.unlink()
                 print('file gone')
+            else:
+                print(f'file {str(cleanup_file)} already gone?')
         print(f"launch(): returning {ret}")
         return ret
 
