@@ -141,14 +141,17 @@ class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
-        binary = "/usr/lib/llvm-16/bin/llvm-profdata"
+        if self.cfg.is_lcov():
+            binary = "/usr/lib/llvm-16/bin/llvm-profdata"
+        else:
+            binary = "gcovr"
         verbose = True
         self.params = make_default_params(verbose, 111)
         print(self.job_parameters)
         start = datetime.now()
         try:
             ret = self.run_monitored(
-                binary, #"gcovr",
+                binary,
                 self.job_parameters,
                 self.params,
                 progressive_timeout=600,
@@ -187,12 +190,16 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
+        if self.cfg.is_lcov():
+            binary = "/usr/lib/llvm-16/bin/llvm-profdata"
+        else:
+            binary = "gcov-tool"
         verbose = True
         self.params = make_default_params(verbose, 111)
         start = datetime.now()
         try:
             ret = self.run_monitored(
-                "/usr/lib/llvm-16/bin/llvm-profdata", # "gcov-tool",
+                binary,
                 self.job_parameters,
                 self.params,
                 progressive_timeout=600,
@@ -374,10 +381,11 @@ def main():
         psutil.cpu_count(logical=False))
 
     sourcedir = base_dir / 'ArangoDB'
-    binary = sourcedir / 'build' / 'bin' / 'arangod'
-    lcov_file = gcov_dir / 'coverage.lcov'
-    print('converting to lcov file')
-    convert_to_lcov_file(cfg, result_dir, lcov_file)
+    if cfg.is_lcov():
+        binary = sourcedir / 'build' / 'bin' / 'arangod'
+        lcov_file = gcov_dir / 'coverage.lcov'
+        print('converting to lcov file')
+        convert_to_lcov_file(cfg, result_dir, lcov_file)
     os.chdir(base_dir)
     # copy the source files from the sourcecode directory
     for copy_dir in [
@@ -420,31 +428,32 @@ def main():
         jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
     (sourcedir / 'include').symlink_to(jmdir)
 
-    # xmlfile = coverage_dir / 'coverage.xml'
-    # resultfile = coverage_dir / 'summary.txt'
-    # gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
-    #     Path('build'),
-    #     Path('build') / '3rdParty' / 'libunwind'/ 'v*',
-    #     Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
-    #     Path('3rdParty'),
-    #     Path('3rdParty') / 'jemalloc' / 'v*',
-    #     Path('usr'),
-    #     Path('tests')
-    #     ])
-    # gcovr.launch()
-    # gcovr.translate_xml()
     cobertura_xml = coverage_dir / 'coverage.xml'
-    print('converting to cobertura report')
-    convert_lcov_to_cobertura(cfg, lcov_file,
-                              sourcedir,
-                              binary,
-                              cobertura_xml,
-                              [
-                                  '.*3rdParty.*',
-                                  '.*usr.*',
-                                  '.*tests/.*'
-                              ])
-    translate_xml(cobertura_xml)
+    if cfg.is_lcov():
+        print('converting to cobertura report')
+        convert_lcov_to_cobertura(cfg, lcov_file,
+                                  sourcedir,
+                                  binary,
+                                  cobertura_xml,
+                                  [
+                                      '.*3rdParty.*',
+                                      '.*usr.*',
+                                      '.*tests/.*'
+                                  ])
+        translate_xml(cobertura_xml)
+    else:
+        resultfile = coverage_dir / 'summary.txt'
+        gcovr = Gcovr(cfg, sourcedir, xmlfile, resultfile, result_dir, [
+            Path('build'),
+            Path('build') / '3rdParty' / 'libunwind'/ 'v*',
+            Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
+            Path('3rdParty'),
+            Path('3rdParty') / 'jemalloc' / 'v*',
+            Path('usr'),
+            Path('tests')
+            ])
+        gcovr.launch()
+        gcovr.translate_xml()
 
     if not SUCCESS:
         os._exit(1)

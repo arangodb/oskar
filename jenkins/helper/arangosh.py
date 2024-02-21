@@ -31,7 +31,8 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     logfile,
                     identifier,
                     temp_dir,
-                    lcov_dir,
+                    cov_var,
+                    cov_dir,
                     verbose
                     ):
        # pylint: disable=R0913 disable=R0902
@@ -64,7 +65,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
             'TMP': str(params['temp_dir'])
         }
         if lcov_dir is not None:
-            params['env']['LLVM_PROFILE_FILE'] = lcov_dir
+            params['env'][cov_var] = cov_dir
         ret = self.run_monitored(
             self.cfg.bin_dir / "arangosh",
             run_cmd,
