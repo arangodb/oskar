@@ -847,7 +847,7 @@ end
 ## #############################################################################
 
 function makeTestPackageLinux
-  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = ""
+  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = "" -a "$ARANGODB_VERSION_MAJOR" -eq 3 -a "$ARANGODB_VERSION_MINOR" -lt 12
     echo "Need to set environment variable DOWNLOAD_SYNC_USER for Enterprise package or use Community."
     return 1
   end
@@ -1034,7 +1034,7 @@ function makeDockerMultiarch
       set MANIFEST_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
     end
 
-    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
       set MANIFEST_NAME2 arangodb/enterprise-preview:latest
     end
   else
@@ -1044,7 +1044,7 @@ function makeDockerMultiarch
       set MANIFEST_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
     end
 
-    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
       set MANIFEST_NAME2 arangodb/arangodb-preview:latest
     end
   end
@@ -1076,13 +1076,13 @@ function makeDockerMultiarchDebug
   if test "$ENTERPRISEEDITION" = "On"
     set MANIFEST_NAME1 arangodb/enterprise-debug:$DOCKER_TAG
 
-    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
       set MANIFEST_NAME2 arangodb/enterprise-debug:latest
     end
   else
     set MANIFEST_NAME1 arangodb/arangodb-debug:$DOCKER_TAG
 
-    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
       set MANIFEST_NAME2 arangodb/arangodb-debug:latest
     end
   end
