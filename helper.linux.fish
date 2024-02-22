@@ -637,10 +637,10 @@ function collectCoverage
   and findRequiredOpenSSL
   if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
       echo "collecting llvm coverage"
-      runInContainer --env LLVM_PROFILE_FILE=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggreregate_coverage.py" "$INNERWORKDIR/" gcov coverage
+      runInContainer --env LLVM_PROFILE_FILE=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
   else
       echo "collecting gcov coverage"
-      runInContainer --env GCOV_PREFIX=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggreregate_coverage.py" "$INNERWORKDIR/" gcov coverage
+      runInContainer --env GCOV_PREFIX=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
    end
   return $status
 end
