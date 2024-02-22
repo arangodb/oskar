@@ -145,7 +145,7 @@ def testing_runner(testing_instance, this, arangosh):
         print('finally')
         try:
             with COVERAGE_LOCK:
-                if this.cov_prefix is not None and not self.is_lcov:
+                if this.cov_prefix is not None and not this.cfg.is_lcov:
                     cov_dir = Path(this.cov_prefix)
                     result_dir = combine_coverage_dirs_multi(this.cfg, cov_dir, this.parallelity)
                     if result_dir is None:
