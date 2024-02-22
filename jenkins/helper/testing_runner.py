@@ -78,7 +78,7 @@ def testing_runner(testing_instance, this, arangosh):
     try:
         this.start = datetime.now(tz=None)
         this.cov_prefix = None
-        if IS_COVERAGE:
+        if IS_COVERAGE and cfg.is_lcov:
             this.cov_prefix =  (Path(COVERAGE_VALUE) /
                                  this.name_enum.replace(' ', '_'))
             if this.cov_prefix.exists():
