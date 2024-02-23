@@ -28,7 +28,6 @@ from site_config import (
     IS_MAC,
     IS_LINUX,
     get_workspace,
-    IS_COVERAGE,
     COVERAGE_VAR,
     COVERAGE_VALUE
 )
@@ -78,7 +77,7 @@ def testing_runner(testing_instance, this, arangosh):
     try:
         this.start = datetime.now(tz=None)
         this.cov_prefix = None
-        if IS_COVERAGE:
+        if this.cfg.is_cov:
             if this.cfg.is_lcov:
                 this.cov_prefix =  (Path(COVERAGE_VALUE) /
                                     this.name_enum.replace(' ', '_'))
@@ -87,8 +86,8 @@ def testing_runner(testing_instance, this, arangosh):
                     shutil.rmtree(str(this.cov_prefix))
                 else:
                     this.cov_prefix =  Path(COVERAGE_VALUE)
-            if not this.cov_prefix.exists():
-                this.cov_prefix.mkdir(parents=True)
+                if not this.cov_prefix.exists():
+                    this.cov_prefix.mkdir(parents=True)
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
