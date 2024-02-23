@@ -381,6 +381,11 @@ def main():
         shutil.rmtree(str(coverage_dir))
     coverage_dir.mkdir()
     gcov_dir = base_dir / sys.argv[2]
+
+    import glob
+  
+    for filename in glob.iglob(gcov_dir + '**/**', recursive=True):
+        print(filename)
     cfg = SiteConfig(gcov_dir.resolve())
     result_dir = combine_coverage_dirs_multi(
         cfg,
