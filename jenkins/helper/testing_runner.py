@@ -82,6 +82,7 @@ def testing_runner(testing_instance, this, arangosh):
             this.cov_prefix =  (Path(COVERAGE_VALUE) /
                                  this.name_enum.replace(' ', '_'))
             if this.cov_prefix.exists():
+                print(f"deleting pre-existing coverage {str(this.cov_prefix)}")
                 shutil.rmtree(str(this.cov_prefix))
             this.cov_prefix.mkdir(parents=True)
         ret = arangosh.run_testing(this.suite,
@@ -155,6 +156,7 @@ def testing_runner(testing_instance, this, arangosh):
                         target_dir = Path(COVERAGE_VALUE) / hash_str
                         print(f'renaming {str(result_dir)} -> {target_dir}')
                         result_dir.rename(target_dir)
+                    print(f"deleting coverage {str(this.cov_prefix)}")
                     shutil.rmtree(str(this.cov_prefix))
             else:
                 import glob
