@@ -384,7 +384,7 @@ def main():
 
     import glob
   
-    for filename in glob.iglob(str(gcov_dir) + '**/**', recursive=True):
+    for filename in glob.iglob('/work/**/**', recursive=True):
         print(filename)
     cfg = SiteConfig(gcov_dir.resolve())
     result_dir = combine_coverage_dirs_multi(
