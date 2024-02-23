@@ -66,6 +66,8 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
         }
         if cov_dir is not None:
             params['env'][cov_var] = cov_dir
+        print("Env:")
+        print(params['env'])
         ret = self.run_monitored(
             self.cfg.bin_dir / "arangosh",
             run_cmd,
