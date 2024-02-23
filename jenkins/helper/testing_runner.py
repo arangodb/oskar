@@ -144,8 +144,8 @@ def testing_runner(testing_instance, this, arangosh):
     finally:
         print('finally')
         try:
-            with COVERAGE_LOCK:
-                if this.cov_prefix is not None and this.cfg.is_lcov:
+            if this.cov_prefix is not None and this.cfg.is_lcov:
+                with COVERAGE_LOCK:
                     cov_dir = Path(this.cov_prefix)
                     result_dir = combine_coverage_dirs_multi(this.cfg, cov_dir, this.parallelity)
                     if result_dir is None:
@@ -156,6 +156,22 @@ def testing_runner(testing_instance, this, arangosh):
                         print(f'renaming {str(result_dir)} -> {target_dir}')
                         result_dir.rename(target_dir)
                     shutil.rmtree(str(this.cov_prefix))
+            else:
+                print('walk_dir (absolute) = ' + os.path.abspath('/work'))
+                for root, subdirs, files in os.walk('/work'):
+                    print('--\nroot = ' + root)
+                    list_file_path = os.path.join(root, 'my-directory-list.txt')
+                    print('list_file_path = ' + list_file_path)
+
+                    with open(list_file_path, 'wb') as list_file:
+                        for subdir in subdirs:
+                            print('\t- subdirectory ' + subdir)
+
+                        for filename in files:
+                            file_path = os.path.join(root, filename)
+
+                            print('\t- file %s (full path: %s)' % (filename, file_path))
+
         except Exception as ex:
             print(ex)
             print(traceback.format_exc())
