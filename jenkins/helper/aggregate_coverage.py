@@ -215,7 +215,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         end = datetime.now()
         import glob
         filecount = 0;
-        for filename in glob.iglob(str(self.outdir)'**/**', recursive=True):
+        for filename in glob.iglob(str(self.outdir) + '**/**', recursive=True):
             filecount += 1
 
         print(f"done with {self.job[0]} +  {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']} => {filecount}")
