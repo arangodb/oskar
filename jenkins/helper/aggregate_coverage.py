@@ -354,14 +354,12 @@ def combine_coverage_dirs_multi(cfg,
     print('all workers joined')
     sys.stdout.flush()
     if not last_output.exists():
+        SUCCESS=False
         print(f'output {str(last_output)} not there?')
+        return None
     result_dir = combined_dir / 'coverage_result'
-    if last_output.exists():
-        last_output.rename(result_dir)
-        return result_dir
-    SUCCESS=False
-    print("Last output wasn't there: {str(result_dir)}")
-    return None
+    last_output.rename(result_dir)
+    return result_dir
 
 def convert_to_lcov_file(cfg, coverage_file, lcov_file):
     """ convert the database into an lcov file """
@@ -449,6 +447,9 @@ def main():
                                   ])
         translate_xml(cobertura_xml)
     else:
+        import glob
+        for filename in glob.iglob('/work/gcov/combined/coverage_result**/**', recursive=True):
+            print(filename)
         resultfile = coverage_dir / 'summary.txt'
         gcovr = Gcovr(cfg, sourcedir, cobertura_xml, resultfile, result_dir, [
             Path('build'),
