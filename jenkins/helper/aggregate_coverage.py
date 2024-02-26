@@ -380,6 +380,9 @@ def main():
     #coverage_dir.mkdir()
     gcov_dir = base_dir / sys.argv[2]
     cfg = SiteConfig(gcov_dir.resolve())
+    import glob
+    for filename in glob.iglob('/work/gcov**/**', recursive=True):
+        print(filename)
     result_dir = combine_coverage_dirs_multi(
         cfg,
         gcov_dir,
