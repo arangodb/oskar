@@ -159,8 +159,8 @@ def testing_runner(testing_instance, this, arangosh):
                         target_dir = Path(COVERAGE_VALUE) / hash_str
                         print(f'renaming {str(result_dir)} -> {target_dir}')
                         result_dir.rename(target_dir)
-                    print(f"deleting coverage {str(this.cov_prefix)}")
-                    shutil.rmtree(str(this.cov_prefix))
+                        print(f"deleting coverage {str(this.cov_prefix)}")
+                        shutil.rmtree(str(this.cov_prefix))
             else:
                 import glob
                 for filename in glob.iglob('/work/gcov**/**', recursive=True):
