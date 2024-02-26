@@ -84,10 +84,10 @@ def testing_runner(testing_instance, this, arangosh):
                 if this.cov_prefix.exists():
                     print(f"deleting pre-existing coverage {str(this.cov_prefix)}")
                     shutil.rmtree(str(this.cov_prefix))
-                else:
-                    this.cov_prefix =  Path(COVERAGE_VALUE)
-                if not this.cov_prefix.exists():
-                    this.cov_prefix.mkdir(parents=True)
+            else:
+                this.cov_prefix =  Path(COVERAGE_VALUE)
+            if not this.cov_prefix.exists():
+                this.cov_prefix.mkdir(parents=True)
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
