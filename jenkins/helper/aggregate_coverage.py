@@ -383,7 +383,6 @@ def main():
     gcov_dir = base_dir / sys.argv[2]
 
     import glob
-  
     for filename in glob.iglob('/work/**/**', recursive=True):
         print(filename)
     cfg = SiteConfig(gcov_dir.resolve())

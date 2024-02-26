@@ -269,11 +269,6 @@ def main():
         print(exc, file=sys.stderr)
         print_exc()
         sys.exit(1)
-    finally:
-        import glob
-        for filename in glob.iglob('/work/gcov**/**', recursive=True):
-            print(filename)
-
 
 if __name__ == "__main__":
     main()
