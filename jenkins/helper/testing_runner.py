@@ -88,6 +88,7 @@ def testing_runner(testing_instance, this, arangosh):
                 this.cov_prefix =  Path(COVERAGE_VALUE)
             if not this.cov_prefix.exists():
                 this.cov_prefix.mkdir(parents=True)
+            print("cov prefix: {str(this.cov_prefix)}")
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
@@ -150,6 +151,7 @@ def testing_runner(testing_instance, this, arangosh):
         try:
             if this.cov_prefix is not None and this.cfg.is_lcov:
                 with COVERAGE_LOCK:
+                    start = time.time()
                     cov_dir = Path(this.cov_prefix)
                     result_dir = combine_coverage_dirs_multi(this.cfg, cov_dir, this.parallelity)
                     if result_dir is None:
@@ -161,11 +163,7 @@ def testing_runner(testing_instance, this, arangosh):
                         result_dir.rename(target_dir)
                         print(f"deleting coverage {str(this.cov_prefix)}")
                         shutil.rmtree(str(this.cov_prefix))
-            else:
-                import glob
-                for filename in glob.iglob('/work/gcov**/**', recursive=True):
-                    print(filename)
-
+                        print(f"done combining after {str(time.time() - start)}")
         except Exception as ex:
             print(ex)
             print(traceback.format_exc())

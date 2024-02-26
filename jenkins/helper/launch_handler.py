@@ -52,9 +52,6 @@ def launch_runner(runner, create_report):
         print(exc, file=sys.stderr)
         print_exc()
     finally:
-        import glob
-        for filename in glob.iglob('/work/gcov**/**', recursive=True):
-            print(filename)
         sys.stderr.flush()
         sys.stdout.flush()
         runner.create_log_file()
