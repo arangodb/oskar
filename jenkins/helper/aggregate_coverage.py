@@ -380,11 +380,11 @@ def main():
     """ go """
     # pylint disable=too-many-locals disable=too-many-statements
     base_dir = Path(sys.argv[1])
-    coverage_dir = base_dir / 'coverage'
     os.chdir(base_dir)
-    #if coverage_dir.exists():
-     #   shutil.rmtree(str(coverage_dir))
-    #coverage_dir.mkdir()
+    coverage_dir = base_dir / 'coverage'
+    if coverage_dir.exists():
+        shutil.rmtree(str(coverage_dir))
+    coverage_dir.mkdir()
     gcov_dir = base_dir / sys.argv[2]
     cfg = SiteConfig(gcov_dir.resolve())
     import glob
