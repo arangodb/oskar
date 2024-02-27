@@ -39,7 +39,7 @@
   <string>NO</string>
 
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © 2014-2023 ArangoDB GmbH, Cologne, Germany. All rights reserved.</string>
+  <string>Copyright © 2014-2024 ArangoDB GmbH, Cologne, Germany. All rights reserved.</string>
 
   <key>LSMinimumSystemVersion</key>
   <string>10.9</string>
