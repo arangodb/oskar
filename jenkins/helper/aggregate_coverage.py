@@ -185,8 +185,8 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
 
     def post_process_launch(self, process):
         """ hook to work with the process while it launches """
-        print(f"re-nicing {str(process)}")
-        process.nice(-19)
+        # print(f"re-nicing {str(process)}")
+        # process.nice(-19)
 
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
@@ -195,7 +195,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             binary = "/usr/lib/llvm-16/bin/llvm-profdata"
         else:
             binary = "gcov-tool"
-        verbose = True
+        verbose = False
         self.params = make_default_params(verbose, 111)
         print([binary] + self.job_parameters)
         start = datetime.now()
@@ -266,9 +266,9 @@ def launch_worker(cfg):
     with COV_SLOT_LOCK:
         worker = Thread(
             target=gcov_merge_runner,
-            name="gcov_merger",
+            #name="gcov_merger",
             args=(cfg, ''))
-        worker.name="gcov_merger"
+        # worker.name="gcov_merger"
         COV_WORKER_ARRAY.append(worker)
         worker.start()
     print('thread launched')
