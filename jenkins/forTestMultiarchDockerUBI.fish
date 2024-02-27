@@ -42,7 +42,7 @@ and if test "$EDITION" = "All"; or test "$EDITION" = "Community"
       community
       forTestDockerMultiarch "$DOCKER_TAG_JENKINS"
     end
-and if test "$EDITION" = "All"; or test "$EDITION" = "Entreprise"
+and if test "$EDITION" = "All"; or test "$EDITION" = "Enterprise"
       enterprise
       forTestDockerMultiarch "$DOCKER_TAG_JENKINS"
     end
