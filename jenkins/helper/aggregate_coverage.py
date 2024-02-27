@@ -381,6 +381,7 @@ def main():
     # pylint disable=too-many-locals disable=too-many-statements
     base_dir = Path(sys.argv[1])
     coverage_dir = base_dir / 'coverage'
+    os.chdir(base_dir)
     #if coverage_dir.exists():
      #   shutil.rmtree(str(coverage_dir))
     #coverage_dir.mkdir()
@@ -400,7 +401,6 @@ def main():
         lcov_file = gcov_dir / 'coverage.lcov'
         print('converting to lcov file')
         convert_to_lcov_file(cfg, result_dir, lcov_file)
-    os.chdir(base_dir)
     # copy the source files from the sourcecode directory
     for copy_dir in [
             Path('lib'),
