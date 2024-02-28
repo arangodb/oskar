@@ -39,5 +39,6 @@ cp /scripts/README.static-linking README.static-linking
 echo scripts/link_executables.sh >> inclusion_list.txt
 echo README.static-linking >> inclusion_list.txt
 
-tar czvf ../arangodb3e_object_files.tar.gz --files-from=inclusion_list.txt
+rm -rf "$INNERWORKDIR/arangodb3e-$PLATFORM-object_files_$BUILDMODE-$ARANGODB_VERSION"_"$ARCH.tar.gz" &>/dev/null 
+eval tar -vczf "$INNERWORKDIR/arangodb3e-$PLATFORM-object_files_$BUILDMODE-$ARANGODB_VERSION"_"$ARCH.tar.gz" --files-from=inclusion_list.txt
 
