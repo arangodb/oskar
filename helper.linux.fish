@@ -363,6 +363,7 @@ function buildArangoDB
   and findUseARM
   and set -xg STATIC_EXECUTABLES Off
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
+  and packBuildFiles
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -378,6 +379,7 @@ function makeArangoDB
     and findUseARM
   end
   and runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
+  and packBuildFiles
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -393,6 +395,10 @@ function buildStaticArangoDB
   and findUseARM
   and set -xg STATIC_EXECUTABLES On
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
+  and packBuildFiles
+  and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 12
+        packObjectFiles
+      end
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -408,6 +414,7 @@ function makeStaticArangoDB
     and findUseARM
   end
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
+  and packBuildFiles
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -1677,6 +1684,8 @@ function runInContainer
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+             -e ARANGODB_VERSION_MAJOR="$ARANGODB_VERSION_MAJOR" \
+             -e ARANGODB_VERSION_MINOR="$ARANGODB_VERSION_MINOR" \
              -e DUMPDEVICE=$DUMPDEVICE \
              -e ARCH="$ARCH" \
              -e SAN="$SAN" \
@@ -2031,6 +2040,16 @@ function downloadAuxBinariesToBuildBin
   end
   and downloadStarter
   and cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
+end
+
+function packObjectFiles
+  runInContainer $UBUNTUBUILDIMAGE_DEVEL $SCRIPTSDIR/packObjectFiles.fish
+end
+
+function packBuildFiles
+  if test "$PACK_BUILD_FILES" = "On"
+    runInContainer $UBUNTUBUILDIMAGE_DEVEL $SCRIPTSDIR/packBuildFiles.fish
+  end
 end
 
 ## #############################################################################
