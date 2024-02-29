@@ -130,6 +130,11 @@ function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
 makeOn
 
+function packBuildFilesOff ; set -gx PACK_BUILD_FILES Off ; end
+function packBuildFilesOn ; set -gx PACK_BUILD_FILES On ; end
+if test -z "$PACK_BUILD_FILES" ; packBuildFilesOff
+else ; set -xg PACK_BUILD_FILES $PACK_BUILD_FILES ; end
+
 set -xg GCR_REG_PREFIX "gcr.io/gcr-for-testing/"
 function gcrRegOff ; set -gx GCR_REG "Off"  ; end
 function gcrRegOn  ; set -gx GCR_REG "On"   ; end
@@ -1782,6 +1787,7 @@ function showConfig
   printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer' $MAINTAINER             '(maintainerOn/Off)'
   printf $fmt3 'Build sepp' $BUILD_SEPP             '(buildSeppOn/buildSeppOff)'
+  printf $fmt3 'Pack build' $PACK_BUILD_FILES       '(packBuildFilesOn/packBuildFilesOff)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
