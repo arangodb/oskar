@@ -28,13 +28,13 @@
 ## --SECTION--                                                      package data
 ## -----------------------------------------------------------------------------
 
-Name:           arangodb3e
+Name:           arangodb3
 Version:        @PACKAGE_VERSION@
 Release:        @PACKAGE_REVISION@
 Summary:        The open-source, multi-model NoSQL database
 License:        Apache-2.0
 Group:          Productivity/Databases/Servers
-Conflicts:	arangodb3, arangodb3-client, arangodb3e-client
+Conflicts:	arangodb3e, arangodb3-client, arangodb3e-client
 Url:            https://www.arangodb.com
 Vendor:         ArangoDB
 
@@ -139,8 +139,7 @@ rmdir /tmp/sbin /tmp/bin
 %files client
 %defattr(-,root,root,0755)
 
-# This is for arangobench.conf and arangobackup.conf (if the latter is present)
-%config(noreplace) %{_cfgdir}/arangob*.conf
+%config(noreplace) %{_cfgdir}/arangobench.conf
 %config(noreplace) %{_cfgdir}/arangodump.conf
 %config(noreplace) %{_cfgdir}/arangoexp*.conf
 %config(noreplace) %{_cfgdir}/arangoimp*.conf
@@ -149,8 +148,7 @@ rmdir /tmp/sbin /tmp/bin
 %config(noreplace) %{_cfgdir}/arangosh.conf
 %config(noreplace) %{_cfgdir}/arangovpack.conf
 %config(noreplace) %{_cfgdir}/foxx-manager.conf
-# This is for arangobench and arangobackup (if the latter is present)
-%{_bindir}/arangob*
+%{_bindir}/arangobench
 %{_bindir}/arangodump
 %{_bindir}/arangoexp*
 %{_bindir}/arangoimp*
@@ -200,7 +198,7 @@ ArangoDB 3 (https://www.arangodb.com)
   or JavaScript extensions.
 
 First Steps with ArangoDB:
-  https://docs.arangodb.com/devel/get-started/
+  https://docs.arangodb.com/3.12/get-started/
 
 Configuration file:
   /etc/arangodb3/arangod.conf
