@@ -1684,6 +1684,8 @@ function runInContainer
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+             -e ARANGODB_VERSION_MAJOR="$ARANGODB_VERSION_MAJOR" \
+             -e ARANGODB_VERSION_MINOR="$ARANGODB_VERSION_MINOR" \
              -e DUMPDEVICE=$DUMPDEVICE \
              -e ARCH="$ARCH" \
              -e SAN="$SAN" \

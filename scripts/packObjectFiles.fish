@@ -21,7 +21,9 @@ end
 
 cp -a (find /opt -name "libssl.a") build
 cp -a (find /opt -name "libcrypto.a") build
-cp -a (find /opt -name "libldap.a") build
+if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+  cp -a (find /opt -name "libldap.a") build
+end
 find . -name "*.a" > inclusion_list.txt
 find . -name "arangovpack.cpp.o" >> inclusion_list.txt
 find . -name "arangobackup.cpp.o" >> inclusion_list.txt
