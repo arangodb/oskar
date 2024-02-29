@@ -913,6 +913,11 @@ function makeSnippets
   community
   and buildSourceSnippet $IN $OUT
 
+  enterprise
+  and for arch in $archSnippets
+        buildObjectfilesSnippet $IN $OUT "x86_64"
+      end
+
   for edition in "community" "enterprise"
     eval "$edition"
     and buildDockerSnippet $OUT
@@ -922,13 +927,17 @@ function makeSnippets
               buildDebianSnippet $IN $OUT "amd64" "x86_64"
               and buildRPMSnippet $IN $OUT "x86_64" "x86_64"
               and buildTarGzSnippet $IN $OUT "x86_64"
-              and buildBundleSnippet $IN $OUT "x86_64"
-              and buildWindowsSnippet $IN $OUT "win64"
+              and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+                    buildBundleSnippet $IN $OUT "x86_64"
+                    buildWindowsSnippet $IN $OUT "win64"
+                  end
             case "ARM"
               buildDebianSnippet $IN $OUT "arm64" "arm64"
               and buildRPMSnippet $IN $OUT "aarch64" "arm64"
               and buildTarGzSnippet $IN $OUT "arm64"
-              and buildBundleSnippet $IN $OUT "arm64"
+              and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+                    buildBundleSnippet $IN $OUT "arm64"
+                  end
           end
         end
   end
@@ -944,32 +953,36 @@ function makeSnippets
       echo ','
     end
 
-    for edition in "community" "enterprise"
-      if test -f "$SNIPPETS/meta-docker-$edition.json"
-	echo '"docker-'$edition'":'
-	cat "$SNIPPETS/meta-docker-$edition.json"
-	echo ','
-      end
-
-      and if test -f "$SNIPPETS/meta-k8s-$edition.json"
-	echo '"k8s-'$edition'":'
-	cat "$SNIPPETS/meta-k8s-$edition.json"
-	echo ','
-      end
-
-      and for arch in x86_64 amd64 arm64 aarch64 win64
-        for type in bundle debian rpm windows
-          if test -f "$SNIPPETS/meta-$type-$edition-$arch.json"
-            echo '"'$type'-'$edition'-'$arch'":'
-            cat "$SNIPPETS/meta-$type-$edition-$arch.json"
-            echo ','
-	  end
-	end
-      end
+    if test -f "$SNIPPETS/meta-objectfiles-enterprise.json"
+      echo '"objectfiles-enterprise":'
+      cat "$SNIPPETS/meta-objectfiles-enterprise.json"
+      echo ','
     end
 
-   echo '"serial": "'(date +%s)'"'
-   echo '}'
+    for edition in "community" "enterprise"
+      if test -f "$SNIPPETS/meta-docker-$edition.json"
+        echo '"docker-'$edition'":'
+        cat "$SNIPPETS/meta-docker-$edition.json"
+        echo ','
+      end
+      and if test -f "$SNIPPETS/meta-k8s-$edition.json"
+	          echo '"k8s-'$edition'":'
+	          cat "$SNIPPETS/meta-k8s-$edition.json"
+            echo ','
+          end
+      and for arch in x86_64 amd64 arm64 aarch64 win64
+            for type in bundle debian rpm windows
+              if test -f "$SNIPPETS/meta-$type-$edition-$arch.json"
+                echo '"'$type'-'$edition'-'$arch'":'
+                cat "$SNIPPETS/meta-$type-$edition-$arch.json"
+                echo ','
+	            end
+            end
+          end
+    end
+
+    echo '"serial": "'(date +%s)'"'
+    echo '}'
   end | jq . > "$SNIPPETS/meta.json"
 end
 
@@ -1041,6 +1054,100 @@ function buildSourceSnippet
 
   and echo "Source Snippet: $n"
 end
+
+## #############################################################################
+## objectfiles snippets
+## #############################################################################
+function buildObjectfilesSnippet
+  set snippetArch "-$argv[3]"
+  set -l arch "$argv[3]"
+  set tarGzSuffix "_$argv[3]"
+
+  if test "$USE_ARM" = "Off"
+    set snippetArch ""
+    set tarGzSuffix ""
+  end
+
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
+    set META_EDITION "enterprise"
+
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "/enterprise-download"
+    else
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
+    end
+  else
+    set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
+    set META_EDITION "community"
+    set DOWNLOAD_LINK ""
+  end
+
+  set -l OBJECTFILES_TAR_GZ "$ARANGODB_PKG_NAME-linux-$ARANGODB_VERSION.tar.gz"
+
+  set -l SOURCE_TAG "$ARANGODB_VERSION"
+  if string match -qr '^[0-9]+$' "$ARANGODB_VERSION_RELEASE_TYPE"
+    set SOURCE_TAG "$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH.$ARANGODB_VERSION_RELEASE_TYPE"
+  end
+
+  set IN $argv[1]/$ARANGODB_PACKAGES/source
+  set OUT $argv[2]/release/snippets
+
+  if test ! -f "$IN/$SOURCE_TAR_GZ"; echo "Source package '$SOURCE_TAR_GZ' is missing"; return 1; end
+  if test ! -f "$IN/$SOURCE_TAR_BZ2"; echo "Source package '$SOURCE_TAR_BZ2"' is missing"; return 1; end
+  if test ! -f "$IN/$SOURCE_ZIP"; echo "Source package '$SOURCE_ZIP"' is missing"; return 1; end
+
+  set -l SOURCE_SIZE_TAR_GZ (expr (wc -c < $IN/$SOURCE_TAR_GZ) / 1024 / 1024)
+  set -l SOURCE_SIZE_TAR_BZ2 (expr (wc -c < $IN/$SOURCE_TAR_BZ2) / 1024 / 1024)
+  set -l SOURCE_SIZE_ZIP (expr (wc -c < $IN/$SOURCE_ZIP) / 1024 / 1024)
+
+  set -l SOURCE_SHA256_TAR_GZ (shasum -a 256 -b < $IN/$SOURCE_TAR_GZ | awk '{print $1}')
+  set -l SOURCE_SHA256_TAR_BZ2 (shasum -a 256 -b < $IN/$SOURCE_TAR_BZ2 | awk '{print $1}')
+  set -l SOURCE_SHA256_ZIP (shasum -a 256 -b < $IN/$SOURCE_ZIP | awk '{print $1}')
+
+  set -l n "$OUT/download-source.html"
+  set -l m "$OUT/meta-source.json"
+
+  sed -e "s|@SOURCE_TAG@|$SOURCE_TAG|g" \
+      -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
+      -e "s|@SOURCE_SIZE_TAR_GZ@|$SOURCE_SIZE_TAR_GZ|g" \
+      -e "s|@SOURCE_SHA256_TAR_GZ@|$SOURCE_SHA256_TAR_GZ|g" \
+      -e "s|@SOURCE_TAR_BZ2@|$SOURCE_TAR_BZ2|g" \
+      -e "s|@SOURCE_SIZE_TAR_BZ2@|$SOURCE_SIZE_TAR_BZ2|g" \
+      -e "s|@SOURCE_SHA256_TAR_BZ2@|$SOURCE_SHA256_TAR_BZ2|g" \
+      -e "s|@SOURCE_ZIP@|$SOURCE_ZIP|g" \
+      -e "s|@SOURCE_SIZE_ZIP@|$SOURCE_SIZE_ZIP|g" \
+      -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/source.html.in > $n
+
+  and if test -f $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-source.json.in
+      sed -e "s|@SOURCE_TAG@|$SOURCE_TAG|g" \
+	  -e "s|@SOURCE_TAR_GZ@|$SOURCE_TAR_GZ|g" \
+	  -e "s|@SOURCE_SIZE_TAR_GZ@|$SOURCE_SIZE_TAR_GZ|g" \
+	  -e "s|@SOURCE_SHA256_TAR_GZ@|$SOURCE_SHA256_TAR_GZ|g" \
+	  -e "s|@SOURCE_TAR_BZ2@|$SOURCE_TAR_BZ2|g" \
+	  -e "s|@SOURCE_SIZE_TAR_BZ2@|$SOURCE_SIZE_TAR_BZ2|g" \
+	  -e "s|@SOURCE_SHA256_TAR_BZ2@|$SOURCE_SHA256_TAR_BZ2|g" \
+	  -e "s|@SOURCE_ZIP@|$SOURCE_ZIP|g" \
+	  -e "s|@SOURCE_SIZE_ZIP@|$SOURCE_SIZE_ZIP|g" \
+	  -e "s|@SOURCE_SHA256_ZIP@|$SOURCE_SHA256_ZIP|g" \
+	  -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+	  -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+	  -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+	  -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+	  < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-source.json.in > $m
+  end
+
+  and echo "Source Snippet: $n"
+end
+
+
 
 ## #############################################################################
 ## debian snippets
