@@ -8,27 +8,36 @@ else
   set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG"
 end
 
+if test -z "$DOCKER_DISTRO"
+  echo "DOCKER_DISTRO required"
+  exit 1
+else
+  if test "$DOCKER_DISTRO" = "ubi"
+    set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-ubi"
+  end
+end
+
 if test -z "$EDITION"
   echo "EDITION required"
   exit 1
 end
 
-if test -z "$MODE"
-  echo "MODE required"
+if test -z "$BUILDMODE"
+  echo "BUILDMODE required"
   exit 1
 else
-  if test "$MODE" = "DEBUG"
+  if test "$BUILDMODE" = "Debug"
     set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-debug"
   end
 end
 
 cleanPrepareLockUpdateClear
 and set -xg RELEASE_TYPE "preview"
-if test "$EDITION" = "All"; or test "$EDITION" = "Community"
+if test "$EDITION" = "community"
   community
   makeDockerMultiarch "$DOCKER_TAG_JENKINS"
 end
-if test "$EDITION" = "All"; or test "$EDITION" = "Enterprise"
+if test "$EDITION" = "enterprise"
   enterprise
   makeDockerMultiarch "$DOCKER_TAG_JENKINS"
 end

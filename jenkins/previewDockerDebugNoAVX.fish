@@ -17,7 +17,11 @@ cleanPrepareLockUpdateClear
 and forceDisableAVXOn
 and cleanWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and if test $IS_NIGHTLY_BUILD = true; setNightlyRelease; end
+and if test "$USE_EXISTING_BUILD" = "On"
+      unpackBuildFilesOn ; packBuildFilesOff
+      moveResultsFromWorkspace
+    end
+and if test $IS_NIGHTLY_BUILD = true; setNightlyVersion; end
 and set -xg RELEASE_TYPE "preview"
 and showRepository
 and showConfig
