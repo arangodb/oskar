@@ -396,7 +396,7 @@ function buildStaticArangoDB
   and set -xg STATIC_EXECUTABLES On
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
   and packBuildFiles
-  and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 12
+  and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
         packObjectFiles
       end
   set -l s $status
