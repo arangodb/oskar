@@ -3,6 +3,7 @@
 from datetime import datetime
 import os
 from pathlib import Path
+import hashlib
 import pprint
 import re
 import shutil
@@ -21,8 +22,9 @@ from socket_counter import get_socket_count
 # pylint: disable=line-too-long disable=broad-except
 from arangosh import ArangoshExecutor
 from test_config import get_priority, TestConfig
-from site_config import TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace
+from site_config import TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace, IS_COVERAGE, LLVM_PROFILE_FILE
 from tools.killall import list_all_processes, kill_all_arango_processes
+from aggregate_coverage import combine_coverage_dirs_multi
 
 MAX_COREFILES_SINGLE=4
 MAX_COREFILES_CLUSTER=15
@@ -33,6 +35,7 @@ MAX_COREFILE_SIZE_MB=850
 if 'MAX_CORESIZE' in os.environ:
     MAX_COREFILE_SIZE_MB=int(os.environ['MAX_CORESIZE'])
 
+COVERAGE_LOCK = Lock()
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -65,6 +68,13 @@ def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
     try:
         this.start = datetime.now(tz=None)
+        this.lcov_prefix = None
+        if IS_COVERAGE:
+            this.lcov_prefix =  (Path(LLVM_PROFILE_FILE) /
+                                 this.name_enum.replace(' ', '_'))
+            if this.lcov_prefix.exists():
+                shutil.rmtree(str(this.lcov_prefix))
+            this.lcov_prefix.mkdir(parents=True)
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
@@ -72,6 +82,7 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.log_file,
                                    this.name_enum,
                                    this.temp_dir,
+                                   str(this.lcov_prefix),
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
@@ -81,9 +92,9 @@ def testing_runner(testing_instance, this, arangosh):
         this.finish = datetime.now(tz=None)
         this.delta = this.finish - this.start
         this.delta_seconds = this.delta.total_seconds()
-        print(f'done with {this.name_enum}')
         this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
         this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
+        print(f'done with {this.name_enum} -> {this.success}')
         if this.report_file.exists():
             this.structured_results = this.report_file.read_text(encoding="UTF-8", errors='ignore')
         this.summary = ret['error']
@@ -116,10 +127,29 @@ def testing_runner(testing_instance, this, arangosh):
         this.crashed = True
         this.success = False
         this.summary = f"Python exception caught during test execution: {ex}\n{stack}"
+        print(this.summary)
         this.finish = datetime.now(tz=None)
         this.delta = this.finish - this.start
         this.delta_seconds = this.delta.total_seconds()
     finally:
+        print('finally')
+        try:
+            with COVERAGE_LOCK:
+                if this.lcov_prefix is not None:
+                    lcov_dir = Path(this.lcov_prefix)
+                    result_dir = combine_coverage_dirs_multi(this.cfg, lcov_dir, this.parallelity)
+                    if result_dir is None:
+                        print("combining coverage failed!")
+                    else:
+                        hash_str = hashlib.md5(this.name_enum.encode()).hexdigest()
+                        target_dir = Path(LLVM_PROFILE_FILE) / hash_str
+                        print(f'renaming {str(result_dir)} -> {target_dir}')
+                        result_dir.rename(target_dir)
+                    shutil.rmtree(str(this.lcov_prefix))
+        except Exception as ex:
+            print(ex)
+            print(traceback.format_exc())
+            raise ex
         with arangosh.slot_lock:
             testing_instance.running_suites.remove(this.name_enum)
         testing_instance.done_job(this.parallelity)
@@ -198,11 +228,13 @@ class TestingRunner():
         this.name_enum = f"{this.name} {str(counter)}"
         print(f"launching {this.name_enum}")
         pp.pprint(this)
+        this.cfg = self.cfg
 
         with self.slot_lock:
             self.running_suites.append(this.name_enum)
 
         worker = Thread(target=testing_runner,
+                        name="testing runner",
                         args=(self,
                               this,
                               self.arangosh))
