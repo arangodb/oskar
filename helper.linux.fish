@@ -1255,7 +1255,7 @@ function buildDockerAny
 
       set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
 
-      if test "$RELEASE_IS_HEAD" = "true"
+      if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
         set IMAGE_NAME3 arangodb/enterprise-preview:latest$archSuffix
       end
     else
@@ -1267,7 +1267,7 @@ function buildDockerAny
 
       set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
 
-      if test "$RELEASE_IS_HEAD" = "true"
+      if test "$RELEASE_IS_HEAD" = "true"  -a "$DOCKER_DISTRO" = "alpine"
         set IMAGE_NAME3 arangodb/arangodb-preview:latest$archSuffix
       end
     end
