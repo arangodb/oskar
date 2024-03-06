@@ -939,7 +939,12 @@ function makeSnippets
 
   enterprise
   and for arch in $archSnippets
-        buildObjectfilesSnippet $IN $OUT "$arch"
+        switch "$arch"
+          case "X86"
+            buildObjectfilesSnippet $IN $OUT "x86_64"
+          case "ARM"
+            buildObjectfilesSnippet $IN $OUT "aarch64"
+        end
       end
 
   for edition in "community" "enterprise"
@@ -1109,12 +1114,12 @@ function buildObjectfilesSnippet
     set DOWNLOAD_LINK ""
   end
 
-  set -l OBJECTFILES_TAR_GZ "$ARANGODB_PKG_NAME-linux-object_files_RelWithDebInfo_$ARANGODB_VERSION$tarGzSuffix.tar.gz"
+  set -l OBJECTFILES_TAR_GZ "$ARANGODB_PKG_NAME-linux-object_files_RelWithDebInfo-$ARANGODB_VERSION$tarGzSuffix.tar.gz"
 
   set IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Linux
   set OUT $argv[2]/release/snippets
 
-  if test ! -f "$IN/$OBJECTFILES_TAR_GZ"; echo "Source package '$OBJECTFILES_TAR_GZ' is missing"; return 1; end
+  if test ! -f "$IN/$OBJECTFILES_TAR_GZ"; echo "Object files package '$OBJECTFILES_TAR_GZ' is missing"; return 1; end
 
   set -l OBJECTFILES_SIZE_TAR_GZ (expr (wc -c < $IN/$OBJECTFILES_TAR_GZ) / 1024 / 1024)
 
@@ -1126,8 +1131,11 @@ function buildObjectfilesSnippet
   sed -e "s|@OBJECTFILES_TAR_GZ@|$OBJECTFILES_TAR_GZ|g" \
       -e "s|@OBJECTFILES_SIZE_TAR_GZ@|$OBJECTFILES_SIZE_TAR_GZ|g" \
       -e "s|@OBJECTFILES_SHA256_TAR_GZ@|$OBJECTFILES_SHA256_TAR_GZ|g" \
+      -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
       -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
       -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
       -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
       -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
       -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
@@ -1137,10 +1145,14 @@ function buildObjectfilesSnippet
       sed -e "s|@OBJECTFILES_TAR_GZ@|$OBJECTFILES_TAR_GZ|g" \
       	  -e "s|@OBJECTFILES_SIZE_TAR_GZ@|$OBJECTFILES_SIZE_TAR_GZ|g" \
       	  -e "s|@OBJECTFILES_SHA256_TAR_GZ@|$OBJECTFILES_SHA256_TAR_GZ|g" \
-      	  -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
-      	  -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
-      	  -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
-      	  -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+          -e "s|@DOWNLOAD_LINK@|$DOWNLOAD_LINK|g" \
+          -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+          -e "s|@ARANGODB_PKG_NAME@|$ARANGODB_PKG_NAME|g" \
+          -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+          -e "s|@ARANGODB_REPO@|$ARANGODB_REPO|g" \
+          -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+          -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+          -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
       	  < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-objectfiles.json.in > $m
   end
 
