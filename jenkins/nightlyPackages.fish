@@ -74,7 +74,7 @@ and begin
   end
 end
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and setNightlyRelease
+and setNightlyVersion
 and makeRelease
 and if test "$COPY_TO_STAGE2" = "true"
   copyPackagesToStage2

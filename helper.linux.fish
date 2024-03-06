@@ -394,10 +394,16 @@ function buildStaticArangoDB
   and findDefaultArchitecture
   and findUseARM
   and set -xg STATIC_EXECUTABLES On
-  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
-  and packBuildFiles
-  and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
-        packObjectFiles
+  and if test "$UNPACK_BUILD_FILES" = "On"
+        echo "UNPACK_BUILD_FILES: $UNPACK_BUILD_FILES"
+        unpackBuildFiles "$BUILD_FILES_ARCHIVE"
+      else
+        echo "UNPACK_BUILD_FILES: $UNPACK_BUILD_FILES"
+        runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
+        and packBuildFiles
+        and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+              packObjectFiles
+            end
       end
   set -l s $status
   if test $s -ne 0
@@ -669,9 +675,29 @@ end
 function buildPackage
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
-  buildDebianPackage
-  and buildRPMPackage
-  and buildTarGzPackage
+  
+  set -l type "$argv[1]"
+  if test -z "$type"
+    set type "ALL"
+  end
+
+  if test "$type" = "ALL"
+    buildDebianPackage
+    and buildRPMPackage
+    and buildTarGzPackage
+  else
+    switch $type
+      case DEB
+        buildDebianPackage
+      case RPM
+        buildRPMPackage
+      case TAR.GZ
+        buildTarGzPackage
+      case '*'
+        echo "fatal, unknown package type \"$type\"!"
+        exit 1
+    end
+  end
 end
 
 function buildEnterprisePackage
@@ -679,6 +705,9 @@ function buildEnterprisePackage
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
   end
+
+  set -l packages "ALL"
+  test -n "$argv[1]"; and set packages "$argv[1]"
  
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
@@ -691,7 +720,7 @@ function buildEnterprisePackage
   and downloadStarter
   and downloadSyncer
   and copyRclone "linux"
-  and buildPackage
+  and buildPackage $packages
 
   if test $status -ne 0
     echo Building enterprise release failed, stopping.
@@ -702,6 +731,9 @@ end
 function buildCommunityPackage
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
+  set -l packages "ALL"
+  test -n "$argv[1]"; and set packages "$argv[1]"
+
   sanOff
   and maintainerOff
   and releaseMode
@@ -709,7 +741,7 @@ function buildCommunityPackage
   and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
-  and buildPackage
+  and buildPackage $packages
 
   if test $status -ne 0
     echo Building community release failed.
@@ -1686,6 +1718,7 @@ function runInContainer
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
              -e ARANGODB_VERSION_MAJOR="$ARANGODB_VERSION_MAJOR" \
              -e ARANGODB_VERSION_MINOR="$ARANGODB_VERSION_MINOR" \
+             -e BUILD_FILES_ARCHIVE="$BUILD_FILES_ARCHIVE" \
              -e DUMPDEVICE=$DUMPDEVICE \
              -e ARCH="$ARCH" \
              -e SAN="$SAN" \
@@ -1718,6 +1751,7 @@ function runInContainer
              -e NO_RM_BUILD="$NO_RM_BUILD" \
              -e ONLYGREY="$ONLYGREY" \
              -e OPENSSL_VERSION="$OPENSSL_VERSION" \
+             -e PACK_BUILD_FILES="$PACK_BUILD_FILES" \
              -e PACKAGE_STRIP="$PACKAGE_STRIP" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
@@ -1740,6 +1774,7 @@ function runInContainer
              -e TEST="$TEST" \
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
+             -e UNPACK_BUILD_FILES="$UNPACK_BUILD_FILES" \
              -e USE_ARM="$USE_ARM" \
              -e USE_CCACHE="$USE_CCACHE" \
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
@@ -2050,6 +2085,10 @@ function packBuildFiles
   if test "$PACK_BUILD_FILES" = "On"
     runInContainer $UBUNTUBUILDIMAGE_DEVEL $SCRIPTSDIR/packBuildFiles.fish
   end
+end
+
+function unpackBuildFiles
+  runInContainer $UBUNTUBUILDIMAGE_DEVEL $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
 end
 
 ## #############################################################################

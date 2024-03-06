@@ -132,8 +132,18 @@ makeOn
 
 function packBuildFilesOff ; set -gx PACK_BUILD_FILES Off ; end
 function packBuildFilesOn ; set -gx PACK_BUILD_FILES On ; end
-if test -z "$PACK_BUILD_FILES" ; packBuildFilesOff
+if test -z "$PACK_BUILD_FILES" ; packBuildFilesOn
 else ; set -xg PACK_BUILD_FILES $PACK_BUILD_FILES ; end
+
+function unpackBuildFilesOff ; set -gx UNPACK_BUILD_FILES Off ; end
+function unpackBuildFilesOn ; set -gx UNPACK_BUILD_FILES On ; end
+if test -z "$UNPACK_BUILD_FILES" ; unpackBuildFilesOff
+else ; set -xg UNPACK_BUILD_FILES $UNPACK_BUILD_FILES ; end
+
+function setBuildFilesArchive ; set -xg BUILD_FILES_ARCHIVE $argv[1] ; end
+function unsetBuildFilesArchive ; set -xg BUILD_FILES_ARCHIVE "" ; end
+if test -z "$BUILD_FILES_ARCHIVE"; unsetBuildFilesArchive
+else ; setBuildFilesArchive "$BUILD_FILES_ARCHIVE" ; end
 
 set -xg GCR_REG_PREFIX "gcr.io/gcr-for-testing/"
 function gcrRegOff ; set -gx GCR_REG "Off"  ; end
@@ -595,7 +605,7 @@ end
 ## set release version variables in CMakeLists.txt
 ## #############################################################################
 
-function setNightlyRelease
+function setNightlyVersion
   checkoutIfNeeded
   set -l suffix ""
   test $PLATFORM = "darwin"; and set suffix ".bak"
@@ -616,17 +626,21 @@ end
 ## #############################################################################
 
 function makeRelease
-  makeEnterpriseRelease
-  and makeCommunityRelease
+  makeEnterpriseRelease "$argv[1]"
+  and makeCommunityRelease "$argv[1]"
 end
 
 function makeCommunityRelease
-  if test (count $argv) -lt 2
+  set -l packages "ALL"
+
+  if test (count $argv) -lt 3
     findArangoDBVersion ; or return 1
+    test -n "$argv[1]" ; and set packages "$argv[1]"
   else
     set -xg ARANGODB_VERSION "$argv[1]"
     set -xg ARANGODB_PACKAGE_REVISION "$argv[2]"
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
+    test -n "$argv[3]" ; and set packages "$argv[3]"
   end
 
   test (findMinimalDebugInfo) = "On"
@@ -639,7 +653,7 @@ function makeCommunityRelease
     minimalDebugInfoOff
   end
   echo ""
-  buildCommunityPackage
+  buildCommunityPackage $packages
 end
 
 function makeEnterpriseRelease
@@ -648,12 +662,16 @@ function makeEnterpriseRelease
     return 1
   end
 
-  if test (count $argv) -lt 2
+  set -l packages "ALL"
+
+  if test (count $argv) -lt 3
     findArangoDBVersion ; or return 1
+    test -n "$argv[1]" ; and set packages "$argv[1]"
   else
     set -xg ARANGODB_VERSION "$argv[1]"
     set -xg ARANGODB_PACKAGE_REVISION "$argv[2]"
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
+    test -n "$argv[3]" ; and set packages "$argv[3]"
   end
 
   test (findMinimalDebugInfo) = "On"
@@ -666,7 +684,7 @@ function makeEnterpriseRelease
     minimalDebugInfoOff
   end
   echo ""
-  buildEnterprisePackage
+  buildEnterprisePackage $packages
 end
 
 function makeJsSha1Sum
@@ -852,7 +870,7 @@ function buildTarGzPackageHelper
   if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10; and test "$PLATFORM" = "darwin"; or test "$PLATFORM" = "linux"
     rm -rf "$name-$os-$v$arch"
     and cp -a "$name-$v$arch" "$name-$os-$v$arch"
-    and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "etc" --exclude "bin/README*" --exclude "var" "$name-$os-$v$arch"
+    and tar czvf "$WORKDIR/work/$name-$os-$v$arch.tar.gz" --exclude "usr/local" --exclude "etc" --exclude "bin/README*" --exclude "var" "$name-$os-$v$arch"
     and rm -rf "$name-$os-$v$arch"
   else
     rm -rf "$name-$os-$v$arch" "$WORKDIR/work/$name-$os-$v$arch.tar.gz"
@@ -866,6 +884,7 @@ function buildTarGzPackageHelper
     and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-client-$os-$v$arch/g" "$name-client-$os-$v$arch/README"
     and rm -rf "$name-client-$os-$v$arch/README.bak"
     and tar czvf "$WORKDIR/work/$name-client-$os-$v$arch.tar.gz" \
+      --exclude "usr/local" \
       --exclude "bin/README*" \
       --exclude "etc" \
       --exclude "var" \
@@ -918,6 +937,11 @@ function makeSnippets
   community
   and buildSourceSnippet $IN $OUT
 
+  enterprise
+  and for arch in $archSnippets
+        buildObjectfilesSnippet $IN $OUT "$arch"
+      end
+
   for edition in "community" "enterprise"
     eval "$edition"
     and buildDockerSnippet $OUT
@@ -927,13 +951,17 @@ function makeSnippets
               buildDebianSnippet $IN $OUT "amd64" "x86_64"
               and buildRPMSnippet $IN $OUT "x86_64" "x86_64"
               and buildTarGzSnippet $IN $OUT "x86_64"
-              and buildBundleSnippet $IN $OUT "x86_64"
-              and buildWindowsSnippet $IN $OUT "win64"
+              and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+                    buildBundleSnippet $IN $OUT "x86_64"
+                    buildWindowsSnippet $IN $OUT "win64"
+                  end
             case "ARM"
               buildDebianSnippet $IN $OUT "arm64" "arm64"
               and buildRPMSnippet $IN $OUT "aarch64" "arm64"
               and buildTarGzSnippet $IN $OUT "arm64"
-              and buildBundleSnippet $IN $OUT "arm64"
+              and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+                    buildBundleSnippet $IN $OUT "arm64"
+                  end
           end
         end
   end
@@ -949,32 +977,36 @@ function makeSnippets
       echo ','
     end
 
-    for edition in "community" "enterprise"
-      if test -f "$SNIPPETS/meta-docker-$edition.json"
-	echo '"docker-'$edition'":'
-	cat "$SNIPPETS/meta-docker-$edition.json"
-	echo ','
-      end
-
-      and if test -f "$SNIPPETS/meta-k8s-$edition.json"
-	echo '"k8s-'$edition'":'
-	cat "$SNIPPETS/meta-k8s-$edition.json"
-	echo ','
-      end
-
-      and for arch in x86_64 amd64 arm64 aarch64 win64
-        for type in bundle debian rpm windows
-          if test -f "$SNIPPETS/meta-$type-$edition-$arch.json"
-            echo '"'$type'-'$edition'-'$arch'":'
-            cat "$SNIPPETS/meta-$type-$edition-$arch.json"
-            echo ','
-	  end
-	end
-      end
+    if test -f "$SNIPPETS/meta-objectfiles-enterprise.json"
+      echo '"objectfiles-enterprise":'
+      cat "$SNIPPETS/meta-objectfiles-enterprise.json"
+      echo ','
     end
 
-   echo '"serial": "'(date +%s)'"'
-   echo '}'
+    for edition in "community" "enterprise"
+      if test -f "$SNIPPETS/meta-docker-$edition.json"
+        echo '"docker-'$edition'":'
+        cat "$SNIPPETS/meta-docker-$edition.json"
+        echo ','
+      end
+      and if test -f "$SNIPPETS/meta-k8s-$edition.json"
+	          echo '"k8s-'$edition'":'
+	          cat "$SNIPPETS/meta-k8s-$edition.json"
+            echo ','
+          end
+      and for arch in x86_64 amd64 arm64 aarch64 win64
+            for type in bundle debian rpm windows
+              if test -f "$SNIPPETS/meta-$type-$edition-$arch.json"
+                echo '"'$type'-'$edition'-'$arch'":'
+                cat "$SNIPPETS/meta-$type-$edition-$arch.json"
+                echo ','
+	            end
+            end
+          end
+    end
+
+    echo '"serial": "'(date +%s)'"'
+    echo '}'
   end | jq . > "$SNIPPETS/meta.json"
 end
 
@@ -1046,6 +1078,75 @@ function buildSourceSnippet
 
   and echo "Source Snippet: $n"
 end
+
+## #############################################################################
+## objectfiles snippets
+## #############################################################################
+function buildObjectfilesSnippet
+  set snippetArch "-$argv[3]"
+  set -l arch "$argv[3]"
+  set tarGzSuffix "_$argv[3]"
+
+  if test "$USE_ARM" = "Off"
+    set snippetArch ""
+    set tarGzSuffix ""
+  end
+
+  if test "$ENTERPRISEEDITION" = "On"
+    set ARANGODB_EDITION "Enterprise"
+    set ARANGODB_PKG_NAME "arangodb3e"
+    set META_EDITION "enterprise"
+
+    if test -z "$ENTERPRISE_DOWNLOAD_KEY"
+      set DOWNLOAD_LINK "/enterprise-download"
+    else
+      set DOWNLOAD_LINK "/$ENTERPRISE_DOWNLOAD_KEY"
+    end
+  else
+    set ARANGODB_EDITION "Community"
+    set ARANGODB_PKG_NAME "arangodb3"
+    set META_EDITION "community"
+    set DOWNLOAD_LINK ""
+  end
+
+  set -l OBJECTFILES_TAR_GZ "$ARANGODB_PKG_NAME-linux-object_files_RelWithDebInfo_$ARANGODB_VERSION$tarGzSuffix.tar.gz"
+
+  set IN $argv[1]/$ARANGODB_PACKAGES/packages/$ARANGODB_EDITION/Linux
+  set OUT $argv[2]/release/snippets
+
+  if test ! -f "$IN/$OBJECTFILES_TAR_GZ"; echo "Source package '$OBJECTFILES_TAR_GZ' is missing"; return 1; end
+
+  set -l OBJECTFILES_SIZE_TAR_GZ (expr (wc -c < $IN/$OBJECTFILES_TAR_GZ) / 1024 / 1024)
+
+  set -l OBJECTFILES_SHA256_TAR_GZ (shasum -a 256 -b < $IN/$OBJECTFILES_TAR_GZ | awk '{print $1}')
+
+  set -l n "$OUT/download-objectfiles-$META_EDITION$snippetArch.html"
+  set -l m "$OUT/meta-objectfiles-$META_EDITION-$arch.json"
+
+  sed -e "s|@OBJECTFILES_TAR_GZ@|$OBJECTFILES_TAR_GZ|g" \
+      -e "s|@OBJECTFILES_SIZE_TAR_GZ@|$OBJECTFILES_SIZE_TAR_GZ|g" \
+      -e "s|@OBJECTFILES_SHA256_TAR_GZ@|$OBJECTFILES_SHA256_TAR_GZ|g" \
+      -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      -e "s|@ARANGODB_EDITION@|$ARANGODB_EDITION|g" \
+      < $WORKDIR/snippets/$ARANGODB_SNIPPETS/objectfiles.html.in > $n
+
+  and if test -f $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-objectfiles.json.in
+      sed -e "s|@OBJECTFILES_TAR_GZ@|$OBJECTFILES_TAR_GZ|g" \
+      	  -e "s|@OBJECTFILES_SIZE_TAR_GZ@|$OBJECTFILES_SIZE_TAR_GZ|g" \
+      	  -e "s|@OBJECTFILES_SHA256_TAR_GZ@|$OBJECTFILES_SHA256_TAR_GZ|g" \
+      	  -e "s|@ARANGODB_PACKAGES@|$ARANGODB_PACKAGES|g" \
+      	  -e "s|@ARANGODB_DOWNLOAD_WARNING@|$ARANGODB_DOWNLOAD_WARNING|g" \
+      	  -e "s|@ARANGODB_VERSION@|$ARANGODB_VERSION|g" \
+      	  -e "s|@ARANGODB_VERSION_RELEASE_NUMBER@|$ARANGODB_VERSION_RELEASE_NUMBER|g" \
+      	  < $WORKDIR/snippets/$ARANGODB_SNIPPETS/meta-objectfiles.json.in > $m
+  end
+
+  and echo "Objectfiles Snippet: $n"
+end
+
 
 ## #############################################################################
 ## debian snippets
@@ -1774,20 +1875,22 @@ function showConfig
 
   echo '------------------------------------------------------------------------------'
   echo 'Build Configuration'
-  printf $fmt3 'Sanitizer'  $SAN                    '(sanOn/Off)'
-  printf $fmt3 'San mode'   $SAN_MODE               '(sanModeAULSan/TSan)'
-  printf $fmt3 'Coverage'   $COVERAGE               '(coverageOn/Off)'
-  printf $fmt3 'Buildmode'  $BUILDMODE              '(debugMode/releaseMode)'
-  printf $fmt3 'Compiler'   $compiler_version       '(compiler x.y.z)'
-  printf $fmt3 'OpenSSL'    $openssl_version        '(opensslVersion x.y.z)'
-  printf $fmt3 'CPU'        $DEFAULT_ARCHITECTURE   '(defaultArchitecture cpuname)'
-  printf $fmt3 'Use ARM'    $USE_ARM                '(ARM true or false)'
-  printf $fmt3 'Use rclone' $USE_RCLONE             '(rclone true or false)'
-  printf $fmt3 'Enterprise' $ENTERPRISEEDITION      '(community/enterprise)'
-  printf $fmt3 'Jemalloc'   $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
-  printf $fmt3 'Maintainer' $MAINTAINER             '(maintainerOn/Off)'
-  printf $fmt3 'Build sepp' $BUILD_SEPP             '(buildSeppOn/buildSeppOff)'
-  printf $fmt3 'Pack build' $PACK_BUILD_FILES       '(packBuildFilesOn/packBuildFilesOff)'
+  printf $fmt3 'Sanitizer'     $SAN                    '(sanOn/Off)'
+  printf $fmt3 'San mode'      $SAN_MODE               '(sanModeAULSan/TSan)'
+  printf $fmt3 'Coverage'      $COVERAGE               '(coverageOn/Off)'
+  printf $fmt3 'Buildmode'     $BUILDMODE              '(debugMode/releaseMode)'
+  printf $fmt3 'Compiler'      $compiler_version       '(compiler x.y.z)'
+  printf $fmt3 'OpenSSL'       $openssl_version        '(opensslVersion x.y.z)'
+  printf $fmt3 'CPU'           $DEFAULT_ARCHITECTURE   '(defaultArchitecture cpuname)'
+  printf $fmt3 'Use ARM'       $USE_ARM                '(ARM true or false)'
+  printf $fmt3 'Use rclone'    $USE_RCLONE             '(rclone true or false)'
+  printf $fmt3 'Enterprise'    $ENTERPRISEEDITION      '(community/enterprise)'
+  printf $fmt3 'Jemalloc'      $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
+  printf $fmt3 'Maintainer'    $MAINTAINER             '(maintainerOn/Off)'
+  printf $fmt3 'Build sepp'    $BUILD_SEPP             '(buildSeppOn/buildSeppOff)'
+  printf $fmt3 'Pack build'    $PACK_BUILD_FILES       '(packBuildFilesOn/packBuildFilesOff)'
+  printf $fmt3 'Unpack build'  $UNPACK_BUILD_FILES     '(unpackBuildFilesOn/unpackBuildFilesOff)'
+  printf $fmt3 'Build archive' $BUILD_FILES_ARCHIVE    '(setBuildFilesArchive path/unsetBuildFilesArchive)'
 
   if test -z "$NO_RM_BUILD"
     printf $fmt3 'Clear build' On '(keepBuild/clearBuild)'
@@ -2266,6 +2369,17 @@ function moveResultsToWorkspace
     if test -d $WORKDIR/work/ArangoDB/testrunXml
       echo "mv JUnit XMLs ($WORKDIR/work/ArangoDB/testrunXml)"
       mv $WORKDIR/work/ArangoDB/testrunXml $WORKSPACE/testrunXml
+    end
+  end
+end
+
+function moveResultsFromWorkspace
+  if test ! -z "$WORKSPACE"
+    # Used in jenkins test
+    echo Moving archives from $WORKSPACE ...
+    set -l matches $WORKSPACE/*.{deb,rpm,7z,tar.gz,tar.bz2,zip}
+    for f in $matches
+      echo "mv $f $WORKDIR/work/" ; and mv $f $WORKDIR/work/
     end
   end
 end
