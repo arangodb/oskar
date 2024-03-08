@@ -386,18 +386,18 @@ def main():
         shutil.rmtree(str(coverage_dir))
     coverage_dir.mkdir()
     gcov_dir = base_dir / sys.argv[2]
-    try:
-        shutil.make_archive("/work/testresults2124",
-                            'tar.gz',
-                            "/work/gcov",
-                            "/work/gcov",
-                            True)
-    except Exception as ex:
-        print(f"Failed to create zip: {str(ex)}")
+    #try:
+    #    shutil.make_archive("/work/testresults2124",
+    #                        'tar.gz',
+    #                        "/work/gcov",
+    #                        "/work/gcov",
+    #                        True)
+    #except Exception as ex:
+    #    print(f"Failed to create zip: {str(ex)}")
     cfg = SiteConfig(gcov_dir.resolve())
-    import glob
-    for filename in glob.iglob('/work/gcov**/**', recursive=True):
-        print(filename)
+    #import glob
+    #for filename in glob.iglob('/work/gcov**/**', recursive=True):
+    #    print(filename)
     result_dir = combine_coverage_dirs_multi(
         cfg,
         gcov_dir,
