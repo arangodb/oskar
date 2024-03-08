@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from threading  import Thread, Lock
 import traceback
-import shutil
+
 import psutil
 from async_client import (
     ArangoCLIprogressiveTimeoutExecutor,
