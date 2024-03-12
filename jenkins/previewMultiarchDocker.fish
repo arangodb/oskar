@@ -15,6 +15,9 @@ else
   if test "$DOCKER_DISTRO" = "ubi"
     set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-ubi"
   end
+  if test "$DOCKER_DISTRO" = "deb"
+    set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-deb"
+  end
 end
 
 if test -z "$EDITION"

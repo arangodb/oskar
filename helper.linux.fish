@@ -1089,14 +1089,14 @@ function makeDockerMultiarch
   end
 
   pushDockerManifest $MANIFEST_NAME1
-  and if test "$RELEASE_IS_HEAD" = "true"
+  and if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
         pushDockerManifest $MANIFEST_NAME2
       end
   or return 1
 
   if test "$GCR_REG" = "On"
     pushDockerManifest $GCR_REG_PREFIX$MANIFEST_NAME1
-    and if test "$RELEASE_IS_HEAD" = "true"
+    and if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
           pushDockerManifest $GCR_REG_PREFIX$MANIFEST_NAME2
         end
     or return 1
