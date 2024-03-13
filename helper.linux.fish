@@ -640,7 +640,7 @@ function collectCoverage
       runInContainer --env LLVM_PROFILE_FILE=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
   else
       echo "collecting gcov coverage"
-      runInContainer (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage_old.py" "$INNERWORKDIR/" gcov coverage
+      runInContainer (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
    end
   return $status
 end
