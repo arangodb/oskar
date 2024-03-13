@@ -23,6 +23,8 @@ if IS_COVERAGE:
     elif 'GCOV_PREFIX' in os.environ:
         COVERAGE_VAR = 'GCOV_PREFIX'
         COVERAGE_TYPE = 'GCOV'
+    else
+        COVERAGE_TYPE = 'GCOV'
     if COVERAGE_VAR:
         COVERAGE_VALUE = os.environ[COVERAGE_VAR]
     print(f"coverage value: {COVERAGE_VAR} = {COVERAGE_VALUE}")
