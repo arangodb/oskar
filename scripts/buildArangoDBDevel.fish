@@ -83,7 +83,7 @@ if test "$SAN" = "On"
    -DCMAKE_CXX_FLAGS="-pthread $SANITIZERS -fno-sanitize=vptr -fno-sanitize=alignment" \
    -DBASE_LIBS="-pthread"
 else if test "$COVERAGE" = "On"
-  echo "Building with Coverage"
+  echo "Building with LCOV Coverage"
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
     -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-instr-generate -fcoverage-mapping -mllvm -runtime-counter-relocation --coverage" \

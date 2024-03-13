@@ -17,9 +17,11 @@ end
 buildSanFlags "$INNERWORKDIR/ArangoDB"
 
 if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+  echo "running LCOV coverage:"
   set -xg LLVM_PROFILE_FILE /work/gcov
   set -xg LCOV_PREFIX_STRIP 3
 else
+  echo "running GCOV coverage:"
   set -xg GCOV_PREFIX /work/gcov
   set -xg GCOV_PREFIX_STRIP 3
 end
