@@ -20,10 +20,11 @@ if IS_COVERAGE:
     if 'LLVM_PROFILE_FILE' in os.environ:
         COVERAGE_VAR = 'LLVM_PROFILE_FILE'
         COVERAGE_TYPE = 'LLVM'
-    else:
+    elif 'GCOV_PREFIX' in os.environ:
         COVERAGE_VAR = 'GCOV_PREFIX'
         COVERAGE_TYPE = 'GCOV'
-    COVERAGE_VALUE = os.environ[COVERAGE_VAR]
+    if COVERAGE_VAR:
+        COVERAGE_VALUE = os.environ[COVERAGE_VAR]
     print(f"coverage value: {COVERAGE_VAR} = {COVERAGE_VALUE}")
 IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
 IS_WINDOWS = platform.win32_ver()[0] != ""
