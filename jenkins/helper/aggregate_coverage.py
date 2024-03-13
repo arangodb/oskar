@@ -199,6 +199,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         self.params = make_default_params(verbose, 111)
         print([binary] + self.job_parameters)
         start = datetime.now()
+        ret = {"rc_exit": 3333}
         try:
             ret = self.run_monitored(
                 binary,
@@ -219,7 +220,6 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             filecount += 1
 
         print(f"done with {self.job[0]} +  {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']} => {filecount}")
-        ret = {}
         ret['error'] = self.params['error']
         for one_file in [self.job[0], self.job[1]]:
             print('cleaning up')
