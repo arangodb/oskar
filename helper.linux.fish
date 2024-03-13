@@ -1732,7 +1732,6 @@ function runInContainer
              -e COVERAGE="$COVERAGE" \
              -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
-             -e FORCE_DISABLE_AVX="$FORCE_DISABLE_AVX" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
@@ -1848,7 +1847,6 @@ function interactiveContainer
     -e COVERAGE="$COVERAGE" \
     -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
     -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
-    -e FORCE_DISABLE_AVX="$FORCE_DISABLE_AVX" \
     -e GID=(id -g) \
     -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
     -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
