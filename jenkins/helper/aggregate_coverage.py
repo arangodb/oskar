@@ -214,9 +214,8 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             {"".join(traceback.TracebackException.from_exception(ex).format())}''')
             self.params['error'] += str(ex)
         end = datetime.now()
-        import glob
-        filecount = 0;
-        for filename in glob.iglob(str(self.outdir) + '**/**', recursive=True):
+        filecount = 0
+        for _ in glob.iglob(str(self.outdir) + '**/**', recursive=True):
             filecount += 1
 
         print(f"done with {self.job[0]} +  {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']} => {filecount}")
@@ -441,7 +440,7 @@ def main():
         path = Path(subdir)
         path.mkdir(parents=True, exist_ok=True)
         for filename in fnmatch.filter(files, '*.gcno'):
-            source = (os.path.join(root, filename))
+            source = os.path.join(root, filename)
             shutil.copy2(source, path / filename)
 
     print('create a symlink into the jemalloc source:')
@@ -464,9 +463,6 @@ def main():
                                   ])
         translate_xml(cobertura_xml)
     else:
-        import glob
-        for filename in glob.iglob('/work/gcov/combined/coverage_result**/**', recursive=True):
-            print(filename)
         resultfile = coverage_dir / 'summary.txt'
         gcovr = Gcovr(cfg, sourcedir, cobertura_xml, resultfile, result_dir, [
             Path('build'),
