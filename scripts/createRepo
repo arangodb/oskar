@@ -175,9 +175,15 @@ create_repo_deb(){
 
     #sign release
     echo "sign release"
-    gpg2 --homedir /root/.gnupg-old --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
-         --passphrase-fd 0 --yes -abs -u "$KEYNAME" \
-         -o Release.gpg Release <<<"arangodb" || ferr "failed to sign Release"
+    if test -d /root/.gnupg-old; then
+      gpg2 --homedir $gpg_dir --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
+      --passphrase-fd 0 --yes -abs -u "$KEYNAME" \
+      -o Release.gpg Release <<<"arangodb" || ferr "failed to sign Release"
+    else
+      gpg2 --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
+      --passphrase-fd 0 --yes -abs -u "$KEYNAME" \
+      -o Release.gpg Release <<<"arangodb" || ferr "failed to sign Release"
+    fi
 
 }
 create_repo_rpm(){
@@ -218,23 +224,24 @@ create_repo_rpm(){
     rm -rf "$repo/.repodata"
     createrepo_c --update --verbose "$repo" || ferr "failed to create repo"
 
-    gpg2 --homedir /root/.gnupg-old \
-	 --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
-	 --no-permission-warning --armor --export info@arangodb.com \
-	 > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
+    if test -d /root/.gnupg-old
+      gpg2 --homedir /root/.gnupg-old \
+      --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning --armor --export info@arangodb.com \
+      > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
 
-    rm -fr "$repo/repodata/repomd.xml.asc" || ferr "failed to delete old signature"
-    gpg2 --homedir /root/.gnupg-old \
-	 --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
-	 --no-permission-warning -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
+      rm -fr "$repo/repodata/repomd.xml.asc" || ferr "failed to delete old signature"
+      gpg2 --homedir /root/.gnupg-old \
+      --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
 
-    gpg2 --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
-	 --no-permission-warning --armor --export admin@arangodb.com \
-	 > "$repo/repodata/repomd256.xml.key" || ferr "failed to export repomd256.xml.key"
+      gpg2 --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning --armor --export admin@arangodb.com \
+      > "$repo/repodata/repomd256.xml.key" || ferr "failed to export repomd256.xml.key"
 
-    ls -l "$repo/repodata"
+      ls -l "$repo/repodata"
 
-    cat <<EOF > "${repo}/arangodb.repo"
+      cat <<EOF > "${repo}/arangodb.repo"
 [arangodb]
 name=ArangoDB Project
 type=rpm-md
@@ -244,7 +251,27 @@ gpgkey=$url/repodata/repomd.xml.key
        $url/repodata/repomd256.xml.key
 enabled=1
 EOF
+    else
+      gpg2 --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning --armor --export admin@arangodb.com \
+      > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
 
+      rm -fr "$repo/repodata/repomd.xml.asc" || ferr "failed to delete old signature"
+      gpg2 --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
+
+      ls -l "$repo/repodata"
+
+      cat <<EOF > "${repo}/arangodb.repo"
+[arangodb]
+name=ArangoDB Project
+type=rpm-md
+baseurl=$url
+gpgcheck=1
+gpgkey=$url/repodata/repomd.xml.key
+enabled=1
+EOF
+    fi
 }
 
 ## run this only if it is run directly

@@ -1481,14 +1481,24 @@ function createRepositories
   findArangoDBVersion
 
   pushd $WORKDIR
-  and runInContainer \
-      -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
-      -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg-old \
-      -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
-      -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
-      -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
-      -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
-      -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
+  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+        runInContainer \
+        -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
+        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
+        -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
+        -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
+      else
+        runInContainer \
+        -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
+        -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg-old \
+        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
+        -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
+        -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
+      end
   or begin ; popd ; return 1 ; end
   popd
 end
