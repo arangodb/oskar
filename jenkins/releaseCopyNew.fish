@@ -31,6 +31,13 @@ for pattern in "arangodb3e_*.deb" "arangodb3e-*.deb" "arangodb3e-*.rpm" "arangod
   end
 end
 
+for pattern in "ArangoDB-*.tar.gz" "ArangoDB-*.tar.gz.asc" "ArangoDB-*.tar.bz2" "ArangoDB-*.tar.bz2.asc" "ArangoDB-*.zip" "ArangoDB-*.zip.asc"
+  set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
+  for file in $files
+    cp -a $SRC/$file $DST/release/source ; or set -g s 1
+  end
+end
+
 for pattern in "*.html"
   set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
   for file in $files
