@@ -1,4 +1,5 @@
-set -gx KEYNAME 86FEC04D
+set -gx KEYNAME     86FEC04D
+set -gx KEYNAME_OLD 115E1684
 
 function lockDirectory
   # Now grab the lock ourselves:

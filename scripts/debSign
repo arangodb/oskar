@@ -14,6 +14,8 @@ debSign(){
         local gpg_dir=/root/.gnupg-old
         if ! test -d /root/.gnupg-old; then
           gpg_dir=/root/.gnupg
+        else
+          KEYNAME=$KEYNAME_OLD
         fi
 
         if gpg2 --homedir $gpg_dir --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 --passphrase-fd 0 --armor --detach-sign -u "$KEYNAME" "$file" <<<"$ARANGO_SIGN_PASSWD"; then

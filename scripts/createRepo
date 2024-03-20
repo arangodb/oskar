@@ -176,8 +176,8 @@ create_repo_deb(){
     #sign release
     echo "sign release"
     if test -d /root/.gnupg-old; then
-      gpg2 --homedir $gpg_dir --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
-      --passphrase-fd 0 --yes -abs -u "$KEYNAME" \
+      gpg2 --homedir "/root/.gnupg-old" --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
+      --passphrase-fd 0 --yes -abs -u "$KEYNAME_OLD" \
       -o Release.gpg Release <<<"arangodb" || ferr "failed to sign Release"
     else
       gpg2 --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \

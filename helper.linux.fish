@@ -1751,6 +1751,7 @@ function runInContainer
              -e IONICE="$IONICE" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e KEYNAME="$KEYNAME" \
+             -e KEYNAME_OLD="$KEYNAME_OLD" \
              -e LDAPHOST="$LDAPHOST" \
              -e LDAPHOST2="$LDAPHOST2" \
              -e MAINTAINER="$MAINTAINER" \
@@ -1866,6 +1867,7 @@ function interactiveContainer
     -e IONICE="$IONICE" \
     -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
     -e KEYNAME="$KEYNAME" \
+    -e KEYNAME_OLD="$KEYNAME_OLD" \
     -e LDAPHOST="$LDAPHOST" \
     -e LDAPHOST2="$LDAPHOST2" \
     -e MAINTAINER="$MAINTAINER" \
