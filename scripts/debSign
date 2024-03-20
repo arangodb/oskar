@@ -12,7 +12,7 @@ debSign(){
         rm -f "$asc"
 
         local gpg_dir=/root/.gnupg-old
-        if test -d /root/.gnupg-old; then
+        if ! test -d /root/.gnupg-old; then
           gpg_dir=/root/.gnupg
         fi
 

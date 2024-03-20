@@ -224,7 +224,7 @@ create_repo_rpm(){
     rm -rf "$repo/.repodata"
     createrepo_c --update --verbose "$repo" || ferr "failed to create repo"
 
-    if test -d /root/.gnupg-old
+    if test -d /root/.gnupg-old; then
       gpg2 --homedir /root/.gnupg-old \
       --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
       --no-permission-warning --armor --export info@arangodb.com \
