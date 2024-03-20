@@ -57,7 +57,7 @@ if test "$SAN" = "On"
   echo "SAN is not support in this environment"
   exit 1
 else if test "$COVERAGE" = "On"
-  echo "Building with Coverage"
+  echo "Building with GCOV Coverage"
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
     -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
