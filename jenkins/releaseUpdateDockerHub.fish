@@ -45,7 +45,7 @@ function updateDockerHub
       end
   and if test "$GCR_REG" = "On"
         eval "$REGCTL_COPY arangodb/$to:$tag$suffix $GCR_REG_PREFIX""arangodb/$to:$tag$suffix"
-        and "$REGCTL_COPY arangodb/$to:$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR$suffix $GCR_REG_PREFIX""arangodb/$to:$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR$suffix"
+        and eval "$REGCTL_COPY arangodb/$to:$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR$suffix $GCR_REG_PREFIX""arangodb/$to:$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR$suffix"
         and if test "$RELEASE_IS_HEAD" = "true"
               eval "$REGCTL_COPY arangodb/$to:latest$suffix $GCR_REG_PREFIX""arangodb/$to:latest$suffix"
             end
