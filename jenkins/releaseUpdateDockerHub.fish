@@ -26,7 +26,7 @@ function downloadLatestRegctl
   rm -rf /tmp/regctl-linux-amd64
   curl -s -L -o "$REGCTL_PATH" "https://github.com/regclient/regclient/releases/download/$REGCTL_VER/regctl-linux-amd64"
   and chmod 755 "$REGCTL_PATH"
-  or or begin ; echo "Failed to download regctl $REGCTL_VER" ; exit 1 ; end
+  or begin ; echo "Failed to download regctl $REGCTL_VER" ; exit 1 ; end
 end
 
 function updateDockerHub
