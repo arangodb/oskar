@@ -581,7 +581,8 @@ function jslint
   or begin popd; return 1; end
 
   set -l s 0
-  runInContainer arangodb/arangodb /scripts/jslint.sh
+  findArangoDBVersion
+  and runInContainer arangodb/arangodb:$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR /scripts/jslint.sh
   set s $status
 
   popd
