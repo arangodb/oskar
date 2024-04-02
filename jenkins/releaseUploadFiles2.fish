@@ -20,9 +20,9 @@ or begin unlockDirectory ; exit 1 ; end
 function upload
   cd /mnt/buildfiles/stage2
   and echo "Copying COMMUNITY"
-  and gsutil rsync -c -x 'index\.html|Packages.*|Release.*' -r $ARANGODB_PACKAGES/repositories/Community/Debian gs://download.arangodb.com/$ARANGODB_REPO/DEBIAN
+  and gsutil -m rsync -c -x 'index\.html|Packages.*|Release.*' -r $ARANGODB_PACKAGES/repositories/Community/Debian gs://download.arangodb.com/$ARANGODB_REPO/DEBIAN
   and echo "Copying ENTERPRISE"
-  and gsutil rsync -c -x 'index\.html|Packages.*|Release.*' -r $ARANGODB_PACKAGES/repositories/Enterprise/Debian gs://download.arangodb.com/$ENTERPRISE_DOWNLOAD_KEY/$ARANGODB_REPO/DEBIAN
+  and gsutil -m rsync -c -x 'index\.html|Packages.*|Release.*' -r $ARANGODB_PACKAGES/repositories/Enterprise/Debian gs://download.arangodb.com/$ENTERPRISE_DOWNLOAD_KEY/$ARANGODB_REPO/DEBIAN
 end
 
 # there might be internet hickups
