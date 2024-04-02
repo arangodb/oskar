@@ -1,5 +1,10 @@
 #!/usr/bin/fish
 
+if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+  echo "Intentionally don't unpack build files for $ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR base!"
+  exit 0
+end
+
 set -l BUILD_FILES_ARCHIVE "$argv[1]"
 
 cd $INNERWORKDIR/ArangoDB
