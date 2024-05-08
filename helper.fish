@@ -1,4 +1,5 @@
-set -gx KEYNAME 115E1684
+set -gx KEYNAME     86FEC04D
+set -gx KEYNAME_OLD 115E1684
 
 function lockDirectory
   # Now grab the lock ourselves:
@@ -932,15 +933,17 @@ function makeSnippets
   community
   and buildSourceSnippet $IN $OUT
 
-  enterprise
-  and for arch in $archSnippets
-        switch "$arch"
-          case "X86"
-            buildObjectfilesSnippet $IN $OUT "x86_64"
-          case "ARM"
-            buildObjectfilesSnippet $IN $OUT "aarch64"
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+    enterprise
+    and for arch in $archSnippets
+          switch "$arch"
+            case "X86"
+              buildObjectfilesSnippet $IN $OUT "x86_64"
+            case "ARM"
+              buildObjectfilesSnippet $IN $OUT "aarch64"
+          end
         end
-      end
+  end
 
   for edition in "community" "enterprise"
     eval "$edition"

@@ -2,6 +2,11 @@
 
 cd $INNERWORKDIR/ArangoDB
 
+if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+  echo "Intentionally don't pack build files for $ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR base!"
+  exit 0
+end
+
 set -l suffix ""
 if test "$ENTERPRISEEDITION" = "On"
   set suffix "e"

@@ -36,11 +36,11 @@ end
 
 cleanPrepareLockUpdateClear
 and set -xg RELEASE_TYPE "preview"
-if test "$EDITION" = "community"
+if test (string lower "$EDITION") = "community"; or test (string lower "$EDITION") = "all"
   community
   makeDockerMultiarch "$DOCKER_TAG_JENKINS"
 end
-if test "$EDITION" = "enterprise"
+if test (string lower "$EDITION") = "enterprise"; or test (string lower "$EDITION") = "all"
   enterprise
   makeDockerMultiarch "$DOCKER_TAG_JENKINS"
 end

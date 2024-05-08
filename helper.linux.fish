@@ -581,7 +581,8 @@ function jslint
   or begin popd; return 1; end
 
   set -l s 0
-  runInContainer arangodb/arangodb /scripts/jslint.sh
+  findArangoDBVersion
+  and runInContainer arangodb/arangodb:$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR /scripts/jslint.sh
   set s $status
 
   popd
@@ -655,7 +656,7 @@ function signSourcePackage
   pushd $WORKDIR/work
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
-        -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg \
+        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
 	(findBuildImage) $SCRIPTSDIR/signFile.fish \
 	/work/ArangoDB-$SOURCE_TAG.tar.gz \
 	/work/ArangoDB-$SOURCE_TAG.tar.bz2 \
@@ -1487,14 +1488,24 @@ function createRepositories
   findArangoDBVersion
 
   pushd $WORKDIR
-  and runInContainer \
-      -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
-      -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg-old \
-      -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
-      -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
-      -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
-      -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
-      -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
+  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+        runInContainer \
+        -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
+        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
+        -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
+        -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
+      else
+        runInContainer \
+        -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
+        -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg-old \
+        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
+        -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
+        -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
+      end
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1747,6 +1758,7 @@ function runInContainer
              -e IONICE="$IONICE" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e KEYNAME="$KEYNAME" \
+             -e KEYNAME_OLD="$KEYNAME_OLD" \
              -e LDAPHOST="$LDAPHOST" \
              -e LDAPHOST2="$LDAPHOST2" \
              -e MAINTAINER="$MAINTAINER" \
@@ -1862,6 +1874,7 @@ function interactiveContainer
     -e IONICE="$IONICE" \
     -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
     -e KEYNAME="$KEYNAME" \
+    -e KEYNAME_OLD="$KEYNAME_OLD" \
     -e LDAPHOST="$LDAPHOST" \
     -e LDAPHOST2="$LDAPHOST2" \
     -e MAINTAINER="$MAINTAINER" \
