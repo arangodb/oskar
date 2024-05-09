@@ -13,6 +13,21 @@ import psutil
 from socket_counter import get_socket_count
 
 IS_COVERAGE = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
+COVERAGE_VAR = None
+COVERAGE_TYPE = None
+COVERAGE_VALUE = ""
+if IS_COVERAGE:
+    if 'LLVM_PROFILE_FILE' in os.environ:
+        COVERAGE_VAR = 'LLVM_PROFILE_FILE'
+        COVERAGE_TYPE = 'LLVM'
+    elif 'GCOV_PREFIX' in os.environ:
+        COVERAGE_VAR = 'GCOV_PREFIX'
+        COVERAGE_TYPE = 'GCOV'
+    else:
+        COVERAGE_TYPE = 'GCOV'
+    if COVERAGE_VAR:
+        COVERAGE_VALUE = os.environ[COVERAGE_VAR]
+    print(f"coverage value: {COVERAGE_VAR} = {COVERAGE_VALUE}")
 IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
@@ -154,17 +169,23 @@ class SiteConfig:
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
         self.is_aulsan = self.is_asan and os.environ['SAN_MODE'] == 'AULSan'
-        self.is_gcov = IS_COVERAGE
-        san_gcov_msg = ""
-        if self.is_asan or self.is_gcov:
-            san_gcov_msg = ' - SAN '
+        self.is_cov = IS_COVERAGE
+        san_cov_msg = ""
+        if self.is_asan or self.is_cov:
+            san_cov_msg = ' - SAN '
             slot_divisor = 4
             if self.is_aulsan:
-                san_gcov_msg = ' - AUL-SAN '
-            elif self.is_gcov:
-                san_gcov_msg = ' - GCOV'
-                slot_divisor = 3
-            san_gcov_msg += ' enabled, reducing possible system capacity\n'
+                san_cov_msg = ' - AUL-SAN '
+            elif self.is_cov:
+                if COVERAGE_TYPE == 'GCOV':
+                    san_cov_msg = ' - GCOV'
+                    slot_divisor = 3
+                    self.is_lcov = False
+                else:
+                    san_cov_msg = ' - LCOV'
+                    slot_divisor = 2
+                    self.is_lcov = True
+            san_cov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
             self.available_slots /= slot_divisor
             #self.timeout *= 1.5
@@ -200,7 +221,7 @@ class SiteConfig:
  - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
  - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
  - {socket_count} number of currently active tcp sockets
-{san_gcov_msg}""")
+{san_cov_msg}""")
         self.cfgdir = base_source_dir / 'etc' / 'relative'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
@@ -224,7 +245,7 @@ class SiteConfig:
 
     def is_instrumented(self):
         """ check whether we run an instrumented build """
-        return self.is_asan or self.is_aulsan or self.is_gcov
+        return self.is_asan or self.is_aulsan or self.is_cov
 
     def get_max(self):
         """ get the maximal value before overlead is triggered """

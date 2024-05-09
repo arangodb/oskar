@@ -26,7 +26,7 @@ set -gx UBUNTUBUILDIMAGE6_TAG 14
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
 set -gx UBUNTUBUILDIMAGE_DEVEL_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE_DEVEL_TAG 3
+set -gx UBUNTUBUILDIMAGE_DEVEL_TAG 4
 set -gx UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:$UBUNTUBUILDIMAGE_DEVEL_TAG-$UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
@@ -636,7 +636,13 @@ end
 function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
-  and runInContainer (findStaticBuildImage) python3 "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+      echo "collecting llvm coverage"
+      runInContainer --env LLVM_PROFILE_FILE=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
+  else
+      echo "collecting gcov coverage"
+      runInContainer (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage_old.py" "$INNERWORKDIR/" gcov coverage
+   end
   return $status
 end
 

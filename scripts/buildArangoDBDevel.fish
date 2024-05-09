@@ -55,26 +55,15 @@ set -g FULLARGS $argv \
  -DBUILD_REPO_INFO=$BUILD_REPO_INFO
 
 if test "$MAINTAINER" = "On"
-    if test "$COVERAGE" = "Off"
-      set -g FULLARGS $FULLARGS \
-        -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld " \
-        -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
-    else
-      set -g FULLARGS $FULLARGS \
-        -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie -fno-stack-protector"
-    end
+  set -g FULLARGS $FULLARGS \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie -fno-stack-protector -fuse-ld=lld" \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
 else
   set -g FULLARGS $FULLARGS \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld " \
+    -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
-  if test "$COVERAGE" = "Off"
-    set -g FULLARGS $FULLARGS \
-      -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld " \
-      -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
-  else
-    set -g FULLARGS $FULLARGS \
-      -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector"
-  end
 end
 
 if test "$BUILD_SEPP" = "On"
@@ -94,14 +83,14 @@ if test "$SAN" = "On"
    -DCMAKE_CXX_FLAGS="-pthread $SANITIZERS -fno-sanitize=vptr -fno-sanitize=alignment" \
    -DBASE_LIBS="-pthread"
 else if test "$COVERAGE" = "On"
-  echo "Building with Coverage"
-  set -xg CC_NAME gcc
-  set -xg CXX_NAME g++
+  echo "Building with LCOV Coverage"
   set -g FULLARGS $FULLARGS \
     -DUSE_JEMALLOC=$JEMALLOC_OSKAR \
-    -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
-    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-arcs -ftest-coverage" \
-    -DUSE_COVERAGE=ON
+    -DCMAKE_C_FLAGS="$pie -fno-stack-protector -fprofile-instr-generate -fcoverage-mapping -mllvm -runtime-counter-relocation --coverage" \
+    -DCMAKE_CXX_FLAGS="$pie -fno-stack-protector -fprofile-instr-generate -fcoverage-mapping -mllvm -runtime-counter-relocation --coverage" \
+    -DCMAKE_LD_FLAGS="$pie -fno-stack-protector -fprofile-instr-generate -fcoverage-mapping -mllvm -runtime-counter-relocation --coverage" \
+    -DUSE_COVERAGE=ON \
+   -DV8_LDFLAGS=--coverage
 else
   set -g FULLARGS $FULLARGS \
    -DUSE_JEMALLOC=$JEMALLOC_OSKAR

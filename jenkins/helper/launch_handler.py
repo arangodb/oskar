@@ -30,9 +30,11 @@ def launch(args, tests):
 
 
 def launch_runner(runner, create_report):
+    """ main test flow """
     dmesg = DmesgWatcher(runner.cfg)
     if IS_LINUX:
-        dmesg_thread = Thread(target=dmesg_runner, args=[dmesg])
+        dmesg_thread = Thread(target=dmesg_runner, args=[dmesg], name="dmesg")
+        dmesg.name = "dmesg"
         dmesg_thread.start()
         time.sleep(3)
     print(runner.scenarios)
