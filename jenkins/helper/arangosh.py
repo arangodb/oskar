@@ -64,7 +64,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
             'TEMP': str(params['temp_dir']),
             'TMP': str(params['temp_dir'])
         }
-        if cov_dir is not None:
+        if cov_dir is not None and cov_var is not None:
             params['env'][cov_var] = cov_dir
         print("Env:")
         print(params['env'])

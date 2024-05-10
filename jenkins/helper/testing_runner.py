@@ -96,7 +96,7 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.name_enum,
                                    this.temp_dir,
                                    COVERAGE_VAR,
-                                   str(this.cov_prefix),
+                                   str(this.cov_prefix) if this.cov_prefix is not None else this.cov_prefix,
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
