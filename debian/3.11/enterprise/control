@@ -14,7 +14,7 @@ Description: a multi-model NoSQL database
  SQL-like query language or JavaScript extensions.
  .
  Copyright: 2012-2013 by triAGENS GmbH
- Copyright: 2014-2023 by ArangoDB GmbH
+ Copyright: 2014-2024 by ArangoDB GmbH
  ArangoDB Software
  www.arangodb.com
 
@@ -28,7 +28,7 @@ Description: stand-alone shell
  SQL-like query language or JavaScript extensions.
  .
  Copyright: 2012-2013 by triAGENS GmbH
- Copyright: 2014-2023 by ArangoDB GmbH
+ Copyright: 2014-2024 by ArangoDB GmbH
  ArangoDB Software
  www.arangodb.com
 

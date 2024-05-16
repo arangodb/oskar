@@ -19,14 +19,15 @@ ensure(){
 setup_gpg(){
     error_info="$(mktemp)"
     test_file="$(mktemp)"
-    export KEYNAME=115E1684
+    export KEYNAME=86FEC04D
     export GPG_TTY="$(tty)"
 
     /usr/bin/gpg-agent --homedir=~/.gnupg --daemon \
         --use-standard-socket --allow-loopback-pinentry 2>"$error_info"
     gpg2 --import -v -v ~/.gnupg/secring.gpg 2>"$error_info" \
         || err "failed to import secret"
-    gpg2 --import -v -v ~/.gnupg/pubring.gpg 2>"$error_info" \
+    gpg2 --homedir=~/.gnupg --no-default-keyring --keyring ~/.gnupg/pubring.kbx \
+        --export -a | gpg2 --import -v -v  2>"$error_info" \
         || err "faild to import public key"
 
     cd /tmp/

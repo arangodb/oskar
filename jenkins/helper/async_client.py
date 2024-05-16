@@ -70,6 +70,22 @@ def tail_line_result(wait, line, params):
         params['skip_done'] = True
         print(params['prefix'] + 'initial tail done, starting to output')
     return True
+def tail_silent_line_result(wait, line, params):
+    """
+    Keep the line, filter it for leading #,
+    if verbose print the line. else print progress.
+    """
+    # pylint: disable=pointless-statement
+    if params['skip_done']:
+        if isinstance(line, tuple):
+            #print(params['prefix'] + str(line[0], 'utf-8').rstrip())
+            params['output'].write(line[0])
+        return True
+    now = datetime.now()
+    if now - params['last_read'] > timedelta(seconds=1):
+        params['skip_done'] = True
+        #print(params['prefix'] + 'initial tail done, starting to output')
+    return True
 def make_tail_params(verbose, prefix, logfile):
     """ create the structure to work with arrays to output the strings to """
     return {
@@ -310,6 +326,10 @@ class ArangoCLIprogressiveTimeoutExecutor:
         """ hook to implemnet custom environment variable setters """
         return os.environ.copy()
 
+    def post_process_launch(self, process):
+        """ hook to work with the process while it launches """
+        pass
+
     def run_arango_tool_monitored(
             self,
             executable,
@@ -408,11 +428,13 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 target=enqueue_stdout,
                 args=(process.stdout, queue, self.connect_instance, identifier, params),
             )
+            thread1.name=f"readIO {identifier}",
             thread2 = Thread(
                 name="readErrIO {identifier}",
                 target=enqueue_stderr,
                 args=(process.stderr, queue, self.connect_instance, identifier, params),
             )
+            thread2.name="readErrIO {identifier}",
             thread1.start()
             thread2.start()
 
@@ -431,7 +453,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         identifier,
                         str(os.getpid()),
                         str(process.pid)))
-
+            self.post_process_launch(process)
             # read line without blocking
             have_progressive_timeout = False
             tcount = 0

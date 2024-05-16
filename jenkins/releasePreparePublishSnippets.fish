@@ -63,11 +63,13 @@ and copySnippet "$SP_SNIPPETS_CO" "download-arangodb3-suse*.html" 's/arangodb3-s
 and copySnippet "$SP_SNIPPETS_CO" "download-arangodb3-rpm*.html" 's/arangodb3-rpm/redhat/'
 and copySnippet "$SP_SNIPPETS_CO" "download-arangodb3-suse*.html" 's/arangodb3-suse/sle/'
 and copySnippet "$SP_SNIPPETS_CO" "download-arangodb3-linux*.html" 's/arangodb3-linux/linux-general/'
-and copySnippet "$SP_SNIPPETS_CO" "download-arangodb3-macosx*.html" 's/arangodb3-macosx/macosx/'
+and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 11
+      copySnippet "$SP_SNIPPETS_CO" "download-arangodb3-macosx*.html" 's/arangodb3-macosx/macosx/'
+      copySnippet "$SP_SNIPPETS_CO" "download-windows*-community.html" 's/windows.*-community/windows/'
+    end
 and copySnippet "$SP_SNIPPETS_CO" "download-docker-community.html" 's/docker-community/docker/'
 and copySnippet "$SP_SNIPPETS_CO" "download-k8s-community.html" 's/k8s-community/k8s/'
 and copySnippet "$SP_SNIPPETS_CO" "download-source.html"
-and copySnippet "$SP_SNIPPETS_CO" "download-windows*-community.html" 's/windows.*-community/windows/'
 and cp $WS_SNIPPETS/meta-*-community*.json $SP_SNIPPETS_CO
 and cp $WS_SNIPPETS/meta-source.json $SP_SNIPPETS_CO
 
@@ -79,10 +81,15 @@ and copySnippet "$SP_SNIPPETS_EN" "download-arangodb3e-suse*.html" 's/arangodb3e
 and copySnippet "$SP_SNIPPETS_EN" "download-arangodb3e-rpm*.html" 's/arangodb3e-rpm/redhat/'
 and copySnippet "$SP_SNIPPETS_EN" "download-arangodb3e-suse*.html" 's/arangodb3e-suse/sle/'
 and copySnippet "$SP_SNIPPETS_EN" "download-arangodb3e-linux*.html" 's/arangodb3e-linux/linux-general/'
-and copySnippet "$SP_SNIPPETS_EN" "download-arangodb3e-macosx*.html" 's/arangodb3e-macosx/macosx/'
+and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 11
+      copySnippet "$SP_SNIPPETS_EN" "download-arangodb3e-macosx*.html" 's/arangodb3e-macosx/macosx/'
+      and copySnippet "$SP_SNIPPETS_EN" "download-windows*-enterprise.html" 's/windows.*-enterprise/windows/'
+    end
 and copySnippet "$SP_SNIPPETS_EN" "download-docker-enterprise.html" 's/docker-enterprise/docker/'
 and copySnippet "$SP_SNIPPETS_EN" "download-k8s-enterprise.html" 's/k8s-enterprise/k8s/'
-and copySnippet "$SP_SNIPPETS_EN" "download-windows*-enterprise.html" 's/windows.*-enterprise/windows/'
+and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+      copySnippet "$SP_SNIPPETS_EN" "download-objectfiles-enterprise*.html" 's/objectfiles-enterprise/objectfiles/'
+    end
 and cp $WS_SNIPPETS/meta-*-enterprise*.json $SP_SNIPPETS_EN
 
 and echo "========== CREATE META-DATA COMMUNITY =========="

@@ -20,9 +20,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
     def get_environment(self, params):
         """ hook to implemnet custom environment variable setters """
         my_env = os.environ.copy()
-        my_env['TMPDIR'] = str(params['temp_dir'])
-        my_env['TEMP'] = str(params['temp_dir'])
-        my_env['TMP'] = str(params['temp_dir'])
+        my_env.update(params['env'])
         return my_env
 
     def run_testing(self,
@@ -33,6 +31,8 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
                     logfile,
                     identifier,
                     temp_dir,
+                    cov_var,
+                    cov_dir,
                     verbose
                     ):
        # pylint: disable=R0913 disable=R0902
@@ -59,6 +59,15 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
             testcase,
             '--testOutput', directory ] + testing_args
         params = make_logfile_params(verbose, logfile, self.cfg.trace, temp_dir)
+        params['env'] = {
+            'TMPDIR': str(params['temp_dir']),
+            'TEMP': str(params['temp_dir']),
+            'TMP': str(params['temp_dir'])
+        }
+        if cov_dir is not None and cov_var is not None:
+            params['env'][cov_var] = cov_dir
+        print("Env:")
+        print(params['env'])
         ret = self.run_monitored(
             self.cfg.bin_dir / "arangosh",
             run_cmd,

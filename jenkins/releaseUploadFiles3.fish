@@ -20,15 +20,15 @@ or begin unlockDirectory ; exit 1 ; end
 function upload
   cd /mnt/buildfiles/stage2
   and echo "Copying COMMUNITY"
-  and gsutil rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/source gs://download.arangodb.com/Source
-  and gsutil rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/packages/Community gs://download.arangodb.com/$ARANGODB_REPO/Community
+  and gsutil -m rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/source gs://download.arangodb.com/Source
+  and gsutil -m rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/packages/Community gs://download.arangodb.com/$ARANGODB_REPO/Community
   and echo "Copying ENTERPRISE"
-  and gsutil rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/packages/Enterprise gs://download.arangodb.com/$ENTERPRISE_DOWNLOAD_KEY/$ARANGODB_REPO/Enterprise
+  and gsutil -m rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/packages/Enterprise gs://download.arangodb.com/$ENTERPRISE_DOWNLOAD_KEY/$ARANGODB_REPO/Enterprise
 end
 
 function uploadWindowsSymbols
   ssh root@symbol.arangodb.biz "cd /script/ && python program.py /mnt/symsrv_arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR"
-  and ssh root@symbol.arangodb.biz "gsutil rsync -r /mnt/symsrv_arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR gs://download.arangodb.com/symsrv_arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR"
+  and ssh root@symbol.arangodb.biz "gsutil -m rsync -r /mnt/symsrv_arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR gs://download.arangodb.com/symsrv_arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR"
 end
 
 # there might be internet hickups

@@ -1,7 +1,7 @@
 #
 # spec file for package arangodb3
 #
-# Copyright (c) 2014-2023 info@arangodb.org
+# Copyright (c) 2014-2024 info@arangodb.org
 #
 # All modifications and additions to the file contributed by third parties
 # remain the property of their copyright owners, unless otherwise agreed
@@ -90,10 +90,6 @@ rm -f %{buildroot}/README
 mkdir /tmp/sbin /tmp/bin
 # arangodb
 mv %{buildroot}/usr/bin/arangodb /tmp/bin
-# arangosync
-if [ -x %{buildroot}/usr/sbin/arangosync ] ; then
-  mv %{buildroot}/usr/sbin/arangosync /tmp/sbin
-fi
 # arangod
 @RPM_STRIP_EXCEPT_ARANGOD@mv %{buildroot}/usr/sbin/arangod /tmp/sbin
 # or all binaries
@@ -125,6 +121,8 @@ rmdir /tmp/sbin /tmp/bin
 /usr/share/doc/arangodb3/LICENSES-OTHER-COMPONENTS.md
 /usr/share/doc/arangodb3/README.md
 /usr/share/doc/arangodb3/README.txt
+/usr/share/doc/arangodb3/GPL-3
+/usr/share/doc/arangodb3/LGPL-3
 
 %attr(0755,arangodb,arangodb) %{_databasedir}
 %attr(0755,arangodb,arangodb) %{_appdir}
@@ -202,10 +200,7 @@ ArangoDB 3 (https://www.arangodb.com)
   or JavaScript extensions.
 
 First Steps with ArangoDB:
-  https://www.arangodb.com/docs/stable/getting-started.html
-
-Configuring the storage Engine:
-  https://www.arangodb.com/docs/stable/programs-arangod-server.html#storage-engine
+  https://docs.arangodb.com/devel/get-started/
 
 Configuration file:
   /etc/arangodb3/arangod.conf

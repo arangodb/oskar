@@ -291,8 +291,8 @@ function findRequiredOpenSSL
   set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -E -o "[0-9]\.[0-9]\.[0-9]*[a-z]?")
 
   if test "$v" = ""
-    echo "$f: no OPENSSL_MACOS specified, using 1.1.1t"
-    opensslVersion 1.1.1t
+    echo "$f: no OPENSSL_MACOS specified, using 3.0.13"
+    opensslVersion 3.0.13
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
@@ -499,7 +499,9 @@ function setupComponents
   if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
     downloadStarter
     if test "$ENTERPRISEEDITION" = "On"
-      set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
+      if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+        set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
+      end
       and downloadSyncer
       if test "$USE_RCLONE" = "true"
         copyRclone "macos"
