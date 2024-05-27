@@ -410,7 +410,7 @@ class TestingRunner():
             filep.write(text + '\n')
 
     # pylint: disable=too-many-arguments
-    def mt_zip_tar(self, fnlist, zip_dir, tarfile, verb, filetype):
+    def mp_zip_tar(self, fnlist, zip_dir, tarfile, verb, filetype):
         """ use full machine to compress files in zip-tar """
         zip_slots = psutil.cpu_count(logical=False)
         count = 0
@@ -517,13 +517,13 @@ class TestingRunner():
         core_zip_dir.mkdir(parents=True, exist_ok=True)
 
         crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
-        self.mt_zip_tar(core_files_list, core_zip_dir, crash_report_file, 'coredump', 'crashreport')
+        self.mp_zip_tar(core_files_list, core_zip_dir, crash_report_file, 'coredump', 'crashreport')
         shutil.rmtree(str(core_zip_dir), ignore_errors=True)
 
         self.cleanup_unneeded_binary_files()
         binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
         bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
-        self.mt_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
+        self.mp_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
 
     def generate_test_report(self):
         """ regular testresults zip """
