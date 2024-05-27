@@ -63,7 +63,7 @@ def zipp_this(filenames, target_dir):
     for corefile in filenames:
         try:
             print(f'zipping {corefile}')
-            zipfile.ZipFile(str(target_dir / (corefile.name + "." + ZIPFORMAT)),
+            zipfile.ZipFile(str(target_dir / (corefile.name + "." + ZIPEXT)),
                             mode='w', compression=zipfile.ZIP_LZMA).write(str(corefile))
         except Exception as exc:
             print(f'skipping {corefile} since {exc}')
