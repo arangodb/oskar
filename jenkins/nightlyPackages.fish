@@ -39,7 +39,7 @@ function copyPackagesToStage2
     or return 1
 
     for pattern in "arangodb3*_*.deb" "arangodb3*-*.deb" "arangodb3*-*.rpm" "arangodb3*-linux-*.tar.gz" "sourceInfo.*"
-      set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
+      set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" -a -not -name "*build_files*" ; and popd)
       for file in $files
         cp $SRC/$file $DST/Linux/$ARCH ; or set -g s 1
       end
