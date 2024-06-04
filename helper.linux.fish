@@ -1987,10 +1987,8 @@ end
 
 function updateOskar
   updateOskarOnly
-  and pullUbuntuBuildImage6
   and pullUbuntuBuildImage311
   and pullUbuntuBuildImageDevel
-  and pullAlpineBuildImage6
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullUbuntuPackagingImage2
