@@ -20,13 +20,13 @@ RUN dpkg -i /debs/*.deb
 
 #FROM ubuntu:23.10 as v81
 
-#COPY ./tools/build_v8.sh /tools/build_v8.sh
-#RUN /tools/build_v8.sh
+#COPY ./tools/build_v8_arm64.sh /tools/build_v8_arm64.sh
+#RUN /tools/build_v8_arm64.sh
 
 #FROM v81 as v8
 
-#COPY ./tools/install_v8.sh /tools/install_v8.sh
-#RUN /tools/install_v8.sh
+#COPY ./tools/install_v8_arm64.sh /tools/install_v8_arm64.sh
+#RUN /tools/install_v8_arm64.sh
 
 # Finally, build the actual build image based on the above preparation:
 
@@ -34,7 +34,7 @@ FROM prepare
 
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
-ARG ARCH="x86_64"
+ARG ARCH="aarch64"
 
 # We provide gcc 13.2.0 as well as clang 16.0.6 from Ubunutu 23.10
 
@@ -55,7 +55,7 @@ RUN npm install -g yarn
 
 # sccache for cloud compiler cache:
 
-RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.3.1/sccache-v0.3.1-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl
+RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.3.1/sccache-v0.3.1-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl
 
 # Fetch V8:
 #COPY --from=v8 /opt/v8/lib /opt/v8/lib
@@ -67,7 +67,7 @@ RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.3.1/sccache-
 
 COPY ./tools/* /tools/
 
-RUN [ "/tools/install.sh", "3.2", "1" ]
+RUN [ "/tools/install.sh", "3.0", "13" ]
 
 COPY ./scripts /scripts
 
@@ -81,6 +81,6 @@ RUN LC_ALL="C" update-ccache-symlinks
 
 RUN git config --global --add safe.directory '*'
 
-RUN apt-get install -y python3-pip && pip3 install py7zr psutil cppcheck-junit lcov_cobertura --break-system-packages
+RUN apt-get install -y python3-pip && pip3 install py7zr psutil cppcheck-junit --break-system-packages
 
 CMD [ "/usr/bin/fish" ]

@@ -16,18 +16,22 @@ set -gx DUMPDEVICE "lo"
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
 if test "$ARCH" = "aarch64"
-  set -xg UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH "arm64v8"
+  set -xg UBUNTUBUILDIMAGE_TAG_ARCH "arm64v8"
 else
-  set -xg UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH "x86_64"
+  set -xg UBUNTUBUILDIMAGE_TAG_ARCH "x86_64"
 end
 
 set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
 set -gx UBUNTUBUILDIMAGE6_TAG 14
 set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
 
-set -gx UBUNTUBUILDIMAGE_DEVEL_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE_DEVEL_TAG 4
-set -gx UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:$UBUNTUBUILDIMAGE_DEVEL_TAG-$UBUNTUBUILDIMAGE_DEVEL_TAG_ARCH
+set -gx UBUNTUBUILDIMAGE_311_NAME arangodb/ubuntubuildarangodb-3.11
+set -gx UBUNTUBUILDIMAGE_311_TAG 1
+set -gx UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:$UBUNTUBUILDIMAGE_311_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
+
+set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
+set -gx UBUNTUBUILDIMAGE_312_TAG 4
+set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
@@ -118,39 +122,16 @@ function opensslVersion
 end
 
 function findBuildImage
-  if test "$COMPILER_VERSION" = ""
-      echo $UBUNTUBUILDIMAGE6
-  else
-    switch $COMPILER_VERSION
-      case 11.2.1_git20220219-r2
-        echo $UBUNTUBUILDIMAGE6
-
-      case 13.2.0
-        echo $UBUNTUBUILDIMAGE_DEVEL
-
-      case clang16.0.6
-        echo $UBUNTUBUILDIMAGE_DEVEL
-
-      case '*'
-        echo "unknown compiler version $version"
-        return 1
-    end
-  end
+  findStaticBuildImage
 end
 
 function findStaticBuildImage
   if test "$COMPILER_VERSION" = ""
-      echo $ALPINEBUILDIMAGE6
+    eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
   else
     switch $COMPILER_VERSION
-      case 11.2.1_git20220219-r2
-        echo $ALPINEBUILDIMAGE6
-
-      case 13.2.0
-        echo $UBUNTUBUILDIMAGE_DEVEL
-
-      case clang16.0.6
-        echo $UBUNTUBUILDIMAGE_DEVEL
+      case 13.2.0 clang16.0.6
+        eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
 
       case '*'
         echo "unknown compiler version $version"
@@ -160,39 +141,16 @@ function findStaticBuildImage
 end
 
 function findBuildScript
-  if test "$COMPILER_VERSION" = ""
-      echo buildArangoDB6.fish
-  else
-    switch $COMPILER_VERSION
-      case 11.2.1_git20220219-r2
-        echo buildArangoDB6.fish
-
-      case 13.2.0
-        echo buildArangoDBDevel.fish
-
-      case clang16.0.6
-        echo buildArangoDBDevel.fish
-
-      case '*'
-        echo "unknown compiler version $version"
-        return 1
-    end
-  end
+  findStaticBuildScript
 end
 
 function findStaticBuildScript
   if test "$COMPILER_VERSION" = ""
-      echo buildAlpine6.fish
+      echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
   else
     switch $COMPILER_VERSION
-      case 11.2.1_git20220219-r2
-        echo buildAlpine6.fish
-
-      case 13.2.0
-        echo buildArangoDBDevel.fish
-
-      case clang16.0.6
-        echo buildArangoDBDevel.fish
+      case 13.2.0 clang16.0.6
+        echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -224,8 +182,8 @@ function findRequiredCompiler
   end
 
   if test "$v" = ""
-    echo "$f: no CLANG_LINUX or GCC_LINUX specified, using g++ 11.2.1_git20220219-r2"
-    compiler 11.2.1_git20220219-r2
+    echo "$f: no CLANG_LINUX or GCC_LINUX specified, using g++ 13.2.0"
+    compiler 13.2.0
   else
     echo "Using compiler '$v' from '$f'"
     compiler $v
@@ -401,8 +359,10 @@ function buildStaticArangoDB
         echo "UNPACK_BUILD_FILES: $UNPACK_BUILD_FILES"
         runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
         and packBuildFiles
-        and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
-              packObjectFiles
+        and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3
+              if test "$ARANGODB_VERSION_MINOR" -ge 12; or begin; test "$ARANGODB_VERSION_MINOR" -eq 11; and test "$ARANGODB_VERSION_PATCH" -ge 10; end
+                packObjectFiles
+              end
             end
       end
   set -l s $status
@@ -1514,32 +1474,40 @@ end
 ## build and packaging images
 ## #############################################################################
 
-function buildUbuntuBuildImage6
+function buildUbuntuBuildImage311
   pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu6.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE6 ."
+  and cd $WORKDIR/containers/buildUbuntu311.docker
+  and switch "$ARCH"
+        case "x86_64"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_311 -f ./Dockerfile.x86-64 ."
+        case "aarch64"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_311 -f ./Dockerfile.arm64 ."
+        case '*'
+          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_311"
+          exit 1
+      end
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushUbuntuBuildImage6
-  docker tag $UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE6
-  and docker push $UBUNTUBUILDIMAGE6_NAME:latest
+function pushUbuntuBuildImage311
+  docker tag $UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
+  and docker push $UBUNTUBUILDIMAGE_311
+  and docker push $UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
 end
 
-function pullUbuntuBuildImage6 ; docker pull $UBUNTUBUILDIMAGE6 ; end
+function pullUbuntuBuildImage311 ; docker pull $UBUNTUBUILDIMAGE_311 ; end
 
 function buildUbuntuBuildImageDevel
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntuDevel.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_DEVEL -f ./Dockerfile.x86-64 ."
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_312 -f ./Dockerfile.x86-64 ."
         case "aarch64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_DEVEL -f ./Dockerfile.arm64 ."
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_312 -f ./Dockerfile.arm64 ."
         case '*'
-          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_DEVEL"
+          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_312"
           exit 1
       end
   or begin ; popd ; return 1 ; end
@@ -1547,12 +1515,12 @@ function buildUbuntuBuildImageDevel
 end
 
 function pushUbuntuBuildImageDevel
-  docker tag $UBUNTUBUILDIMAGE_DEVEL $UBUNTUBUILDIMAGE_DEVEL_NAME:latest-$ARCH
-  and docker push $UBUNTUBUILDIMAGE_DEVEL
-  and docker push $UBUNTUBUILDIMAGE_DEVEL_NAME:latest-$ARCH
+  docker tag $UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
+  and docker push $UBUNTUBUILDIMAGE_312
+  and docker push $UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
 end
 
-function pullUbuntuBuildImageDevel ; docker pull $UBUNTUBUILDIMAGE_DEVEL ; end
+function pullUbuntuBuildImageDevel ; docker pull $UBUNTUBUILDIMAGE_312 ; end
 
 function buildUbuntuPackagingImage
   pushd $WORKDIR
@@ -1581,22 +1549,6 @@ end
 function pushUbuntuPackagingImage2 ; docker push $UBUNTUPACKAGINGIMAGE2 ; end
 
 function pullUbuntuPackagingImage2 ; docker pull $UBUNTUPACKAGINGIMAGE2 ; end
-
-function buildAlpineBuildImage6
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine6.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE6 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushAlpineBuildImage6
-  docker tag $ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:latest
-  and docker push $ALPINEBUILDIMAGE6
-  and docker push $ALPINEBUILDIMAGE6_NAME:latest
-end
-
-function pullAlpineBuildImage6 ; docker pull $ALPINEBUILDIMAGE6 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
@@ -1662,12 +1614,10 @@ function pullLdapImage ; docker pull $LDAPIMAGE ; end
 function remakeImages
   set -l s 0
 
-  buildUbuntuBuildImage6 ; or set -l s 1
-  pushUbuntuBuildImage6 ; or set -l s 1
+  buildUbuntuBuildImage311 ; or set -l s 1
+  pushUbuntuBuildImage311 ; or set -l s 1
   buildUbuntuBuildImageDevel ; or set -l s 1
   pushUbuntuBuildImageDevel ; or set -l s 1
-  buildAlpineBuildImage6 ; or set -l s 1
-  pushAlpineBuildImage6 ; or set -l s 1
   buildAlpineUtilsImage ; or set -l s 1
   pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
@@ -1683,12 +1633,10 @@ end
 function remakeBuildImages
   set -l s 0
 
-  buildUbuntuBuildImage6 ; or set -l s 1
-  pushUbuntuBuildImage6 ; or set -l s 1
+  buildUbuntuBuildImage311 ; or set -l s 1
+  pushUbuntuBuildImage311 ; or set -l s 1
   buildUbuntuBuildImageDevel ; or set -l s 1
   pushUbuntuBuildImageDevel ; or set -l s 1
-  buildAlpineBuildImage6 ; or set -l s 1
-  pushAlpineBuildImage6 ; or set -l s 1
 
   return $s
 end
@@ -2003,14 +1951,11 @@ function pushOskar
   and source helper.fish
   and git push
 
-  and buildUbuntuBuildImage6
-  and pushUbuntuBuildImage6
+  and buildUbuntuBuildImage311
+  and pushUbuntuBuildImage311
 
   and buildUbuntuBuildImageDevel
   and pushUbuntuBuildImageDevel
-
-  and buildAlpineBuildImage6
-  and pushAlpineBuildImage6
 
   and buildAlpineUtilsImage
   and pushAlpineUtilsImage
@@ -2043,6 +1988,7 @@ end
 function updateOskar
   updateOskarOnly
   and pullUbuntuBuildImage6
+  and pullUbuntuBuildImage311
   and pullUbuntuBuildImageDevel
   and pullAlpineBuildImage6
   and pullAlpineUtilsImage
@@ -2095,17 +2041,17 @@ function downloadAuxBinariesToBuildBin
 end
 
 function packObjectFiles
-  runInContainer $UBUNTUBUILDIMAGE_DEVEL $SCRIPTSDIR/packObjectFiles.fish
+  runInContainer $UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR $SCRIPTSDIR/packObjectFiles.fish
 end
 
 function packBuildFiles
   if test "$PACK_BUILD_FILES" = "On"
-    runInContainer $UBUNTUBUILDIMAGE_DEVEL $SCRIPTSDIR/packBuildFiles.fish
+    runInContainer $UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR $SCRIPTSDIR/packBuildFiles.fish
   end
 end
 
 function unpackBuildFiles
-  runInContainer $UBUNTUBUILDIMAGE_DEVEL $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
+  runInContainer $UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
 end
 
 ## #############################################################################
