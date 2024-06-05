@@ -2039,17 +2039,17 @@ function downloadAuxBinariesToBuildBin
 end
 
 function packObjectFiles
-  runInContainer $UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR $SCRIPTSDIR/packObjectFiles.fish
+  runInContainer "UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR" $SCRIPTSDIR/packObjectFiles.fish
 end
 
 function packBuildFiles
   if test "$PACK_BUILD_FILES" = "On"
-    runInContainer $UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR $SCRIPTSDIR/packBuildFiles.fish
+    runInContainer "UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR" $SCRIPTSDIR/packBuildFiles.fish
   end
 end
 
 function unpackBuildFiles
-  runInContainer $UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
+  runInContainer "UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR" $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
 end
 
 ## #############################################################################
