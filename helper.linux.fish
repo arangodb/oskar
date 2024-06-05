@@ -21,28 +21,16 @@ else
   set -xg UBUNTUBUILDIMAGE_TAG_ARCH "x86_64"
 end
 
-set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
-set -gx UBUNTUBUILDIMAGE6_TAG 14
-set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
-
-set -gx UBUNTUBUILDIMAGE_311_NAME arangodb/ubuntubuildarangodb-3.11
-set -gx UBUNTUBUILDIMAGE_311_TAG 1
-set -gx UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:$UBUNTUBUILDIMAGE_311_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
-
 set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE_312_TAG 4
+set -gx UBUNTUBUILDIMAGE_312_TAG 5
 set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
+
+set -gx UBUNTUBUILDIMAGE_311_NAME $UBUNTUBUILDIMAGE_312_NAME
+set -gx UBUNTUBUILDIMAGE_311_TAG $UBUNTUBUILDIMAGE_312_TAG
+set -gx UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:$UBUNTUBUILDIMAGE_311_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
-
-set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
-set -gx ALPINEBUILDIMAGE6_TAG 13
-set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
-
-set -gx ALPINEPERFBUILDIMAGE1_NAME arangodb/alpineperfbuildimage1-$ARCH
-set -gx ALPINEPERFBUILDIMAGE1_TAG 1
-set -gx ALPINEPERFBUILDIMAGE1 $ALPINEPERFBUILDIMAGE1_NAME:$ALPINEPERFBUILDIMAGE1_TAG
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
@@ -107,13 +95,10 @@ function opensslVersion
   end
 
   switch $oversion
-    case '3.0'
-      set -gx OPENSSL_VERSION $oversion
-
-    case '3.1'
-      set -gx OPENSSL_VERSION $oversion
-
     case '3.2'
+      set -gx OPENSSL_VERSION $oversion
+
+    case '3.3'
       set -gx OPENSSL_VERSION $oversion
 
     case '*'
@@ -2039,17 +2024,17 @@ function downloadAuxBinariesToBuildBin
 end
 
 function packObjectFiles
-  runInContainer "UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR" $SCRIPTSDIR/packObjectFiles.fish
+  runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/packObjectFiles.fish
 end
 
 function packBuildFiles
   if test "$PACK_BUILD_FILES" = "On"
-    runInContainer "UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR" $SCRIPTSDIR/packBuildFiles.fish
+    runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/packBuildFiles.fish
   end
 end
 
 function unpackBuildFiles
-  runInContainer "UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR" $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
+  runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
 end
 
 ## #############################################################################
