@@ -589,6 +589,7 @@ function collectCoverage
       echo "collecting gcov coverage"
       runInContainer (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage_old.py" "$INNERWORKDIR/" gcov coverage
     end
+  end
   return $status
 end
 

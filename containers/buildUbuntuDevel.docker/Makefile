@@ -1,5 +1,5 @@
 IMAGE = arangodb/ubuntubuildarangodb-devel
-TAG = 5#$(shell ./latest-tag.sh)
+TAG = $(shell ./latest-tag.sh)
 
 all: amd64 arm64v8 manifest
 
