@@ -22,10 +22,9 @@ LABEL name="$name" \
 
 ADD ./LICENSE /licenses/LICENSE
 
-ENV PACKAGES_REPO https://mirror.stream.centos.org/9-stream/BaseOS/$(uname -p)/os/Packages
-ENV NUMA_PACKAGES_VERSION 2.0.16-3.el9.$(uname -p)
-
-RUN microdnf -y install gpg wget binutils && \
+RUN PACKAGES_REPO="https://mirror.stream.centos.org/9-stream/BaseOS/$(uname -p)/os/Packages" && \
+    NUMA_PACKAGES_VERSION="2.0.16-3.el9.$(uname -p)" && \
+    microdnf -y install gpg wget binutils && \
     for i in numactl-libs numactl; do \
       curl -L -O $PACKAGES_REPO/$i-$NUMA_PACKAGES_VERSION.rpm && \
       rpm -i $i-$NUMA_PACKAGES_VERSION.rpm && \
