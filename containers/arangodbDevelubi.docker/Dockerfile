@@ -30,7 +30,7 @@ RUN microdnf -y install gpg wget binutils && \
       curl -L -O $PACKAGES_REPO/$i-$NUMA_PACKAGES_VERSION.rpm && \
       rpm -i $i-$NUMA_PACKAGES_VERSION.rpm && \
       rm -f $i-$NUMA_PACKAGES_VERSION.rpm; \
-    done
+    done && \
     microdnf clean all
 
 ADD install.tar.gz /
