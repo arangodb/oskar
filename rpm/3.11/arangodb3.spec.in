@@ -125,6 +125,8 @@ rmdir /tmp/sbin /tmp/bin
 /usr/share/doc/arangodb3/LICENSES-OTHER-COMPONENTS.md
 /usr/share/doc/arangodb3/README.md
 /usr/share/doc/arangodb3/README.txt
+/usr/share/doc/arangodb3/GPL-3
+/usr/share/doc/arangodb3/LGPL-3
 
 %attr(0755,arangodb,arangodb) %{_databasedir}
 %attr(0755,arangodb,arangodb) %{_appdir}
