@@ -7,8 +7,8 @@ After extracting the archive in an empty directory, you will have
 all the needed object files (.a and .o files). The scripts directory
 has an example script for linking.
 
-This has been tested on Ubuntu 23.10, since you need glibc in version 
-at least 2.38. Install the following packages as tools:
+This has been tested on Ubuntu 24.04, since you need glibc in version 
+at least 2.39. Install the following packages as tools:
 
     apt install build-essential clang-16 lld-16 liburing-dev
 
