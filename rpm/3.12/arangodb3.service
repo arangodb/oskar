@@ -4,10 +4,9 @@
 #
 #  Used to start ArangoDB
 #
-#  A universal open-source database with a flexible data model 
-#  for documents, graphs, and key-values. Build high 
-#  performance applications using a convenient sql-like query 
-#  language or JavaScript extensions.
+#  A scalable graph database system to drive value from connected data, faster.
+#  Native graphs, an integrated search engine, and JSON support, via a single
+#  query language. ArangoDB runs on-prem, in the cloud - anywhere.
 #
 #  http://www.arangodb.com
 #
