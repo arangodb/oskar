@@ -14,7 +14,7 @@
 #  - arangoimport
 #  - arangobackup
 
-# Use Ubuntu 23.04 (with glibc 2.39 or later) and install the following
+# Use Ubuntu 24.04 (with glibc 2.39 or later) and install the following
 # packages:
 #   apt install build-essential clang-16 lld-16 liburing-dev
 
