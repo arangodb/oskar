@@ -1,4 +1,4 @@
-FROM ubuntu:23.10
+FROM ubuntu:24.04
 MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl jq pwgen numactl elfutils sysstat && apt-get autoremove -y && apt-get clean
