@@ -1736,6 +1736,7 @@ function runInContainer
              -e WORKSPACE="$WORKSPACE" \
              -e PROMTOOL_PATH="$PROMTOOL_PATH" \
              -e BUILD_REPO_INFO="$BUILD_REPO_INFO" \
+             -e ARANGODB_BUILD_DATE="$ARANGODB_BUILD_DATE" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1854,6 +1855,7 @@ function interactiveContainer
     -e WORKSPACE="$WORKSPACE" \
     -e PROMTOOL_PATH="$PROMTOOL_PATH" \
     -e BUILD_REPO_INFO="$BUILD_REPO_INFO" \
+    -e ARANGODB_BUILD_DATE="$ARANGODB_BUILD_DATE" \
     $argv
 
   if test -n "$agentstarted"
