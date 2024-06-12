@@ -6,7 +6,7 @@ set -x GPG_TTY (tty)
 
 gpgconf --kill gpg-agent
 and gpg2 --homedir=~/.gnupg --no-permission-warning --import ~/.gnupg/secring.gpg
-and gpg2 --homedir=~/.gnupg --no-permission-warning --import ~/.gnupg/pubring.gpg
+and gpg2 --no-default-keyring --keyring ~/.gnupg/pubring.kbx --export -a | gpg2 --import
 and begin
   cd /tmp/
   and echo "this is a test" > $test_file

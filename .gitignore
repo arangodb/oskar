@@ -12,3 +12,5 @@ release
 .local
 .stdout.log
 .stderr.log
+.idea
+__pycache__

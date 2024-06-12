@@ -37,7 +37,7 @@ end
 function upload
   cd $SRC
   and echo "Copying NIGHTLY"
-  and gsutil rsync -d -r $PACKAGES $DST/$PACKAGES
+  and gsutil -m rsync -d -r $PACKAGES $DST/$PACKAGES
 end
 
 cleanPrepareLockUpdateClear
@@ -52,7 +52,7 @@ and begin
   or upload
 end
 and set PACKAGES_DEVEL (find $SRC -lname devel -printf "%f\n")
-and gsutil rsync -d -r $DST/devel $DST/$PACKAGES_DEVEL
+and gsutil -m rsync -d -r $DST/devel $DST/$PACKAGES_DEVEL
 and gsutil cp $SRC/index.html $DST/index.html
 
 function uploadNightlyWindowsSymbols

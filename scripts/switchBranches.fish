@@ -15,31 +15,36 @@ function checkoutRepo
   end
   set -l branch (string trim $argv[1])
   set -l clean $argv[2]
+  set -l STATUS 0
 
-  git checkout -- .
-  and git fetch --tags -f
-  and git fetch --all -f
+  set fish_trace 1
+  git fetch --prune --prune-tags --force --all --tags
+  and git reset --hard origin/devel
   and git submodule deinit --all -f
   and git checkout -f "$branch"
   and if test "$clean" = "true"
-    if echo "$branch" | grep -q "^v"
-      git checkout -- .
-    else
-      git remote update origin
-      git fetch --force --all
-      git pull
-      git reset --hard "$branch"
-    end
-    and git clean -fdx
-  else
-    if echo "$branch" | grep -q "^v"
-      git checkout --
-    else
-      git pull
-    end
-  end
-  git submodule update --init --force
-  return $status
+        if echo "$branch" | grep -q "^v"
+          git checkout -- .
+        else
+          git status | head -n 1 | grep -v "HEAD detached"
+          and git for-each-ref --format='%(upstream:short)' (git symbolic-ref -q HEAD) | grep .
+          and git reset --hard "origin/$branch"
+          or git reset --hard "$branch"
+        end
+        and git clean -fdx
+      else
+        if echo "$branch" | grep -q "^v"
+          git checkout --
+        else
+          git pull
+        end
+      end
+  and git submodule update --init --force
+  or set STATUS 1
+  set -e fish_trace
+  
+  echo "STATUS: $STATUS"
+  return $STATUS
 end
 
 if test "$argv[1]" = "help"
@@ -74,8 +79,8 @@ cd $INNERWORKDIR/ArangoDB
 and checkoutRepo $arango $force_clean
 if test $status -ne 0
   echo "Failed to checkout community branch"
-  setupSourceInfo "VERSION" "N/A"
-  setupSourceInfo "Community" "N/A"
+  setupSourceInfo "VERSION" "N\/A"
+  setupSourceInfo "Community" "N\/A"
   exit 1
 else
   setupSourceInfo "VERSION" (cat $INNERWORKDIR/ArangoDB/ARANGO-VERSION)
@@ -87,7 +92,7 @@ if test $ENTERPRISEEDITION = On
   and checkoutRepo $enterprise $force_clean
   if test $status -ne 0
     echo "Failed to checkout enterprise branch"
-    setupSourceInfo "Enterprise" "N/A"
+    setupSourceInfo "Enterprise" "N\/A"
     exit 1
   else
     setupSourceInfo "Enterprise" (git rev-parse --verify HEAD)

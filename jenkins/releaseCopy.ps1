@@ -46,6 +46,8 @@ If(-Not(Test-Path -PathType Container -Path "$dest/packages/Enterprise/Windows")
 echo $pwd
 dir
 
+$ErrorActionPreference = 'Stop'
+
 ForEach($file in $(Get-ChildItem -Path . -Filter "ArangoDB3-*.exe").fullName)
 {
   Copy-Item "$file" -Destination "$dest/packages/Community/Windows"

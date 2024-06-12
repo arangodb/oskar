@@ -4,72 +4,72 @@ source $SCRIPTS/lib/tests.fish
 
 set -xg ADDITIONAL_OPTIONS $argv
 
+set ENTERPRISE_ARG "--no-enterprise"
+if test "$ENTERPRISEEDITION" = "On"
+   set ENTERPRISE_ARG "--enterprise"
+end
+
 ################################################################################
 ## Single tests: runtime,command
 ################################################################################
 
-set -l ST
-echo "Using test definitions from arangodb repo"
-python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f fish --full | source
-
-set -g STS (echo -e $ST | fgrep , | sort -rn | awk -F, '{print $2}')
-set -g STL (count $STS)
-
 function launchSingleTests
-  set -g launchCount (math $launchCount + 1)
-
-  if test $launchCount -gt $STL
-    return 0
-  end
-
-  set -l test $STS[$launchCount]
-
-  if test -n "$TEST"
-    if echo $test | fgrep -q "$TEST"
-      echo "Running test '$test' (contains '$TEST')"
-    else
-      echo "Skipping test '$test' (does not contain '$TEST')"
-      return 1
-    end
-  end
-
-  eval $test
-  return 1
+  echo "Using test definitions from arangodb repo"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full "$ENTERPRISE_ARG"
+  set x $status
+  if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $x"
+   end
 end
 
 ################################################################################
 ## Catch tests
 ################################################################################
 
-function launchCatchTest
-  switch $launchCount
-    case  0 ; runCatchTest1 catch -
-    case '*' ; return 0
-  end
-  set -g launchCount (math $launchCount + 1)
-  return 1
+function launchGTest
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest "$ENTERPRISE_ARG"
+  set x $status
+  if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $x"
+   end
 end
 
 ################################################################################
 ## Cluster tests: runtime,command
 ################################################################################
 
-set -l CT
-echo "Using test definitions from arangodb repo"
-python3 "$WORKSPACE/jenkins/helper/generate_jenkins_scripts.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f fish --full --cluster | source
-
-set -g CTS (echo -e $CT | fgrep , | sort -rn | awk -F, '{print $2}')
-set -g CTL (count $CTS)
-
 function launchClusterTests
-  set -g launchCount (math $launchCount + 1)
+  echo "Using test definitions from arangodb repo"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full "$ENTERPRISE_ARG"
+  set x $status
+  if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $x"
+   end
+end
 
-  if test $launchCount -gt $CTL
-    return 0
-  end
+################################################################################
+## single and cluster tests: runtime,command
+################################################################################
 
-  eval $CTS[$launchCount]
-  return 1
+function launchSingleClusterTests
+  echo "Using test definitions from arangodb repo"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster --full "$ENTERPRISE_ARG"
+  set x $status
+  if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
+    set -xg result "GOOD"
+  else
+    set -xg result "BAD"
+    echo "python exited $x"
+   end
 end
 
 ################################################################################
@@ -97,19 +97,31 @@ set -g suiteRunner ""
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
-    set timeLimit 16200
+    set -xg timeLimit 16200
     set suiteRunner "launchClusterTests"
+  case "single_cluster"
+    resetLaunch 4
+    set -xg timeLimit 60000
+    set suiteRunner "launchSingleClusterTests"
   case "single"
     resetLaunch 1
-    set timeLimit 9000
+    set -xg timeLimit 9000
     set suiteRunner "launchSingleTests"
+  case "gtest"
+    resetLaunch 1
+    set -xg  timeLimit 1800
+    set suiteRunner "launchGTest"
   case "catchtest"
     resetLaunch 1
-    set timeLimit 1800
-    set suiteRunner "launchCatchTest"
+    set -xg  timeLimit 1800
+    set suiteRunner "launchGTest"
   case "resilience"
     resetLaunch 4
-    set timeLimit 10800
+    set -xg timeLimit 3600
+    set suiteRunner "launchResilienceTests"
+  case "resilience"
+    resetLaunch 4
+    set -xg timeLimit 10800
     set suiteRunner "launchResilienceTests"
   case "*"
     echo Unknown test suite $TESTSUITE
@@ -120,9 +132,9 @@ end
 if test "$SAN" = "On"
   switch $SAN_MODE
     case "TSan"
-      set timeLimit (math $timeLimit \* 8)
+      set timeLimit (math $timeLimit \* 12)
     case "AULSan"
-      set timeLimit (math $timeLimit \* 4)
+      set timeLimit (math $timeLimit \* 8)
     case "*"
       echo Unknown SAN mode $SAN_MODE
       set -g result BAD
@@ -130,11 +142,9 @@ if test "$SAN" = "On"
   end
 end
 
-set evalCmd "waitOrKill $timeLimit $suiteRunner"
-eval $evalCmd
-set timeout $status
+eval "$suiteRunner"
 
-createReport
+echo "RESULT: $result"
 
 if test $result = GOOD -a $timeout = 0
   exit 0

@@ -12,6 +12,7 @@ and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and ubiDockerImage
 and showRepository
 and ccacheOff
+and releaseBuildRepoInfo
 and makeDockerEnterpriseRelease
 
 set -l s $status

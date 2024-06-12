@@ -65,6 +65,7 @@ function setupCcache
       echo "using sccache at S3 ($SCCACHE_BUCKET)"
       set -e SCCACHE_DIR
       set -e SCCACHE_GCS_BUCKET
+      set -e SCCACHE_GCS_KEY_PATH
       set -e SCCACHE_MEMCACHED
       set -e SCCACHE_REDIS
     else if test "$SCCACHE_GCS_BUCKET" != "" -a -f "/work/.gcs-credentials"
@@ -201,28 +202,14 @@ end
 function runCmake
   echo cmake $FULLARGS
 
-  if test "$FORCE_DISABLE_AVX" = "On"
-    set -l suffix ""
-    test $PLATFORM = "darwin"; and set suffix ".bak"
-    sed -i$suffix -E 's/^(.*)(list\(APPEND _available_vector_units_list \"sse\" \"sse2\" \"sse3\" \"ssse3\" \"sse4.1\" \"sse4.2\" )\"avx\"(\))/\1\2\3/g' $INNERWORKDIR/ArangoDB/cmake/OptimizeForArchitecture.cmake
-    #sed -i$suffix -E 's/^(.*)(set\(CMAKE_C.*_FLAGS)(.*\"\$\{EXTRA_C.*_FLAGS\})\"(.*)$/\1\2\3 -mno-avx"\4/g' $INNERWORKDIR/ArangoDB/CMakeLists.txt
-    #set -xg FULLARGS "$FULLARGS -DEXTRA_C_FLAGS=\"-mno-avx\" -DEXTRA_CXX_FLAGS=\"-mno-avx\""
-  end
-
   if test "$SHOW_DETAILS" = "On"
-    cmake $FULLARGS .. 2>&1
+    echo "cmake $FULLARGS -DVERBOSE=On .. 2>&1"
+    cmake $FULLARGS -DVERBOSE=On .. 2>&1
   else
+    echo "cmake $FULLARGS -DVERBOSE=On .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1"
     echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
-    cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1
+    cmake $FULLARGS -DVERBOSE=On .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1
   end
-
-#  if test "$FORCE_DISABLE_AVX" = "On"
-#    if test -e $INNERWORKDIR/ArangoDB/build/CMakeCache.txt
-#      set -l suffix ""
-#      test $PLATFORM = "darwin"; and set suffix ".bak"
-#      sed -i$suffix -E 's/^\(CMAKE_C.*_FLAGS\)\([^-].*INTERNAL\)=\(.*\)$/\1\2=\3 -m-noavx/g' $INNERWORKDIR/ArangoDB/build/CMakeCache.txt
-#    end
-#  end
 end
 
 function runMake

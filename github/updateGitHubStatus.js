@@ -239,40 +239,65 @@ const checkPRMethod = (prCheckData, sha) => {
   // bool to check whether we won't find expected attributes we need
   let parseError = false;
 
-  if (prCheckData.hasOwnProperty('total_count')) {
-    if (prCheckData.total_count >= 1) {
-      let elementPositionToUse = prCheckData.total_count - 1;
-      let infoItem = prCheckData.items[elementPositionToUse];
+  const parsePullRequestItems = (prCheckData) => {
+    let infoItem;
+    if (!prCheckData.hasOwnProperty('items')) {
+      exitAndWriteResultToFile(true, 'Could not parse expected attribute: "items". Format might have been changed.');
+    }
 
-      if (infoItem.hasOwnProperty('state')) {
-        if (infoItem.state !== 'open') {
-          // we can abort - we found a PR, but this one is already closed
-          exitAndWriteResultToFile(true, "We've only found a closed PR. Exiting.", "FAIL_NO_PR");
-        }
+    let foundPullRequestsArray = prCheckData.items.slice().reverse();
+
+    // iterate in reverse order, as the last items are the most relevant ones
+    for (let pullRequestItem of foundPullRequestsArray) {
+      // check if found item is valid (means it must be part of our given repository)
+      if (pullRequestItem.url && pullRequestItem.url.indexOf(repository) != -1) {
+        // means we've found a valid repository into our given repository
+        infoItem = pullRequestItem;
+        break;
       }
+    };
 
-      if (infoItem.hasOwnProperty('body')) {
-        // just additional information, let's not fail here
-        pullRequestExtraInformation.info = infoItem.body;
+    if (!infoItem) {
+      // We've not found any valid pull request, therefore we cannot continue.
+      // TODO Future: This is no actual error, we just do not need to continue with that script as it would be useless.
+      // Check how to handle this case in the future.
+      exitAndWriteResultToFile(true, "Found no related pull request. Exiting. Nothing to do.", 'FAIL_NO_PR');
+    }
+
+    if (infoItem.hasOwnProperty('state')) {
+      if (infoItem.state !== 'open') {
+        // we can abort - we found a PR, but this one is already closed
+        exitAndWriteResultToFile(true, "We've only found a closed PR. Exiting.", "FAIL_NO_PR");
       }
+    }
 
-      if (infoItem.hasOwnProperty('pull_request')) {
-        let pr = infoItem.pull_request;
-        if (pr.hasOwnProperty('url')) {
-          pullRequestExtraInformation.url = infoItem.pull_request.url;
-        } else {
-          parseError = true;
-        }
+    if (infoItem.hasOwnProperty('body')) {
+      // just additional information, let's not fail here
+      pullRequestExtraInformation.info = infoItem.body;
+    }
+
+    if (infoItem.hasOwnProperty('pull_request')) {
+      let pr = infoItem.pull_request;
+      if (pr.hasOwnProperty('url')) {
+        pullRequestExtraInformation.url = infoItem.pull_request.url;
       } else {
         parseError = true;
       }
+    } else {
+      parseError = true;
+    }
 
-      if (parseError) {
-        exitAndWriteResultToFile(true, "Could not parse expected attributes. Format might have been changed.");
-      }
+    if (parseError) {
+      exitAndWriteResultToFile(true, "Could not parse expected attributes. Format might have been changed.");
+    }
 
-      // if all good and PR found
-      continueWithAction(sha);
+    // if all good and PR found
+    continueWithAction(sha);
+  };
+
+  if (prCheckData.hasOwnProperty('total_count')) {
+    if (prCheckData.total_count >= 1) {
+      parsePullRequestItems(prCheckData);
     } else {
       exitAndWriteResultToFile(true, "Could not read pull request details from GitHub Search API");
     }
@@ -284,7 +309,8 @@ const checkPRMethod = (prCheckData, sha) => {
 }
 
 const checkPRExists = (sha) => {
-  const checkPRExistencePath = `/search/issues?q=${sha}`;
+  const queryString = encodeURIComponent(`${sha} repo:${repository}`);
+  const checkPRExistencePath = `/search/issues?q=${queryString}`;
   getRequest(checkPRExistencePath, checkPRMethod, sha);
 }
 

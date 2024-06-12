@@ -2,33 +2,17 @@
 set -g SCRIPTS (dirname (dirname (status -f)))
 source $SCRIPTS/lib/tests.fish
 
-################################################################################
-## load tests definition from ArangoDB
-################################################################################
-
-echo "Using test definitions from arangodb repo"
-
-ls -l
-echo $SCRIPTS
-set -l TESTS
-source $INNERWORKDIR/ArangoDB/tests/Definition/rlog/pr.fish
+set -xg ADDITIONAL_OPTIONS $argv
 
 ################################################################################
-## launch a test
+## Cluster tests
 ################################################################################
 
-set -g STS (echo -e $TESTS | fgrep , | sort -rn | awk -F, '{print $2}')
-set -g STL (count $STS)
-
-function launchTests
-  set -g launchCount (math $launchCount + 1)
-
-  if test $launchCount -gt $STL
-    return 0
-  end
-
-  eval $STS[$launchCount]
-  return 1
+function launchClusterTests
+  echo "Using rlog test definitions from arangodb repo"
+  python3 "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions-rlog.txt" -f launch --cluster --full
+  and set -xg result "GOOD"
+  or set -xg result "BAD"
 end
 
 ################################################################################
@@ -55,7 +39,7 @@ set -g suiteRunner ""
 
 resetLaunch 4
 set timeLimit 4200
-set suiteRunner "launchTests"
+set suiteRunner "launchClusterTests"
 
 if test "$SAN" = "On"
   switch $SAN_MODE
@@ -70,14 +54,9 @@ if test "$SAN" = "On"
   end
 end
 
-set evalCmd "waitOrKill $timeLimit $suiteRunner"
-eval $evalCmd
-set timeout $status
-
-createReport
+eval "$suiteRunner"
 
 echo "RESULT: $result"
-echo "TIMEOUT: $timeout"
 
 if test $result = GOOD -a $timeout = 0
   exit 0

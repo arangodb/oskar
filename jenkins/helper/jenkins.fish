@@ -46,8 +46,13 @@ function prepareOskar
     end
   end
 
-  mkdir -p work
+  mkdir -p work;
+  #pushd work; and find . -not -name 'ArangoDB' -delete; popd
   begin test -f $HOME/.gcs-credentials; and cp $HOME/.gcs-credentials work/.gcs-credentials; end; or true
+end
+
+function clearMachine
+  python3 jenkins/helper/clear_machine.py
 end
 
 function cleanBranchName
@@ -68,6 +73,7 @@ function cleanPrepareLockUpdateClear
     and lockDirectory
     and updateOskar
     and clearResults
+    and clearMachine
   else
     source helper.fish
   end
@@ -80,6 +86,7 @@ function cleanPrepareLockUpdateClear2
     and lockDirectory
     and updateOskarOnly
     and clearResults
+    and clearMachine
   else
     source helper.fish
   end

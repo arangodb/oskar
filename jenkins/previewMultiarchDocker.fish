@@ -8,30 +8,42 @@ else
   set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG"
 end
 
+if test -z "$DOCKER_DISTRO"
+  echo "DOCKER_DISTRO required"
+  exit 1
+else
+  if test "$DOCKER_DISTRO" = "ubi"
+    set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-ubi"
+  end
+  if test "$DOCKER_DISTRO" = "deb"
+    set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-deb"
+  end
+end
+
 if test -z "$EDITION"
   echo "EDITION required"
   exit 1
 end
 
-if test -z "$MODE"
-  echo "MODE required"
+if test -z "$BUILDMODE"
+  echo "BUILDMODE required"
   exit 1
 else
-  if "$MODE" = "DEBUG"
+  if test "$BUILDMODE" = "Debug"
     set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-debug"
   end
 end
 
 cleanPrepareLockUpdateClear
 and set -xg RELEASE_TYPE "preview"
-and if test "$EDITION" = "All"; or test "$EDITION" = "Community"
-      community
-      makeDockerMultiarch "$DOCKER_TAG_JENKINS"
-    end
-and if test "$EDITION" = "All"; or test "$EDITION" = "Entreprise"
-      enterprise
-      makeDockerMultiarch "$DOCKER_TAG_JENKINS"
-    end
+if test (string lower "$EDITION") = "community"; or test (string lower "$EDITION") = "all"
+  community
+  makeDockerMultiarch "$DOCKER_TAG_JENKINS"
+end
+if test (string lower "$EDITION") = "enterprise"; or test (string lower "$EDITION") = "all"
+  enterprise
+  makeDockerMultiarch "$DOCKER_TAG_JENKINS"
+end
 
 set -l s $status
 cd "$HOME/$NODE_NAME/$OSKAR" ; moveResultsToWorkspace ; unlockDirectory

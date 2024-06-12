@@ -25,17 +25,21 @@ if test -z "$ENTERPRISE_BRANCH"
 end
 
 rm -rf $WORKSPACE/imagenames.log
+and set -xg NOSTRIP 1
+and packageStripNone
 and community
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter
-and buildDockerLocal | tee ./buildDocker.log; and grep -oP "Successfully built \K[0-9a-f]*" ./buildDocker.log >> $WORKSPACE/imagenames.log 
+and set imagename "arangodb/arangodb-local:"(date +%Y%m%d%H%M%S)
+and buildDockerLocal $imagename
 
 if test $status -ne 0
   echo Production of Community image failed, giving up...
   moveResultsToWorkspace; exit 1
 end
+echo $imagename >> $WORKSPACE/imagenames.log
 
 enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
@@ -43,10 +47,12 @@ and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter
 and downloadSyncer
-and buildDockerLocal | tee ./buildDocker.log; and grep -oP "Successfully built \K[0-9a-f]*" ./buildDocker.log >> $WORKSPACE/imagenames.log 
+and set imagename "arangodb/enterprise-local:"(date +%Y%m%d%H%M%S)
+and buildDockerLocal $imagename
 
 if test $status -ne 0
   echo Production of Enterprise image failed, giving up...
   moveResultsToWorkspace; exit 1
 end
+echo $imagename >> $WORKSPACE/imagenames.log
 

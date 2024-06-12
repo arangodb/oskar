@@ -3,7 +3,7 @@ source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear
 switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and buildStaticArangoDB
+#and buildStaticArangoDB
 and cppcheckArangoDB
 
 set -l s $status

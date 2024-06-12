@@ -1,4 +1,12 @@
 #!/bin/bash
+chown -R root:root /root/.gnupg
+chmod 700 /root/.gnupg
+
+if test -d /root/.gnupg-old; then
+  chown -R root:root /root/.gnupg-old
+  chmod 700 /root/.gnupg-old
+fi
+
 script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 . "$script_dir/createRepo"
 
@@ -6,35 +14,71 @@ oskar_dir="$script_dir/.."
 
 echo "run test"
 
+echo "=== gpg ==="
+gpg --version
+
+echo "=== RPM ==="
+rpm --version
+
 version="$ARANGODB_VERSION"
 incoming="/packages"
 repo="/repositories"
 
 test -n "$version" || exit 1
 
+echo "USE_ARM=$USE_ARM"
+
 #centos
 #fedora
 #suse
 mkdir -p $repo/Community/RPM/x86_64
 mkdir -p $repo/Enterprise/RPM/x86_64
+if [[ "$USE_ARM" = "On" ]]
+then
+  mkdir -p $repo/Community/RPM/aarch64
+  mkdir -p $repo/Enterprise/RPM/aarch64
+fi
+
+arch_list="x86_64"
+[[ "$USE_ARM" = "On" ]] && arch_list="$arch_list:aarch64"
+
+echo "User archs are $arch_list"
 
 ensure_oskar "$version" "$incoming" "$repo" \
             "Linux" "RPM" \
-            "x86_64" "rpm"
+            "$arch_list" "rpm"
 
 #debian
 #ubuntu
 mkdir -p $repo/Community/Debian/amd64
 mkdir -p $repo/Enterprise/Debian/amd64
+if [[ "$USE_ARM" = "On" ]]
+then
+  mkdir -p $repo/Community/Debian/arm64
+  mkdir -p $repo/Enterprise/Debian/arm64
+fi
+
+arch_list="amd64"
+[[ "$USE_ARM" = "On" ]] && arch_list="$arch_list:arm64"
+
+echo "User archs are $arch_list"
 
 ensure_oskar "$version" "$incoming" "$repo" \
             "Linux" "Debian" \
-            "amd64" "deb"
+            "$arch_list" "deb"
 
 chown -R $UID.$GID $repo
 
-cd $repo/Community/Debian
-gpg2 --no-permission-warning --armor --export info@arangodb.com  > Release.key
 
+cd $repo/Community/Debian
+if test -d /root/.gnupg-old; then
+  gpg2 --homedir /root/.gnupg-old --no-permission-warning --armor --export info@arangodb.com  > Release.key
+else
+  gpg2 --no-permission-warning --armor --export admin@arangodb.com  > Release.key
+fi
 cd $repo/Enterprise/Debian
-gpg2 --no-permission-warning --armor --export info@arangodb.com  > Release.key
+if test -d /root/.gnupg-old; then
+  gpg2 --homedir /root/.gnupg-old --no-permission-warning --armor --export info@arangodb.com  > Release.key
+else
+  gpg2 --no-permission-warning --armor --export admin@arangodb.com  > Release.key
+fi

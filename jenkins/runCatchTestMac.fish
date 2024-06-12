@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+
 source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear2
