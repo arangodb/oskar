@@ -90,6 +90,9 @@ If ($global:ok )
     clearResults
     setNightlyVersion
     makeRelease
+    storeSymbolsOn
+    storeSymbols
+    cleanOldNightlyDebugSymbols
 }
 $s = $global:ok
 If ($global:ok -And $env:COPY_TO_STAGE2 -eq $true) 
