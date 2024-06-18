@@ -304,7 +304,7 @@ def combine_coverage_dirs_multi(cfg,
     print('all workers joined')
     sys.stdout.flush()
     if not last_output.exists():
-        SUCCESS=False
+        SUCCESS = False
         print(f'output {str(last_output)} not there?')
         return None
     result_dir = combined_dir / 'coverage_result'

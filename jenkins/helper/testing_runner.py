@@ -85,6 +85,7 @@ def testing_runner(testing_instance, this, arangosh):
                 shutil.rmtree(str(this.cov_prefix))
             if not this.cov_prefix.exists():
                 this.cov_prefix.mkdir(parents=True)
+            this.cov_prefix /= "testingjs"
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
