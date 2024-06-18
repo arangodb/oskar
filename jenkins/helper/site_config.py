@@ -20,12 +20,6 @@ if IS_COVERAGE:
     if 'LLVM_PROFILE_FILE' in os.environ:
         COVERAGE_VAR = 'LLVM_PROFILE_FILE'
         COVERAGE_TYPE = 'LLVM'
-    elif 'GCOV_PREFIX' in os.environ:
-        COVERAGE_VAR = 'GCOV_PREFIX'
-        COVERAGE_TYPE = 'GCOV'
-    else:
-        COVERAGE_TYPE = 'GCOV'
-    if COVERAGE_VAR:
         COVERAGE_VALUE = os.environ[COVERAGE_VAR]
     print(f"coverage value: {COVERAGE_VAR} = {COVERAGE_VALUE}")
 IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
@@ -177,14 +171,8 @@ class SiteConfig:
             if self.is_aulsan:
                 san_cov_msg = ' - AUL-SAN '
             elif self.is_cov:
-                if COVERAGE_TYPE == 'GCOV':
-                    san_cov_msg = ' - GCOV'
-                    slot_divisor = 3
-                    self.is_lcov = False
-                else:
-                    san_cov_msg = ' - LCOV'
-                    slot_divisor = 2
-                    self.is_lcov = True
+                san_cov_msg = ' - LCOV'
+                slot_divisor = 2
             san_cov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
             self.available_slots /= slot_divisor
