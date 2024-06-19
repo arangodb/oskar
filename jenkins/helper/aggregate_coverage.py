@@ -229,6 +229,9 @@ def combine_coverage_dirs_multi(cfg,
     print('8'*88)
     # Locate all directories containing coverage information;
     coverage_dirs = []
+    if gcov_dir.is_file():
+        # we could have `testingjs` file here...
+        gcov_dir = (gcov_dir / '..').resolve()
     for subdir in gcov_dir.iterdir():
         if len(str(subdir.name)) == 32 or str(subdir.name) == "testingjs":
             print(f"adding {subdir}")
