@@ -77,6 +77,7 @@ def testing_runner(testing_instance, this, arangosh):
     try:
         this.start = datetime.now(tz=None)
         this.cov_prefix = None
+        this.cov_prefix_var = None
         if this.cfg.is_cov:
             this.cov_prefix =  (Path(COVERAGE_VALUE) /
                                 this.name_enum.replace(' ', '_'))
@@ -85,7 +86,7 @@ def testing_runner(testing_instance, this, arangosh):
                 shutil.rmtree(str(this.cov_prefix))
             if not this.cov_prefix.exists():
                 this.cov_prefix.mkdir(parents=True)
-            this.cov_prefix /= "testingjs"
+            this.cov_prefix_var = this.cov_prefix / "testingjs"
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
@@ -94,7 +95,7 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.name_enum,
                                    this.temp_dir,
                                    COVERAGE_VAR,
-                                   str(this.cov_prefix) if this.cov_prefix is not None else this.cov_prefix,
+                                   str(this.cov_prefix_var) if this.cov_prefix is not None else this.cov_prefix,
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
