@@ -232,6 +232,9 @@ def combine_coverage_dirs_multi(cfg,
     if gcov_dir.is_file():
         # we could have `testingjs` file here...
         gcov_dir = (gcov_dir / '..').resolve()
+    if not gcov_dir.is_dir():
+        print(f"the specified dir is not a directory! {gcov_dir}")
+        os._exit(1)
     for subdir in gcov_dir.iterdir():
         if len(str(subdir.name)) == 32 or str(subdir.name) == "testingjs":
             print(f"adding {subdir}")
