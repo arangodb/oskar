@@ -132,7 +132,7 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         self.identifier = job[0]
         self.job = job
         self.job_parameters = ['merge', job[0], job[1], '-o', job[2]]
-        self.outdir = job[2]
+        self.outdir = Path(job[2])
         self.params = None
         super().__init__(site_config, None)
 
