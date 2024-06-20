@@ -166,7 +166,7 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         end = datetime.now()
         filecount = 0
         if self.outdir.is_file():
-            filecount = self.outdir().stat.st_size
+            filecount = self.outdir.stat().st_size
         else:
             for _ in glob.iglob(str(self.outdir) + '**/**', recursive=True):
                 filecount += 1
