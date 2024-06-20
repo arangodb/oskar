@@ -117,9 +117,12 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
 
 def translate_xml(xmlfile):
     """ convert the directories inside the xml file """
+    xml_file_size = xmlfile.stat().st_size
     xmltext = xmlfile.read_text(encoding='utf8')
+    xmlsize = len(xmltext)
     xmltext = xmltext.replace('filename="', 'filename="./coverage/')
     xmlfile.write_text(xmltext)
+    print(f"Result XML size: {xmlsize} => {len(xmltext)} Files: {xml_file_size} => {xmlfile.stat().st_size}")
 
 
 class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
@@ -162,8 +165,11 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             self.params['error'] += str(ex)
         end = datetime.now()
         filecount = 0
-        for _ in glob.iglob(str(self.outdir) + '**/**', recursive=True):
-            filecount += 1
+        if self.outdir.is_file():
+            filecount = self.outdir().stat.st_size
+        else:
+            for _ in glob.iglob(str(self.outdir) + '**/**', recursive=True):
+                filecount += 1
 
         print(f"done with {self.job[0]} +  {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']} => {filecount}")
         ret['error'] = self.params['error']
