@@ -173,18 +173,29 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
 
         print(f"done with {self.job[0]} +  {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']} => {filecount}")
         ret['error'] = self.params['error']
-        for one_file in [self.job[0], self.job[1]]:
-            print('cleaning up')
-            cleanup_file = Path(one_file)
-            print(cleanup_file)
-            if cleanup_file.is_dir():
-                shutil.rmtree(cleanup_file)
-            elif cleanup_file.exists():
-                print('delete file')
-                cleanup_file.unlink()
-                print('file gone')
+        if ret['rc_exit'] != 0:
+            print(f"mitigating error: {self.params['error']}")
+            if self.params['error'].find(self.job[0]) > 0:
+                print(f"skipping {self.job[0]}")
+                Path(self.job[1]).rename(Path(self.params['output']))
+            elif self.params['error'].find(self.job[1]) > 0:
+                print(f"skipping {self.job[1]}")
+                Path(self.job[1]).rename(Path(self.params['output']))
             else:
-                print(f'file {str(cleanup_file)} already gone?')
+                print("none of our files found in the error message!")
+        else:
+          for one_file in [self.job[0], self.job[1]]:
+              print('cleaning up')
+              cleanup_file = Path(one_file)
+              print(cleanup_file)
+              if cleanup_file.is_dir():
+                  shutil.rmtree(cleanup_file)
+              elif cleanup_file.exists():
+                  print('delete file')
+                  cleanup_file.unlink()
+                  print('file gone')
+              else:
+                  print(f'file {str(cleanup_file)} already gone?')
         print(f"launch(): returning {ret}")
         return ret
 
