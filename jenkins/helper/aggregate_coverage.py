@@ -184,18 +184,18 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             else:
                 print("none of our files found in the error message!")
         else:
-          for one_file in [self.job[0], self.job[1]]:
-              print('cleaning up')
-              cleanup_file = Path(one_file)
-              print(cleanup_file)
-              if cleanup_file.is_dir():
-                  shutil.rmtree(cleanup_file)
-              elif cleanup_file.exists():
-                  print('delete file')
-                  cleanup_file.unlink()
-                  print('file gone')
-              else:
-                  print(f'file {str(cleanup_file)} already gone?')
+            for one_file in [self.job[0], self.job[1]]:
+                print('cleaning up')
+                cleanup_file = Path(one_file)
+                print(cleanup_file)
+                if cleanup_file.is_dir():
+                    shutil.rmtree(cleanup_file)
+                elif cleanup_file.exists():
+                    print('delete file')
+                    cleanup_file.unlink()
+                    print('file gone')
+                else:
+                    print(f'file {str(cleanup_file)} already gone?')
         print(f"launch(): returning {ret}")
         return ret
 
