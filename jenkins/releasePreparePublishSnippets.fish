@@ -87,8 +87,10 @@ and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" 
     end
 and copySnippet "$SP_SNIPPETS_EN" "download-docker-enterprise.html" 's/docker-enterprise/docker/'
 and copySnippet "$SP_SNIPPETS_EN" "download-k8s-enterprise.html" 's/k8s-enterprise/k8s/'
-and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
-      copySnippet "$SP_SNIPPETS_EN" "download-objectfiles-enterprise*.html" 's/objectfiles-enterprise/objectfiles/'
+and if test "$ARANGODB_VERSION_MAJOR" -eq 3
+      if test "$ARANGODB_VERSION_MINOR" -ge 12; or begin; test "$ARANGODB_VERSION_MINOR" -eq 11; and test "$ARANGODB_VERSION_PATCH" -ge 10; end
+        copySnippet "$SP_SNIPPETS_EN" "download-objectfiles-enterprise*.html" 's/objectfiles-enterprise/objectfiles/'
+      end
     end
 and cp $WS_SNIPPETS/meta-*-enterprise*.json $SP_SNIPPETS_EN
 
