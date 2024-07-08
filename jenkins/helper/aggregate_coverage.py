@@ -253,7 +253,8 @@ def combine_coverage_dirs_multi(cfg,
         print(f"the specified dir is not a directory! {gcov_dir}")
         os._exit(1)
     for subdir in gcov_dir.iterdir():
-        if len(str(subdir.name)) == 32 or str(subdir.name) == "testingjs":
+        print(f"subdir: {str(subdir.name)}")
+        if len(str(subdir.name)) > 32 and str(subdir.name).endswith("arangod"):
             subdir_props = subdir.stat()
             print(f"adding {subdir} => {subdir_props}")
             coverage_dirs.append(subdir)
