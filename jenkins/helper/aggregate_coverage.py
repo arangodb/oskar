@@ -254,7 +254,8 @@ def combine_coverage_dirs_multi(cfg,
         os._exit(1)
     for subdir in gcov_dir.iterdir():
         print(f"subdir: {str(subdir.name)}")
-        if len(str(subdir.name)) > 32 and str(subdir.name).endswith("arangod"):
+        if ((len(str(subdir.name)) == 32) or
+            len(str(subdir.name)) > 32 and str(subdir.name).endswith("arangod")):
             subdir_props = subdir.stat()
             print(f"adding {subdir} => {subdir_props}")
             coverage_dirs.append(subdir)
@@ -273,7 +274,7 @@ def combine_coverage_dirs_multi(cfg,
     count = 0
     jobcount = 0
     if len(sub_jobs) == 0:
-        print("failed to locate subjobs in {coverage_dirs}")
+        print(f"failed to locate subjobs in {coverage_dirs}")
         return None
     if len(sub_jobs) == 1:
         print(sub_jobs)
