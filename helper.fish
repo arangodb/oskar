@@ -933,16 +933,18 @@ function makeSnippets
   community
   and buildSourceSnippet $IN $OUT
 
-  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
-    enterprise
-    and for arch in $archSnippets
-          switch "$arch"
-            case "X86"
-              buildObjectfilesSnippet $IN $OUT "x86_64"
-            case "ARM"
-              buildObjectfilesSnippet $IN $OUT "aarch64"
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3
+    if test "$ARANGODB_VERSION_MINOR" -ge 12; or begin; test "$ARANGODB_VERSION_MINOR" -eq 11; and test "$ARANGODB_VERSION_PATCH" -ge 10; end
+      enterprise
+      and for arch in $archSnippets
+            switch "$arch"
+              case "X86"
+                buildObjectfilesSnippet $IN $OUT "x86_64"
+              case "ARM"
+                buildObjectfilesSnippet $IN $OUT "aarch64"
+            end
           end
-        end
+    end
   end
 
   for edition in "community" "enterprise"
