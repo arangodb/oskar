@@ -10,7 +10,7 @@ Copyright (C) 2012-2013 triAGENS GmbH
 License:
 
 The prepackaged binaries of the ArangoDB Community Edition are governed by the
-ArangoDB Community License: https://arangodb.com/wp-content/uploads/2024/05/ADB-Community-License_31OCT2023.pdf
+ArangoDB Community License: https://arangodb.com/community-license/
 The use for commercial purposes is limited to a 100 GB on dataset size in
 production within a single cluster and a maximum of three clusters.
 
