@@ -23,9 +23,11 @@ and if test -z "$DOCKER_IMAGE"
 end
 
 and sudo rm -rf work/database $simple/results.csv
+and cat /proc/sys/kernel/core_pattern
 and echo "==== starting performance run ===="
 and if test -z "$DOCKER_IMAGE"
   docker run \
+    --ulimit core=-1 \
     -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
     -v (pwd)/work/ArangoDB:/ArangoDB \
     -v (pwd)/work:/data \
@@ -43,6 +45,7 @@ and if test -z "$DOCKER_IMAGE"
     --javascript.script simple/$ARANGODB_TEST_CONFIG"
 else
   docker run \
+    --ulimit core=-1 \
     -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
     -v (pwd)/work:/data \
     -v $simple:/performance \
@@ -58,6 +61,23 @@ else
 end
 
 set -l s $status
+
+if count $simple/core* >/dev/null
+   docker run \
+           -v $simple:/performance \
+           --rm \
+       $DOCKER_IMAGE \
+       sh -c "cp /usr/sbin/arangod /performance; chmod a+rw /performance/core* /performance/arangod"
+    printf "\nCoredumps found after testrun:\n"
+    ls -l $simple/core* $simple/arangod
+    and 7z a $simple/../{$NODE_NAME}.coredumps.7z $simple/core* $simple/arangod
+    and rm -f $simple/core* $simple/arangod
+    echo "FAILED BY COREDUMP FOUND!"
+    set -l s 1
+else
+    echo "no coredumps"
+end
+
 set -l resultname (echo $ARANGODB_BRANCH | tr "/" "_")
 set -l localname work/results.csv
 

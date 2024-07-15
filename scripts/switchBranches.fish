@@ -1,5 +1,13 @@
 #!/usr/bin/env fish
 
+function setupSourceInfo
+  set -l field $argv[1]
+  set -l value $argv[2]
+  set -l suffix ""
+  test $PLATFORM = "darwin"; and set suffix ".bak"
+  sed -i$suffix -E 's/^'"$field"':.*$/'"$field"': '"$value"'/g' $INNERWORKDIR/sourceInfo.log
+end
+
 function checkoutRepo
   if test (count $argv) -ne 2
       echo "Checkout needs two parameters branch force"
@@ -7,48 +15,36 @@ function checkoutRepo
   end
   set -l branch (string trim $argv[1])
   set -l clean $argv[2]
+  set -l STATUS 0
 
-  git checkout -- .
-  and git fetch --tags -f
-  and git fetch
+  set fish_trace 1
+  git fetch --prune --prune-tags --force --all --tags
+  and git reset --hard origin/devel
+  and git submodule deinit --all -f
   and git checkout -f "$branch"
   and if test "$clean" = "true"
-    if echo "$branch" | grep -q "^v"
-      git checkout -- .
-    else
-      git reset --hard "origin/$branch"
-    end
-    and git clean -fdx
-  else
-    if echo "$branch" | grep -q "^v"
-      git checkout --
-    else
-      git pull
-    end
-  end
-  return $status
-end
-
-function convertSItoJSON
-  if test -f $INNERWORKDIR/sourceInfo.log
-    set -l fields ""
-    and begin
-      cat $INNERWORKDIR/sourceInfo.log | while read -l line
-      set -l var (echo $line | cut -f1 -d ':')
-      switch "$var"
-        case "VERSION" "Community" "Enterprise"
-          set -l val (echo $line | cut -f2 -d ' ')
-          if test -n $val
-            set fields "$fields  \"$var\":\""(echo $line | cut -f2 -d ' ')\"\n""
-          end
+        if echo "$branch" | grep -q "^v"
+          git checkout -- .
+        else
+          git status | head -n 1 | grep -v "HEAD detached"
+          and git for-each-ref --format='%(upstream:short)' (git symbolic-ref -q HEAD) | grep .
+          and git reset --hard "origin/$branch"
+          or git reset --hard "$branch"
+        end
+        and git clean -fdx
+      else
+        if echo "$branch" | grep -q "^v"
+          git checkout --
+        else
+          git pull
         end
       end
-      if test -n "$fields"
-        echo "convert $INNERWORKDIR/sourceInfo.log to $INNERWORKDIR/sourceInfo.json"
-        printf "{\n"(printf $fields | string join ",\n")"\n}" > $INNERWORKDIR/sourceInfo.json
-      end
-    end
-  end
+  and git submodule update --init --force
+  or set STATUS 1
+  set -e fish_trace
+  
+  echo "STATUS: $STATUS"
+  return $STATUS
 end
 
 if test "$argv[1]" = "help"
@@ -83,10 +79,12 @@ cd $INNERWORKDIR/ArangoDB
 and checkoutRepo $arango $force_clean
 if test $status -ne 0
   echo "Failed to checkout community branch"
+  setupSourceInfo "VERSION" "N\/A"
+  setupSourceInfo "Community" "N\/A"
   exit 1
 else
-  echo "VERSION:" (cat $INNERWORKDIR/ArangoDB/ARANGO-VERSION) > $INNERWORKDIR/sourceInfo.log
-  echo "Community:" (git rev-parse --verify HEAD) >> $INNERWORKDIR/sourceInfo.log
+  setupSourceInfo "VERSION" (cat $INNERWORKDIR/ArangoDB/ARANGO-VERSION)
+  setupSourceInfo "Community" (git rev-parse --verify HEAD)
 end
 
 if test $ENTERPRISEEDITION = On
@@ -94,10 +92,9 @@ if test $ENTERPRISEEDITION = On
   and checkoutRepo $enterprise $force_clean
   if test $status -ne 0
     echo "Failed to checkout enterprise branch"
+    setupSourceInfo "Enterprise" "N\/A"
     exit 1
   else
-    echo "Enterprise:" (git rev-parse --verify HEAD) >> $INNERWORKDIR/sourceInfo.log
+    setupSourceInfo "Enterprise" (git rev-parse --verify HEAD)
   end
 end
-
-convertSItoJSON

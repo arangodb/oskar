@@ -14,7 +14,7 @@ If (!$env:ARANGODB_PACKAGES -or $env:ARANGODB_PACKAGES -eq "")
     Exit 1
 }
 
-# \\nas02.arangodb.biz\buildfiles
+# \\nas01.arangodb.biz\buildfiles
 If (!$env:NAS_SHARE_ROOT -or $env:NAS_SHARE_ROOT -eq "" -and $env:COPY_TO_STAGE2 -eq $true)
 {
     Write-Host "NAS_SHARE_ROOT required"
@@ -57,19 +57,19 @@ Function copyPackagesToStage2
     Write-Host "Windows: $SYSTEM_IS_WINDOWS"
     If ($SYSTEM_IS_WINDOWS)
     {
-        Write-Host "Recreate $DST\Windows"
-        rm -Force -Recurse $DST\Windows -ErrorAction SilentlyContinue;comm
-        mkdir -p $DST\Windows;comm
+        Write-Host "Recreate $DST\Windows\x86_64"
+        rm -Force -Recurse $DST\Windows\x86_64 -ErrorAction SilentlyContinue;comm
+        mkdir -p $DST\Windows\x86_64;comm
     }
 
     ForEach ($file in $(Get-ChildItem $SRC\* -Filter ArangoDB3* -Include *.zip, *.exe))
     {
-        Copy-Item -Force -Path "$file" -Destination $DST\Windows;comm
+        Copy-Item -Force -Path "$file" -Destination $DST\Windows\x86_64;comm
     }
 
     ForEach ($file in $(Get-ChildItem $SRC -Filter "sourceInfo*" -File))
     {
-        Copy-Item -Force -Path "$SRC\$file" -Destination $DST\Windows;comm
+        Copy-Item -Force -Path "$SRC\$file" -Destination $DST\Windows\x86_64;comm
     }
 
   return $global:ok
@@ -88,7 +88,7 @@ switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok ) 
 {
     clearResults
-    setNightlyRelease
+    setNightlyVersion
     makeRelease
 }
 $s = $global:ok

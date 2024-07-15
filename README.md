@@ -234,6 +234,102 @@ if supported, set number of concurrent builds to `PARALLELISM`
 
 ## Testing
 
+`jenkins/helper/test_launch_controller.py` is used to control multiple test executions.
+
+### Its dependencies over stock python3 are:
+ - psutil to control subprocesses
+ - py7zr (optional) to build 7z reports instead of tar.bz2
+
+### It's reading these environment variables:
+- `INNERWORKDIR` - as the directory to place the report files
+- `WORKDIR` - used instead if `INNERWORKDIR` hasn't been set.
+- `TEMP` - temporary directory if not `INNERWORKDIR`/ArangoDB
+- `TMPDIR` and `TEMP` are passed to the executors.
+- `TSHARK` passed as value to `--sniffProgram`
+- `DUMPDEVICE` passed as value to `--sniffDevice`
+- `SKIPNONDETERMINISTIC` passed on as value to `--skipNondeterministic` to the testing.
+- `SKIPTIMECRITICAL` passed on as value to `--skipTimeCritical` to the testing.
+- `BUILDMODE` passed on as value to `--buildType` to the testing.
+- `DUMPAGENCYONERROR` passed on as value to `--dumpAgencyOnError` to the testing.
+- `PORTBASE` passed on as value to `--minPort` and `--maxPort` (+99) to the testing. Defaults to 7000
+- `SKIPGREY` passed on as value to `--skipGrey` to the testing.
+- `ONLYGREY` passed on as value to `--onlyGrey` to the testing.
+- `TIMELIMIT` is used to calculate the execution deadline starting point in time.
+- `COREDIR` the directory to locate coredumps for crashes
+- `LDAPHOST` to enable the tests with `ldap` flags.
+- any parameter in `test-definition.txt` that starts with a `$` is expanded to its value.
+
+### Its Parameters are:
+ - `PATH/test-definition.txt` - (first parameter) test definitions file from the arangodb source tree
+   (also used to locate the arangodb source)
+ - `-f` `[launch|dump]` use `dump` for syntax checking of `test-definition.txt` instead of executing the tests
+ - `--validate-only` don't run the tests
+ - `--help-flags` list the flags which can be used in `test-definition.txt`:
+    - `cluster`: this test requires a cluster
+    - `single`: this test requires a single server
+    - `full`: this test is only executed in full tests
+    - `!full`: this test is only executed in non-full tests
+    - `gtest`: only testsuites starting with 'gtest' are to be executed
+    - `ldap`: ldap
+    - `enterprise`: this test is only executed with the enterprise version
+    - `!windows`: test is excluded from Windows runs
+    - `!mac`: test is excluded from MacOS
+    - `!arm`: test is excluded from ARM Linux / MacOS hosts 
+ - `--cluster` filter `test-definition.txt` for all tests flagged as `cluster`
+ - `--full` - all tests including those flagged as `full` are executed.
+ - `--gtest` - only testsuites starting with 'gtest' are executed
+ - `--all` - output unfiltered
+ 
+### Syntax in `test-definition.txt`
+Lines consist of these parts:
+```
+testingJsSuiteName flags params suffix -- args to testing.js
+```
+where 
+- `flags` are listed above in `--help-flags`
+- params are:
+  - priority - sequence priority of test, 250 is the default.
+  - parallelity - execution slots to book. defaults to 1, if cluster 4.
+  - buckets - split testcases to be launched in concurent chunks
+  Specifying a `*` in front of the number takes the default and multiplies it by the value.
+- suffix - if a testsuite is launched several times, make it distinguishable
+  like shell_aql => shell_aql_vst ; Bucket indexes are appended afterwards.
+- `--` literally the two dashes to split the line at.
+- `args to testing.js` - anything that `./scripts/unittest --help` would print you.
+
+### job scheduling
+To utilize all of the machines resources, tests can be run in parallel. The `execution_slots` are 
+set to the number of the physical cores of the machine (not threads).
+`parallelity` is used to add the currently expected load by the tests to be no more than `execution_slots`.
+
+For managing each of these parallel executions of testing.js, worker threads are used. The workers
+themselves will spawn a set of I/O threads to capture the output of testing.js into a report file.
+
+The life cycle of a testrun will be as follows:
+
+ - the environment variable `TIMELIMIT` defines a *deadline* to all the tests, how much seconds should be allowed.
+ - tests are running in worker threads.
+ - main thread keeps control, launches more worker threads, once machine bandwith permits, but only every 5s as closest to not overwhelm the machine while launching arangods.
+ - tests themselves have their timeouts; `testing.js` will abort if they are reached.
+ - workers have a progressive timeout, if it doesn't hear back from `testing.js` for 999999999s it will hard kill and abort. [currently high / not used!]
+ - if workers have no output from `testing.js` they check whether the *deadline* is reached.
+ - if the *deadline* is reached, `SIG_INT`[* nix] / `SIG_BREAK`[windows] is sent to `testing.js` to trigger its *deadline* feature.
+ - the reached *deadline* will be indicated to the `testfailures.txt` report file and the logfile of the test in question.
+ - with *deadline* engageged, `testing.js` can send no more subsequent requests, nor spawn processes => eventually testing will abort.
+ - force shutdown of arangod Instances will reset the deadline, SIG_ABRT arangods, and try to do core dump analysis.
+ - workers continue reading pipes from `testing.js`, but once no chars are comming, `waitpid()` checks with a 1s timout whether `testing.js` is done and exited.
+ - if the worker reaches `180` counters of `waitpid()` invocations it will give up. It will hard kill `testing.js` and all other child processes it can find.
+ - this should unblock the workers I/O threads, and they should exit.
+ - the `waitpid()` on `testing.js` should exit, I/O threads should be joined, results should be passed up to the main thread.
+ - so the workers still have a slugish interpretation of the *deadline*, giving them the chance to collect as much knowledge about the test execution as posible.
+ - meanwhile the main thread has a *fixed* deadline: 5 minutes after the `TIMELIMIT` is reached.
+ - if not all workers have indicated their exit before this final deadline:
+   - the main thread will start killing any subprocesses of itself which it finds.
+   - after this wait another 20s, to see whether the workers may have been unblocked by the killing
+ - if not, it shouts "Geronimoooo" and takes the big shotgun, and force-terminates the python process which is running it. This will kill all threads as well and terminate the process.
+ - if all workers have indicated their exit in time, their threads will be joined.
+ - reports will be generated.
+
 ## Packaging
 
     makeRelease

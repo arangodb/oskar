@@ -1,4 +1,4 @@
-FROM alpine:3.14
+FROM alpine:3.18
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 ARG ARCH "x86_64"

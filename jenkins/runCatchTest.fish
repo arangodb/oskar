@@ -7,6 +7,7 @@ and TT_init
 and eval $EDITION
 and catchtest
 and pingDetails
+and setAllLogsToWorkspace
 
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage

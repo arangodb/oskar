@@ -1,0 +1,40 @@
+{
+  "rocksdb": {
+    "general": {},
+    "db": {},
+    "table": {}
+  },
+  "setup": {
+    "collections": [
+      {
+        "name": "testcol",
+        "type": "document"
+      }
+    ]
+  },
+  "workload": {
+    "insert": {
+      "default": {
+        "collection": "testcol",
+        "document": {
+          "source": "inline",
+          "value": {
+            "foo": "bar"
+          }
+        },
+        "documentModifier": {
+          "s": {
+            "randomString": {
+              "size": 100
+            }
+          }
+        },
+        "documentsPerTrx": 10
+      },
+      "stopAfter": {
+        "runtime": 40000
+      },
+      "threads": 8
+    }
+  }
+}

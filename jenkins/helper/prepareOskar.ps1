@@ -13,6 +13,16 @@
     }
 }
 
+If(-Not($env:IS_JENKINS))
+{
+    $env:IS_JENKINS = $true
+}
+
+Function clearMachine
+{
+    python.exe "$OSKARDIR\oskar\jenkins\helper\clear_machine.py"
+}
+
 $HDD = $(Split-Path -Qualifier $env:WORKSPACE)
 If(-Not(Test-Path -PathType Container -Path "$HDD\$env:NODE_NAME"))
 {
@@ -67,4 +77,5 @@ If($(Get-Module).Name -contains "oskar")
 }
 Import-Module "$OSKARDIR\oskar\helper.psm1"
 clearResults
+If($env:IS_JENKINS) { clearMachine }
 clearWorkdir

@@ -8,6 +8,7 @@ and eval $EDITION
 and eval $STORAGE_ENGINE
 and eval $TEST_SUITE
 and skipGrey
+and setAllLogsToWorkspace
 
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage

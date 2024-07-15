@@ -5,7 +5,8 @@ Copy-Item -Force "$env:WORKSPACE\jenkins\helper\prepareOskar.ps1" $pwd
 
 skipPackagingOn
 staticExecutablesOn
-catchtest
+setAllLogsToWorkspace
+gtest
 releaseMode
 
 switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
@@ -13,7 +14,7 @@ switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok) 
 {
     setPDBsToWorkspaceOnCrashOnly
-    clcacheOn
+    clcacheOff
     oskar1
 }
 $s = $global:ok

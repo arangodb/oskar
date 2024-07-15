@@ -35,10 +35,10 @@ switch $TESTSUITE
     and runSingleTest1 $TEST - $argv[3..-1]
     and waitOrKill 120 ""
     createReport
-  case "catchtest"
+  case "gtest"
     resetLaunch 1
     and echo "Running $TEST in $TESTUITE with args '$argv[3..-1]'"
-    and runCatchTest1 catch - $argv[3..-1]
+    and runGTest1 gtest - $argv[3..-1]
     and waitOrKill 120 ""
     createReport
   case "*"

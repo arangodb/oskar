@@ -4,7 +4,7 @@ If (!$env:RELEASE_TAG -or $env:RELEASE_TAG -eq "")
     Exit 1
 }
 
-# \\nas02.arangodb.biz\buildfiles
+# \\nas01.arangodb.biz\buildfiles
 If (!$env:NAS_SHARE_ROOT -or $env:NAS_SHARE_ROOT -eq "")
 {
     Write-Host "NAS_SHARE_ROOT required"
@@ -45,6 +45,8 @@ If(-Not(Test-Path -PathType Container -Path "$dest/packages/Enterprise/Windows")
 
 echo $pwd
 dir
+
+$ErrorActionPreference = 'Stop'
 
 ForEach($file in $(Get-ChildItem -Path . -Filter "ArangoDB3-*.exe").fullName)
 {

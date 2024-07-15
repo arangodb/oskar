@@ -11,7 +11,7 @@ switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok) 
 {
     clearResults
-    clcacheOn
+    clcacheOff
     buildArangoDB
 }
 $s = $global:ok

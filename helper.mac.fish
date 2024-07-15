@@ -7,8 +7,10 @@ set -gx THIRDPARTY_BIN third_party/bin
 set -gx THIRDPARTY_SBIN third_party/sbin
 set -gx CCACHEBINPATH /usr/local/opt/ccache/libexec
 set -gx CMAKE_INSTALL_PREFIX /opt/arangodb
+set -gx CURRENT_PATH $PATH
 set -xg IONICE ""
 set -gx ARCH (uname -m)
+set -gx DUMPDEVICE "lo0"
 
 if test "$ARCH" = "arm64"
   set CCACHEBINPATH /opt/homebrew/opt/ccache/libexec
@@ -19,6 +21,9 @@ ln -s $SCRIPTSDIR/tools/sccache-apple-darwin-$ARCH $SCRIPTSDIR/tools/sccache
 
 function defaultMacOSXDeploymentTarget
   set -xg MACOSX_DEPLOYMENT_TARGET 10.14
+  if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+    set -xg MACOSX_DEPLOYMENT_TARGET 11.0
+  end
 end
 
 if test -z "$MACOSX_DEPLOYMENT_TARGET"
@@ -79,8 +84,38 @@ function findRequiredMinMacOS
     echo "$f: no MACOS_MIN specified, using $MACOSX_DEPLOYMENT_TARGET"
     minMacOS $MACOSX_DEPLOYMENT_TARGET
   else
-    echo "Using MACOS_MIN version '$v' from '$f'"
+    if test "$USE_ARM" = "On"
+      if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+        echo "Using MACOS_MIN version '11.0' instead of '$v' from '$f' for ARM!"
+        set v "11.0"
+      end
+    else
+      echo "Using MACOS_MIN version '$v' from '$f'"
+    end
     minMacOS $v
+  end
+end
+
+function compiler
+  set -l cversion $argv[1]
+
+  if test "$cversion" = ""
+    set -e COMPILER_VERSION
+    return 0
+  end
+
+  switch $cversion
+    case 12
+      set -gx COMPILER_VERSION $cversion
+
+    case 13
+      set -gx COMPILER_VERSION $cversion
+
+    case 14
+      set -gx COMPILER_VERSION $cversion
+
+    case '*'
+      echo "unknown compiler version $cversion"
   end
 end
 
@@ -93,12 +128,13 @@ function downloadOpenSSL
   set -l directory $WORKDIR/work/openssl
   set -l url https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz  
   mkdir -p $directory
-  cd $directory
+  pushd $directory
   echo "Downloading sources to $directory from URL: $url"
   curl -LO $url
   rm -rf openssl-$OPENSSL_VERSION
   tar -xzvf openssl-$OPENSSL_VERSION.tar.gz
   set -xg OPENSSL_SOURCE_DIR "$directory/openssl-$OPENSSL_VERSION"
+  popd
 end
 
 function buildOpenSSL
@@ -109,8 +145,7 @@ function buildOpenSSL
     echo "OpenSSL was already built! No need to rebuild it."
     return
   end
-  cd $OPENSSL_SOURCE_DIR
-  mkdir build
+  mkdir -p $OPENSSL_SOURCE_DIR/build
   
   if test -z "$ARCH"
     echo "ARCH is not set! Can't decide wether to build OpenSSL for arm64 or x86_64."
@@ -126,16 +161,17 @@ function buildOpenSSL
     return 1
   end
 
+  pushd $OPENSSL_SOURCE_DIR
   for type in shared no-shared
     for mode in debug release
       set -l cmd "perl ./Configure --prefix=$OPENSSL_SOURCE_DIR/build/$mode/$type --openssldir=$OPENSSL_SOURCE_DIR/build/$mode/$type/openssl --$mode $type $OPENSSL_PLATFORM"
       echo "Executing: $cmd"
       eval $cmd
       make
-      make test
       make install_dev
     end
   end
+  popd
 end
 
 function findOpenSSLPath
@@ -200,7 +236,7 @@ function checkOskarOpenSSL
     false
     return 1
   end
-  set -l cmd "$executable version | grep -o \"[0-9]\.[0-9]\.[0-9][a-z]\""
+  set -l cmd "$executable version | grep -m 1 -o \"[0-9]\.[0-9]\.[0-9]*[a-z]*\" | head -1"
   set -l output (eval "arch -$ARCH $cmd")
   if test "$output" = "$OPENSSL_VERSION"
     echo "Found OpenSSL $OPENSSL_VERSION"
@@ -210,6 +246,31 @@ function checkOskarOpenSSL
     echo "Couldn't find OpenSSL $OPENSSL_VERSION!"
     false
     return 1
+  end
+end
+
+function findRequiredCompiler
+  set -l f $WORKDIR/work/ArangoDB/VERSIONS
+
+  test -f $f
+  or begin
+    echo "Cannot find $f; make sure source is checked out"
+    return 1
+  end
+
+  #if test "$COMPILER_VERSION" != ""
+  #  echo "Compiler version already set to '$COMPILER_VERSION'"
+  #  return 0
+  #end
+
+  set -l v (fgrep LLVM_CLANG_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+  if test "$v" = ""
+    echo "$f: no LLVM_CLANG_MACOS specified, using 13"
+    compiler 13
+  else
+    echo "Using compiler '$v' from '$f'"
+    compiler $v
   end
 end
 
@@ -227,11 +288,11 @@ function findRequiredOpenSSL
   #  return 0
   #end
 
-  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o "[0-9]\.[0-9]\.[0-9][a-z]")
+  set -l v (fgrep OPENSSL_MACOS $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -E -o "[0-9]\.[0-9]\.[0-9]*[a-z]?")
 
   if test "$v" = ""
-    echo "$f: no OPENSSL_MACOS specified, using 1.1.1g"
-    opensslVersion 1.1.1g
+    echo "$f: no OPENSSL_MACOS specified, using 3.0.13"
+    opensslVersion 3.0.13
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
@@ -315,11 +376,6 @@ function runLocal
   return $s
 end
 
-function checkoutUpgradeDataTests
-  runLocal $SCRIPTSDIR/checkoutUpgradeDataTests.fish
-  or return $status
-end
-
 function checkoutArangoDB
   runLocal $SCRIPTSDIR/checkoutArangoDB.fish
   or return $status
@@ -335,9 +391,12 @@ end
 function switchBranches
   checkoutIfNeeded
   runLocal $SCRIPTSDIR/switchBranches.fish $argv
+  and convertSItoJSON
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
+  and findRequiredCompiler
   and findUseARM
+  and findArangoDBVersion
 end
 
 function clearWorkdir
@@ -347,6 +406,7 @@ end
 function buildArangoDB
   checkoutIfNeeded
   and findDefaultArchitecture
+  and findRequiredCompiler
   and findUseARM
   and findRequiredMinMacOS
   and prepareOpenSSL
@@ -360,6 +420,7 @@ end
 
 function makeArangoDB
   findDefaultArchitecture
+  and findRequiredCompiler
   and findUseARM
   and findRequiredMinMacOS
   and prepareOpenSSL
@@ -381,12 +442,20 @@ end
 
 function oskar
   checkoutIfNeeded
-  runLocal $SCRIPTSDIR/runTests.fish
+  and findRequiredCompiler
+  and runLocal $SCRIPTSDIR/runTests.fish
 end
 
 function oskarFull
   checkoutIfNeeded
-  runLocal $SCRIPTSDIR/runFullTests.fish
+  and findRequiredCompiler
+  and runLocal $SCRIPTSDIR/runFullTests.fish
+end
+
+function rlogTests
+  checkoutIfNeeded
+  and findRequiredCompiler
+  and runLocal $SCRIPTSDIR/rlog/pr.fish $argv
 end
 
 function pushOskar
@@ -416,24 +485,66 @@ end
 function downloadStarter
   mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
   and runLocal $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
+  and convertSItoJSON
 end
 
 function downloadSyncer
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
   and runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+  and convertSItoJSON
+end
+
+function setupComponents
+  cleanupThirdParty
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+    downloadStarter
+    if test "$ENTERPRISEEDITION" = "On"
+      if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+        set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
+      end
+      and downloadSyncer
+      if test "$USE_RCLONE" = "true"
+        copyRclone "macos"
+      end
+    end
+  else
+    set -xg USE_RCLONE false
+  end
+
+  return 0
+end
+
+function setupPackaging
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+    set -xg PACKAGING_OPTIONS "-DPACKAGING=Bundle -DPACKAGE_TARGET_DIR=$INNERWORKDIR -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb"
+    if test "$ENTERPRISEEDITION" = "On"
+      if test "$USE_RCLONE" = "true"
+        set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
+      end
+      set -xg PACKAGING_OPTIONS "$PACKAGING_OPTIONS -DTHIRDPARTY_SBIN=$THIRDPARTY_SBIN_LIST"
+    end
+  else
+    set -xg PACKAGING_OPTIONS ""
+  end
+
+  return 0
 end
 
 function buildPackage
   # This assumes that a build has already happened
 
   if test "$ENTERPRISEEDITION" = "On"
-    echo Building enterprise edition MacOs bundle...
+    echo Building enterprise edition macOs bundle...
   else
-    echo Building community edition MacOs bundle...
+    echo Building community edition macOs bundle...
   end
 
-  runLocal $SCRIPTSDIR/buildMacOsPackage.fish $ARANGODB_PACKAGES
-  and buildTarGzPackage
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+    runLocal $SCRIPTSDIR/buildMacOsPackage.fish $ARANGODB_PACKAGES
+    and buildTarGzPackage
+  else
+    buildTarGzPackage
+  end
 end
 
 function cleanupThirdParty
@@ -454,20 +565,9 @@ function buildEnterprisePackage
   and releaseMode
   and enterprise
   and set -xg NOSTRIP 1
-  and cleanupThirdParty
-  and set -gx THIRDPARTY_SBIN_LIST $WORKDIR/work/$THIRDPARTY_SBIN/arangosync
-  and downloadStarter
-  and downloadSyncer
-  and copyRclone "macos"
-  and if test "$USE_RCLONE" = "true"
-    set -gx THIRDPARTY_SBIN_LIST "$THIRDPARTY_SBIN_LIST\;$WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb"
-  end
-  and buildArangoDB \
-      -DPACKAGING=Bundle \
-      -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DTHIRDPARTY_SBIN=$THIRDPARTY_SBIN_LIST \
-      -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
-      -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
+  and setupComponents
+  and setupPackaging
+  and buildArangoDB $PACKAGING_OPTIONS -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
 
   if test $status != 0
@@ -484,13 +584,9 @@ function buildCommunityPackage
   and releaseMode
   and community
   and set -xg NOSTRIP 1
-  and cleanupThirdParty
-  and downloadStarter
-  and buildArangoDB \
-      -DPACKAGING=Bundle \
-      -DPACKAGE_TARGET_DIR=$INNERWORKDIR \
-      -DTHIRDPARTY_BIN=$WORKDIR/work/$THIRDPARTY_BIN/arangodb \
-      -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
+  and setupComponents
+  and setupPackaging
+  and buildArangoDB $PACKAGING_OPTIONS -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
   and buildPackage
 
   if test $status != 0
@@ -500,18 +596,30 @@ function buildCommunityPackage
 end
 
 function buildTarGzPackage
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 11
+    set -xg MAKE_INSTALL_COMPONENTS '-C client-tools'
+  else
+    set -xg MAKE_INSTALL_COMPONENTS ""
+  end
   pushd $INNERWORKDIR/ArangoDB/build
+  echo (pwd)
+  echo (ls -l client-tools)
   and rm -rf install
-  and make install DESTDIR=install
+  and echo "make $MAKE_INSTALL_COMPONENTS install DESTDIR="(pwd)"/install"
+  and eval make $MAKE_INSTALL_COMPONENTS install VERBOSE=1 DESTDIR=(pwd)/install
   and makeJsSha1Sum (pwd)/install/opt/arangodb/share/arangodb3/js
   and if test "$ENTERPRISEEDITION" = "On"
-        pushd install/opt/arangodb/bin
-        ln -s ../sbin/arangosync
-        popd
+        if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+          pushd install/opt/arangodb/bin
+          ln -s ../sbin/arangosync
+          popd
+        end
       end
   and mkdir -p install/usr
   and mv install/opt/arangodb/bin install/usr
-  and mv install/opt/arangodb/sbin install/usr
+  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
+        mv install/opt/arangodb/sbin install/usr
+      end
   and mv install/opt/arangodb/share install/usr
   and mv install/opt/arangodb/etc install
   and rm -rf install/opt
@@ -525,7 +633,7 @@ end
 ## #############################################################################
 
 function findCompilerVersion
-  gcc -v 2>&1 | tail -1 | awk '{print $3}'
+  echo $COMPILER_VERSION
 end
 
 function findOpenSSLVersion

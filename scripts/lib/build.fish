@@ -65,6 +65,7 @@ function setupCcache
       echo "using sccache at S3 ($SCCACHE_BUCKET)"
       set -e SCCACHE_DIR
       set -e SCCACHE_GCS_BUCKET
+      set -e SCCACHE_GCS_KEY_PATH
       set -e SCCACHE_MEMCACHED
       set -e SCCACHE_REDIS
     else if test "$SCCACHE_GCS_BUCKET" != "" -a -f "/work/.gcs-credentials"
@@ -202,10 +203,12 @@ function runCmake
   echo cmake $FULLARGS
 
   if test "$SHOW_DETAILS" = "On"
-    cmake $FULLARGS .. 2>&1
+    echo "cmake $FULLARGS -DVERBOSE=On .. 2>&1"
+    cmake $FULLARGS -DVERBOSE=On .. 2>&1
   else
+    echo "cmake $FULLARGS -DVERBOSE=On .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1"
     echo cmake output in $INNERWORKDIR/cmakeArangoDB.log
-    cmake $FULLARGS .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1
+    cmake $FULLARGS -DVERBOSE=On .. > $INNERWORKDIR/cmakeArangoDB.log 2>&1
   end
 end
 

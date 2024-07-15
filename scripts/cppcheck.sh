@@ -2,7 +2,7 @@
 set -e
 
 cd /work/ArangoDB
-./utils/cppcheck.sh -j $PARALLELISM
+./utils/cppcheck.sh -j $PARALLELISM $@
 status=$?
 
 cat cppcheck.xml \

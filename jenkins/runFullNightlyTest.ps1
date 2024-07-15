@@ -13,7 +13,7 @@ If ($global:ok)
 {
     setPDBsToWorkspaceOnCrashOnly
     setPDBsArchive7z
-    clcacheOn
+    clcacheOff
     oskar1Full
 }
 $s = $global:ok

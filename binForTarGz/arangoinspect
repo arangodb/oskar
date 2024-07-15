@@ -24,7 +24,6 @@ if [ -x "$executable" ] ; then
   exec "$executable" \
        --configuration none \
        --console.pretty-print true \
-       --server.endpoint tcp://127.0.0.1:8529 \
        --server.authentication false \
        --server.ask-jwt-secret true \
        --javascript.startup-directory "$installation/usr/share/arangodb3/js" \

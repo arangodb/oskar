@@ -4,7 +4,11 @@ source jenkins/helper/jenkins.fish
 cleanPrepareLockUpdateClear
 and enterprise
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and setNightlyRelease
+and if test "$USE_EXISTING_BUILD" = "On"
+      unpackBuildFilesOn ; packBuildFilesOff
+      moveResultsFromWorkspace
+    end
+and setNightlyVersion
 and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter

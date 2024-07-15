@@ -11,6 +11,7 @@ and cleanWorkspace
 and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and showRepository
 and ccacheOff
+and releaseBuildRepoInfo
 and makeDockerCommunityRelease
 
 set -l s $status

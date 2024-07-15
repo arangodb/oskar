@@ -11,10 +11,12 @@ let pullRequestExtraInformation = {
 // Variables we need from jenkins env:
 const apiToken = process.env.API_TOKEN;       // well, a token :)
 const repository = process.env.REPO;          // Format: arangodb/arangodb
+const jobName = process.env.JOB_NAME;         // Format: jenkins-job-name
 const targetUrl = process.env.JOB_ID;         // Format: https://www.abc.de/#123
 const actionState = process.env.ACTION_STATE; // States: setPending, setError, setFailure, setSuccess
 const githubBranchName = process.env.ARANGODB_BRANCH;
 const githubCommitSHA = process.env.ARANGODB_COMMIT;
+
 
 // error = bool, message = string, extra = object
 const exitAndWriteResultToFile = (error, message, status, extra) => {
@@ -74,15 +76,15 @@ let actionStateIsValid = () => {
 if (!actionStateIsValid()) {
   exitAndWriteResultToFile(true, "No valid JOB_ID env found!");
 }
+if (!jobName) {
+  exitAndWriteResultToFile(true, "No valid JOB_NAME env found!");
+}
 if (!apiToken) {
   exitAndWriteResultToFile(true, "No valid API_TOKEN env found!");
 }
 if (!targetUrl) {
   exitAndWriteResultToFile(true, "No valid JOB_ID env found!");
 }
-
-// TODO Future: Read the job name from ENV variables
-const jobName = "arangodb-matrix-pr";
 if (!repository) {
   exitAndWriteResultToFile(true, "No valid REPO env found!", "FAIL_NO_BRANCH");
 }
@@ -237,40 +239,65 @@ const checkPRMethod = (prCheckData, sha) => {
   // bool to check whether we won't find expected attributes we need
   let parseError = false;
 
-  if (prCheckData.hasOwnProperty('total_count')) {
-    if (prCheckData.total_count >= 1) {
-      let elementPositionToUse = prCheckData.total_count - 1;
-      let infoItem = prCheckData.items[elementPositionToUse];
+  const parsePullRequestItems = (prCheckData) => {
+    let infoItem;
+    if (!prCheckData.hasOwnProperty('items')) {
+      exitAndWriteResultToFile(true, 'Could not parse expected attribute: "items". Format might have been changed.');
+    }
 
-      if (infoItem.hasOwnProperty('state')) {
-        if (infoItem.state !== 'open') {
-          // we can abort - we found a PR, but this one is already closed
-          exitAndWriteResultToFile(true, "We've only found a closed PR. Exiting.", "FAIL_NO_PR");
-        }
+    let foundPullRequestsArray = prCheckData.items.slice().reverse();
+
+    // iterate in reverse order, as the last items are the most relevant ones
+    for (let pullRequestItem of foundPullRequestsArray) {
+      // check if found item is valid (means it must be part of our given repository)
+      if (pullRequestItem.url && pullRequestItem.url.indexOf(repository) != -1) {
+        // means we've found a valid repository into our given repository
+        infoItem = pullRequestItem;
+        break;
       }
+    };
 
-      if (infoItem.hasOwnProperty('body')) {
-        // just additional information, let's not fail here
-        pullRequestExtraInformation.info = infoItem.body;
+    if (!infoItem) {
+      // We've not found any valid pull request, therefore we cannot continue.
+      // TODO Future: This is no actual error, we just do not need to continue with that script as it would be useless.
+      // Check how to handle this case in the future.
+      exitAndWriteResultToFile(true, "Found no related pull request. Exiting. Nothing to do.", 'FAIL_NO_PR');
+    }
+
+    if (infoItem.hasOwnProperty('state')) {
+      if (infoItem.state !== 'open') {
+        // we can abort - we found a PR, but this one is already closed
+        exitAndWriteResultToFile(true, "We've only found a closed PR. Exiting.", "FAIL_NO_PR");
       }
+    }
 
-      if (infoItem.hasOwnProperty('pull_request')) {
-        let pr = infoItem.pull_request;
-        if (pr.hasOwnProperty('url')) {
-          pullRequestExtraInformation.url = infoItem.pull_request.url;
-        } else {
-          parseError = true;
-        }
+    if (infoItem.hasOwnProperty('body')) {
+      // just additional information, let's not fail here
+      pullRequestExtraInformation.info = infoItem.body;
+    }
+
+    if (infoItem.hasOwnProperty('pull_request')) {
+      let pr = infoItem.pull_request;
+      if (pr.hasOwnProperty('url')) {
+        pullRequestExtraInformation.url = infoItem.pull_request.url;
       } else {
         parseError = true;
       }
+    } else {
+      parseError = true;
+    }
 
-      if (parseError) {
-        exitAndWriteResultToFile(true, "Could not parse expected attributes. Format might have been changed.");
-      }
+    if (parseError) {
+      exitAndWriteResultToFile(true, "Could not parse expected attributes. Format might have been changed.");
+    }
 
-      // if all good and PR found
-      continueWithAction(sha);
+    // if all good and PR found
+    continueWithAction(sha);
+  };
+
+  if (prCheckData.hasOwnProperty('total_count')) {
+    if (prCheckData.total_count >= 1) {
+      parsePullRequestItems(prCheckData);
     } else {
       exitAndWriteResultToFile(true, "Could not read pull request details from GitHub Search API");
     }
@@ -282,7 +309,8 @@ const checkPRMethod = (prCheckData, sha) => {
 }
 
 const checkPRExists = (sha) => {
-  const checkPRExistencePath = `/search/issues?q=${sha}`;
+  const queryString = encodeURIComponent(`${sha} repo:${repository}`);
+  const checkPRExistencePath = `/search/issues?q=${queryString}`;
   getRequest(checkPRExistencePath, checkPRMethod, sha);
 }
 

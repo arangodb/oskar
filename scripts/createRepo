@@ -26,7 +26,7 @@ usage(){
 
 provided(){
     echo -n "createRepo <version:'$1'> <in_path'$2'> <repo_path'$3'>"
-    echo " <in_name'$4'> <repo_name'$5'> <arch'$5'> <package_type'$7'>"
+    echo " <in_name'$4'> <repo_name'$5'> <arch'$6'> <package_type'$7'>"
 }
 
 #provided "$@"
@@ -63,10 +63,10 @@ provided(){
 ## . `dirname $0`/../config/default.inc
 
 create_repo(){
-    #set -x
+    set -x
     provided "$@"
     local version="$1"                     # X.Y.Z[-(H | (alpha | beta | milestone | rc).R)]
-    local major_minor=$(expr "$version" : '\([0-9].[0-9]\)')      # X.Y
+    local major_minor=$(expr "$version" : '\([0-9].[0-9]*\)')      # X.Y
     local version_fs="${major_minor/./}"   # XY[-(alpha | beta | milestone | rc).R]
     [[ "${version%%-*}" = "${version}" ]] || [[ "${version##*-}" =~ ^[1-9]+$ ]] || version_fs="${version_fs}-${version##*-}"
     local in_path="$2"                     # /mnt/data/fileserver
@@ -86,7 +86,7 @@ create_repo(){
     url_community="$url_base/arangodb${version_fs}/$repo_name"
     url_enterprise="$url_base/$url_secret/arangodb${version_fs}/$repo_name"
 
-    setup_gpg
+    # setup_gpg
 
   echo "community #################################"
   create_repo_edition "$version" "$major_minor" "$arch" "$package_type" \
@@ -94,10 +94,10 @@ create_repo(){
                       "$repo_path/$repo_community/$repo_name" \
                       "$url_community"
   echo "enterprise #################################"
-    create_repo_edition "$version" "$major_minor" "$arch" "$package_type"\
-                        "$in_path/$in_enterprise/$in_name" \
-                        "$repo_path/$repo_enterprise/$repo_name" \
-                        "$url_enterprise"
+  create_repo_edition "$version" "$major_minor" "$arch" "$package_type"\
+                      "$in_path/$in_enterprise/$in_name" \
+                      "$repo_path/$repo_enterprise/$repo_name" \
+                      "$url_enterprise"
 }
 
 create_repo_edition(){
@@ -135,21 +135,22 @@ create_repo_deb(){
     local url="$7"
 
     # sign files
-    cd "$in" || { echo "can not enter source dir"; exit 1; }
-    for file in "$in"/*"$major_minor"*.deb; do
-        fbase="${file%.deb}"
-        noext="${fbase##*/}"
-        [[ -f "$file" ]] || ferr "create_repo_deb - file: $file - does not exist"
-        [[ -d "$repo" ]] || ferr "create_repo_deb - reop: $repo - does not exist"
-        if cmp -s "$file" "$repo/amd64/${noext}.deb"; then
-	  echo "file already exists '$file'"
-	else
-	  cp "$file" "$repo/amd64/${noext}.deb" \
-	      || { echo "could not move $file" to "$repo"; exit 1;  }
-	  "$script_dir"/debSign "$repo/amd64/${noext}.deb" || ferr "failed to sign $repo/amd64/${noext}.deb"
-        fi
+    for arch in "${arch_array[@]}"; do
+        cd "$in" || { echo "can not enter source dir"; exit 1; }
+        for file in "$in"/*"$major_minor"*${arch}*.deb; do
+            fbase="${file%.deb}"
+            noext="${fbase##*/}"
+            [[ -f "$file" ]] || ferr "create_repo_deb - file: $file - does not exist"
+            [[ -d "$repo" ]] || ferr "create_repo_deb - reop: $repo - does not exist"
+            if cmp -s "$file" "$repo/${arch}/${noext}.deb"; then
+    	          echo "file already exists '$file'"
+    	      else
+    	          cp "$file" "$repo/${arch}/${noext}.deb" \
+    	          || { echo "could not move $file" to "$repo"; exit 1;  }
+    	          "$script_dir"/debSign "$repo/${arch}/${noext}.deb" || ferr "failed to sign $repo/${arch}/${noext}.deb"
+            fi
+        done
     done
-
     cd "$repo" || { echo "can not enter repo"; exit 1; }
     echo
     echo "now building reop"
@@ -174,9 +175,15 @@ create_repo_deb(){
 
     #sign release
     echo "sign release"
-        gpg2 --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
-         --passphrase-fd 0 --yes -abs -u "$KEYNAME" \
-         -o Release.gpg Release <<<"arangodb" || ferr "failed to sign Release"
+    if test -d /root/.gnupg-old; then
+      gpg2 --homedir "/root/.gnupg-old" --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
+      --passphrase-fd 0 --yes -abs -u "$KEYNAME_OLD" \
+      -o Release.gpg Release <<<"arangodb" || ferr "failed to sign Release"
+    else
+      gpg2 --no-permission-warning --pinentry-mode=loopback --digest-algo SHA512 \
+      --passphrase-fd 0 --yes -abs -u "$KEYNAME" \
+      -o Release.gpg Release <<<"arangodb" || ferr "failed to sign Release"
+    fi
 
 }
 create_repo_rpm(){
@@ -190,32 +197,72 @@ create_repo_rpm(){
     local in="$5"
     local repo="$6"
     local url="$7"
+	
+    export GPG_TTY=$(tty)
+    echo "GPG_TTY: $GPG_TTY"
 
     # sign files
-    cd "$in" || { echo "can not enter source dir"; exit 1; }
-    for file in "$in"/*"$major_minor"*.rpm; do
-        fbase="${file%.rpm}"
-        noext="${fbase##*/}"
-        if cmp -s "$file" "$repo/x86_64/${noext}.rpm"; then
-	  echo "file already exists '$file'"
-	else
-	  "$script_dir"/rpmSign.exp "$file" || ferr "failed to sign $file"
-	  cp "$file" "$repo/x86_64/${noext}.rpm" \
-	      || { echo "could not move $file" to "$repo"; exit 1;  }
-	fi
+    for arch in "${arch_array[@]}"; do
+        cd "$in" || { echo "can not enter source dir"; exit 1; }
+        for file in "$in"/*"$major_minor"*${arch}*.rpm; do
+            fbase="${file%.rpm}"
+            noext="${fbase##*/}"
+            if cmp -s "$file" "$repo/${arch}/${noext}.rpm"; then
+    	          echo "file already exists '$file'"
+    	      else
+    	          rpm -vv --addsign "$file" || ferr "failed to sign $file"
+    	          cp "$file" "$repo/${arch}/${noext}.rpm" \
+    	          || { echo "could not move $file" to "$repo"; exit 1;  }
+    	      fi
+        done
     done
-
     cd "$repo" || { echo "can not enter repo"; exit 1; }
     echo
     echo "now building reop"
     echo
 
-    ensure createrepo --update --verbose "$repo" || ferr "failed to create repo"
-    gpg2 --no-permission-warning --armor --export info@arangodb.com  > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
-    rm -fr "$repo/repodata/repomd.xml.asc" || ferr "failed to delete old signature"
-    gpg2 --no-permission-warning -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
+    rm -rf "$repo/.repodata"
+    createrepo_c --update --verbose "$repo" || ferr "failed to create repo"
 
-    cat <<EOF > "${repo}/arangodb.repo"
+    if test -d /root/.gnupg-old; then
+      gpg2 --homedir /root/.gnupg-old \
+      --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning --armor --export info@arangodb.com \
+      > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
+
+      rm -fr "$repo/repodata/repomd.xml.asc" || ferr "failed to delete old signature"
+      gpg2 --homedir /root/.gnupg-old \
+      --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
+
+      gpg2 --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning --armor --export admin@arangodb.com \
+      > "$repo/repodata/repomd256.xml.key" || ferr "failed to export repomd256.xml.key"
+
+      ls -l "$repo/repodata"
+
+      cat <<EOF > "${repo}/arangodb.repo"
+[arangodb]
+name=ArangoDB Project
+type=rpm-md
+baseurl=$url
+gpgcheck=1
+gpgkey=$url/repodata/repomd.xml.key
+       $url/repodata/repomd256.xml.key
+enabled=1
+EOF
+    else
+      gpg2 --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning --armor --export admin@arangodb.com \
+      > "$repo/repodata/repomd.xml.key" || ferr "failed to export repomd.xml.key"
+
+      rm -fr "$repo/repodata/repomd.xml.asc" || ferr "failed to delete old signature"
+      gpg2 --batch --pinentry-mode loopback --passphrase "$ARANGO_SIGN_PASSWD" \
+      --no-permission-warning -a --detach-sign "$repo/repodata/repomd.xml" || ferr "failed to export repomd.xml"
+
+      ls -l "$repo/repodata"
+
+      cat <<EOF > "${repo}/arangodb.repo"
 [arangodb]
 name=ArangoDB Project
 type=rpm-md
@@ -224,7 +271,7 @@ gpgcheck=1
 gpgkey=$url/repodata/repomd.xml.key
 enabled=1
 EOF
-
+    fi
 }
 
 ## run this only if it is run directly

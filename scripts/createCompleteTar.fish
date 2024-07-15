@@ -14,6 +14,9 @@ function checkoutCommunity
   echo "Checkout ArangoDB Community $RELEASE_TAG"
   pushd $INNERWORKDIR/CompleteTar
   and git clone --progress --single-branch --branch $RELEASE_TAG ssh://git@github.com/arangodb/arangodb ArangoDB-$RELEASE_TAG
+  and pushd $INNERWORKDIR/CompleteTar/ArangoDB-$RELEASE_TAG/3rdParty
+  and git submodule update --init --force
+  and popd
   and eval "set "(grep SYNCER_REV ArangoDB-$RELEASE_TAG/VERSIONS)
   and eval "set "(grep STARTER_REV ArangoDB-$RELEASE_TAG/VERSIONS)
   or begin popd; return 1; end
@@ -45,11 +48,13 @@ function checkoutStarter
 end
 
 function checkoutSyncer
-  echo "Checkout ArangoDB Syncer $SYNCER_REV"
-  pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch $SYNCER_REV ssh://git@github.com/arangodb/arangosync arangosync-$SYNCER_REV
-  or begin popd; return 1; end
-  popd
+  if test -n "$SYNCER_REV"
+    echo "Checkout ArangoDB Syncer $SYNCER_REV"
+    pushd $INNERWORKDIR/CompleteTar
+    and git clone --progress --single-branch --branch $SYNCER_REV ssh://git@github.com/arangodb/arangosync arangosync-$SYNCER_REV
+    or begin popd; return 1; end
+    popd
+    end
 end
 
 function checkoutOskar

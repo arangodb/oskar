@@ -6,7 +6,7 @@ apk update
 apk add groff g++ make curl fish bash pcre-dev python3
 
 # Compile cppcheck library:
-export CPPCHECK_VERSION=2.6
+export CPPCHECK_VERSION=2.10
 cd /tmp
 curl -L -O https://github.com/danmar/cppcheck/archive/$CPPCHECK_VERSION.tar.gz
 tar xzvf $CPPCHECK_VERSION.tar.gz
