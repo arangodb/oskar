@@ -38,6 +38,8 @@ and mkdir -p $SP_SOURCE
 
 and echo "========== COPYING PACKAGES =========="
 and tar -C $SRC/release -c -f - packages | tar -C $DST -x -v -f -
+and echo "========== COPYING PACKAGES To gcr-for-rta =========="
+and gsutil -m rsync -c -r $SRC/release gs://gcr-for-rta/$DST
 and echo "========== COPYING SOURCE =========="
 and tar -C $WS_SOURCE -c -f - . | tar -C $SP_SOURCE -x -v -f -
 
