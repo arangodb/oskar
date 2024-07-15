@@ -74,12 +74,27 @@ $global:STORESYMBOLS = $false
 $env:TMP = "$INNERWORKDIR\tmp"
 $global:ARANGODB_BUILD_DATE = "$env:ARANGODB_BUILD_DATE"
 
+Function setVisualStudioEnvs
+{
+    param (
+        [Parameter(Mandatory=$true)]
+        $patternVersion
+    )
+    $installationPath = $(Get-VSSetupInstance | Select-VSSetupInstance -Version $patternVersion).InstallationPath
+    if ("$installationPath" -and (test-path "$installationPath\Common7\Tools\vsdevcmd.bat")) {
+        & "${env:COMSPEC}" /s /c "`"$installationPath\Common7\Tools\vsdevcmd.bat`" -no_logo && set" | foreach-object {
+        $name, $value = $_ -split '=', 2
+        set-content env:\"$name" $value
+        }
+    }
+}
 Function VS2019
 {
     $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All | Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname | Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
     $global:GENERATOR = "Visual Studio 16 2019"
     $global:GENERATORID = "v142"
     $global:MSVS = "2019"
+    setVisualStudioEnvs "[16.0,17.0)"
 }
 
 Function VS2022
