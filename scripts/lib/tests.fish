@@ -16,7 +16,7 @@ end
 # set -xg ARANGODB_OVERRIDE_CRASH_HANDLER "Off"
 buildSanFlags "$INNERWORKDIR/ArangoDB"
 
-if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 11
   echo "running LCOV coverage:"
   set -xg LLVM_PROFILE_FILE /work/gcov
   set -xg LCOV_PREFIX_STRIP 3
