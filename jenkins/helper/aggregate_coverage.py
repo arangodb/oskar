@@ -30,6 +30,8 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
     """Convert the joint report to the jenkins compatible XML"""
 
     def __init__(self, site_config):
+        self.job_parameters = []
+        self.params = {}
         super().__init__(site_config, None)
 
     def launch(self, coverage_file, lcov_file):
@@ -70,6 +72,8 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
     """Convert the joint report to the jenkins compatible XML"""
 
     def __init__(self, site_config):
+        self.job_parameters = []
+        self.params = {}
         super().__init__(site_config, None)
 
     def launch(self, lcov_file, source_dir, coverage_binary, cobertura_xml, excludes):
@@ -113,73 +117,22 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
 
 def translate_xml(xmlfile):
     """ convert the directories inside the xml file """
+    xml_file_size = xmlfile.stat().st_size
     xmltext = xmlfile.read_text(encoding='utf8')
+    xmlsize = len(xmltext)
     xmltext = xmltext.replace('filename="', 'filename="./coverage/')
     xmlfile.write_text(xmltext)
+    print(f"Result XML size: {xmlsize} => {len(xmltext)} Files: {xml_file_size} => {xmlfile.stat().st_size}")
 
-class Gcovr(ArangoCLIprogressiveTimeoutExecutor):
-    """Convert the joint report to the jenkins compatible XML"""
 
-    def __init__(self, site_config, rootdir, xmlfile, resultfile, coverage_dir, directories):
-        self.job_parameters = [
-            '--print-summary',
-            '--exclude-throw-branches',
-            '--root', str(rootdir),
-            '--xml',
-            '--output', str(xmlfile),
-            '--exclude-lines-by-pattern', "TRI_ASSERT",
-        ]
-        for one_directory in directories:
-            for one_globbed in glob.glob(str(rootdir / one_directory)):
-                self.job_parameters += ['-e', str(one_globbed)]
-        self.job_parameters.append(str(coverage_dir))
-        self.resultfile = resultfile
-        self.xmlfile = xmlfile
-        self.params = None
-        super().__init__(site_config, None)
-
-    def launch(self):
-       # pylint: disable=R0913 disable=R0902 disable=broad-except
-        """ gcov merger """
-        if self.cfg.is_lcov:
-            binary = "/usr/lib/llvm-16/bin/llvm-profdata"
-        else:
-            binary = "gcovr"
-        verbose = True
-        self.params = make_default_params(verbose, 111)
-        print(self.job_parameters)
-        start = datetime.now()
-        try:
-            ret = self.run_monitored(
-                binary,
-                self.job_parameters,
-                self.params,
-                progressive_timeout=600,
-                deadline_grace_period=30*60,
-                identifier=binary
-            )
-        except Exception as ex:
-            print(f'''exception in {binary} run {ex}
-            {"".join(traceback.TracebackException.from_exception(ex).format())}''')
-            self.params['error'] += str(ex)
-        end = datetime.now()
-        print(f'done with {binary} in {end-start}')
-        ret = {}
-        ret['error'] = self.params['error']
-        return ret
-
-    def translate_xml(self):
-        """ convert the directories inside the xml file """
-        translate_xml(self.xmlfile)
-
-class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
+class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     """Merge two sets of gcov files"""
 
     def __init__(self, job, site_config):
         self.identifier = job[0]
         self.job = job
         self.job_parameters = ['merge', job[0], job[1], '-o', job[2]]
-        self.outdir = job[2]
+        self.outdir = Path(job[2])
         self.params = None
         super().__init__(site_config, None)
 
@@ -191,10 +144,7 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
-        if self.cfg.is_lcov:
-            binary = "/usr/lib/llvm-16/bin/llvm-profdata"
-        else:
-            binary = "gcov-tool"
+        binary = "/usr/lib/llvm-16/bin/llvm-profdata"
         verbose = False
         self.params = make_default_params(verbose, 111)
         print([binary] + self.job_parameters)
@@ -215,23 +165,37 @@ class GcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             self.params['error'] += str(ex)
         end = datetime.now()
         filecount = 0
-        for _ in glob.iglob(str(self.outdir) + '**/**', recursive=True):
-            filecount += 1
+        if self.outdir.is_file():
+            filecount = self.outdir.stat().st_size
+        else:
+            for _ in glob.iglob(str(self.outdir) + '**/**', recursive=True):
+                filecount += 1
 
         print(f"done with {self.job[0]} +  {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']} => {filecount}")
         ret['error'] = self.params['error']
-        for one_file in [self.job[0], self.job[1]]:
-            print('cleaning up')
-            cleanup_file = Path(one_file)
-            print(cleanup_file)
-            if cleanup_file.is_dir():
-                shutil.rmtree(cleanup_file)
-            elif cleanup_file.exists():
-                print('delete file')
-                cleanup_file.unlink()
-                print('file gone')
+        if ret['rc_exit'] != 0:
+            print(f"mitigating error: {self.params['error']}")
+            if self.params['error'].find(self.job[0]) > 0:
+                print(f"skipping {self.job[0]}")
+                Path(self.job[1]).rename(Path(self.params['output']))
+            elif self.params['error'].find(self.job[1]) > 0:
+                print(f"skipping {self.job[1]}")
+                Path(self.job[1]).rename(Path(self.params['output']))
             else:
-                print(f'file {str(cleanup_file)} already gone?')
+                print("none of our files found in the error message!")
+        else:
+            for one_file in [self.job[0], self.job[1]]:
+                print('cleaning up')
+                cleanup_file = Path(one_file)
+                print(cleanup_file)
+                if cleanup_file.is_dir():
+                    shutil.rmtree(cleanup_file)
+                elif cleanup_file.exists():
+                    print('delete file')
+                    cleanup_file.unlink()
+                    print('file gone')
+                else:
+                    print(f'file {str(cleanup_file)} already gone?')
         print(f"launch(): returning {ret}")
         return ret
 
@@ -240,7 +204,7 @@ COV_WORKER_ARRAY = []
 COV_JOB_QUEUE = None
 COV_JOB_DONE_QUEUE = None
 
-def gcov_merge_runner(cfg, _):
+def lcov_merge_runner(cfg, _):
     """ thread runner for merging coverage directories """
     global COV_SLOT_LOCK, SUCCESS
     print('worker thread started')
@@ -250,7 +214,7 @@ def gcov_merge_runner(cfg, _):
             print('worker exiting')
             return
         print(f'thread starting {job}')
-        merger = GcovMerger(job, cfg)
+        merger = LcovMerger(job, cfg)
         ret = merger.launch()
         with COV_SLOT_LOCK:
             if ret['error'] != '':
@@ -264,10 +228,8 @@ def launch_worker(cfg):
     global COV_SLOT_LOCK
     with COV_SLOT_LOCK:
         worker = Thread(
-            target=gcov_merge_runner,
-            #name="gcov_merger",
+            target=lcov_merge_runner,
             args=(cfg, ''))
-        # worker.name="gcov_merger"
         COV_WORKER_ARRAY.append(worker)
         worker.start()
     print('thread launched')
@@ -284,9 +246,18 @@ def combine_coverage_dirs_multi(cfg,
     print('8'*88)
     # Locate all directories containing coverage information;
     coverage_dirs = []
+    if gcov_dir.is_file():
+        # we could have `testingjs` file here...
+        gcov_dir = (gcov_dir / '..').resolve()
+    if not gcov_dir.is_dir():
+        print(f"the specified dir is not a directory! {gcov_dir}")
+        os._exit(1)
     for subdir in gcov_dir.iterdir():
-        if len(str(subdir.name)) == 32:
-            print(f"adding {subdir}")
+        print(f"subdir: {str(subdir.name)}")
+        if ((len(str(subdir.name)) == 32) or
+            len(str(subdir.name)) > 32 and str(subdir.name).endswith("arangod")):
+            subdir_props = subdir.stat()
+            print(f"adding {subdir} => {subdir_props}")
             coverage_dirs.append(subdir)
         else:
             print(len(str(subdir.name)))
@@ -303,7 +274,7 @@ def combine_coverage_dirs_multi(cfg,
     count = 0
     jobcount = 0
     if len(sub_jobs) == 0:
-        print("failed to locate subjobs in {coverage_dirs}")
+        print(f"failed to locate subjobs in {coverage_dirs}")
         return None
     if len(sub_jobs) == 1:
         print(sub_jobs)
@@ -359,7 +330,7 @@ def combine_coverage_dirs_multi(cfg,
     print('all workers joined')
     sys.stdout.flush()
     if not last_output.exists():
-        SUCCESS=False
+        SUCCESS = False
         print(f'output {str(last_output)} not there?')
         return None
     result_dir = combined_dir / 'coverage_result'
@@ -403,11 +374,10 @@ def main():
         psutil.cpu_count(logical=False))
 
     sourcedir = base_dir / 'ArangoDB'
-    if cfg.is_lcov:
-        binary = sourcedir / 'build' / 'bin' / 'arangod'
-        lcov_file = gcov_dir / 'coverage.lcov'
-        print('converting to lcov file')
-        convert_to_lcov_file(cfg, result_dir, lcov_file)
+    binary = sourcedir / 'build' / 'bin' / 'arangod'
+    lcov_file = gcov_dir / 'coverage.lcov'
+    print('converting to lcov file')
+    convert_to_lcov_file(cfg, result_dir, lcov_file)
     # copy the source files from the sourcecode directory
     for copy_dir in [
             Path('lib'),
@@ -450,31 +420,17 @@ def main():
     (sourcedir / 'include').symlink_to(jmdir)
 
     cobertura_xml = coverage_dir / 'coverage.xml'
-    if cfg.is_lcov:
-        print('converting to cobertura report')
-        convert_lcov_to_cobertura(cfg, lcov_file,
-                                  sourcedir,
-                                  binary,
-                                  cobertura_xml,
-                                  [
-                                      '.*3rdParty.*',
-                                      '.*usr.*',
-                                      '.*tests/.*'
-                                  ])
-        translate_xml(cobertura_xml)
-    else:
-        resultfile = coverage_dir / 'summary.txt'
-        gcovr = Gcovr(cfg, sourcedir, cobertura_xml, resultfile, result_dir, [
-            Path('build'),
-            Path('build') / '3rdParty' / 'libunwind'/ 'v*',
-            Path('build') / '3rdParty' / 'libunwind' / 'v*' / 'src',
-            Path('3rdParty'),
-            Path('3rdParty') / 'jemalloc' / 'v*',
-            Path('usr'),
-            Path('tests')
-            ])
-        gcovr.launch()
-        gcovr.translate_xml()
+    print('converting to cobertura report')
+    convert_lcov_to_cobertura(cfg, lcov_file,
+                              sourcedir,
+                              binary,
+                              cobertura_xml,
+                              [
+                                  '.*3rdParty.*',
+                                  '.*usr.*',
+                                  '.*tests/.*'
+                              ])
+    translate_xml(cobertura_xml)
 
     if not SUCCESS:
         os._exit(1)
