@@ -105,6 +105,8 @@ if [ "$1" = 'arangod' ]; then
     # must work regardless under which user we run:
     cp /etc/arangodb3/arangod.conf /tmp/arangod.conf
 
+    updateconf
+
     ARANGO_STORAGE_ENGINE=rocksdb
     if [ ! -z "$ARANGO_ENCRYPTION_KEYFILE" ]; then
         echo "Using encrypted database"
