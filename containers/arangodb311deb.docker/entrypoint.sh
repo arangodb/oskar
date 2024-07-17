@@ -1,6 +1,70 @@
 #!/bin/sh
 set -e
 
+## Update conf from generic env vars
+## env vars syntax:
+##  ARANGOD_CONF_SECTION_OPTION=VALUE
+## example:
+##  ARANGOD_CONF_LOG_LEVEL=debug
+##   => update [log] section with "level = debug"
+## Multi-line values will be split in multiple occurences of the same option
+updateconf() {
+  tmpconfdir=/tmp/arangoconf
+  conffile=/tmp/arangod.conf
+
+  # first section has no name. Will be id 0, name "header"
+  currentfile=header
+  currentnumber=0
+
+  mkdir -p "$tmpconfdir"
+  rm "$tmpconfdir"/[0-9]* 2>/dev/null || true
+
+  ## Split config file per section
+  while read -r line; do
+      if echo "$line" | grep -q -e '^\[.*\]'; then
+          currentfile="$(echo "$line" | sed -n 's/.*\[\(.*\)\]/\1/p')"
+          currentnumber=$((currentnumber+1))
+      fi
+      echo "$line" >> "$(printf "%s/%02d-%s" "$tmpconfdir" "$currentnumber" "$currentfile")"
+  done < "$conffile"
+
+  ## cycle through all ARANGOD_CONF_* var / value pairs
+  awk 'BEGIN{for(v in ENVIRON) print v}' \
+    | grep -e '^ARANGOD_CONF_' \
+    | while read -r var; do
+
+        ## Extract section name and option name from var name.
+        # :: In POSIX sh, process substitution is undefined. In bash we would do:
+        # :: $ read -r section option < <(echo "$var" | sed -n 's/ARANGOD_CONF_\([^_]*\)_\(.*\)/\1 \2/p')
+        # :: so let's split it in 2 separate parsings
+        section=$(echo "$var" | sed -n 's/ARANGOD_CONF_\([^_]*\)_\(.*\)/\1/p' | tr '[:upper:]' '[:lower:]')
+        option=$(echo "$var" | sed -n 's/ARANGOD_CONF_\([^_]*\)_\(.*\)/\2/p' | tr '[:upper:]' '[:lower:]')
+        option=$(echo "$option" | sed 's/_/-/') # env vars use '_' but option names use '-'
+        if [ "$section" = "" ] || [ "$option" = "" ]; then continue; fi # bypass invalid vars
+
+        # :: array not available in POSIX sh - let's hope sections are never duplicate
+        file="$(ls "$tmpconfdir"/[0-9][0-9]-"$section" 2>/dev/null || true)"
+
+        if [ ! -f "$file" ]; then # section (file) not yet existing
+          file="$tmpconfdir"/99-"$section"
+          echo "[$section]" >> "$file"
+        fi
+
+        if grep -qe "^$option = " "$file"; then # option already existing - comment it
+          sed -i 's/^\('"$option"' = .*\)/# \1/' "$file"
+        fi
+
+        # Add option - split by newline
+        awk 'BEGIN{print ENVIRON["'"$var"'"]}' \
+        | while read -r value_i; do
+          echo "$option = $value_i" >> "$file"
+        done
+      done
+
+  ## Generate a new config file from updated section files
+  cat "$tmpconfdir"/[0-9][0-9]-* > "$conffile"
+}
+
 if [ -z "$ARANGO_INIT_PORT" ] ; then
     ARANGO_INIT_PORT=8999
 fi
