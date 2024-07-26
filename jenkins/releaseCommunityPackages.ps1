@@ -8,6 +8,8 @@ If ($global:ok)
     clcacheOff
     releaseBuildRepoInfo
     makeCommunityRelease
+    storeSymbolsOn
+    storeSymbols
 }
 $s = $global:ok
 moveResultsToWorkspace
