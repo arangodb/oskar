@@ -1,6 +1,6 @@
-This is the Debian GNU/Linux prepackaged version of arangodb.
-It was packaged by Frank Celler <f.celler@arangodb.org>
-from sources obtained from http://github.com/arangodb/ArangoDB.
+This is the Debian GNU/Linux prepackaged version of ArangoDB.
+It was packaged by Frank Celler <info@arangodb.com>
+from sources obtained from http://github.com/arangodb/arangodb.
 
 Copyright:
 
@@ -9,9 +9,23 @@ Copyright (C) 2012-2013 triAGENS GmbH
 
 License:
 
-ArangoDB is distributed under the terms of the Apache2 licenses.
-On Debian GNU/Linux system you can find a copy of this
-license in `/usr/share/common-licenses/Apache-2.0'.
+The prepackaged binaries of the ArangoDB Community Edition are governed by the
+ArangoDB Community License: https://arangodb.com/community-license/
+The use for commercial purposes is limited to a 100 GB on dataset size in
+production within a single cluster and a maximum of three clusters.
 
-The licenses of the 3rd party libraries can be found in
-`/usr/share/doc/arangodb3/LICENSES-OTHER-COMPONENTS.md`.
+The source code of the Community Edition is available under the
+Business Source License 1.1 (BUSL-1.1): `/usr/share/doc/arangodb3/LICENSE.txt`
+Copying, modification, redistribution, non-commercial use, and commercial use
+in a non-production context are always allowed. Additionally, you can deploy
+BUSL-licensed ArangoDB source code for any purpose (including production) as
+long as you are not creating a commercial derivative work or offering, or are
+including it in a commercial product, application, or service. On the fourth
+anniversary of the first publicly available distribution of a specific version,
+the license changes to the permissive Apache 2.0 open-source license. On
+Debian GNU/Linux systems you can find a copy of this license at
+`/usr/share/common-licenses/Apache-2.0`.
+
+ArangoDB contains software of third parties under their respective licenses:
+`/usr/share/doc/arangodb3/LICENSES-OTHER-COMPONENTS.md.gz`
+You may use `zcat <FILE> | more` to read it without extracting.
