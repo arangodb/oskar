@@ -38,6 +38,7 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
         verbose = True
+        print(coverage_file.stat())
         binary = "/usr/lib/llvm-16/bin/llvm-cov"
         self.job_parameters = [
             'export',
