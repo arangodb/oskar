@@ -15,6 +15,16 @@ if test "$ASAN" = "true"
    sanOn
    and buildSanFlags "$WORKDIR/work/ArangoDB"
 end
+if test "$COVERAGE" = "true"
+    echo "Coverage build"
+    coverageOn
+    rm -rf $WORKDIR/work/gcov.old
+    if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
+end
+if test "$BUILD_MODE" = "maintainer"
+   echo "switching to maintainer build"
+   maintainerOn
+end
 if test "$BUILD_MODE" = "debug"
    echo "switching to debug build"
    debugMode
@@ -46,6 +56,9 @@ for f in $matches
    echo $f | grep -qv testreport ; and echo "mv $f $WORKSPACE" ; and mv $f $WORKSPACE; or echo "skipping $f"
 end
 
+if test "$COVERAGE" = "true"
+    collectCoverage
+end
 unlockDirectory
 
 exit $s
