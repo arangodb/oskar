@@ -79,19 +79,23 @@ def tail_silent_line_result(wait, line, params):
     if params['skip_done']:
         if isinstance(line, tuple):
             #print(params['prefix'] + str(line[0], 'utf-8').rstrip())
-            params['output'].write(line[0])
+            if line[2] == 'e' and params["capturestderr"]:
+                print('EE: ' + line[0])
+            else:
+                params['output'].write(line[0])
         return True
     now = datetime.now()
     if now - params['last_read'] > timedelta(seconds=1):
         params['skip_done'] = True
         #print(params['prefix'] + 'initial tail done, starting to output')
     return True
-def make_tail_params(verbose, prefix, logfile):
+def make_tail_params(verbose, prefix, logfile, captureStderr=True):
     """ create the structure to work with arrays to output the strings to """
     return {
         "overload": None,
         "trace_io": False,
         "error": "",
+        "capturestderr": captureStderr,
         "verbose": verbose,
         "output": logfile.open("wb"),
         "lfn": str(logfile),
@@ -148,7 +152,7 @@ def enqueue_stdout(std_out, queue, instance, identifier, params):
     try:
         for line in iter(std_out.readline, b""):
             # print("O: " + str(line))
-            queue.put((line, instance))
+            queue.put((line, instance, 'o'))
     except ValueError as ex:
         print_log(f"{identifier} communication line seems to be closed: {str(ex)}", params)
     print_log(f"{identifier} x0 done!", params)
@@ -161,7 +165,7 @@ def enqueue_stderr(std_err, queue, instance, identifier, params):
     try:
         for line in iter(std_err.readline, b""):
             # print("E: " + str(line))
-            queue.put((line, instance))
+            queue.put((line, instance, 'e'))
     except ValueError as ex:
         print_log(f"{identifier} communication line seems to be closed: {str(ex)}", params)
     print_log(f"{identifier} x1 done!", params)

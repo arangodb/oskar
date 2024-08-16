@@ -45,7 +45,7 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
             'ArangoDB/build/bin/arangod',
             f'-instr-profile={str(coverage_file)}'
         ]
-        self.params = make_tail_params(verbose, "lcov_convert ", lcov_file)
+        self.params = make_tail_params(verbose, "lcov_convert ", lcov_file, False)
         print(self.job_parameters)
         start = datetime.now()
         try:
