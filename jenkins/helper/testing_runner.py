@@ -146,26 +146,26 @@ def testing_runner(testing_instance, this, arangosh):
         this.delta_seconds = this.delta.total_seconds()
     finally:
         print('finally')
-        try:
-            if this.cov_prefix is not None:
-                with COVERAGE_LOCK:
-                    start = time.time()
-                    cov_dir = Path(this.cov_prefix)
-                    result_dir = combine_coverage_dirs_multi(this.cfg, cov_dir, this.parallelity)
-                    if result_dir is None:
-                        print("combining coverage failed!")
-                    else:
-                        hash_str = hashlib.md5(this.name_enum.encode()).hexdigest()
-                        target_dir = Path(COVERAGE_VALUE) / hash_str
-                        print(f'renaming {str(result_dir)} -> {target_dir}')
-                        result_dir.rename(target_dir)
-                        print(f"deleting coverage {str(this.cov_prefix)}")
-                        shutil.rmtree(str(this.cov_prefix))
-                        print(f"done combining after {str(time.time() - start)}")
-        except Exception as ex:
-            print(ex)
-            print(traceback.format_exc())
-            raise ex
+        #try:
+        #    if this.cov_prefix is not None:
+        #        with COVERAGE_LOCK:
+        #            start = time.time()
+        #            cov_dir = Path(this.cov_prefix)
+        #            result_dir = combine_coverage_dirs_multi(this.cfg, cov_dir, this.parallelity)
+        #            if result_dir is None:
+        #                print("combining coverage failed!")
+        #            else:
+        #                hash_str = hashlib.md5(this.name_enum.encode()).hexdigest()
+        #                target_dir = Path(COVERAGE_VALUE) / hash_str
+        #                print(f'renaming {str(result_dir)} -> {target_dir}')
+        #                result_dir.rename(target_dir)
+        #                print(f"deleting coverage {str(this.cov_prefix)}")
+        #                shutil.rmtree(str(this.cov_prefix))
+        #                print(f"done combining after {str(time.time() - start)}")
+        #except Exception as ex:
+        #    print(ex)
+        #    print(traceback.format_exc())
+        #    raise ex
         with arangosh.slot_lock:
             testing_instance.running_suites.remove(this.name_enum)
         testing_instance.done_job(this.parallelity)
