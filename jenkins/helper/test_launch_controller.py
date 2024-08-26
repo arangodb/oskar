@@ -99,7 +99,7 @@ known_flags = {
     "!circleci": "test is excluded on CircleCI",
     "!mac": "test is excluded when launched on MacOS",
     "!arm": "test is excluded when launched on Arm Linux/MacOS hosts",
-    "allProtocols": "run the test suite(s) for all protocols (http, http2, vst)"
+    "allProtocols": "run the test suite(s) for all protocols (http, http2, vst)",
     "!coverage": "test is excluded when coverage scenario are ran",
     "no_report": "disable reporting"
 }
