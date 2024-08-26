@@ -6,6 +6,7 @@ If ($global:ok)
 {
     signPackageOn
     clcacheOff
+    releaseBuildRepoInfo
     makeRelease
 }
 $s = $global:ok

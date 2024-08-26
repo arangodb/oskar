@@ -15,47 +15,22 @@ set -gx DUMPDEVICE "lo"
 
 set IMAGE_ARGS "--build-arg ARCH=$ARCH"
 
-set -gx UBUNTUBUILDIMAGE3_NAME arangodb/ubuntubuildarangodb3-$ARCH
-set -gx UBUNTUBUILDIMAGE3_TAG 20
-set -gx UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:$UBUNTUBUILDIMAGE3_TAG
+if test "$ARCH" = "aarch64"
+  set -xg UBUNTUBUILDIMAGE_TAG_ARCH "arm64v8"
+else
+  set -xg UBUNTUBUILDIMAGE_TAG_ARCH "x86_64"
+end
 
-set -gx UBUNTUBUILDIMAGE4_NAME arangodb/ubuntubuildarangodb4-$ARCH
-set -gx UBUNTUBUILDIMAGE4_TAG 21
-set -gx UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:$UBUNTUBUILDIMAGE4_TAG
+set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
+set -gx UBUNTUBUILDIMAGE_312_TAG 6
+set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
-set -gx UBUNTUBUILDIMAGE5_NAME arangodb/ubuntubuildarangodb5-$ARCH
-set -gx UBUNTUBUILDIMAGE5_TAG 15
-set -gx UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:$UBUNTUBUILDIMAGE5_TAG
-
-set -gx UBUNTUBUILDIMAGE6_NAME arangodb/ubuntubuildarangodb6-$ARCH
-set -gx UBUNTUBUILDIMAGE6_TAG 8
-set -gx UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:$UBUNTUBUILDIMAGE6_TAG
-
-set -gx UBUNTUBUILDIMAGE7_NAME arangodb/ubuntubuildarangodb7-$ARCH
-set -gx UBUNTUBUILDIMAGE7_TAG 1
-set -gx UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:$UBUNTUBUILDIMAGE7_TAG
+set -gx UBUNTUBUILDIMAGE_311_NAME $UBUNTUBUILDIMAGE_312_NAME
+set -gx UBUNTUBUILDIMAGE_311_TAG $UBUNTUBUILDIMAGE_312_TAG
+set -gx UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:$UBUNTUBUILDIMAGE_311_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
-
-set -gx ALPINEBUILDIMAGE3_NAME arangodb/alpinebuildarangodb3-$ARCH
-set -gx ALPINEBUILDIMAGE3_TAG 23
-set -gx ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:$ALPINEBUILDIMAGE3_TAG
-
-set -gx ALPINEBUILDIMAGE4_NAME arangodb/alpinebuildarangodb4-$ARCH
-set -gx ALPINEBUILDIMAGE4_TAG 24
-set -gx ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:$ALPINEBUILDIMAGE4_TAG
-
-set -gx ALPINEBUILDIMAGE5_NAME arangodb/alpinebuildarangodb5-$ARCH
-set -gx ALPINEBUILDIMAGE5_TAG 14
-set -gx ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:$ALPINEBUILDIMAGE5_TAG
-
-set -gx ALPINEBUILDIMAGE6_NAME arangodb/alpinebuildarangodb6-$ARCH
-set -gx ALPINEBUILDIMAGE6_TAG 7
-set -gx ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:$ALPINEBUILDIMAGE6_TAG
-
-set -gx ALPINEBUILDIMAGE7_NAME arangodb/alpinebuildarangodb7-$ARCH
-set -gx ALPINEBUILDIMAGE7_TAG 1
-set -gx ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:$ALPINEBUILDIMAGE7_TAG
+set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
@@ -66,7 +41,7 @@ set -gx CENTOSPACKAGINGIMAGE_TAG 3
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
 
 set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck-$ARCH
-set -gx CPPCHECKIMAGE_TAG 7
+set -gx CPPCHECKIMAGE_TAG 8
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
 
 set -gx LDAPIMAGE_NAME arangodb/ldap-test-$ARCH
@@ -94,19 +69,16 @@ function compiler
   end
 
   switch $cversion
-    case 9.3.0-r0
-      set -gx COMPILER_VERSION $cversion
-
-    case 9.3.0-r2
-      set -gx COMPILER_VERSION $cversion
-
-    case 10.2.1_pre1-r3
-      set -gx COMPILER_VERSION $cversion
-
     case 11.2.1_git20220219-r2
       set -gx COMPILER_VERSION $cversion
 
     case 12.2.1_git20220924-r4
+      set -gx COMPILER_VERSION $cversion
+
+    case 13.2.0
+      set -xg COMPILER_VERSION $cversion
+
+    case clang16.0.6
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -123,16 +95,10 @@ function opensslVersion
   end
 
   switch $oversion
-    case '1.0.0'
+    case '3.2'
       set -gx OPENSSL_VERSION $oversion
 
-    case '1.1.0'
-      set -gx OPENSSL_VERSION $oversion
-
-    case '1.1.1'
-      set -gx OPENSSL_VERSION $oversion
-
-    case '3.0'
+    case '3.3'
       set -gx OPENSSL_VERSION $oversion
 
     case '*'
@@ -141,51 +107,16 @@ function opensslVersion
 end
 
 function findBuildImage
-  if test "$COMPILER_VERSION" = ""
-      echo $UBUNTUBUILDIMAGE
-  else
-    switch $COMPILER_VERSION
-      case 9.3.0-r0
-        echo $UBUNTUBUILDIMAGE3
-
-      case 9.3.0-r2
-        echo $UBUNTUBUILDIMAGE4
-
-      case 10.2.1_pre1-r3
-        echo $UBUNTUBUILDIMAGE5
-
-      case 11.2.1_git20220219-r2
-        echo $UBUNTUBUILDIMAGE6
-
-      case 12.2.1_git20220924-r4
-        echo $UBUNTUBUILDIMAGE7
-
-      case '*'
-        echo "unknown compiler version $version"
-        return 1
-    end
-  end
+  findStaticBuildImage
 end
 
 function findStaticBuildImage
   if test "$COMPILER_VERSION" = ""
-      echo $ALPINEBUILDIMAGE
+    eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
   else
     switch $COMPILER_VERSION
-      case 9.3.0-r0
-        echo $ALPINEBUILDIMAGE3
-
-      case 9.3.0-r2
-        echo $ALPINEBUILDIMAGE4
-
-      case 10.2.1_pre1-r3
-        echo $ALPINEBUILDIMAGE5
-
-      case 11.2.1_git20220219-r2
-        echo $ALPINEBUILDIMAGE6
-
-      case 12.2.1_git20220924-r4
-        echo $ALPINEBUILDIMAGE7
+      case 13.2.0 clang16.0.6
+        eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
 
       case '*'
         echo "unknown compiler version $version"
@@ -195,51 +126,16 @@ function findStaticBuildImage
 end
 
 function findBuildScript
-  if test "$COMPILER_VERSION" = ""
-      echo buildArangoDB3.fish
-  else
-    switch $COMPILER_VERSION
-      case 9.3.0-r0
-        echo buildArangoDB3.fish
-
-      case 9.3.0-r2
-        echo buildArangoDB4.fish
-
-      case 10.2.1_pre1-r3
-        echo buildArangoDB5.fish
-
-      case 11.2.1_git20220219-r2
-        echo buildArangoDB6.fish
-
-      case 12.2.1_git20220924-r4
-        echo buildArangoDB7.fish
-
-      case '*'
-        echo "unknown compiler version $version"
-        return 1
-    end
-  end
+  findStaticBuildScript
 end
 
 function findStaticBuildScript
   if test "$COMPILER_VERSION" = ""
-      echo buildAlpine3.fish
+      echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
   else
     switch $COMPILER_VERSION
-      case 9.3.0-r0
-        echo buildAlpine3.fish
-
-      case 9.3.0-r2
-        echo buildAlpine4.fish
-
-      case 10.2.1_pre1-r3
-        echo buildAlpine5.fish
-
-      case 11.2.1_git20220219-r2
-        echo buildAlpine6.fish
-
-      case 12.2.1_git20220924-r4
-        echo buildAlpine7.fish
+      case 13.2.0 clang16.0.6
+        echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
 
       case '*'
         echo "unknown compiler version $version"
@@ -262,11 +158,17 @@ function findRequiredCompiler
   #  return 0
   #end
 
-  set -l v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  set -l v (fgrep CLANG_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
 
   if test "$v" = ""
-    echo "$f: no GCC_LINUX specified, using 9.3.0-r0"
-    compiler 9.3.0-r0
+    set v (fgrep GCC_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+  else
+    set v "clang$v"
+  end
+
+  if test "$v" = ""
+    echo "$f: no CLANG_LINUX or GCC_LINUX specified, using g++ 13.2.0"
+    compiler 13.2.0
   else
     echo "Using compiler '$v' from '$f'"
     compiler $v
@@ -290,8 +192,8 @@ function findRequiredOpenSSL
   set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o '^[0-2]\.[0-2]\.[0-2]\|^[3-9]\.[0-9]')
 
   if test "$v" = ""
-    echo "$f: no OPENSSL_LINUX specified, using 1.1.0"
-    opensslVersion 1.1.0
+    echo "$f: no OPENSSL_LINUX specified, using 3.3"
+    opensslVersion 3.3
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
@@ -326,6 +228,11 @@ end
 
 function checkoutMiniChaos
   runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMiniChaos.fish
+  or return $status
+end
+
+function checkoutRTA
+  runInContainer -e RTA_BRANCH="$RTA_BRANCH" $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutRTA.fish
   or return $status
 end
 
@@ -397,7 +304,9 @@ function buildArangoDB
   and findRequiredOpenSSL
   and findDefaultArchitecture
   and findUseARM
+  and set -xg STATIC_EXECUTABLES Off
   and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
+  and packBuildFiles
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -413,6 +322,7 @@ function makeArangoDB
     and findUseARM
   end
   and runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
+  and packBuildFiles
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -426,7 +336,20 @@ function buildStaticArangoDB
   and findRequiredOpenSSL
   and findDefaultArchitecture
   and findUseARM
-  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
+  and set -xg STATIC_EXECUTABLES On
+  and if test "$UNPACK_BUILD_FILES" = "On"
+        echo "UNPACK_BUILD_FILES: $UNPACK_BUILD_FILES"
+        unpackBuildFiles "$BUILD_FILES_ARCHIVE"
+      else
+        echo "UNPACK_BUILD_FILES: $UNPACK_BUILD_FILES"
+        runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
+        and packBuildFiles
+        and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3
+              if test "$ARANGODB_VERSION_MINOR" -ge 12; or begin; test "$ARANGODB_VERSION_MINOR" -eq 11; and test "$ARANGODB_VERSION_PATCH" -ge 10; end
+                packObjectFiles
+              end
+            end
+      end
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -442,6 +365,7 @@ function makeStaticArangoDB
     and findUseARM
   end
   and runInContainer (findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
+  and packBuildFiles
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -602,7 +526,8 @@ function jslint
   or begin popd; return 1; end
 
   set -l s 0
-  runInContainer arangodb/arangodb /scripts/jslint.sh
+  findArangoDBVersion
+  and runInContainer arangodb/arangodb:$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR /scripts/jslint.sh
   set s $status
 
   popd
@@ -656,7 +581,8 @@ end
 function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
-  and runInContainer (findStaticBuildImage) python3 "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
+  and echo "collecting llvm coverage"
+  and runInContainer --env LLVM_PROFILE_FILE=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
   return $status
 end
 
@@ -670,7 +596,7 @@ function signSourcePackage
   pushd $WORKDIR/work
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
-        -v $HOME/.gnupg3:/root/.gnupg \
+        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
 	(findBuildImage) $SCRIPTSDIR/signFile.fish \
 	/work/ArangoDB-$SOURCE_TAG.tar.gz \
 	/work/ArangoDB-$SOURCE_TAG.tar.bz2 \
@@ -696,9 +622,29 @@ end
 function buildPackage
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
-  buildDebianPackage
-  and buildRPMPackage
-  and buildTarGzPackage
+  
+  set -l type "$argv[1]"
+  if test -z "$type"
+    set type "ALL"
+  end
+
+  if test "$type" = "ALL"
+    buildDebianPackage
+    and buildRPMPackage
+    and buildTarGzPackage
+  else
+    switch $type
+      case DEB
+        buildDebianPackage
+      case RPM
+        buildRPMPackage
+      case TAR.GZ
+        buildTarGzPackage
+      case '*'
+        echo "fatal, unknown package type \"$type\"!"
+        exit 1
+    end
+  end
 end
 
 function buildEnterprisePackage
@@ -706,6 +652,9 @@ function buildEnterprisePackage
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
   end
+
+  set -l packages "ALL"
+  test -n "$argv[1]"; and set packages "$argv[1]"
  
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
@@ -718,7 +667,7 @@ function buildEnterprisePackage
   and downloadStarter
   and downloadSyncer
   and copyRclone "linux"
-  and buildPackage
+  and buildPackage $packages
 
   if test $status -ne 0
     echo Building enterprise release failed, stopping.
@@ -729,6 +678,9 @@ end
 function buildCommunityPackage
   # Must have set ARANGODB_VERSION and ARANGODB_PACKAGE_REVISION and
   # ARANGODB_FULL_VERSION, for example by running findArangoDBVersion.
+  set -l packages "ALL"
+  test -n "$argv[1]"; and set packages "$argv[1]"
+
   sanOff
   and maintainerOff
   and releaseMode
@@ -736,7 +688,7 @@ function buildCommunityPackage
   and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
-  and buildPackage
+  and buildPackage $packages
 
   if test $status -ne 0
     echo Building community release failed.
@@ -881,7 +833,7 @@ end
 ## #############################################################################
 
 function makeTestPackageLinux
-  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = ""
+  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = "" -a "$ARANGODB_VERSION_MAJOR" -eq 3 -a "$ARANGODB_VERSION_MINOR" -lt 12
     echo "Need to set environment variable DOWNLOAD_SYNC_USER for Enterprise package or use Community."
     return 1
   end
@@ -934,7 +886,9 @@ function buildTarGzServerLinuxTestPackage
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
-  and mv bin/README .
+  and cp bin/README.linux.server ./README
+  and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
+  and rm -rf ./README.bak
   and prepareInstall $WORKDIR/work/targz
   and rm -rf "$WORKDIR/work/$name-$v"
   and cp -r $WORKDIR/work/targz "$WORKDIR/work/$name-$v"
@@ -943,7 +897,7 @@ function buildTarGzServerLinuxTestPackage
 
   rm -rf "$name-linux-$v"
   and ln -s "$name-$v" "$name-linux-$v"
-  and tar -c -z -f "$WORKDIR/work/$name-linux-$v.tar.gz" -h --exclude "etc" --exclude "var" "$name-linux-$v"
+  and tar -c -z -f "$WORKDIR/work/$name-linux-$v.tar.gz" -h --exclude "etc" --exclude "var" --exclude "bin/README*" "$name-linux-$v"
   and rm -rf "$name-linux-$v"
   set s $status
 
@@ -1066,7 +1020,7 @@ function makeDockerMultiarch
       set MANIFEST_NAME1 arangodb/enterprise-preview:$DOCKER_TAG
     end
 
-    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
       set MANIFEST_NAME2 arangodb/enterprise-preview:latest
     end
   else
@@ -1076,24 +1030,54 @@ function makeDockerMultiarch
       set MANIFEST_NAME1 arangodb/arangodb-preview:$DOCKER_TAG
     end
 
-    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" != "ubi"
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
       set MANIFEST_NAME2 arangodb/arangodb-preview:latest
     end
   end
 
   pushDockerManifest $MANIFEST_NAME1
-  and if test "$RELEASE_IS_HEAD" = "true"
+  and if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
         pushDockerManifest $MANIFEST_NAME2
       end
   or return 1
 
   if test "$GCR_REG" = "On"
     pushDockerManifest $GCR_REG_PREFIX$MANIFEST_NAME1
-    and if test "$RELEASE_IS_HEAD" = "true"
+    and if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
           pushDockerManifest $GCR_REG_PREFIX$MANIFEST_NAME2
         end
     or return 1
   end
+end
+
+function makeDockerMultiarchDebug
+  set -l DOCKER_TAG $argv[1]
+
+  # build tag
+  set -l MANIFEST_NAME1 ""
+
+  # latest tag
+  set -l MANIFEST_NAME2 ""
+
+  if test "$ENTERPRISEEDITION" = "On"
+    set MANIFEST_NAME1 arangodb/enterprise-debug:$DOCKER_TAG
+
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
+      set MANIFEST_NAME2 arangodb/enterprise-debug:latest
+    end
+  else
+    set MANIFEST_NAME1 arangodb/arangodb-debug:$DOCKER_TAG
+
+    if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
+      set MANIFEST_NAME2 arangodb/arangodb-debug:latest
+    end
+  end
+
+  pushDockerManifest $MANIFEST_NAME1
+#  and if test "$RELEASE_IS_HEAD" = "true"
+#        pushDockerManifest $MANIFEST_NAME2
+#      end
+  or return 1
 end
 
 function makeDockerDebug
@@ -1120,9 +1104,9 @@ function makeDockerCommunityDebug
   and minimalDebugInfoOff
   and community
   and if test (count $argv) -ge 1
-    buildDockerDebug $argv[1]-debug
+    buildDockerDebug "arangodb/arangodb-debug:$argv[1]"
   else
-    buildDockerDebug $DOCKER_TAG-debug
+    buildDockerDebug "arangodb/arangodb-debug:$DOCKER_TAG"
   end
 end
 
@@ -1138,18 +1122,33 @@ function makeDockerEnterpriseDebug
   and minimalDebugInfoOff
   and enterprise
   and if test (count $argv) -ge 1
-    buildDockerDebug $argv[1]-debug
+    buildDockerDebug "arangodb/enterprise-debug:$argv[1]"
   else
-    buildDockerDebug $DOCKER_TAG-debug
+    buildDockerDebug "arangodb/enterprise-debug:$DOCKER_TAG"
   end
 end
 
 function buildDockerDebug
+  set -l archSuffix ""
+  if test "$USE_ARM" = "On"
+    switch "$ARCH"
+      case "x86_64"
+        set archSuffix "-amd64"
+      case '*'
+        if string match --quiet --regex '^arm64$|^aarch64$' $ARCH >/dev/null
+        set archSuffix "-arm64v8"
+      else
+        echo "fatal, unknown architecture $ARCH for docker"
+        exit 1
+      end
+    end
+  end
+
   sanOff
   and maintainerOn
-  and releaseMode
+  and debugMode
   and set -xg NOSTRIP 1
-  and buildDockerAny $argv[1]
+  and buildDockerAny $argv[1]$archSuffix
 end
 
 function buildDockerRelease
@@ -1203,7 +1202,7 @@ function buildDockerAny
 
       set IMAGE_NAME2 arangodb/enterprise-preview:$DOCKER_TAG
 
-      if test "$RELEASE_IS_HEAD" = "true"
+      if test "$RELEASE_IS_HEAD" = "true" -a "$DOCKER_DISTRO" = "alpine"
         set IMAGE_NAME3 arangodb/enterprise-preview:latest$archSuffix
       end
     else
@@ -1215,7 +1214,7 @@ function buildDockerAny
 
       set IMAGE_NAME2 arangodb/arangodb-preview:$DOCKER_TAG
 
-      if test "$RELEASE_IS_HEAD" = "true"
+      if test "$RELEASE_IS_HEAD" = "true"  -a "$DOCKER_DISTRO" = "alpine"
         set IMAGE_NAME3 arangodb/arangodb-preview:latest$archSuffix
       end
     end
@@ -1387,6 +1386,16 @@ end
 
 function buildDockerLocal
   findArangoDBVersion ; or return 1
+
+  set -l imagename $argv[1]
+  if test "$imagename" = ""
+    set -l edition "arangodb"
+    if test "$ENTERPRISEEDITION" = "On"
+      set edition "enterprise"
+    end
+    set imagename "arangodb/$edition-local:"(date +%Y%m%d%H%M%S)
+  end
+
   set -l BUILD_ARGS (buildDockerArgs $DOCKER_DISTRO)
   pushd $WORKDIR/work/ArangoDB/build/install
 
@@ -1405,7 +1414,8 @@ function buildDockerLocal
   popd
 
   pushd $containerpath
-  and eval "docker build --pull ."
+  set -l tag (date +%Y%m%d%H%M%S)
+  and eval "docker build -t $imagename --pull . 2>&1"
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1418,12 +1428,24 @@ function createRepositories
   findArangoDBVersion
 
   pushd $WORKDIR
-  runInContainer \
-      -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
-      -v $HOME/.gnupg3:/root/.gnupg \
-      -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
-      -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
-      $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/createAll
+  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+        runInContainer \
+        -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
+        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
+        -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
+        -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
+      else
+        runInContainer \
+        -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
+        -v $WORKSPACE/signing-keys/.gnupg3:/root/.gnupg-old \
+        -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
+        -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
+        -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
+        -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
+      end
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1432,84 +1454,53 @@ end
 ## build and packaging images
 ## #############################################################################
 
-function buildUbuntuBuildImage3
+function buildUbuntuBuildImage311
   pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu3.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE3 ."
-  popd
-end
-
-function pushUbuntuBuildImage3
-  docker tag $UBUNTUBUILDIMAGE3 $UBUNTUBUILDIMAGE3_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE3
-  and docker push $UBUNTUBUILDIMAGE3_NAME:latest
-end
-
-function pullUbuntuBuildImage3 ; docker pull $UBUNTUBUILDIMAGE3 ; end
-
-function buildUbuntuBuildImage4
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu4.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE4 ."
+  and cd $WORKDIR/containers/buildUbuntu311.docker
+  and switch "$ARCH"
+        case "x86_64"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_311 -f ./Dockerfile.x86-64 ."
+        case "aarch64"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_311 -f ./Dockerfile.arm64 ."
+        case '*'
+          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_311"
+          exit 1
+      end
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushUbuntuBuildImage4
-  docker tag $UBUNTUBUILDIMAGE4 $UBUNTUBUILDIMAGE4_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE4
-  and docker push $UBUNTUBUILDIMAGE4_NAME:latest
+function pushUbuntuBuildImage311
+  docker tag $UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
+  and docker push $UBUNTUBUILDIMAGE_311
+  and docker push $UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
 end
 
-function pullUbuntuBuildImage4 ; docker pull $UBUNTUBUILDIMAGE4 ; end
+function pullUbuntuBuildImage311 ; docker pull $UBUNTUBUILDIMAGE_311 ; end
 
-function buildUbuntuBuildImage5
+function buildUbuntuBuildImageDevel
   pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu5.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE5 ."
+  and cd $WORKDIR/containers/buildUbuntuDevel.docker
+  and switch "$ARCH"
+        case "x86_64"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_312 -f ./Dockerfile.x86-64 ."
+        case "aarch64"
+          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_312 -f ./Dockerfile.arm64 ."
+        case '*'
+          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_312"
+          exit 1
+      end
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushUbuntuBuildImage5
-  docker tag $UBUNTUBUILDIMAGE5 $UBUNTUBUILDIMAGE5_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE5
-  and docker push $UBUNTUBUILDIMAGE5_NAME:latest
+function pushUbuntuBuildImageDevel
+  docker tag $UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
+  and docker push $UBUNTUBUILDIMAGE_312
+  and docker push $UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
 end
 
-function pullUbuntuBuildImage5 ; docker pull $UBUNTUBUILDIMAGE5 ; end
-
-function buildUbuntuBuildImage6
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu6.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE6 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushUbuntuBuildImage6
-  docker tag $UBUNTUBUILDIMAGE6 $UBUNTUBUILDIMAGE6_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE6
-  and docker push $UBUNTUBUILDIMAGE6_NAME:latest
-end
-
-function pullUbuntuBuildImage6 ; docker pull $UBUNTUBUILDIMAGE6 ; end
-
-function buildUbuntuBuildImage7
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu7.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE7 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushUbuntuBuildImage7
-  docker tag $UBUNTUBUILDIMAGE7 $UBUNTUBUILDIMAGE7_NAME:latest
-  and docker push $UBUNTUBUILDIMAGE7
-  and docker push $UBUNTUBUILDIMAGE7_NAME:latest
-end
-
-function pullUbuntuBuildImage7 ; docker pull $UBUNTUBUILDIMAGE7 ; end
+function pullUbuntuBuildImageDevel ; docker pull $UBUNTUBUILDIMAGE_312 ; end
 
 function buildUbuntuPackagingImage
   pushd $WORKDIR
@@ -1525,85 +1516,19 @@ function pushUbuntuPackagingImage ; docker push $UBUNTUPACKAGINGIMAGE ; end
 
 function pullUbuntuPackagingImage ; docker pull $UBUNTUPACKAGINGIMAGE ; end
 
-function buildAlpineBuildImage3
+function buildUbuntuPackagingImage2
   pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine3.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE3 ."
+  and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging2.docker/scripts
+  and cd $WORKDIR/containers/buildUbuntuPackaging2.docker
+  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUPACKAGINGIMAGE2 ."
+  and rm -f $WORKDIR/containers/buildUbuntuPackaging2.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushAlpineBuildImage3
-  docker tag $ALPINEBUILDIMAGE3 $ALPINEBUILDIMAGE3_NAME:latest
-  and docker push $ALPINEBUILDIMAGE3
-  and docker push $ALPINEBUILDIMAGE3_NAME:latest
-end
+function pushUbuntuPackagingImage2 ; docker push $UBUNTUPACKAGINGIMAGE2 ; end
 
-function pullAlpineBuildImage3 ; docker pull $ALPINEBUILDIMAGE3 ; end
-
-function buildAlpineBuildImage4
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine4.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE4 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushAlpineBuildImage4
-  docker tag $ALPINEBUILDIMAGE4 $ALPINEBUILDIMAGE4_NAME:latest
-  and docker push $ALPINEBUILDIMAGE4
-  and docker push $ALPINEBUILDIMAGE4_NAME:latest
-end
-
-function pullAlpineBuildImage4 ; docker pull $ALPINEBUILDIMAGE4 ; end
-
-function buildAlpineBuildImage5
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine5.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE5 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushAlpineBuildImage5
-  docker tag $ALPINEBUILDIMAGE5 $ALPINEBUILDIMAGE5_NAME:latest
-  and docker push $ALPINEBUILDIMAGE5
-  and docker push $ALPINEBUILDIMAGE5_NAME:latest
-end
-
-function pullAlpineBuildImage5 ; docker pull $ALPINEBUILDIMAGE5 ; end
-
-function buildAlpineBuildImage6
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine6.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE6 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushAlpineBuildImage6
-  docker tag $ALPINEBUILDIMAGE6 $ALPINEBUILDIMAGE6_NAME:latest
-  and docker push $ALPINEBUILDIMAGE6
-  and docker push $ALPINEBUILDIMAGE6_NAME:latest
-end
-
-function pullAlpineBuildImage6 ; docker pull $ALPINEBUILDIMAGE6 ; end
-
-function buildAlpineBuildImage7
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildAlpine7.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEBUILDIMAGE7 ."
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushAlpineBuildImage7
-  docker tag $ALPINEBUILDIMAGE7 $ALPINEBUILDIMAGE7_NAME:latest
-  and docker push $ALPINEBUILDIMAGE7
-  and docker push $ALPINEBUILDIMAGE7_NAME:latest
-end
-
-function pullAlpineBuildImage7 ; docker pull $ALPINEBUILDIMAGE6 ; end
+function pullUbuntuPackagingImage2 ; docker pull $UBUNTUPACKAGINGIMAGE2 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
@@ -1669,26 +1594,10 @@ function pullLdapImage ; docker pull $LDAPIMAGE ; end
 function remakeImages
   set -l s 0
 
-  buildUbuntuBuildImage3 ; or set -l s 1
-  pushUbuntuBuildImage3 ; or set -l s 1
-  buildUbuntuBuildImage4 ; or set -l s 1
-  pushUbuntuBuildImage4 ; or set -l s 1
-  buildUbuntuBuildImage5 ; or set -l s 1
-  pushUbuntuBuildImage5 ; or set -l s 1
-  buildUbuntuBuildImage6 ; or set -l s 1
-  pushUbuntuBuildImage6 ; or set -l s 1
-  buildUbuntuBuildImage7 ; or set -l s 1
-  pushUbuntuBuildImage7 ; or set -l s 1
-  buildAlpineBuildImage3 ; or set -l s 1
-  pushAlpineBuildImage3 ; or set -l s 1
-  buildAlpineBuildImage4 ; or set -l s 1
-  pushAlpineBuildImage4 ; or set -l s 1
-  buildAlpineBuildImage5 ; or set -l s 1
-  pushAlpineBuildImage5 ; or set -l s 1
-  buildAlpineBuildImage6 ; or set -l s 1
-  pushAlpineBuildImage6 ; or set -l s 1
-  buildAlpineBuildImage7 ; or set -l s 1
-  pushAlpineBuildImage7 ; or set -l s 1
+  buildUbuntuBuildImage311 ; or set -l s 1
+  pushUbuntuBuildImage311 ; or set -l s 1
+  buildUbuntuBuildImageDevel ; or set -l s 1
+  pushUbuntuBuildImageDevel ; or set -l s 1
   buildAlpineUtilsImage ; or set -l s 1
   pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
@@ -1704,26 +1613,10 @@ end
 function remakeBuildImages
   set -l s 0
 
-  buildUbuntuBuildImage3 ; or set -l s 1
-  pushUbuntuBuildImage3 ; or set -l s 1
-  buildUbuntuBuildImage4 ; or set -l s 1
-  pushUbuntuBuildImage4 ; or set -l s 1
-  buildUbuntuBuildImage5 ; or set -l s 1
-  pushUbuntuBuildImage5 ; or set -l s 1
-  buildUbuntuBuildImage6 ; or set -l s 1
-  pushUbuntuBuildImage6 ; or set -l s 1
-  buildUbuntuBuildImage7 ; or set -l s 1
-  pushUbuntuBuildImage7 ; or set -l s 1
-  buildAlpineBuildImage3 ; or set -l s 1
-  pushAlpineBuildImage3 ; or set -l s 1
-  buildAlpineBuildImage4 ; or set -l s 1
-  pushAlpineBuildImage4 ; or set -l s 1
-  buildAlpineBuildImage5 ; or set -l s 1
-  pushAlpineBuildImage5 ; or set -l s 1
-  buildAlpineBuildImage6 ; or set -l s 1
-  pushAlpineBuildImage6 ; or set -l s 1
-  buildAlpineBuildImage7 ; or set -l s 1
-  pushAlpineBuildImage7 ; or set -l s 1
+  buildUbuntuBuildImage311 ; or set -l s 1
+  pushUbuntuBuildImage311 ; or set -l s 1
+  buildUbuntuBuildImageDevel ; or set -l s 1
+  pushUbuntuBuildImageDevel ; or set -l s 1
 
   return $s
 end
@@ -1768,6 +1661,10 @@ function runInContainer
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+             -e ARANGODB_VERSION_MAJOR="$ARANGODB_VERSION_MAJOR" \
+             -e ARANGODB_VERSION_MINOR="$ARANGODB_VERSION_MINOR" \
+             -e ARANGODB_VERSION_PATCH="$ARANGODB_VERSION_PATCH" \
+             -e BUILD_FILES_ARCHIVE="$BUILD_FILES_ARCHIVE" \
              -e DUMPDEVICE=$DUMPDEVICE \
              -e ARCH="$ARCH" \
              -e SAN="$SAN" \
@@ -1781,7 +1678,6 @@ function runInContainer
              -e COVERAGE="$COVERAGE" \
              -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
-             -e FORCE_DISABLE_AVX="$FORCE_DISABLE_AVX" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
              -e GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" \
@@ -1791,6 +1687,7 @@ function runInContainer
              -e IONICE="$IONICE" \
              -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
              -e KEYNAME="$KEYNAME" \
+             -e KEYNAME_OLD="$KEYNAME_OLD" \
              -e LDAPHOST="$LDAPHOST" \
              -e LDAPHOST2="$LDAPHOST2" \
              -e MAINTAINER="$MAINTAINER" \
@@ -1800,6 +1697,7 @@ function runInContainer
              -e NO_RM_BUILD="$NO_RM_BUILD" \
              -e ONLYGREY="$ONLYGREY" \
              -e OPENSSL_VERSION="$OPENSSL_VERSION" \
+             -e PACK_BUILD_FILES="$PACK_BUILD_FILES" \
              -e PACKAGE_STRIP="$PACKAGE_STRIP" \
              -e PARALLELISM="$PARALLELISM" \
              -e PLATFORM="$PLATFORM" \
@@ -1817,10 +1715,12 @@ function runInContainer
              -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
              -e SKIP_MAKE="$SKIP_MAKE" \
              -e SSH_AUTH_SOCK=/ssh-agent \
+             -e STATIC_EXECUTABLES="$STATIC_EXECUTABLES" \
              -e STORAGEENGINE="$STORAGEENGINE" \
              -e TEST="$TEST" \
              -e TESTSUITE="$TESTSUITE" \
              -e UID=(id -u) \
+             -e UNPACK_BUILD_FILES="$UNPACK_BUILD_FILES" \
              -e USE_ARM="$USE_ARM" \
              -e USE_CCACHE="$USE_CCACHE" \
              -e USE_STRICT_OPENSSL="$USE_STRICT_OPENSSL" \
@@ -1828,6 +1728,8 @@ function runInContainer
              -e VERBOSEOSKAR="$VERBOSEOSKAR" \
              -e WORKSPACE="$WORKSPACE" \
              -e PROMTOOL_PATH="$PROMTOOL_PATH" \
+             -e BUILD_REPO_INFO="$BUILD_REPO_INFO" \
+             -e ARANGODB_BUILD_DATE="$ARANGODB_BUILD_DATE" \
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
@@ -1872,14 +1774,18 @@ function interactiveContainer
   end
 
   docker run -it --rm --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
-    -v $WORKDIR/work:$INNERWORKDIR \
+    -v $WORKDIR/work/:$INNERWORKDIR \
     -v $SSH_AUTH_SOCK:/ssh-agent \
     -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
-    -v "$WORKDIR/scripts":"/scripts" \
+    -v "$WORKDIR/scripts/":"/scripts" \
     -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
     -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
     -e ARANGODB_REPO="$ARANGODB_REPO" \
     -e ARANGODB_VERSION="$ARANGODB_VERSION" \
+    -e ARANGODB_VERSION_MAJOR="$ARANGODB_VERSION_MAJOR" \
+    -e ARANGODB_VERSION_MINOR="$ARANGODB_VERSION_MINOR" \
+    -e ARANGODB_VERSION_PATCH="$ARANGODB_VERSION_PATCH" \
+    -e BUILD_FILES_ARCHIVE="$BUILD_FILES_ARCHIVE" \
     -e DUMPDEVICE=$DUMPDEVICE \
     -e ARCH="ARCH" \
     -e SAN="$SAN" \
@@ -1902,6 +1808,7 @@ function interactiveContainer
     -e IONICE="$IONICE" \
     -e JEMALLOC_OSKAR="$JEMALLOC_OSKAR" \
     -e KEYNAME="$KEYNAME" \
+    -e KEYNAME_OLD="$KEYNAME_OLD" \
     -e LDAPHOST="$LDAPHOST" \
     -e LDAPHOST2="$LDAPHOST2" \
     -e MAINTAINER="$MAINTAINER" \
@@ -1928,6 +1835,7 @@ function interactiveContainer
     -e SKIPTIMECRITICAL="$SKIPTIMECRITICAL" \
     -e SKIP_MAKE="$SKIP_MAKE" \
     -e SSH_AUTH_SOCK=/ssh-agent \
+    -e STATIC_EXECUTABLES="$STATIC_EXECUTABLES" \
     -e STORAGEENGINE="$STORAGEENGINE" \
     -e TEST="$TEST" \
     -e TESTSUITE="$TESTSUITE" \
@@ -1939,6 +1847,8 @@ function interactiveContainer
     -e VERBOSEOSKAR="$VERBOSEOSKAR" \
     -e WORKSPACE="$WORKSPACE" \
     -e PROMTOOL_PATH="$PROMTOOL_PATH" \
+    -e BUILD_REPO_INFO="$BUILD_REPO_INFO" \
+    -e ARANGODB_BUILD_DATE="$ARANGODB_BUILD_DATE" \
     $argv
 
   if test -n "$agentstarted"
@@ -2028,35 +1938,11 @@ function pushOskar
   and source helper.fish
   and git push
 
-  and buildUbuntuBuildImage3
-  and pushUbuntuBuildImage3
+  and buildUbuntuBuildImage311
+  and pushUbuntuBuildImage311
 
-  and buildUbuntuBuildImage4
-  and pushUbuntuBuildImage4
-
-  and buildUbuntuBuildImage5
-  and pushUbuntuBuildImage5
-
-  and buildUbuntuBuildImage6
-  and pushUbuntuBuildImage6
-
-  and buildUbuntuBuildImage7
-  and pushUbuntuBuildImage7
-
-  and buildAlpineBuildImage3
-  and pushAlpineBuildImage3
-
-  and buildAlpineBuildImage4
-  and pushAlpineBuildImage4
-
-  and buildAlpineBuildImage5
-  and pushAlpineBuildImage5
-
-  and buildAlpineBuildImage6
-  and pushAlpineBuildImage6
-
-  and buildAlpineBuildImage7
-  and pushAlpineBuildImage7
+  and buildUbuntuBuildImageDevel
+  and pushUbuntuBuildImageDevel
 
   and buildAlpineUtilsImage
   and pushAlpineUtilsImage
@@ -2088,18 +1974,11 @@ end
 
 function updateOskar
   updateOskarOnly
-  and pullUbuntuBuildImage3
-  and pullUbuntuBuildImage4
-  and pullUbuntuBuildImage5
-  and pullUbuntuBuildImage6
-  and pullUbuntuBuildImage7
-  and pullAlpineBuildImage3
-  and pullAlpineBuildImage4
-  and pullAlpineBuildImage5
-  and pullAlpineBuildImage6
-  and pullAlpineBuildImage7
+  and pullUbuntuBuildImage311
+  and pullUbuntuBuildImageDevel
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
+  and pullUbuntuPackagingImage2
   and pullCentosPackagingImage
   and pullCppcheckImage
   and pullLdapImage
@@ -2120,15 +1999,44 @@ function downloadStarter
 end
 
 function downloadSyncer
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+    if test "$DOWNLOAD_SYNC_USER" = ""
+      echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+      return 1
+    end
+    mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+    and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+    and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+    and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
+    and convertSItoJSON
   end
-  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-  and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
-  and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-  and convertSItoJSON
+end
+
+function downloadAuxBinariesToBuildBin
+  if test "$ENTERPRISEEDITION" = "On"
+     copyRclone linux
+     and cp work/ArangoDB/build/install/usr/sbin/rclone-arangodb work/ArangoDB/build/bin/
+     and downloadSyncer
+     and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+           cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
+         end
+  end
+  and downloadStarter
+  and cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/
+end
+
+function packObjectFiles
+  runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/packObjectFiles.fish
+end
+
+function packBuildFiles
+  if test "$PACK_BUILD_FILES" = "On"
+    runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/packBuildFiles.fish
+  end
+end
+
+function unpackBuildFiles
+  runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
 end
 
 ## #############################################################################

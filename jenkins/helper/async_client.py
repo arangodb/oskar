@@ -45,6 +45,7 @@ def default_line_result(wait, line, params):
 def make_default_params(verbose, identifier):
     """ create the structure to work with arrays to output the strings to """
     return {
+        "overload": None,
         "trace_io": False,
         "error": "",
         "verbose": verbose,
@@ -69,9 +70,26 @@ def tail_line_result(wait, line, params):
         params['skip_done'] = True
         print(params['prefix'] + 'initial tail done, starting to output')
     return True
+def tail_silent_line_result(wait, line, params):
+    """
+    Keep the line, filter it for leading #,
+    if verbose print the line. else print progress.
+    """
+    # pylint: disable=pointless-statement
+    if params['skip_done']:
+        if isinstance(line, tuple):
+            #print(params['prefix'] + str(line[0], 'utf-8').rstrip())
+            params['output'].write(line[0])
+        return True
+    now = datetime.now()
+    if now - params['last_read'] > timedelta(seconds=1):
+        params['skip_done'] = True
+        #print(params['prefix'] + 'initial tail done, starting to output')
+    return True
 def make_tail_params(verbose, prefix, logfile):
     """ create the structure to work with arrays to output the strings to """
     return {
+        "overload": None,
         "trace_io": False,
         "error": "",
         "verbose": verbose,
@@ -92,6 +110,7 @@ def delete_tail_params(params):
 def make_logfile_params(verbose, logfile, trace, temp_dir):
     """ create the structure to work with logfiles """
     return {
+        "overload": None,
         "trace_io": True,
         "trace": trace,
         "error": "",
@@ -111,7 +130,10 @@ def logfile_line_result(wait, line, params):
     if isinstance(line, tuple):
         if params['trace']:
             print("e: " + str(line[0], 'utf-8').rstrip())
-        params['output'].write(line[0])
+        if params["overload"]:
+            params['output'].write(bytes(params["overload"], 'utf-8') + line[0])
+        else:
+            params['output'].write(line[0])
     return True
 def delete_logfile_params(params):
     """ teardown the structure to work with logfiles """
@@ -189,7 +211,8 @@ def kill_children(identifier, params, children):
             killed.append(one_child.pid)
             err += add_message_to_report(
                 params,
-                f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}")
+                f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}",
+                True, True)
             one_child.resume()
         except FileNotFoundError:
             pass
@@ -205,9 +228,24 @@ def kill_children(identifier, params, children):
             one_child.kill()
         except psutil.NoSuchProcess:  # pragma: no cover
             pass
+        except psutil.AccessDenied:
+            pass
     print_log(f"{identifier}: Waiting for the children to terminate {killed} {len(children)}",
               params)
-    psutil.wait_procs(children, timeout=20)
+    try:
+        psutil.wait_procs(children, timeout=20)
+    except psutil.TimeoutExpired:
+        pass
+    except FileNotFoundError:
+        pass
+    except AttributeError:
+        pass
+    except ProcessLookupError:
+        pass
+    except psutil.NoSuchProcess:
+        pass
+    except psutil.AccessDenied:
+        pass
     return err
 
 class CliExecutionException(Exception):
@@ -287,6 +325,10 @@ class ArangoCLIprogressiveTimeoutExecutor:
     def get_environment(self, params):
         """ hook to implemnet custom environment variable setters """
         return os.environ.copy()
+
+    def post_process_launch(self, process):
+        """ hook to work with the process while it launches """
+        pass
 
     def run_arango_tool_monitored(
             self,
@@ -386,11 +428,13 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 target=enqueue_stdout,
                 args=(process.stdout, queue, self.connect_instance, identifier, params),
             )
+            thread1.name=f"readIO {identifier}",
             thread2 = Thread(
                 name="readErrIO {identifier}",
                 target=enqueue_stderr,
                 args=(process.stderr, queue, self.connect_instance, identifier, params),
             )
+            thread2.name="readErrIO {identifier}",
             thread1.start()
             thread2.start()
 
@@ -409,7 +453,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                         identifier,
                         str(os.getpid()),
                         str(process.pid)))
-
+            self.post_process_launch(process)
             # read line without blocking
             have_progressive_timeout = False
             tcount = 0
@@ -423,11 +467,12 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 line = ""
                 try:
                     overload = self.cfg.get_overload()
-                    if overload:
+                    if overload and not params['overload']:
                         add_message_to_report(
                             params,
-                            overload,
+                            overload + self.cfg.get_max(),
                             False)
+                    params['overload'] = overload
                     line = queue.get(timeout=1)
                     ret = result_line_handler(0, line, params)
                     line_filter = line_filter or ret

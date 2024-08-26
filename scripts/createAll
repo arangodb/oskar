@@ -1,10 +1,24 @@
 #!/bin/bash
+chown -R root:root /root/.gnupg
+chmod 700 /root/.gnupg
+
+if test -d /root/.gnupg-old; then
+  chown -R root:root /root/.gnupg-old
+  chmod 700 /root/.gnupg-old
+fi
+
 script_dir="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 . "$script_dir/createRepo"
 
 oskar_dir="$script_dir/.."
 
 echo "run test"
+
+echo "=== gpg ==="
+gpg --version
+
+echo "=== RPM ==="
+rpm --version
 
 version="$ARANGODB_VERSION"
 incoming="/packages"
@@ -55,8 +69,16 @@ ensure_oskar "$version" "$incoming" "$repo" \
 
 chown -R $UID.$GID $repo
 
-cd $repo/Community/Debian
-gpg2 --no-permission-warning --armor --export info@arangodb.com  > Release.key
 
+cd $repo/Community/Debian
+if test -d /root/.gnupg-old; then
+  gpg2 --homedir /root/.gnupg-old --no-permission-warning --armor --export info@arangodb.com  > Release.key
+else
+  gpg2 --no-permission-warning --armor --export admin@arangodb.com  > Release.key
+fi
 cd $repo/Enterprise/Debian
-gpg2 --no-permission-warning --armor --export info@arangodb.com  > Release.key
+if test -d /root/.gnupg-old; then
+  gpg2 --homedir /root/.gnupg-old --no-permission-warning --armor --export info@arangodb.com  > Release.key
+else
+  gpg2 --no-permission-warning --armor --export admin@arangodb.com  > Release.key
+fi

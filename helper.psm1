@@ -70,13 +70,29 @@ $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
 $env:TMP = "$INNERWORKDIR\tmp"
+$global:ARANGODB_BUILD_DATE = "$env:ARANGODB_BUILD_DATE"
 
+Function setVisualStudioEnvs
+{
+    param (
+        [Parameter(Mandatory=$true)]
+        $patternVersion
+    )
+    $installationPath = $(Get-VSSetupInstance | Select-VSSetupInstance -Version $patternVersion).InstallationPath
+    if ("$installationPath" -and (test-path "$installationPath\Common7\Tools\vsdevcmd.bat")) {
+        & "${env:COMSPEC}" /s /c "`"$installationPath\Common7\Tools\vsdevcmd.bat`" -no_logo && set" | foreach-object {
+        $name, $value = $_ -split '=', 2
+        set-content env:\"$name" $value
+        }
+    }
+}
 Function VS2019
 {
     $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All | Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname | Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
     $global:GENERATOR = "Visual Studio 16 2019"
     $global:GENERATORID = "v142"
     $global:MSVS = "2019"
+    setVisualStudioEnvs "[16.0,17.0)"
 }
 
 Function VS2022
@@ -961,7 +977,7 @@ Function findRequiredOpenSSL
         $OPENSSL_WINDOWS = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "OPENSSL_WINDOWS" | Select Line
         If ($OPENSSL_WINDOWS -ne "")
         {
-            If ($OPENSSL_WINDOWS -match '[0-9]{1}\.[0-9]{1}\.[0-9]{1}[a-z]?' -And $Matches.count -eq 1)
+            If ($OPENSSL_WINDOWS -match '[0-9]{1}\.[0-9]{1}\.[0-9]+[a-z]?' -And $Matches.count -eq 1)
             {
                 $global:OPENSSL_VERSION = $Matches[0]
                 return
@@ -970,6 +986,30 @@ Function findRequiredOpenSSL
     }
     Write-Host "No VERSIONS file with proper OPENSSL_WINDOWS record found! Using default version: ${OPENSSL_DEFAULT_VERSION}"
     $global:OPENSSL_VERSION = $global:OPENSSL_DEFAULT_VERSION
+}
+
+Function defaultBuildRepoInfo
+{
+    $global:BUILD_REPO_INFO = "default"
+}
+
+Function releaseBuildRepoInfo
+{
+    $global:BUILD_REPO_INFO = "release"
+}
+
+Function nightlyBuildRepoInfo
+{
+    $global:BUILD_REPO_INFO = "nightly"
+}
+
+If (-Not($BUILD_REPO_INFO))
+{
+    defaultBuildRepoInfo
+}
+Else 
+{
+    $global:BUILD_REPO_INFO = "$BUILD_REPO_INFO"
 }
 
 # ##############################################################################
@@ -1033,7 +1073,7 @@ Function uploadSymbols
 {
     findArangoDBVersion
     proc -process "ssh" -argument "root@symbol.arangodb.biz cd /script/ && python program.py /mnt/symsrv_$global:ARANGODB_REPO" -logfile $true -priority "Normal"; comm
-    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil rsync -r /mnt/symsrv_$global:ARANGODB_REPO gs://download.arangodb.com/symsrv_$global:ARANGODB_REPO" -logfile $true -priority "Normal"; comm
+    proc -process "ssh" -argument "root@symbol.arangodb.biz gsutil -m rsync -r /mnt/symsrv_$global:ARANGODB_REPO gs://download.arangodb.com/symsrv_$global:ARANGODB_REPO" -logfile $true -priority "Normal"; comm
 }
 
 ################################################################################
@@ -1044,8 +1084,16 @@ Function downloadStarter
 {
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "STARTER_REV").Line -match '([0-9]+.[0-9]+.[0-9]+[\-]?[0-9a-z]*[\-]?[0-9]?)|latest' | Out-Null
-    $STARTER_REV = $Matches[0]
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "STARTER_REV").Line -match '(v[0-9]+.[0-9]+.[0-9]+[\-]?[0-9a-z]*[\-]?[0-9]?)|latest' | Out-Null
+    $STARTER_REV = $Matches[0]    
+    If ($STARTER_REV -eq "")
+    {
+        Write-Host "Failed to identify STARTER_REV from VERSIONS file!"
+    }
+    Else
+    {
+        Write-Host "Identified STARTER_REV is $STARTER_REV"
+    }
     If ($STARTER_REV -eq "latest")
     {
         $JSON = Invoke-WebRequest -Uri 'https://api.github.com/repos/arangodb-helper/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
@@ -1058,31 +1106,34 @@ Function downloadStarter
 
 Function downloadSyncer
 {
-    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    If (-Not($env:DOWNLOAD_SYNC_USER))
+    If ($global:ARANGODB_VERSION_MAJOR -eq 3 -And $global:ARANGODB_VERSION_MINOR -lt 12)
     {
-        Write-Host "Need environment variable set!"
-    }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+(-preview-[0-9]+)?)|latest' | Out-Null
-    $SYNCER_REV = $Matches[0]
-    If ($SYNCER_REV -eq "latest")
-    {
-        $JSON = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/latest" | ConvertFrom-Json
-        $SYNCER_REV = $JSON.name
-    }
-    $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
-    $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
-    Write-Host "Download: Syncer $SYNCER_REV"
-    curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
-    If (Select-String -Path "$global:ARANGODIR\build\arangosync.exe" -Pattern '"message": "Not Found"')
-    {
-        Write-Host "Download: Syncer FAILED!"
-        $global:ok = $false
-    }
-    Else
-    {
-        setupSourceInfo "Syncer" $SYNCER_REV
+        Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        If (-Not($env:DOWNLOAD_SYNC_USER))
+        {
+            Write-Host "Need environment variable set!"
+        }
+        (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "SYNCER_REV").Line -match 'v?([0-9]+.[0-9]+.[0-9]+(-preview-[0-9]+)?)|latest' | Out-Null
+        $SYNCER_REV = $Matches[0]
+        If ($SYNCER_REV -eq "latest")
+        {
+            $JSON = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/latest" | ConvertFrom-Json
+            $SYNCER_REV = $JSON.name
+        }
+        $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
+        $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
+        Write-Host "Download: Syncer $SYNCER_REV"
+        curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
+        If (Select-String -Path "$global:ARANGODIR\build\arangosync.exe" -Pattern '"message": "Not Found"')
+        {
+            Write-Host "Download: Syncer FAILED!"
+            $global:ok = $false
+        }
+        Else
+        {
+            setupSourceInfo "Syncer" $SYNCER_REV
+        }
     }
 }
 
@@ -1215,6 +1266,7 @@ Function switchBranches($branch_c,$branch_e)
     checkoutIfNeeded
     Push-Location $pwd
     Set-Location $global:ARANGODIR;comm
+    proc -process "git" -argument "config --system core.longpaths true" -logfile $false -priority "Normal"
     If ($global:ok)
     {
         proc -process "git" -argument "clean -fdx" -logfile $false -priority "Normal"
@@ -1552,28 +1604,35 @@ Function configureWindows
       $ARANGODIR_SLASH = $global:ARANGODIR -replace "\\","/"
       If ($ENTERPRISEEDITION -eq "On")
       {
-          downloadStarter
-          downloadSyncer
+          if ($global:PACKAGING -eq "On") {
+            downloadStarter
+            downloadSyncer
+          }
           If (-Not $global:ok)
           {
               return
           }
-          copyRclone
-          $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
+          If ($global:ARANGODB_VERSION_MAJOR -eq 3 -And $global:ARANGODB_VERSION_MINOR -lt 12)
+          {
+              $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
+          }
           If ($global:USE_RCLONE -eq "true")
           {
+              copyRclone
               $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
           }
           Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
-          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" $global:CMAKEPARAMS `"$global:ARANGODIR`""
-          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" $global:CMAKEPARAMS `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
       }
       Else
       {
-          downloadStarter
+          if ($global:PACKAGING -eq "On") {
+            downloadStarter
+          }
           Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" $global:CMAKEPARAMS `"$global:ARANGODIR`""
-          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" $global:CMAKEPARAMS `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
       }
       #If (!$haveCache)
       #{
@@ -1666,13 +1725,14 @@ Function storeSymbols
     }
 }
 
-Function setNightlyRelease
+Function setNightlyVersion
 {
     checkoutIfNeeded
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_TYPE .*', 'set(ARANGODB_VERSION_RELEASE_TYPE "nightly")' | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
     (Get-Content $ARANGODIR\CMakeLists.txt) -replace 'set\(ARANGODB_VERSION_RELEASE_NUMBER.*', ('set(ARANGODB_VERSION_RELEASE_NUMBER "' + (Get-Date).ToString("yyyyMMdd") + '")') | Out-File -Encoding UTF8 $ARANGODIR\CMakeLists.txt
     findArangoDBVersion
     setupSourceInfo "VERSION" $global:ARANGODB_FULL_VERSION
+    nightlyBuildRepoInfo
 }
 
 Function movePackagesToWorkdir
@@ -1917,6 +1977,12 @@ Function moveResultsToWorkspace
     {
         Write-Host "Move $INNERWORKDIR\testfailures.txt"
         Move-Item -Force -Path "$INNERWORKDIR\testfailures.txt" -Destination $ENV:WORKSPACE; comm 
+    }
+    Write-Host "testrunXml"
+    If (Test-Path "$INNERWORKDIR\ArangoDB\testrunXml")
+    {
+        Write-Host "Move $INNERWORKDIR\ArangoDB\testrunXml"
+        Move-Item -Force -Path "$INNERWORKDIR\ArangoDB\testrunXml" -Destination $ENV:WORKSPACE; comm 
     }
 }
 

@@ -43,6 +43,10 @@ class TestConfig():
             self.base_logdir.mkdir()
         self.log_file =  cfg.run_root / f'{self.name}.log'
 
+        self.xml_report_dir = cfg.xml_report_dir / self.name
+        if not self.xml_report_dir.exists():
+            self.xml_report_dir.mkdir(parents=True)
+
         self.temp_dir = TEMP / self.name
         # pylint: disable=global-variable-not-assigned
         global TEST_LOG_FILES
@@ -67,8 +71,11 @@ class TestConfig():
                     print("Error: failed to expand environment variable: '" + param + "' for '" + self.name + "'")
             else:
                 self.args.append(param)
-        self.args += ['--coreCheck', 'true', '--disableMonitor', 'true', '--writeXmlReport', 'true']
-
+        self.args += ['--coreCheck', 'true',
+                      '--disableMonitor', 'true',
+                      '--writeXmlReport', 'true',
+                      '--testXmlOutputDirectory', str(self.xml_report_dir),
+                      '--memory', str(self.parallelity * cfg.slot_memory) ]
 
         if 'filter' in os.environ:
             self.args += ['--test', os.environ['filter']]

@@ -12,6 +12,16 @@ import sys
 import psutil
 from socket_counter import get_socket_count
 
+IS_COVERAGE = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
+COVERAGE_VAR = None
+COVERAGE_TYPE = None
+COVERAGE_VALUE = ""
+if IS_COVERAGE:
+    if 'LLVM_PROFILE_FILE' in os.environ:
+        COVERAGE_VAR = 'LLVM_PROFILE_FILE'
+        COVERAGE_TYPE = 'LLVM'
+        COVERAGE_VALUE = os.environ[COVERAGE_VAR]
+    print(f"coverage value: {COVERAGE_VAR} = {COVERAGE_VALUE}")
 IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
 IS_WINDOWS = platform.win32_ver()[0] != ""
 IS_MAC = platform.mac_ver()[0] != ""
@@ -127,6 +137,7 @@ class SiteConfig:
             self.timeout *= 4
         self.no_threads = psutil.cpu_count()
         self.available_slots = round(self.no_threads * 2) #logical=False)
+        self.available_slots = round(self.available_slots * 0.7)
         if IS_MAC and platform.processor() == "arm":
             if psutil.cpu_count() == 8:
                 self.no_threads = 6 # M1 mac mini only has 4 performance cores
@@ -145,23 +156,24 @@ class SiteConfig:
         self.core_dozend = round(self.no_threads / 10)
         if self.core_dozend == 0:
             self.core_dozend = 1
+        self.max_load *= 0.7
         self.loop_sleep = round(5 / self.core_dozend)
         self.overload = self.max_load * 1.4
-        self.slots_to_parallelity_factor = self.max_load / self.available_slots
+        self.parallelity_to_load_factor  = self.max_load / self.available_slots
         self.rapid_fire = round(self.available_slots / 10)
         self.is_asan = 'SAN' in os.environ and os.environ['SAN'] == 'On'
         self.is_aulsan = self.is_asan and os.environ['SAN_MODE'] == 'AULSan'
-        self.is_gcov = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
-        san_gcov_msg = ""
-        if self.is_asan or self.is_gcov:
-            san_gcov_msg = ' - SAN '
+        self.is_cov = IS_COVERAGE
+        san_cov_msg = ""
+        if self.is_asan or self.is_cov:
+            san_cov_msg = ' - SAN '
             slot_divisor = 4
             if self.is_aulsan:
-                san_gcov_msg = ' - AUL-SAN '
-            elif self.is_gcov:
-                san_gcov_msg = ' - GCOV'
-                slot_divisor = 3
-            san_gcov_msg += ' enabled, reducing possible system capacity\n'
+                san_cov_msg = ' - AUL-SAN '
+            elif self.is_cov:
+                san_cov_msg = ' - LCOV'
+                slot_divisor = 2
+            san_cov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
             self.available_slots /= slot_divisor
             #self.timeout *= 1.5
@@ -187,10 +199,9 @@ class SiteConfig:
  - {psutil.cpu_count(logical=False)} Cores / {psutil.cpu_count(logical=True)} Threads
  - {platform.processor()} processor architecture
  - {psutil.virtual_memory()} virtual Memory
- - {self.slots_to_parallelity_factor} parallelity to load estimate factor
+ - {self.parallelity_to_load_factor} parallelity to load estimate factor
  - {self.overload} load1 threshhold for overload logging
  - {self.max_load} / {self.max_load1} configured maximum load 0 / 1
- - {self.slots_to_parallelity_factor} parallelity to load estimate factor
  - {self.available_slots} test slots {self.rapid_fire} rapid fire slots
  - {str(TEMP)} - temporary directory
  - current Disk I/O: {str(psutil.disk_io_counters())}
@@ -198,8 +209,8 @@ class SiteConfig:
  - Starting {str(datetime.now())} soft deadline will be: {str(self.deadline)} hard deadline will be: {str(self.hard_deadline)}
  - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
  - {socket_count} number of currently active tcp sockets
-{san_gcov_msg}""")
-        self.cfgdir = base_source_dir / 'etc' / 'relative'
+{san_cov_msg}""")
+        self.cfgdir = base_source_dir / 'etc' / 'testing'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
         self.test_data_dir = base_source_dir
@@ -207,6 +218,10 @@ class SiteConfig:
         self.run_root = base_source_dir / 'testrun'
         if self.run_root.exists():
             shutil.rmtree(self.run_root)
+        self.xml_report_dir = base_source_dir / 'testrunXml'
+        if self.xml_report_dir.exists():
+            shutil.rmtree(self.xml_report_dir)
+        self.xml_report_dir.mkdir(parents=True)
         self.test_data_dir_x = self.run_root / 'run'
         self.test_data_dir_x.mkdir(parents=True)
         self.test_report_dir = self.run_root / 'report'
@@ -214,14 +229,19 @@ class SiteConfig:
         self.portbase = 7000
         if 'PORTBASE' in os.environ:
             self.portbase = int(os.environ['PORTBASE'])
+        self.slot_memory = round((1.1 * psutil.virtual_memory().total) / self.available_slots)
 
     def is_instrumented(self):
         """ check whether we run an instrumented build """
-        return self.is_asan or self.is_aulsan or self.is_gcov
+        return self.is_asan or self.is_aulsan or self.is_cov
+
+    def get_max(self):
+        """ get the maximal value before overlead is triggered """
+        return f'> {self.overload:9.2f}'
 
     def get_overload(self):
         """ estimate whether the system is overloaded """
         load = psutil.getloadavg()
         if load[0] > self.overload:
-            return f"HIGH SYSTEM LOAD! {load[0]:9.2f} > {self.overload:9.2f} "
+            return f"HIGH LOAD[{load[0]:3.2f} ] "
         return None

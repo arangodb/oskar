@@ -5,7 +5,7 @@ import copy
 import sys
 from traceback import print_exc
 
-from site_config import IS_ARM, IS_WINDOWS, IS_MAC
+from site_config import IS_ARM, IS_WINDOWS, IS_MAC, IS_COVERAGE
 
 from dump_handler import generate_dump_output
 from launch_handler import launch
@@ -38,7 +38,7 @@ def filter_tests(args, tests):
             filters.append(lambda test: "full" not in test["flags"])
 
         if args.gtest:
-            filters.append(lambda test: "gtest" ==  test["name"])
+            filters.append(lambda test: test["name"].startswith("gtest"))
 
         if not args.enterprise:
             filters.append(lambda test: "enterprise" not in test["flags"])
@@ -51,6 +51,9 @@ def filter_tests(args, tests):
 
         if IS_ARM:
             filters.append(lambda test: "!arm" not in test["flags"])
+
+        if IS_COVERAGE:
+            filters.append(lambda test: "!coverage" not in test["flags"])
 
         if args.no_report:
             print("Disabling report generation")
@@ -88,15 +91,17 @@ known_flags = {
     "single": "this test requires a single server",
     "full": "this test is only executed in full tests",
     "!full": "this test is only executed in non-full tests",
-    "gtest": "only the gtest are to be executed",
+    "gtest": "only the testsuites starting with 'gtest' are to be executed",
     "sniff": "whether tcpdump / ngrep should be used",
     "ldap": "ldap",
     "enterprise": "this tests is only executed with the enterprise version",
     "!windows": "test is excluded from ps1 output",
+    "!circleci": "test is excluded on CircleCI",
     "!mac": "test is excluded when launched on MacOS",
     "!arm": "test is excluded when launched on Arm Linux/MacOS hosts",
-    "no_report": "disable reporting",
     "allProtocols": "run the test suite(s) for all protocols (http, http2, vst)"
+    "!coverage": "test is excluded when coverage scenario are ran",
+    "no_report": "disable reporting"
 }
 
 known_parameter = {
@@ -138,7 +143,7 @@ def parse_arguments():
     parser.add_argument("--enterprise", help="add enterprise tests", action="store_true")
     parser.add_argument("--no-enterprise", help="add enterprise tests", action="store_true")
     parser.add_argument("--full", help="output full test set", action="store_true")
-    parser.add_argument("--gtest", help="only run gtest", action="store_true")
+    parser.add_argument("--gtest", help="only run gtest-suites", action="store_true")
     parser.add_argument("--all", help="output all test, ignore other filters", action="store_true")
     parser.add_argument("--no-report", help="don't create testreport and crash tarballs", type=bool)
     args = parser.parse_args()
@@ -265,7 +270,6 @@ def main():
         print(exc, file=sys.stderr)
         print_exc()
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()

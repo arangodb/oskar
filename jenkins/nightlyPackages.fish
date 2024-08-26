@@ -39,7 +39,7 @@ function copyPackagesToStage2
     or return 1
 
     for pattern in "arangodb3*_*.deb" "arangodb3*-*.deb" "arangodb3*-*.rpm" "arangodb3*-linux-*.tar.gz" "sourceInfo.*"
-      set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
+      set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" -a -not -name "*build_files*" ; and popd)
       for file in $files
         cp $SRC/$file $DST/Linux/$ARCH ; or set -g s 1
       end
@@ -50,6 +50,7 @@ function copyPackagesToStage2
     and mkdir -p $DST/MacOSX/$ARCH
     and chmod 777 $DST/MacOSX/$ARCH
     or return 1
+    cd "$WORKDIR"
     echo "Current dir:" (pwd)
     for pattern in "arangodb3*-*.dmg" "arangodb3*-mac*-*.tar.gz" "sourceInfo.*"
       set files (pushd $SRC ; and find . -maxdepth 1 -type f -name "$pattern" ; and popd)
@@ -73,7 +74,7 @@ and begin
   end
 end
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
-and setNightlyRelease
+and setNightlyVersion
 and makeRelease
 and if test "$COPY_TO_STAGE2" = "true"
   copyPackagesToStage2

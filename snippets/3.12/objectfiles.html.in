@@ -1,0 +1,19 @@
+<div>
+  <p>
+    ArangoDB object files are available for Enterprise edition binaries.
+  </p>
+  <p>
+    These are object files for the individual release (e.g.
+    <code>v@ARANGODB_VERSION@</code> tag).
+    These are applicable only to Enterprise edtion release.
+  </p>
+  <hr/>
+  <p>
+    <ul>
+      <li>
+        <a href="https://download.arangodb.com@DOWNLOAD_LINK@/@ARANGODB_REPO@/@ARANGODB_EDITION@/Linux/@OBJECTFILES_TAR_GZ@">Object files (Enterprise edition) @ARANGODB_VERSION@</a><br>
+        (@OBJECTFILES_SIZE_TAR_GZ@ MByte, SHA256 @OBJECTFILES_SHA256_TAR_GZ@)
+      </li>
+    </ul>
+  </p>
+</div>

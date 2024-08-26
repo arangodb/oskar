@@ -3,6 +3,7 @@
 from datetime import datetime
 import os
 from pathlib import Path
+import hashlib
 import pprint
 import re
 import shutil
@@ -10,6 +11,7 @@ import signal
 import sys
 import time
 from threading  import Thread, Lock
+import traceback
 from multiprocessing import Process
 import zipfile
 
@@ -20,8 +22,17 @@ from socket_counter import get_socket_count
 # pylint: disable=line-too-long disable=broad-except
 from arangosh import ArangoshExecutor
 from test_config import get_priority, TestConfig
-from site_config import TEMP, IS_WINDOWS, IS_MAC, IS_LINUX, get_workspace
+from site_config import (
+    TEMP,
+    IS_WINDOWS,
+    IS_MAC,
+    IS_LINUX,
+    get_workspace,
+    COVERAGE_VAR,
+    COVERAGE_VALUE
+)
 from tools.killall import list_all_processes, kill_all_arango_processes
+from aggregate_coverage import combine_coverage_dirs_multi
 
 MAX_COREFILES_SINGLE=4
 MAX_COREFILES_CLUSTER=15
@@ -32,6 +43,7 @@ MAX_COREFILE_SIZE_MB=850
 if 'MAX_CORESIZE' in os.environ:
     MAX_COREFILE_SIZE_MB=int(os.environ['MAX_CORESIZE'])
 
+COVERAGE_LOCK = Lock()
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -51,15 +63,30 @@ def zipp_this(filenames, target_dir):
     for corefile in filenames:
         try:
             print(f'zipping {corefile}')
-            zipfile.ZipFile(str(target_dir / (corefile.name + '.xz')),
+            zipfile.ZipFile(str(target_dir / (corefile.name + "." + ZIPEXT)),
                             mode='w', compression=zipfile.ZIP_LZMA).write(str(corefile))
         except Exception as exc:
             print(f'skipping {corefile} since {exc}')
+        try:
+            corefile.unlink(missing_ok=True)
+        except Exception as ex:
+            print(f"failed to delete {corefile} because of {ex}")
 
 def testing_runner(testing_instance, this, arangosh):
     """ operate one makedata instance """
     try:
         this.start = datetime.now(tz=None)
+        this.cov_prefix = None
+        this.cov_prefix_var = None
+        if this.cfg.is_cov:
+            this.cov_prefix =  (Path(COVERAGE_VALUE) /
+                                this.name_enum.replace(' ', '_'))
+            if this.cov_prefix.exists():
+                print(f"deleting pre-existing coverage {str(this.cov_prefix)}")
+                shutil.rmtree(str(this.cov_prefix))
+            if not this.cov_prefix.exists():
+                this.cov_prefix.mkdir(parents=True)
+            this.cov_prefix_var = this.cov_prefix / "testingjs"
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
@@ -67,6 +94,8 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.log_file,
                                    this.name_enum,
                                    this.temp_dir,
+                                   COVERAGE_VAR,
+                                   str(this.cov_prefix_var) if this.cov_prefix is not None else this.cov_prefix,
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
@@ -76,9 +105,9 @@ def testing_runner(testing_instance, this, arangosh):
         this.finish = datetime.now(tz=None)
         this.delta = this.finish - this.start
         this.delta_seconds = this.delta.total_seconds()
-        print(f'done with {this.name_enum}')
         this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
         this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
+        print(f'done with {this.name_enum} -> {this.success}')
         if this.report_file.exists():
             this.structured_results = this.report_file.read_text(encoding="UTF-8", errors='ignore')
         this.summary = ret['error']
@@ -107,13 +136,36 @@ def testing_runner(testing_instance, this, arangosh):
         except FileExistsError as ex:
             print(f"can't expand the temp directory {ex} to {final_name}")
     except Exception as ex:
+        stack = ''.join(traceback.TracebackException.from_exception(ex).format())
         this.crashed = True
         this.success = False
-        this.summary = f"Python exception caught during test execution: {ex}"
+        this.summary = f"Python exception caught during test execution: {ex}\n{stack}"
+        print(this.summary)
         this.finish = datetime.now(tz=None)
         this.delta = this.finish - this.start
         this.delta_seconds = this.delta.total_seconds()
     finally:
+        print('finally')
+        try:
+            if this.cov_prefix is not None:
+                with COVERAGE_LOCK:
+                    start = time.time()
+                    cov_dir = Path(this.cov_prefix)
+                    result_dir = combine_coverage_dirs_multi(this.cfg, cov_dir, this.parallelity)
+                    if result_dir is None:
+                        print("combining coverage failed!")
+                    else:
+                        hash_str = hashlib.md5(this.name_enum.encode()).hexdigest()
+                        target_dir = Path(COVERAGE_VALUE) / hash_str
+                        print(f'renaming {str(result_dir)} -> {target_dir}')
+                        result_dir.rename(target_dir)
+                        print(f"deleting coverage {str(this.cov_prefix)}")
+                        shutil.rmtree(str(this.cov_prefix))
+                        print(f"done combining after {str(time.time() - start)}")
+        except Exception as ex:
+            print(ex)
+            print(traceback.format_exc())
+            raise ex
         with arangosh.slot_lock:
             testing_instance.running_suites.remove(this.name_enum)
         testing_instance.done_job(this.parallelity)
@@ -174,7 +226,7 @@ class TestingRunner():
                     return -1
             except psutil.AccessDenied:
                 pass
-            load_estimate = self.cfg.slots_to_parallelity_factor * self.scenarios[offset].parallelity
+            load_estimate = self.cfg.parallelity_to_load_factor * self.scenarios[offset].parallelity
             load = psutil.getloadavg()
             if ((load[0] > self.cfg.max_load) or
                 (load[1] > self.cfg.max_load1) or
@@ -192,11 +244,13 @@ class TestingRunner():
         this.name_enum = f"{this.name} {str(counter)}"
         print(f"launching {this.name_enum}")
         pp.pprint(this)
+        this.cfg = self.cfg
 
         with self.slot_lock:
             self.running_suites.append(this.name_enum)
 
         worker = Thread(target=testing_runner,
+                        name="testing runner",
                         args=(self,
                               this,
                               self.arangosh))
@@ -354,6 +408,45 @@ class TestingRunner():
         with self.testfailures_file.open("a") as filep:
             filep.write(text + '\n')
 
+    # pylint: disable=too-many-arguments
+    def mp_zip_tar(self, fnlist, zip_dir, tarfile, verb, filetype):
+        """ use full machine to compress files in zip-tar """
+        zip_slots = psutil.cpu_count(logical=False)
+        count = 0
+        zip_slot_array = []
+        for _ in range(zip_slots):
+            zip_slot_array.append([])
+        for one_file in fnlist:
+            if one_file.exists():
+                zip_slot_array[count % zip_slots].append(one_file)
+                count += 1
+        zippers = []
+        print(f"{verb} launching zipper sub processes {zip_slot_array}")
+        for zip_slot in zip_slot_array:
+            if len(zip_slot) > 0:
+                proc = Process(target=zipp_this, args=(zip_slot, zip_dir))
+                proc.start()
+                zippers.append(proc)
+        for zipper in zippers:
+            zipper.join()
+        print("compressing files done")
+
+        for one_file in fnlist:
+            if one_file.is_file():
+                one_file.unlink(missing_ok=True)
+
+        print(f"creating {filetype}: {str(tarfile)} with {str(fnlist)}.tar")
+        sys.stdout.flush()
+        try:
+            shutil.make_archive(str(tarfile),
+                                'tar',
+                                (zip_dir / '..').resolve(),
+                                zip_dir.name,
+                                True)
+        except Exception as ex:
+            print(f"Failed to create {verb} zip: {str(ex)}")
+            self.append_report_txt(f"Failed to create {verb} zip: {str(ex)}")
+
     def cleanup_unneeded_binary_files(self):
         """ delete all files not needed for the crashreport binaries """
         shutil.rmtree(str(self.cfg.bin_dir / 'tzdata'))
@@ -415,60 +508,21 @@ class TestingRunner():
         if len(core_files_list) == 0 or core_max_count <= 0:
             print(f'Coredumps are not collected: {str(len(core_files_list))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
             return
-
+        if not self.crashed or self.success:
+            self.append_report_txt("non captured crash reports found; please inspect the tests to find out who created them.")
+        self.crashed = True
+        self.success = False
         core_zip_dir = get_workspace() / 'coredumps'
         core_zip_dir.mkdir(parents=True, exist_ok=True)
-        zip_slots = psutil.cpu_count(logical=False)
-        count = 0
-        zip_slot_array = []
-        for _ in range(zip_slots):
-            zip_slot_array.append([])
-        for one_file in core_files_list:
-            if one_file.exists():
-                zip_slot_array[count % zip_slots].append(one_file)
-                count += 1
-        zippers = []
-        print(f"coredump launching zipper sub processes {zip_slot_array}")
-        for zip_slot in zip_slot_array:
-            if len(zip_slot) > 0:
-                proc = Process(target=zipp_this, args=(zip_slot, core_zip_dir))
-                proc.start()
-                zippers.append(proc)
-        for zipper in zippers:
-            zipper.join()
-        print("compressing files done")
-
-        for one_file in core_files_list:
-            if one_file.is_file():
-                one_file.unlink(missing_ok=True)
 
         crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
-        print(f"creating crashreport: {str(crash_report_file)} with {str(core_files_list)}.tar")
-        sys.stdout.flush()
-        try:
-            shutil.make_archive(str(crash_report_file),
-                                'tar',
-                                (core_zip_dir / '..').resolve(),
-                                core_zip_dir.name,
-                                True)
-        except Exception as ex:
-            print("Failed to create binaries zip: " + str(ex))
-            self.append_report_txt("Failed to create binaries zip: " + str(ex))
+        self.mp_zip_tar(core_files_list, core_zip_dir, crash_report_file, 'coredump', 'crashreport')
+        shutil.rmtree(str(core_zip_dir), ignore_errors=True)
 
         self.cleanup_unneeded_binary_files()
         binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
-        print(f"creating crashreport binary support zip: {str(binary_report_file)}.{ZIPEXT}")
-        sys.stdout.flush()
-        try:
-            shutil.make_archive(str(binary_report_file),
-                                ZIPFORMAT,
-                                (self.cfg.bin_dir / '..').resolve(),
-                                self.cfg.bin_dir.name,
-                                True)
-        except Exception as ex:
-            print(f"Failed to create crashdump {ZIPEXT}: {str(ex)}")
-            self.append_report_txt("Failed to create crashdump zip: " + str(ex))
-        shutil.rmtree(str(core_zip_dir), ignore_errors=True)
+        bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
+        self.mp_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
 
     def generate_test_report(self):
         """ regular testresults zip """
