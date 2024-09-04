@@ -93,7 +93,7 @@ set -g timeLimit -1
 set -g suiteRunner ""
 
 if test "$SAN" = "On"
-     $INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-server.py
+     $INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-server.py &
 end
 
 switch $TESTSUITE
@@ -143,7 +143,8 @@ end
 eval "$suiteRunner"
 
 if test "$SAN" = "On"
-   killall   llvm-symbolizer-server.py
+   jobs
+   kill %1
 end
 echo "RESULT: $result"
 
