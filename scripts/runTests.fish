@@ -92,6 +92,10 @@ set -g timeout 0
 set -g timeLimit -1
 set -g suiteRunner ""
 
+if test "$SAN" = "On"
+     $INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-server.py
+end
+
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
@@ -138,6 +142,9 @@ end
 
 eval "$suiteRunner"
 
+if test "$SAN" = "On"
+   killall   llvm-symbolizer-server.py
+end
 echo "RESULT: $result"
 
 if test $result = GOOD
