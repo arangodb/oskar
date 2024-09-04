@@ -8,12 +8,12 @@ function buildSanFlags --argument SRCDIR
     # This also has to be in runRTAtest.fish
     if not test -z "$SAN"; and test "$SAN" = "On"
       echo "Use SAN mode: $SAN_MODE"
-      set common_options "log_exe_name=true"
+      set common_options "log_exe_name=true:external_symbolizer_path=$INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-client.py"
 
       switch "$SAN_MODE"
         case "AULSan"
           # address sanitizer
-          set -xg ASAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=true:detect_stack_use_after_return=false:detect_odr_violation=1:strict_init_order=true:external_symbolizer_path=$INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-client.py"
+          set -xg ASAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log:handle_ioctl=true:check_initialization_order=true:detect_container_overflow=true:detect_stack_use_after_return=false:detect_odr_violation=1:strict_init_order=true"
 
           # leak sanitizer
           set -xg LSAN_OPTIONS "$common_options:log_path=$INNERWORKDIR/aulsan.log"
