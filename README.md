@@ -24,6 +24,7 @@ follows (in `fish`, so start a `fish` shell first if it is not your
 login shell):
 
     cd oskar
+    fish                           (start fish in case your default shell is bash)
     source helper.fish
     checkoutEnterprise             (or checkoutArangoDB if you do not have access)
     
@@ -31,6 +32,15 @@ This will pull the Docker image, start up a build and test container
 and clone the ArangoDB source (optionally including the enterprise
 code) into a subdirectory `work` in the current directory. It will
 also show its current configuration.
+
+In case you want to build a specific version, for example 3.12.2 use
+
+    cd oskar
+    git checkout feature/arangodb-3.12.2
+    fish                           (start fish in case your default shell is bash)
+    source helper.fish
+    checkoutEnterprise             (or checkoutArangoDB if you do not have access)
+
 
 ### OpenSSL dependency build (macOS)
 
