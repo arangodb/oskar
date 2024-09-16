@@ -77,17 +77,16 @@ def testing_runner(testing_instance, this, arangosh):
     try:
         this.start = datetime.now(tz=None)
         this.cov_prefix = None
+        this.cov_prefix_var = None
         if this.cfg.is_cov:
-            if this.cfg.is_lcov:
-                this.cov_prefix =  (Path(COVERAGE_VALUE) /
-                                    this.name_enum.replace(' ', '_'))
-                if this.cov_prefix.exists():
-                    print(f"deleting pre-existing coverage {str(this.cov_prefix)}")
-                    shutil.rmtree(str(this.cov_prefix))
-            else:
-                this.cov_prefix =  Path(COVERAGE_VALUE)
+            this.cov_prefix =  (Path(COVERAGE_VALUE) /
+                                this.name_enum.replace(' ', '_'))
+            if this.cov_prefix.exists():
+                print(f"deleting pre-existing coverage {str(this.cov_prefix)}")
+                shutil.rmtree(str(this.cov_prefix))
             if not this.cov_prefix.exists():
                 this.cov_prefix.mkdir(parents=True)
+            this.cov_prefix_var = this.cov_prefix / "testingjs"
         ret = arangosh.run_testing(this.suite,
                                    this.args,
                                    999999999,
@@ -96,7 +95,7 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.name_enum,
                                    this.temp_dir,
                                    COVERAGE_VAR,
-                                   str(this.cov_prefix) if this.cov_prefix is not None else this.cov_prefix,
+                                   str(this.cov_prefix_var) if this.cov_prefix is not None else this.cov_prefix,
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
@@ -148,7 +147,7 @@ def testing_runner(testing_instance, this, arangosh):
     finally:
         print('finally')
         try:
-            if this.cov_prefix is not None and this.cfg.is_lcov:
+            if this.cov_prefix is not None:
                 with COVERAGE_LOCK:
                     start = time.time()
                     cov_dir = Path(this.cov_prefix)

@@ -8,7 +8,7 @@ function buildSanFlags --argument SRCDIR
     # This also has to be in runRTAtest.fish
     if not test -z "$SAN"; and test "$SAN" = "On"
       echo "Use SAN mode: $SAN_MODE"
-      set common_options "log_exe_name=true"
+      set common_options "log_exe_name=true:external_symbolizer_path=$INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-client.py"
 
       switch "$SAN_MODE"
         case "AULSan"

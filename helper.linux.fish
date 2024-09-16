@@ -581,15 +581,8 @@ end
 function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
-  if test "$ARANGODB_VERSION_MAJOR" -eq 3
-    if test "$ARANGODB_VERSION_MINOR" -ge 12; or begin; test "$ARANGODB_VERSION_MINOR" -eq 11; and test "$ARANGODB_VERSION_PATCH" -ge 10; end
-      echo "collecting llvm coverage"
-      runInContainer --env LLVM_PROFILE_FILE=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
-    else
-      echo "collecting gcov coverage"
-      runInContainer (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage_old.py" "$INNERWORKDIR/" gcov coverage
-    end
-  end
+  and echo "collecting llvm coverage"
+  and runInContainer --env LLVM_PROFILE_FILE=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
   return $status
 end
 

@@ -36,6 +36,8 @@ and mkdir -p $DST
 and echo "creating source destination directory '$SP_SOURCE'"
 and mkdir -p $SP_SOURCE
 
+and echo "========== COPYING PACKAGES To gcr-for-rta =========="
+and gsutil -m rsync -c -r $SRC/release gs://gcr-for-rta/stage2/$ARANGODB_PACKAGES
 and echo "========== COPYING PACKAGES =========="
 and tar -C $SRC/release -c -f - packages | tar -C $DST -x -v -f -
 and echo "========== COPYING SOURCE =========="
