@@ -1428,7 +1428,7 @@ function createRepositories
   findArangoDBVersion
 
   pushd $WORKDIR
-  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and begin; test "$ARANGODB_VERSION_MINOR" -ge 12; or begin; test "$ARANGODB_VERSION_MINOR" -eq 11; and test "$ARANGODB_VERSION_PATCH" -ge 11; end; end;
         runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
         -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
