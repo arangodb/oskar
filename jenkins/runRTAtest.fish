@@ -30,7 +30,7 @@ and TT_compile
 and downloadAuxBinariesToBuildBin
 
 if test "$SAN" = "On"
-     $WORKDIR/ArangoDB/utils/llvm-symbolizer-server.py > $WORKDIR/symbolizer.log  2>&1 &
+     WORKDIR/work/ArangoDB/utils/llvm-symbolizer-server.py > $WORKDIR/work/symbolizer.log  2>&1 &
 end
 
 
@@ -51,7 +51,7 @@ set -l s $status
 # compiling results:
 moveResultsToWorkspace
 
-set -l matches $WORKDIR/work/release-test-automation/test_dir/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv,tar,png}
+set -l matches $WORK/work/release-test-automation/test_dir/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv,tar,png}
 for f in $matches
    echo $f | grep -qv testreport ; and echo "mv $f $WORKSPACE" ; and mv $f $WORKSPACE; or echo "skipping $f"
 end
