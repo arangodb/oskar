@@ -29,12 +29,22 @@ and oskarCompile
 and TT_compile
 and downloadAuxBinariesToBuildBin
 
+if test "$SAN" = "On"
+     $INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-server.py > $INNERWORKDIR/symbolizer.log  2>&1 &
+end
+
+
 and checkoutRTA
 and cd work/release-test-automation/
 if test "$ENTERPRISEEDITION" = "On"
    set -xg RTA_EDITION "EP,EPr2"
 end
 and bash -x ./jenkins/oskar_tar.sh $argv
+
+if test "$SAN" = "On"
+   jobs
+   kill %1
+end
 
 set -l s $status
 
