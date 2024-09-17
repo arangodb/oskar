@@ -30,7 +30,7 @@ and TT_compile
 and downloadAuxBinariesToBuildBin
 
 if test "$SAN" = "On"
-     $INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-server.py > $INNERWORKDIR/symbolizer.log  2>&1 &
+     $WORKDIR/ArangoDB/utils/llvm-symbolizer-server.py > $WORKDIR/symbolizer.log  2>&1 &
 end
 
 
