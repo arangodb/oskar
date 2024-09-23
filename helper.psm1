@@ -21,9 +21,9 @@ If (-Not($ENV:ARANGODB_GIT_ORGA))
     $ENV:ARANGODB_GIT_ORGA = "arangodb"
 }
 
-If (-Not($ENV:STARTER_GIT_ORGA))
+If (-Not($ENV:HELPER_GIT_ORGA))
 {
-    $ENV:STARTER_GIT_ORGA = "arangodb-helper"
+    $ENV:HELPER_GIT_ORGA = "arangodb-helper"
 }
 
 If (-Not($ENV:ENTERPRISE_GIT_HOST))
@@ -1121,11 +1121,11 @@ Function downloadStarter
     }
     If ($STARTER_REV -eq "latest")
     {
-        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:STARTER_GIT_ORGA/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
+        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:HELPER_GIT_ORGA/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
         $STARTER_REV = $JSON.name
     }
     Write-Host "Download: Starter"
-    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:STARTER_GIT_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
+    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:HELPER_GIT_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
     setupSourceInfo "Starter" $STARTER_REV
 }
 

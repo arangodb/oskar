@@ -43,7 +43,7 @@ end
 function checkoutStarter
   echo "Checkout ArangoDB Starter $STARTER_REV"
   pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch $STARTER_REV ssh://git@$ARANGODB_GIT_HOST/$STARTER_GIT_ORGA/arangodb Starter-$STARTER_REV
+  and git clone --progress --single-branch --branch $STARTER_REV ssh://git@$ARANGODB_GIT_HOST/$HELPER_GIT_ORGA/arangodb Starter-$STARTER_REV
   or begin popd; return 1; end
   popd
 end

@@ -95,7 +95,7 @@ end
 
 function arangodbGitHost ; set -gx ARANGODB_GIT_HOST $argv[1] ; end
 function arangodbGitOrga ; set -gx ARANGODB_GIT_ORGA $argv[1] ; end
-function starterGitOrga ; set -gx STARTER_GIT_ORGA $argv[1] ; end
+function helperGitOrga ; set -gx HELPER_GIT_ORGA $argv[1] ; end
 function enterpriseGitHost ; set -gx ENTERPRISE_GIT_HOST $argv[1] ; end
 function enterpriseGitOrga ; set -gx ENTERPRISE_GIT_ORGA $argv[1] ; end
 
@@ -105,8 +105,8 @@ else ; set -gx ARANGODB_GIT_HOST $ARANGODB_GIT_HOST ; end
 if test -z "$ARANGODB_GIT_ORGA"; arangodbGitOrga "arangodb"
 else ; set -gx ARANGODB_GIT_ORGA $ARANGODB_GIT_ORGA ; end
 
-if test -z "$STARTER_GIT_ORGA"; starterGitOrga "arangodb-helper"
-else ; set -gx STARTER_GIT_ORGA $STARTER_GIT_ORGA ; end
+if test -z "$HELPER_GIT_ORGA"; helperGitOrga "arangodb-helper"
+else ; set -gx HELPER_GIT_ORGA $HELPER_GIT_ORGA ; end
 
 if test -z "$ENTERPRISE_GIT_HOST"; enterpriseGitHost "github.com"
 else ; set -gx ENTERPRISE_GIT_HOST $ENTERPRISE_GIT_HOST; end
@@ -1924,7 +1924,7 @@ function showConfig
   printf $fmt2 'ArangoDB GIT orga'    $ARANGODB_GIT_ORGA
   printf $fmt2 'Enterprise GIT host'  $ENTERPRISE_GIT_HOST
   printf $fmt2 'Enterprise GIT orga'  $ENTERPRISE_GIT_ORGA
-  printf $fmt2 'Starter GIT orga'     $STARTER_GIT_ORGA
+  printf $fmt2 'Starter GIT orga'     $HELPER_GIT_ORGA
   echo
 
   echo 'Build Configuration'
