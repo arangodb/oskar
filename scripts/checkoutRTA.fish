@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-ssh -o StrictHostKeyChecking=no -T git@github.com
+ssh -o StrictHostKeyChecking=no -T git@$ARANGODB_GIT_HOST
 
 cd $INNERWORKDIR
 and git config --global http.postBuffer 524288000
@@ -10,7 +10,7 @@ and if test ! -d release-test-automation/.git
 end
 and if test ! -d release-test-automation
   echo == (date) == started clone 'RTA'
-  and git clone --progress ssh://git@github.com/arangodb/release-test-automation
+  and git clone --progress ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/release-test-automation
   and echo == (date) == finished clone 'release test automation'
 end
 and pushd release-test-automation
