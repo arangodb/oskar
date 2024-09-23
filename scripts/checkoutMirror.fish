@@ -17,7 +17,7 @@ else
   popd
 end
 and if test ! -d enterprise.git
-  git clone --progress --mirror ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/enterprise.git
+  git clone --progress --mirror ssh://git@$ENTERPRISE_GIT_HOST/$ENTERPRISE_GIT_ORGA/enterprise.git
   or exit 1
 else
   pushd enterprise.git

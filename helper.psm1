@@ -21,9 +21,19 @@ If (-Not($ENV:ARANGODB_GIT_ORGA))
     $ENV:ARANGODB_GIT_ORGA = "arangodb"
 }
 
-If (-Not($ENV:ARANGODB_GIT_STARTER_ORGA))
+If (-Not($ENV:STARTER_GIT_ORGA))
 {
-    $ENV:ARANGODB_GIT_STARTER_ORGA = "arangodb-helper"
+    $ENV:STARTER_GIT_ORGA = "arangodb-helper"
+}
+
+If (-Not($ENV:ENTERPRISE_GIT_HOST))
+{
+    $ENV:ENTERPRISE_GIT_HOST = "github.com"
+}
+
+If (-Not($ENV:ENTERPRISE_GIT_ORGA))
+{
+    $ENV:ENTERPRISE_GIT_ORGA = "arangodb"
 }
 
 If (-Not(Test-Path -PathType Container -Path "work"))
@@ -1111,11 +1121,11 @@ Function downloadStarter
     }
     If ($STARTER_REV -eq "latest")
     {
-        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:ARANGODB_GIT_STARTER_ORGA/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
+        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:STARTER_GIT_ORGA/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
         $STARTER_REV = $JSON.name
     }
     Write-Host "Download: Starter"
-    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:ARANGODB_GIT_STARTER_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
+    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:STARTER_GIT_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
     setupSourceInfo "Starter" $STARTER_REV
 }
 
@@ -1189,7 +1199,7 @@ Function checkoutEnterprise
         Set-Location $global:ARANGODIR
         If (-Not(Test-Path -PathType Container -Path "enterprise"))
         {
-            proc -process "git" -argument "clone ssh://git@$ENV:ARANGODB_GIT_HOST/$ENV:ARANGODB_GIT_ORGA/enterprise" -logfile $false -priority "Normal"
+            proc -process "git" -argument "clone ssh://git@$ENV:ENTERPRISE_GIT_HOST/$ENV:ENTERPRISE_GIT_ORGA/enterprise" -logfile $false -priority "Normal"
         }
         Pop-Location
     }
