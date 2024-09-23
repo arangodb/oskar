@@ -1,6 +1,5 @@
 #!/usr/bin/env fish
 ssh -o StrictHostKeyChecking=no -T git@$ARANGODB_GIT_HOST
-if test "$ENTERPRISEEDITION" = "On"; ssh -o StrictHostKeyChecking=no -T git@$ENTERPRISE_GIT_HOST
 
 set -xg GCOV_PREFIX /work/gcov
 set -xg GCOV_PREFIX_STRIP 3
