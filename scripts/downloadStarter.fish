@@ -40,7 +40,7 @@ else
   set STARTER_REV "$argv[2]"
 end
 if test "$STARTER_REV" = latest
-  set -l meta (curl -s -L "https://api.$ARANGODB_GIT_HOST/repos/$ARANGODB_GIT_STARTER_ORGA/$ARANGODB_GIT_ORGA/releases/latest")
+  set -l meta (curl -s -L "https://api.$ARANGODB_GIT_HOST/repos/$ARANGODB_GIT_STARTER_ORGA/arangodb/releases/latest")
   or begin ; echo "Finding download asset failed for latest" ; exit 1 ; end
   set STARTER_REV (echo $meta | jq -r ".name")
   or begin ; echo "Could not parse downloaded JSON" ; exit 1 ; end
@@ -49,8 +49,8 @@ echo Using STARTER_REV "$STARTER_REV"
 
 mkdir -p $STARTER_FOLDER
 set -l STARTER_PATH $STARTER_FOLDER/arangodb
-echo "https://$ARANGODB_GIT_HOST/$ARANGODB_GIT_STARTER_ORGA/$ARANGODB_GIT_ORGA/releases/download/$STARTER_REV/arangodb-$PLATFORM-$arch"
-and curl -s -L -o "$STARTER_PATH" "https://$ARANGODB_GIT_HOST/$ARANGODB_GIT_STARTER_ORGA/$ARANGODB_GIT_ORGA/releases/download/$STARTER_REV/arangodb-$PLATFORM-$arch"
+echo "https://$ARANGODB_GIT_HOST/$ARANGODB_GIT_STARTER_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-$PLATFORM-$arch"
+and curl -s -L -o "$STARTER_PATH" "https://$ARANGODB_GIT_HOST/$ARANGODB_GIT_STARTER_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-$PLATFORM-$arch"
 and chmod 755 "$STARTER_PATH"
 and echo Starter ready for build $STARTER_PATH
 and setupSourceInfo "$STARTER_REV"
