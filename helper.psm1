@@ -1111,11 +1111,11 @@ Function downloadStarter
     }
     If ($STARTER_REV -eq "latest")
     {
-        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:ARANGODB_GIT_STARTER_ORGA/$ENV:ARANGODB_GIT_ORGA/releases/latest' -UseBasicParsing | ConvertFrom-Json
+        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:ARANGODB_GIT_STARTER_ORGA/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
         $STARTER_REV = $JSON.name
     }
     Write-Host "Download: Starter"
-    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:ARANGODB_GIT_STARTER_ORGA/$ENV:ARANGODB_GIT_ORGA/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
+    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:ARANGODB_GIT_STARTER_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
     setupSourceInfo "Starter" $STARTER_REV
 }
 
