@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-ssh -o StrictHostKeyChecking=no -T git@github.com
+ssh -o StrictHostKeyChecking=no -T git@$ARANGODB_GIT_HOST
 
 set -xg GCOV_PREFIX /work/gcov
 set -xg GCOV_PREFIX_STRIP 3
@@ -9,9 +9,9 @@ and if test -d docs
   rm -rf docs
 end
 and if test -n "$ARANGODB_DOCS_BRANCH"
-  git clone --progress -b $ARANGODB_DOCS_BRANCH --single-branch ssh://git@github.com/arangodb/docs
+  git clone --progress -b $ARANGODB_DOCS_BRANCH --single-branch ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/docs
 else
-  git clone --progress ssh://git@github.com/arangodb/docs
+  git clone --progress ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/docs
 end
 and begin
   set -l CMAKELIST "CMakeLists.txt"

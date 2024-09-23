@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-ssh -o StrictHostKeyChecking=no -T git@github.com
+ssh -o StrictHostKeyChecking=no -T git@$ARANGODB_GIT_HOST
 
 apt install -y bc
 

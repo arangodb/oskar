@@ -1,5 +1,6 @@
 #!/usr/bin/env fish
-ssh -o StrictHostKeyChecking=no -T git@github.com
+ssh -o StrictHostKeyChecking=no -T git@$ARANGODB_GIT_HOST
+if test "$ENTERPRISEEDITION" = "On"; ssh -o StrictHostKeyChecking=no -T git@$ENTERPRISE_GIT_HOST; end
 
 if test (count $argv) -ne 1
     echo "usage: createCompleteTar.fish <RELEASE-TAG>"
@@ -13,7 +14,7 @@ set -g STARTER_REV "unknown"
 function checkoutCommunity
   echo "Checkout ArangoDB Community $RELEASE_TAG"
   pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch $RELEASE_TAG ssh://git@github.com/arangodb/arangodb ArangoDB-$RELEASE_TAG
+  and git clone --progress --single-branch --branch $RELEASE_TAG ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/arangodb ArangoDB-$RELEASE_TAG
   and pushd $INNERWORKDIR/CompleteTar/ArangoDB-$RELEASE_TAG/3rdParty
   and git submodule update --init --force
   and popd
@@ -26,7 +27,7 @@ end
 function checkoutEnterprise
   echo "Checkout ArangoDB Enterprise $RELEASE_TAG"
   pushd $INNERWORKDIR/CompleteTar/ArangoDB-$RELEASE_TAG
-  and git clone --progress --single-branch --branch $RELEASE_TAG ssh://git@github.com/arangodb/enterprise enterprise
+  and git clone --progress --single-branch --branch $RELEASE_TAG ssh://git@$ENTERPRISE_GIT_HOST/$ENTERPRISE_GIT_ORGA/enterprise enterprise
   or begin popd; return 1; end
   popd
 end
@@ -42,7 +43,7 @@ end
 function checkoutStarter
   echo "Checkout ArangoDB Starter $STARTER_REV"
   pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch $STARTER_REV ssh://git@github.com/arangodb-helper/arangodb Starter-$STARTER_REV
+  and git clone --progress --single-branch --branch $STARTER_REV ssh://git@$ARANGODB_GIT_HOST/$HELPER_GIT_ORGA/arangodb Starter-$STARTER_REV
   or begin popd; return 1; end
   popd
 end
@@ -51,7 +52,7 @@ function checkoutSyncer
   if test -n "$SYNCER_REV"
     echo "Checkout ArangoDB Syncer $SYNCER_REV"
     pushd $INNERWORKDIR/CompleteTar
-    and git clone --progress --single-branch --branch $SYNCER_REV ssh://git@github.com/arangodb/arangosync arangosync-$SYNCER_REV
+    and git clone --progress --single-branch --branch $SYNCER_REV ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/arangosync arangosync-$SYNCER_REV
     or begin popd; return 1; end
     popd
     end
@@ -60,7 +61,7 @@ end
 function checkoutOskar
   echo "Checkout OSKAR"
   pushd $INNERWORKDIR/CompleteTar
-  and git clone --progress --single-branch --branch master ssh://git@github.com/arangodb/oskar
+  and git clone --progress --single-branch --branch master ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/oskar
   or begin popd; return 1; end
   popd
 end

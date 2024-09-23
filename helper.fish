@@ -93,67 +93,100 @@ end
 ## config
 ## #############################################################################
 
+function arangodbGitHost ; set -gx ARANGODB_GIT_HOST $argv[1] ; end
+function arangodbGitOrga ; set -gx ARANGODB_GIT_ORGA $argv[1] ; end
+function helperGitOrga ; set -gx HELPER_GIT_ORGA $argv[1] ; end
+function enterpriseGitHost ; set -gx ENTERPRISE_GIT_HOST $argv[1] ; end
+function enterpriseGitOrga ; set -gx ENTERPRISE_GIT_ORGA $argv[1] ; end
+
+if test -z "$ARANGODB_GIT_HOST"; arangodbGitHost "github.com"
+else ; set -gx ARANGODB_GIT_HOST $ARANGODB_GIT_HOST ; end
+
+if test -z "$ARANGODB_GIT_ORGA"; arangodbGitOrga "arangodb"
+else ; set -gx ARANGODB_GIT_ORGA $ARANGODB_GIT_ORGA ; end
+
+if test -z "$HELPER_GIT_ORGA"; helperGitOrga "arangodb-helper"
+else ; set -gx HELPER_GIT_ORGA $HELPER_GIT_ORGA ; end
+
+if test -z "$ENTERPRISE_GIT_HOST"; enterpriseGitHost "github.com"
+else ; set -gx ENTERPRISE_GIT_HOST $ENTERPRISE_GIT_HOST; end
+
+if test -z "$ENTERPRISE_GIT_ORGA"; enterpriseGitOrga "arangodb"
+else ; set -gx ENTERPRISE_GIT_ORGA $ENTERPRISE_GIT_ORGA; end
+
 function single ; set -gx TESTSUITE single ; end
 function cluster ; set -gx TESTSUITE cluster ; end
 function single_cluster ; set -gx TESTSUITE single_cluster ; end
 function resilience ; set -gx TESTSUITE resilience ; end
 function catchtest ; set -gx TESTSUITE gtest ; end
 function gtest ; set -gx TESTSUITE gtest ; end
+
 if test -z "$TESTSUITE" ; cluster
 else ; set -gx TESTSUITE $TESTSUITE ; end
 
 function maintainerOn ; set -gx MAINTAINER On ; end
 function maintainerOff ; set -gx MAINTAINER Off ; end
+
 if test -z "$MAINTAINER" ; maintainerOn
 else ; set -gx MAINTAINER $MAINTAINER ; end
 
 function sanOn ; set -gx SAN On ; end
 function sanOff ; set -gx SAN Off ; end
+
 if test -z "$SAN" ; sanOff
 else ; set -gx SAN $SAN ; end
 
 function sanModeAULSan ; set -gx SAN_MODE AULSan ; end
 function sanModeTSan ; set -gx SAN_MODE TSan ; end
+
 if test -z "$SAN_MODE" ; sanModeAULSan
 else ; set -gx SAN_MODE $SAN_MODE ; end
 
 function jemallocOn; set -gx JEMALLOC_OSKAR On ; end
 function jemallocOff; set -gx JEMALLOC_OSKAR Off ; end
+
 if test -z "$JEMALLOC_OSKAR" ; jemallocOn
 else ; set -gx JEMALLOC_OSKAR $JEMALLOC_OSKAR ; end
 
 function debugMode ; set -gx BUILDMODE Debug ; end
 function releaseMode ; set -gx BUILDMODE RelWithDebInfo ; end
+
 if test -z "$BUILDMODE" ; releaseMode
 else ; set -gx BUILDMODE $BUILDMODE ; end
 
 function makeOff ; set -gx SKIP_MAKE On  ; end
 function makeOn  ; set -gx SKIP_MAKE Off ; end
+
 makeOn
 
 function packBuildFilesOff ; set -gx PACK_BUILD_FILES Off ; end
 function packBuildFilesOn ; set -gx PACK_BUILD_FILES On ; end
+
 if test -z "$PACK_BUILD_FILES" ; packBuildFilesOn
 else ; set -xg PACK_BUILD_FILES $PACK_BUILD_FILES ; end
 
 function unpackBuildFilesOff ; set -gx UNPACK_BUILD_FILES Off ; end
 function unpackBuildFilesOn ; set -gx UNPACK_BUILD_FILES On ; end
+
 if test -z "$UNPACK_BUILD_FILES" ; unpackBuildFilesOff
 else ; set -xg UNPACK_BUILD_FILES $UNPACK_BUILD_FILES ; end
 
 function setBuildFilesArchive ; set -xg BUILD_FILES_ARCHIVE $argv[1] ; end
 function unsetBuildFilesArchive ; set -xg BUILD_FILES_ARCHIVE "" ; end
+
 if test -z "$BUILD_FILES_ARCHIVE"; unsetBuildFilesArchive
 else ; setBuildFilesArchive "$BUILD_FILES_ARCHIVE" ; end
 
 set -xg GCR_REG_PREFIX "gcr.io/gcr-for-testing/"
 function gcrRegOff ; set -gx GCR_REG "Off"  ; end
 function gcrRegOn  ; set -gx GCR_REG "On"   ; end
+
 gcrRegOn
 
 function packageStripNone          ; set -gx PACKAGE_STRIP None    ; end
 function packageStripExceptArangod ; set -gx PACKAGE_STRIP ExceptArangod ; end
 function packageStripAll           ; set -gx PACKAGE_STRIP All     ; end
+
 packageStripAll
 
 function findMinimalDebugInfo
@@ -1886,6 +1919,14 @@ function showConfig
   end
 
   echo '------------------------------------------------------------------------------'
+  echo 'GIT Configuration'
+  printf $fmt2 'ArangoDB GIT host'    $ARANGODB_GIT_HOST
+  printf $fmt2 'ArangoDB GIT orga'    $ARANGODB_GIT_ORGA
+  printf $fmt2 'Enterprise GIT host'  $ENTERPRISE_GIT_HOST
+  printf $fmt2 'Enterprise GIT orga'  $ENTERPRISE_GIT_ORGA
+  printf $fmt2 'Starter GIT orga'     $HELPER_GIT_ORGA
+  echo
+
   echo 'Build Configuration'
   printf $fmt3 'Sanitizer'     $SAN                    '(sanOn/Off)'
   printf $fmt3 'San mode'      $SAN_MODE               '(sanModeAULSan/TSan)'
