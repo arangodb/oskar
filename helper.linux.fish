@@ -1658,6 +1658,9 @@ function runInContainer
              -v "$WORKDIR/scripts/":"/scripts" \
              $mirror \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
+             -e ARANGODB_GIT_HOST="$ARANGODB_GIT_HOST" \
+             -e ARANGODB_GIT_ORGA="$ARANGODB_GIT_ORGA" \
+             -e ARANGODB_GIT_STARTER_ORGA="$ARANGODB_GIT_STARTER_ORGA" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
@@ -1779,6 +1782,9 @@ function interactiveContainer
     -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
     -v "$WORKDIR/scripts/":"/scripts" \
     -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
+    -e ARANGODB_GIT_HOST="$ARANGODB_GIT_HOST" \
+    -e ARANGODB_GIT_ORGA="$ARANGODB_GIT_ORGA" \
+    -e ARANGODB_GIT_STARTER_ORGA="$ARANGODB_GIT_STARTER_ORGA" \
     -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
     -e ARANGODB_REPO="$ARANGODB_REPO" \
     -e ARANGODB_VERSION="$ARANGODB_VERSION" \
