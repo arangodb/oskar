@@ -1,6 +1,10 @@
 set -gx KEYNAME     86FEC04D
 set -gx KEYNAME_OLD 115E1684
 
+if test -z "ARANGODB_GIT_HOST"; set -gx ARANGODB_GIT_URL "github.com"
+if test -z "ARANGODB_GIT_ORGA"; set -gx ARANGODB_GIT_ORGA "arangodb"
+if test -z "ARANGODB_GIT_STARTER_ORGA"; set -gx ARANGODB_GIT_STARTER_ORGA "arangodb-helper"
+
 function lockDirectory
   # Now grab the lock ourselves:
   set -l pid (echo %self)

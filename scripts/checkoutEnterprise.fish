@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-ssh -o StrictHostKeyChecking=no -T git@github.com
+ssh -o StrictHostKeyChecking=no -T git@$ARANGODB_GIT_HOST
 
 set -l mirror
 
@@ -17,7 +17,7 @@ and if test ! -d enterprise/.git
 end
 and if test ! -d enterprise
   echo == (date) == started clone 'enterprise'
-  and git clone --progress $mirror ssh://git@github.com/arangodb/enterprise
+  and git clone --progress $mirror ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/enterprise
   and echo == (date) == finished clone 'enterprise'
   and if test -d /mirror/enterprise.git
     cd enterprise
