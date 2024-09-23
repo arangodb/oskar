@@ -1,5 +1,6 @@
 #!/usr/bin/env fish
 ssh -o StrictHostKeyChecking=no -T git@$ARANGODB_GIT_HOST
+if test "$ENTERPRISEEDITION" = "On"; ssh -o StrictHostKeyChecking=no -T git@$ENTERPRISE_GIT_HOST
 
 cd $INNERWORKDIR
 and git config --global http.postBuffer 524288000
