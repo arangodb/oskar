@@ -35,6 +35,10 @@ echo "Using openssl version $OPENSSL_VERSION"
 
 if test "$ARCH" = "x86_64" -a (string sub -s 1 -l 1 "$OPENSSLPATH") = "3" 
   set -xg X86_64_SUFFIX "64"
+  set -xg LAPACK_LIB_PATH "/usr/lib/x86_64-linux-gnu/lapack"
+else
+  # TODO (jbajic) check this path
+  set -xg LAPACK_LIB_PATH "/usr/lib/aarch64/lapack"
 end
 
 set -l pie ""
@@ -54,7 +58,7 @@ set -g FULLARGS $argv \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL \
  -DBUILD_REPO_INFO=$BUILD_REPO_INFO \
  -DARANGODB_BUILD_DATE="$ARANGODB_BUILD_DATE" \
- -DLAPACK_LIBRARIES="/usr/lib/x86_64-linux-gnu/"
+ -DLAPACK_LIBRARIES="$LAPACK_LIB_PATH"
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
@@ -62,7 +66,7 @@ if test "$MAINTAINER" = "On"
     -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld " \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld -fopenmp=libomp -L/opt/omp" \
     -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
