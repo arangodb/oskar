@@ -35,6 +35,9 @@ echo "Using openssl version $OPENSSL_VERSION"
 
 if test "$ARCH" = "x86_64" -a (string sub -s 1 -l 1 "$OPENSSLPATH") = "3" 
   set -xg X86_64_SUFFIX "64"
+end
+
+if test "$ARCH" = "x86_64"
   set -xg LAPACK_LIB_PATH "/usr/lib/x86_64-linux-gnu/lapack"
 else
   # TODO (jbajic) check this path
