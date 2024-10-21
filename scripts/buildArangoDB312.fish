@@ -40,8 +40,7 @@ end
 if test "$ARCH" = "x86_64"
   set -xg LAPACK_LIB_PATH "/usr/lib/x86_64-linux-gnu/lapack"
 else
-  # TODO (jbajic) check this path
-  set -xg LAPACK_LIB_PATH "/usr/lib/aarch64/lapack"
+  set -xg LAPACK_LIB_PATH "/usr/lib/aarch64-linux-gnu/lapack"
 end
 
 set -l pie ""
