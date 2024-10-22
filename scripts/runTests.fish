@@ -130,7 +130,7 @@ end
 if test "$SAN" = "On"
   switch $SAN_MODE
     case "TSan"
-      set timeLimit (math $timeLimit \* 13)
+      set timeLimit (math $timeLimit \* 14)
     case "AULSan"
       set timeLimit (math $timeLimit \* 8)
     case "*"
