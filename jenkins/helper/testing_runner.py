@@ -647,7 +647,7 @@ class TestingRunner():
                            name,
                            test["suite"],
                            [ *args],
-                           test['arangosh_args',
+                           test['arangosh_args'],
                            test['priority'],
                            parallelity,
                            test['flags']))
