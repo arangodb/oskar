@@ -601,6 +601,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 timeout_str = "TIMEOUT OCCURED!"
                 print(timeout_str)
                 timeout_str += "\n"
+                params['error'] += timeout_str
             elif rc_exit is None:
                 print_log(f"{identifier} waiting for regular exit", params)
                 rc_exit = process.wait()

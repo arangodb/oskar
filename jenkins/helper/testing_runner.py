@@ -88,6 +88,7 @@ def testing_runner(testing_instance, this, arangosh):
                 this.cov_prefix.mkdir(parents=True)
             this.cov_prefix_var = this.cov_prefix / "testingjs"
         ret = arangosh.run_testing(this.suite,
+                                   this.arangosh_args,
                                    this.args,
                                    999999999,
                                    this.base_logdir,
@@ -107,7 +108,7 @@ def testing_runner(testing_instance, this, arangosh):
         this.delta_seconds = this.delta.total_seconds()
         this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
         this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
-        print(f'done with {this.name_enum} -> {this.success}')
+        print(f'done with {this.name_enum} -> {this.success} {ret['rc_exit']}')
         if this.report_file.exists():
             this.structured_results = this.report_file.read_text(encoding="UTF-8", errors='ignore')
         this.summary = ret['error']
