@@ -637,6 +637,7 @@ class TestingRunner():
                                [ *args,
                                  '--index', f"{i}",
                                  '--testBuckets', f'{num_buckets}/{i}'],
+                               arangosh_args,
                                test['priority'],
                                parallelity,
                                test['flags']))
@@ -646,6 +647,7 @@ class TestingRunner():
                            name,
                            test["suite"],
                            [ *args],
+                           arangosh_args,
                            test['priority'],
                            parallelity,
                            test['flags']))
