@@ -2,6 +2,7 @@
 """ keep the config for one testsuite to execute """
 import copy
 import os
+import json
 
 from site_config import IS_WINDOWS, IS_MAC, TEMP
 TEST_LOG_FILES = []
