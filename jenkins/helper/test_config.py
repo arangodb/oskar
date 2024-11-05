@@ -67,7 +67,10 @@ class TestConfig():
         # the yaml work around is to have an A prepended. detect and strip out:
         if arangosh_args is not None and len(arangosh_args) > 0 and arangosh_args != 'A ""':
             print(arangosh_args)
-            self.arangosh_args = json.loads(arangosh_args[1:])
+            if type(arangosh_args) not is types.ListType:
+                self.arangosh_args = json.loads(arangosh_args[1:])
+            else:
+                self.arangosh_args = arangosh_args
         self.args = copy.deepcopy(cfg.extra_args)
         for param in args:
             if param.startswith('$'):
