@@ -16,8 +16,10 @@ OVERLOAD_THREAD = None
 def overload_thread(sitecfg, _):
     """watcher thread to track system load"""
     continue_running = True
-    # print("starting load monitoring thread")
-    with open((sitecfg.base_dir / "overloads.jsonl"), "w+", encoding="utf-8")  as jsonl_file:
+    print("starting load monitoring thread")
+    fn =sitecfg.base_dir / "overloads.jsonl"
+    print(f"report file: {str(fn)}")
+    with open(fn, "w+", encoding="utf-8")  as jsonl_file:
         while continue_running:
             #try:
             #    sock_count = get_socket_count()
