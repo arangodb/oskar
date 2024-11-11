@@ -7,6 +7,7 @@ from threading  import Thread
 from traceback import print_exc
 
 from dmesg import DmesgWatcher, dmesg_runner
+from overload_thread import spawn_overload_watcher_thread, shutdown_overload_watcher_thread
 from site_config import SiteConfig, IS_LINUX
 from testing_runner import TestingRunner
 
@@ -36,6 +37,7 @@ def launch_runner(runner, create_report):
         dmesg_thread = Thread(target=dmesg_runner, args=[dmesg], name="dmesg")
         dmesg.name = "dmesg"
         dmesg_thread.start()
+        spawn_overload_watcher_thread(runner.cfg)
         time.sleep(3)
     print(runner.scenarios)
     try:
@@ -59,6 +61,7 @@ def launch_runner(runner, create_report):
         runner.create_testruns_file()
         if IS_LINUX:
             dmesg.end_run()
+            shutdown_overload_watcher_thread()
             print('joining dmesg threads')
             dmesg_thread.join()
         runner.print_and_exit_closing_stance()
