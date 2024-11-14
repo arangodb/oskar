@@ -50,6 +50,7 @@ def gather_process_thread_statistics(p):
     ret['process'] = [{
         'time': time.ctime(),
         'pid': p.pid,
+        'ppid': p.ppid(),
         'cmdline': p.cmdline(),
         'name': p.name(),
         'percent': p.cpu_percent(),
