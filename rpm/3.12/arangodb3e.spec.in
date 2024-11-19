@@ -165,7 +165,7 @@ rmdir /tmp/sbin /tmp/bin
 %{_datadir}/arangodb3/js@JS_DIR@/common
 %{_datadir}/arangodb3/js@JS_DIR@/client
 %{_datadir}/arangodb3/js@JS_DIR@/node
-%{_datadir}/arangodb3/icudtl.dat
+%{_datadir}/arangodb3/icudtl*.dat
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                         changelog

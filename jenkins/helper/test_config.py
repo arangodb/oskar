@@ -16,6 +16,7 @@ class TestConfig():
                  name,
                  suite,
                  args,
+                 arangosh_args,
                  priority,
                  parallelity,
                  flags):
@@ -61,6 +62,7 @@ class TestConfig():
         self.report_file =  self.base_logdir / 'UNITTEST_RESULT.json'
         self.base_testdir = cfg.test_data_dir_x / self.name
 
+        self.arangosh_args = arangosh_args
         self.args = copy.deepcopy(cfg.extra_args)
         for param in args:
             if param.startswith('$'):
