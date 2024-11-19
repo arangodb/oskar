@@ -86,6 +86,7 @@ def get_all_processes_stats_json(load):
         'diskio': psutil.disk_io_counters(perdisk=True, nowrap=True),
         'netio': psutil.net_io_counters(pernic=True, nowrap=True),
     }
+<<<<<<< HEAD
     processes = psutil.process_iter()
     for process in processes:
         name = ""
@@ -98,4 +99,24 @@ def get_all_processes_stats_json(load):
             pass
         except Exception as ex:
             print(f"while inspecting {name}: {ex} ")
+=======
+    for n in [True, False]:
+        processes = psutil.process_iter()
+        for process in processes:
+            name = ""
+            try:
+                name = process.name()
+                if  process.pid not in [1, 2] and process.ppid() != 2:
+                    procstat = gather_process_thread_statistics(process)
+                    if n:
+                        process_full_list[f"p{process.pid}"] = procstat
+                    else:
+                        add_delta(process_full_list[f"p{process.pid}"], procstat)
+            except psutil.AccessDenied:
+                pass
+            except Exception as ex:
+                print(f"while inspecting {name}: {ex} ")
+        if n:
+            time.sleep(1)
+>>>>>>> 9bac7477 (write system information as well)
     return json.dumps(process_full_list)
