@@ -11,6 +11,7 @@ def list_all_processes():
     # pylint: disable=catching-non-exception
     for process in psutil.process_iter(["pid", "ppid", "name"]):
         if  process.pid in [1, 2] or process.ppid() == 2:
+            continue
         cmdline = process.name
         try:
             cmdline = str(process.cmdline())
