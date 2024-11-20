@@ -280,7 +280,7 @@ Function configureWER($executable, $path)
     New-ItemProperty "$regPath" -Name DumpType -PropertyType DWord -Value 2 -Force | Out-Null
 }
 
-$global:OPENSSL_DEFAULT_VERSION = "1.1.0l"
+$global:OPENSSL_DEFAULT_VERSION = "3.4.0"
 $global:OPENSSL_VERSION = $global:OPENSSL_DEFAULT_VERSION
 
 $global:OPENSSL_MODES = "release", "debug"
