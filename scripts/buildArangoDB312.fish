@@ -39,8 +39,10 @@ end
 
 if test "$ARCH" = "x86_64"
   set -xg LAPACK_LIB_PATH "/usr/lib/x86_64-linux-gnu/lapack/liblapack.a"
+  set -xg BLAS_LIB_PATH "/usr/lib/x86_64-linux-gnu/blas/libblas.a"
 else
   set -xg LAPACK_LIB_PATH "/usr/lib/aarch64-linux-gnu/lapack/liblapack.a"
+  set -xg BLAS_LIB_PATH "/usr/lib/aarch64-linux-gnu/blas/libblas.a"
 end
 
 set -l pie ""
@@ -60,7 +62,8 @@ set -g FULLARGS $argv \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL \
  -DBUILD_REPO_INFO=$BUILD_REPO_INFO \
  -DARANGODB_BUILD_DATE="$ARANGODB_BUILD_DATE" \
- -DLAPACK_LIBRARIES="$LAPACK_LIB_PATH"
+ -DLAPACK_LIBRARIES="$LAPACK_LIB_PATH" \
+ -DBLAS_LIBRARIES="$BLAS_LIB_PATH"
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
