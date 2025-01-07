@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import hashlib
+import json
 import pprint
 import re
 import shutil
@@ -168,6 +169,8 @@ def testing_runner(testing_instance, this, arangosh):
             print(traceback.format_exc())
             raise ex
         with arangosh.slot_lock:
+            with open((this.cfg.run_root / "job_to_pids.jsonl"), "a+", encoding="utf-8")  as jsonl_file:
+                jsonl_file.write(f'{json.dumps({"pid": ret["pid"], "logfile": str(this.log_file)})}\n')
             testing_instance.running_suites.remove(this.name_enum)
         testing_instance.done_job(this.parallelity)
 
