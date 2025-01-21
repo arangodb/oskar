@@ -1,7 +1,7 @@
 # First rebuild glibc with a special option and provide some .deb files:
 ARG COMPILER_VERSION=13
-ARG CLANG_VERSION=19
-ARG CLANG_FULL_VERSION=19.1.6
+ARG CLANG_VERSION=16
+ARG CLANG_FULL_VERSION=16.0.6
 
 FROM ubuntu:24.04 as glibcdebs
 

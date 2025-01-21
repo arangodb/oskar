@@ -1,8 +1,9 @@
-# First rebuild glibc with a special option and provide some .deb files:
+# Arguments used through multiple build stages
 ARG COMPILER_VERSION=13
-ARG CLANG_VERSION=19
-ARG CLANG_FULL_VERSION=19.1.6
+ARG CLANG_VERSION=16
+ARG CLANG_FULL_VERSION=16.0.6
 
+# First rebuild glibc with a special option and provide some .deb files:
 FROM ubuntu:24.04 as glibcdebs
 
 COPY ./static /static
@@ -23,15 +24,13 @@ RUN dpkg -i /debs/*.deb
 
 #FROM ubuntu:24.04 as v81
 #
-#COPY ./tools/build_v8_arm64.sh /tools/build_v8_arm64.sh
-#RUN /tools/build_v8_arm64.sh
+#COPY ./tools/build_v8.sh /tools/build_v8.sh
+#RUN /tools/build_v8.sh
 #
 #FROM v81 as v8
 #
-#COPY ./tools/install_v8_arm64.sh /tools/install_v8_arm64.sh
-#RUN /tools/install_v8_arm64.sh
-
-# Finally, build the actual build image based on the above preparation:
+#COPY ./tools/install_v8.sh /tools/install_v8.sh
+#RUN /tools/install_v8.sh
 
 # Build OpenMP static library
 FROM ubuntu:24.04 as openmp
@@ -76,11 +75,13 @@ RUN cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang;openmp" -DCMAKE_C_COMPILER=clan
 RUN mkdir -p /opt/omp && cp ./lib/libomp.so.5 /opt/omp/libomp.a
 
 
+# Finally, build the actual build image based on the above preparation:
+
 FROM prepare
 
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
-ARG ARCH="aarch64"
+ARG ARCH="x86_64"
 ARG COMPILER_VERSION
 ARG CLANG_VERSION
 
@@ -110,12 +111,14 @@ RUN npm install -g yarn
 
 # sccache for cloud compiler cache:
 
-RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.3.1/sccache-v0.3.1-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.2.15-${ARCH}-unknown-linux-musl
+RUN curl -L https://github.com/mozilla/sccache/releases/download/v0.3.1/sccache-v0.3.1-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v0.3.1-${ARCH}-unknown-linux-musl
 
 # Fetch V8:
 #COPY --from=v8 /opt/v8/lib /opt/v8/lib
 #COPY --from=v8 /opt/v8/include /opt/v8/include
 #COPY --from=v8 /opt/v8/third_party /opt/v8/third_party
+
+# Fetch libomp
 COPY --from=openmp /opt/omp /opt/omp 
 
 # Build openssl and openldap libraries in specific versions and with static
@@ -137,6 +140,6 @@ RUN LC_ALL="C" update-ccache-symlinks
 
 RUN git config --global --add safe.directory '*'
 
-RUN apt-get install -y python3-pip && pip3 install py7zr psutil cppcheck-junit --break-system-packages
+RUN apt-get install -y python3-pip && pip3 install py7zr psutil cppcheck-junit lcov_cobertura --break-system-packages
 
 CMD [ "/usr/bin/fish" ]

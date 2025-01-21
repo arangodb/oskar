@@ -22,11 +22,11 @@ else
 end
 
 set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE_312_TAG 10
+set -gx UBUNTUBUILDIMAGE_312_TAG 11
 set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
-set -gx UBUNTUBUILDIMAGE_311_NAME $UBUNTUBUILDIMAGE_312_NAME
-set -gx UBUNTUBUILDIMAGE_311_TAG $UBUNTUBUILDIMAGE_312_TAG
+set -gx UBUNTUBUILDIMAGE_311_NAME arangodb/ubuntubuildarangodb-311
+set -gx UBUNTUBUILDIMAGE_311_TAG 1
 set -gx UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:$UBUNTUBUILDIMAGE_311_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
@@ -69,16 +69,13 @@ function compiler
   end
 
   switch $cversion
-    case 11.2.1_git20220219-r2
-      set -gx COMPILER_VERSION $cversion
-
-    case 12.2.1_git20220924-r4
-      set -gx COMPILER_VERSION $cversion
-
     case 13.2.0
       set -xg COMPILER_VERSION $cversion
 
     case clang16.0.6
+      set -gx COMPILER_VERSION $cversion
+
+    case clang19.1.6
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -95,10 +92,7 @@ function opensslVersion
   end
 
   switch $oversion
-    case '3.2'
-      set -gx OPENSSL_VERSION $oversion
-
-    case '3.3'
+    case '3.4'
       set -gx OPENSSL_VERSION $oversion
 
     case '*'
@@ -115,7 +109,7 @@ function findStaticBuildImage
     eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
   else
     switch $COMPILER_VERSION
-      case 13.2.0 clang16.0.6
+      case 13.2.0 clang16.0.6 clang19.1.6
         eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
 
       case '*'
@@ -134,7 +128,7 @@ function findStaticBuildScript
       echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
   else
     switch $COMPILER_VERSION
-      case 13.2.0 clang16.0.6
+      case 13.2.0 clang16.0.6 clang19.1.6
         echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
 
       case '*'
