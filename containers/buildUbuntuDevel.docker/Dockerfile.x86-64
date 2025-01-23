@@ -1,7 +1,6 @@
 # Arguments used through multiple build stages
 ARG COMPILER_VERSION=13
 ARG CLANG_VERSION=19
-ARG CLANG_FULL_VERSION=19.1.6
 
 # First rebuild glibc with a special option and provide some .deb files:
 FROM ubuntu:24.04 as glibcdebs
@@ -37,30 +36,36 @@ FROM ubuntu:24.04 as openmp
 
 ARG COMPILER_VERSION
 ARG CLANG_VERSION
-ARG CLANG_FULL_VERSION
 
 RUN apt-get update --fix-missing && \
     apt-get upgrade -y && \
-    apt-get install -y software-properties-common net-tools wget
+    apt-get install -y software-properties-common net-tools wget gnupg lsb-release git
 
 WORKDIR /
 
 COPY static/ubuntu.sources ./
 
 RUN cat ubuntu.sources >> /etc/apt/sources.list.d/ubuntu.sources
- 
+
 RUN apt-get update && apt-get install dpkg-dev -y
 
-RUN apt-get source llvm-${CLANG_VERSION}-dev -y && \
-  apt-get build-dep llvm-${CLANG_VERSION}-dev -y
+RUN wget https://apt.llvm.org/llvm.sh && \
+  chmod +x llvm.sh &&\
+  ./llvm.sh ${CLANG_VERSION} all
+
+RUN apt-get install llvm-toolchain-${CLANG_VERSION}-dev -y
+# && \
+#  apt-get build-dep llvm-toolchain-${CLANG_VERSION}-dev -y
 
 RUN apt-get update --fix-missing && apt-get install -y \
-  clang-$CLANG_VERSION clang++-$CLANG_VERSION \
-  cmake lsb-release wget git ninja-build gnupg
+  cmake ninja-build
+#  clang-$CLANG_VERSION clang++-$CLANG_VERSION \
 
 COPY patches/diff_llvm.patch .
 
-WORKDIR /llvm-toolchain-${CLANG_VERSION}-${CLANG_FULL_VERSION}
+RUN ls /llvm*
+
+WORKDIR /llvm-toolchain-${CLANG_VERSION}-19.1.7
 
 # Patch omp to enable running when it is a static library
 RUN git apply /diff_llvm.patch 
@@ -85,25 +90,27 @@ ARG ARCH="x86_64"
 ARG COMPILER_VERSION
 ARG CLANG_VERSION
 
-# We provide gcc 13.2.0 as well as clang 16.0.6 from Ubunutu 24.04
+# We provide gcc 13.2.0 as well as clang 19 (latest) from LLVM
 
 ENV COMPILER_VERSION=${COMPILER_VERSION}
 ENV CLANG_VERSION=${CLANG_VERSION}
 
 RUN apt-get update --fix-missing && \
-    apt-get install -y software-properties-common net-tools && \
+    apt-get install -y software-properties-common net-tools gnupg2 wget && \
     apt-get update && \
     apt-get upgrade -y
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN wget https://apt.llvm.org/llvm.sh && \
+  chmod +x llvm.sh &&\
+  ./llvm.sh ${CLANG_VERSION} all
+
 RUN apt-get update --fix-missing && \
   apt-get install -y build-essential gcc-${COMPILER_VERSION} g++-${COMPILER_VERSION} \
   cmake make bison flex python3 ccache git libjemalloc-dev vim exuberant-ctags gdb fish \
-  psmisc sudo debhelper debconf jq wget libdb-dev curl gnupg2 gcovr prometheus bc tcpdump \
-  liburing-dev cppcheck clang-${CLANG_VERSION} lldb-${CLANG_VERSION} lld-${CLANG_VERSION} \
-  libc++-${CLANG_VERSION}-dev libc++abi-${CLANG_VERSION}-dev libclang-common-${CLANG_VERSION}-dev \
-  libclang-rt-${CLANG_VERSION}-dev nodejs npm libomp-16-dev liblapack-dev libopenblas-dev gfortran \
+  psmisc sudo debhelper debconf jq libdb-dev curl gcovr prometheus bc tcpdump \
+  liburing-dev cppcheck nodejs npm libomp-16-dev liblapack-dev libopenblas-dev gfortran \
   && apt-get clean
 
 # yarn for UI build:
