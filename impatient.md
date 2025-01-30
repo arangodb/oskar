@@ -51,6 +51,14 @@ Switch to the correct branch.
 
 Build ArangoDB and all related utilities.
 
+# Build a specific target
+
+Use the following to see all targets defined.
+
+```
+    makeArangoDB help
+```
+
 ```
     buildStaticArangoDB
 ```
