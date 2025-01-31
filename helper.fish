@@ -1980,6 +1980,7 @@ function showConfig
     if test "$SCCACHE_BUCKET" != ""
       printf $fmt3 'S3 Bucket' $SCCACHE_BUCKET      '(SCCACHE_BUCKET)'
       printf $fmt3 'S3 Server' $SCCACHE_ENDPOINT    '(SCCACHE_ENDPOINT)'
+      printf $fmt3 'S3 Server' $SCCACHE_REGION'     '(SCCACHE_REGION)'
     end
   end
   printf $fmt3 'Verbose Build' $VERBOSEBUILD          '(verboseBuild/silentBuild)'
