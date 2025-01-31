@@ -75,7 +75,7 @@ function compiler
     case clang16.0.6
       set -gx COMPILER_VERSION $cversion
 
-    case clang19.1.6
+    case clang19.1.7
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -109,7 +109,7 @@ function findStaticBuildImage
     eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
   else
     switch $COMPILER_VERSION
-      case 13.2.0 clang16.0.6 clang19.1.6
+      case 13.2.0 clang16.0.6 clang19.1.7
         eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
 
       case '*'
@@ -128,7 +128,7 @@ function findStaticBuildScript
       echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
   else
     switch $COMPILER_VERSION
-      case 13.2.0 clang16.0.6 clang19.1.6
+      case 13.2.0 clang16.0.6 clang19.1.7
         echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
 
       case '*'
