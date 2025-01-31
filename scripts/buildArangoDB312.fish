@@ -13,11 +13,11 @@ end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-  set -xg COMPILER_VERSION clang16.0.6
+  set -xg COMPILER_VERSION clang19.1.7
 end
 echo "Using compiler version $COMPILER_VERSION"
 
-if test "$COMPILER_VERSION" = "clang16.0.6"
+if test "$COMPILER_VERSION" = "clang19.1.7"
   set -xg CC_NAME clang
   set -xg CXX_NAME clang++
 else if test "$COMPILER_VERSION" = "13.2.0"
