@@ -120,7 +120,7 @@ RUN npm install -g yarn
 
 # sccache for cloud compiler cache:
 
-RUN curl -L https://github.com/mozilla/sccache/releases/download/v/sccache-v${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl
+RUN curl -L https://github.com/mozilla/sccache/releases/download/v/${SCCACHE_VERSION}/sccache-v${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl
 
 # Fetch V8:
 #COPY --from=v8 /opt/v8/lib /opt/v8/lib
