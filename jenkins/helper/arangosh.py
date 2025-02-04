@@ -25,6 +25,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
 
     def run_testing(self,
                     testcase,
+                    arangosh_args,
                     testing_args,
                     timeout,
                     directory,
@@ -54,7 +55,7 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
             '--javascript.allow-external-process-control', 'true',
             '--javascript.execute', str(testscript),
             ]
-        run_cmd = args +[
+        run_cmd = arangosh_args + args +[
             '--',
             testcase,
             '--testOutput', directory ] + testing_args
@@ -79,4 +80,5 @@ class ArangoshExecutor(ArangoCLIprogressiveTimeoutExecutor):
         )
         delete_logfile_params(params)
         ret['error'] = params['error']
+        ret['pid'] = params['pid']
         return ret

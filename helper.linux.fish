@@ -22,11 +22,11 @@ else
 end
 
 set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE_312_TAG 6
+set -gx UBUNTUBUILDIMAGE_312_TAG 11
 set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
-set -gx UBUNTUBUILDIMAGE_311_NAME $UBUNTUBUILDIMAGE_312_NAME
-set -gx UBUNTUBUILDIMAGE_311_TAG $UBUNTUBUILDIMAGE_312_TAG
+set -gx UBUNTUBUILDIMAGE_311_NAME arangodb/ubuntubuildarangodb-311
+set -gx UBUNTUBUILDIMAGE_311_TAG 1
 set -gx UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:$UBUNTUBUILDIMAGE_311_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
@@ -69,16 +69,13 @@ function compiler
   end
 
   switch $cversion
-    case 11.2.1_git20220219-r2
-      set -gx COMPILER_VERSION $cversion
-
-    case 12.2.1_git20220924-r4
-      set -gx COMPILER_VERSION $cversion
-
     case 13.2.0
       set -xg COMPILER_VERSION $cversion
 
     case clang16.0.6
+      set -gx COMPILER_VERSION $cversion
+
+    case clang19.1.7
       set -gx COMPILER_VERSION $cversion
 
     case '*'
@@ -95,10 +92,7 @@ function opensslVersion
   end
 
   switch $oversion
-    case '3.2'
-      set -gx OPENSSL_VERSION $oversion
-
-    case '3.3'
+    case '3.4'
       set -gx OPENSSL_VERSION $oversion
 
     case '*'
@@ -115,7 +109,7 @@ function findStaticBuildImage
     eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
   else
     switch $COMPILER_VERSION
-      case 13.2.0 clang16.0.6
+      case 13.2.0 clang16.0.6 clang19.1.7
         eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR
 
       case '*'
@@ -134,7 +128,7 @@ function findStaticBuildScript
       echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
   else
     switch $COMPILER_VERSION
-      case 13.2.0 clang16.0.6
+      case 13.2.0 clang16.0.6 clang19.1.7
         echo buildArangoDB$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR.fish
 
       case '*'
@@ -192,8 +186,8 @@ function findRequiredOpenSSL
   set -l v (fgrep OPENSSL_LINUX $f | awk '{print $2}' | tr -d '"' | tr -d "'" | grep -o '^[0-2]\.[0-2]\.[0-2]\|^[3-9]\.[0-9]')
 
   if test "$v" = ""
-    echo "$f: no OPENSSL_LINUX specified, using 3.3"
-    opensslVersion 3.3
+    echo "$f: no OPENSSL_LINUX specified, using 3.4"
+    opensslVersion 3.4
   else
     echo "Using OpenSSL version '$v' from '$f'"
     opensslVersion $v
@@ -1658,13 +1652,20 @@ function runInContainer
              -v "$WORKDIR/scripts/":"/scripts" \
              $mirror \
              -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
+             -e ARANGODB_GIT_HOST="$ARANGODB_GIT_HOST" \
+             -e ARANGODB_GIT_ORGA="$ARANGODB_GIT_ORGA" \
+             -e HELPER_GIT_ORGA="$HELPER_GIT_ORGA" \
              -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
              -e ARANGODB_REPO="$ARANGODB_REPO" \
              -e ARANGODB_VERSION="$ARANGODB_VERSION" \
              -e ARANGODB_VERSION_MAJOR="$ARANGODB_VERSION_MAJOR" \
              -e ARANGODB_VERSION_MINOR="$ARANGODB_VERSION_MINOR" \
              -e ARANGODB_VERSION_PATCH="$ARANGODB_VERSION_PATCH" \
+             -e ENTERPRISE_GIT_HOST="$ENTERPRISE_GIT_HOST" \
+             -e ENTERPRISE_GIT_ORGA="$ENTERPRISE_GIT_ORGA" \
              -e BUILD_FILES_ARCHIVE="$BUILD_FILES_ARCHIVE" \
+             -e ENTERPRISE_GIT_HOST="$ENTERPRISE_GIT_HOST" \
+             -e ENTERPRISE_GIT_ORGA="$ENTERPRISE_GIT_ORGA" \
              -e DUMPDEVICE=$DUMPDEVICE \
              -e ARCH="$ARCH" \
              -e SAN="$SAN" \
@@ -1703,6 +1704,7 @@ function runInContainer
              -e PLATFORM="$PLATFORM" \
              -e SCCACHE_BUCKET="$SCCACHE_BUCKET" \
              -e SCCACHE_ENDPOINT="$SCCACHE_ENDPOINT" \
+             -e SCCACHE_REGION="$SCCACHE_REGION" \
              -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
              -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
              -e SCCACHE_IDLE_TIMEOUT="$SCCACHE_IDLE_TIMEOUT" \
@@ -1779,12 +1781,17 @@ function interactiveContainer
     -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
     -v "$WORKDIR/scripts/":"/scripts" \
     -e ARANGODB_DOCS_BRANCH="$ARANGODB_DOCS_BRANCH" \
+    -e ARANGODB_GIT_HOST="$ARANGODB_GIT_HOST" \
+    -e ARANGODB_GIT_ORGA="$ARANGODB_GIT_ORGA" \
+    -e HELPER_GIT_ORGA="$HELPER_GIT_ORGA" \
     -e ARANGODB_PACKAGES="$ARANGODB_PACKAGES" \
     -e ARANGODB_REPO="$ARANGODB_REPO" \
     -e ARANGODB_VERSION="$ARANGODB_VERSION" \
     -e ARANGODB_VERSION_MAJOR="$ARANGODB_VERSION_MAJOR" \
     -e ARANGODB_VERSION_MINOR="$ARANGODB_VERSION_MINOR" \
     -e ARANGODB_VERSION_PATCH="$ARANGODB_VERSION_PATCH" \
+    -e ENTERPRISE_GIT_HOST="$ENTERPRISE_GIT_HOST" \
+    -e ENTERPRISE_GIT_ORGA="$ENTERPRISE_GIT_ORGA" \
     -e BUILD_FILES_ARCHIVE="$BUILD_FILES_ARCHIVE" \
     -e DUMPDEVICE=$DUMPDEVICE \
     -e ARCH="ARCH" \
@@ -1823,6 +1830,7 @@ function interactiveContainer
     -e PLATFORM="$PLATFORM" \
     -e SCCACHE_BUCKET="$SCCACHE_BUCKET" \
     -e SCCACHE_ENDPOINT="$SCCACHE_ENDPOINT" \
+    -e SCCACHE_REGION="$SCCACHE_REGION" \
     -e SCCACHE_GCS_BUCKET="$SCCACHE_GCS_BUCKET" \
     -e SCCACHE_GCS_KEY_PATH="$SCCACHE_GCS_KEY_PATH" \
     -e SCCACHE_IDLE_TIMEOUT="$SCCACHE_IDLE_TIMEOUT" \

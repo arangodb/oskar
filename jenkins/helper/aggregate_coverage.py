@@ -183,7 +183,7 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
                 Path(self.job[1]).rename(Path(self.params['output']))
             else:
                 print("none of our files found in the error message!")
-        else:
+        elif self.job[2]:
             for one_file in [self.job[0], self.job[1]]:
                 print('cleaning up')
                 cleanup_file = Path(one_file)
@@ -196,6 +196,9 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
                     print('file gone')
                 else:
                     print(f'file {str(cleanup_file)} already gone?')
+                print(f"skipping {self.job[0]}")
+            else:
+                print(f"skipping this layer with {self.job[0]} {self.job[1]}")
         print(f"launch(): returning {ret}")
         return ret
 
@@ -279,6 +282,7 @@ def combine_coverage_dirs_multi(cfg,
     if len(sub_jobs) == 1:
         print(sub_jobs)
         return sub_jobs[0]
+    layer = 0
     while len(sub_jobs) > 1:
         next_jobs = []
         jobs.append([])
@@ -286,7 +290,8 @@ def combine_coverage_dirs_multi(cfg,
             last_output = combined_dir / f'{jobcount}'
             this_subjob = [str(sub_jobs.pop()),
                            str(sub_jobs.pop()),
-                           str(last_output)]
+                           str(last_output),
+                           count < 5]
             jobs[count].append(this_subjob)
             next_jobs.append(this_subjob[2])
             jobcount += 1
@@ -346,39 +351,8 @@ def convert_lcov_to_cobertura(cfg, lcov_file, source_dir, binary, cobertura_xml,
     cov = LcovCobertura(cfg)
     cov.launch(lcov_file, source_dir, binary, cobertura_xml, excludes)
 
-def main():
-    """ go """
-    # pylint disable=too-many-locals disable=too-many-statements
-    base_dir = Path(sys.argv[1])
-    os.chdir(base_dir)
-    coverage_dir = base_dir / 'coverage'
-    if coverage_dir.exists():
-        shutil.rmtree(str(coverage_dir))
-    coverage_dir.mkdir()
-    gcov_dir = base_dir / sys.argv[2]
-    #try:
-    #    shutil.make_archive("/work/testresults2124",
-    #                        'tar.gz',
-    #                        "/work/gcov",
-    #                        "/work/gcov",
-    #                        True)
-    #except Exception as ex:
-    #    print(f"Failed to create zip: {str(ex)}")
-    cfg = SiteConfig(gcov_dir.resolve())
-    #import glob
-    #for filename in glob.iglob('/work/gcov**/**', recursive=True):
-    #    print(filename)
-    result_dir = combine_coverage_dirs_multi(
-        cfg,
-        gcov_dir,
-        psutil.cpu_count(logical=False))
-
-    sourcedir = base_dir / 'ArangoDB'
-    binary = sourcedir / 'build' / 'bin' / 'arangod'
-    lcov_file = gcov_dir / 'coverage.lcov'
-    print('converting to lcov file')
-    convert_to_lcov_file(cfg, result_dir, lcov_file)
-    # copy the source files from the sourcecode directory
+def copy_source_directory(sourcedir, coverage_dir):
+    """ copy the source files from the sourcecode directory """
     for copy_dir in [
             Path('lib'),
             Path('arangosh'),
@@ -401,7 +375,36 @@ def main():
                 for filename in files:
                     source = os.path.join(root, filename)
                     shutil.copy2(source, path / filename)
+    print('create a symlink into the jemalloc source:')
+    jmdir = sourcedir / '3rdParty' / 'jemalloc' / 'jemalloc' / 'include'
+    if not jmdir.exists():
+        jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
+    (sourcedir / 'include').symlink_to(jmdir)
 
+def main():
+    """ go """
+    # pylint disable=too-many-locals disable=too-many-statements
+    base_dir = Path(sys.argv[1])
+    os.chdir(base_dir)
+    coverage_dir = base_dir / 'coverage'
+    if coverage_dir.exists():
+        shutil.rmtree(str(coverage_dir))
+    coverage_dir.mkdir()
+    gcov_dir = base_dir / sys.argv[2]
+    cfg = SiteConfig(gcov_dir.resolve())
+    result_dir = combine_coverage_dirs_multi(
+        cfg,
+        gcov_dir,
+        psutil.cpu_count(logical=False))
+
+    sourcedir = base_dir / 'ArangoDB'
+    binary = sourcedir / 'build' / 'bin' / 'arangod'
+    lcov_file = gcov_dir / 'coverage.lcov'
+
+    copy_source_directory(sourcedir, coverage_dir)
+
+    print('converting to lcov file')
+    convert_to_lcov_file(cfg, result_dir, lcov_file)
     print('copy the gcno files from the build directory')
     buildir = sourcedir / 'build'
     baselen = len(str(buildir))
@@ -412,12 +415,6 @@ def main():
         for filename in fnmatch.filter(files, '*.gcno'):
             source = os.path.join(root, filename)
             shutil.copy2(source, path / filename)
-
-    print('create a symlink into the jemalloc source:')
-    jmdir = sourcedir / '3rdParty' / 'jemalloc' / 'jemalloc' / 'include'
-    if not jmdir.exists():
-        jmdir = list((sourcedir / '3rdParty' / 'jemalloc').glob('v*'))[0] / 'include'
-    (sourcedir / 'include').symlink_to(jmdir)
 
     cobertura_xml = coverage_dir / 'coverage.xml'
     print('converting to cobertura report')
