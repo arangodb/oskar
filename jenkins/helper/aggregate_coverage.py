@@ -22,6 +22,13 @@ from async_client import (
 
 from site_config import SiteConfig
 
+LLVM_COV = Path(f"/usr/lib/llvm-{os.environ['CLANG_VERSION']}/bin/llvm-cov")
+if not LLVM_COV.exists():
+    LLVM_COV = Path("/usr/lib/llvm/bin/llvm-cov")
+LLVM_PROFDATA = Path(f"/usr/lib/llvm-{os.environ['CLANG_VERSION']}/bin/llvm-profdata")
+if not LLVM_PROFDATA.exists():
+    LLVM_PROFDATA = Path("/usr/lib/llvm/bin/llvm-profdata")
+
 SUCCESS = True
 
 # pylint disable=global-variable-not-assigned disable=global-statement
@@ -38,7 +45,7 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
         verbose = True
-        binary = f"/usr/lib/llvm-{os.environ['CLANG_VERSION']}/bin/llvm-cov"
+        binary = str(LLVM_COV)
         self.job_parameters = [
             'export',
             '-format=lcov',
@@ -147,6 +154,7 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         binary = f"/usr/lib/llvm-{os.environ['CLANG_VERSION']}/bin/llvm-profdata"
         verbose = False
         self.params = make_default_params(verbose, 111)
+        binary = str(LLVM_PROFDATA)
         print([binary] + self.job_parameters)
         start = datetime.now()
         ret = {"rc_exit": 3333}
