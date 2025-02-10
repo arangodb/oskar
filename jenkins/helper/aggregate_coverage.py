@@ -38,7 +38,7 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
         verbose = True
-        binary = "/usr/lib/llvm-16/bin/llvm-cov"
+        binary = f"/usr/lib/llvm-{os.environ['CLANG_VERSION']}/bin/llvm-cov"
         self.job_parameters = [
             'export',
             '-format=lcov',
@@ -144,7 +144,7 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
-        binary = "/usr/lib/llvm-16/bin/llvm-profdata"
+        binary = f"/usr/lib/llvm-{os.environ['CLANG_VERSION']}/bin/llvm-profdata"
         verbose = False
         self.params = make_default_params(verbose, 111)
         print([binary] + self.job_parameters)
