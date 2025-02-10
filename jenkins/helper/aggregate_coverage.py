@@ -151,7 +151,6 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
     def launch(self):
        # pylint: disable=R0913 disable=R0902 disable=broad-except
         """ gcov merger """
-        binary = f"/usr/lib/llvm-{os.environ['CLANG_VERSION']}/bin/llvm-profdata"
         verbose = False
         self.params = make_default_params(verbose, 111)
         binary = str(LLVM_PROFDATA)
