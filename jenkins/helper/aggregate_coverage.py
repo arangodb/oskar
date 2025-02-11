@@ -22,6 +22,8 @@ from async_client import (
 
 from site_config import SiteConfig
 
+if not 'CLANG_VERSION' in os.environ:
+    os.environ['CLANG_VERSION'] = ''
 LLVM_COV = Path(f"/usr/lib/llvm-{os.environ['CLANG_VERSION']}/bin/llvm-cov")
 if not LLVM_COV.exists():
     LLVM_COV = Path("/usr/lib/llvm/bin/llvm-cov")
