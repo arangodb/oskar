@@ -1225,7 +1225,22 @@ function buildDockerAny
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
     docker tag $IMAGE_NAME1 $IMAGE_NAME2
   end
-  and pushDockerImage $IMAGE_NAME2
+  if not test $status -eq 0
+    return $status
+  end
+  if test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "1"
+    if test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "1"
+      set -l CVE_REPORT_FILE $WORKDIR/work/grype-cve-report-$IMAGE_NAME2.txt
+      checkDockerImageForCves $IMAGE_NAME2 $CVE_REPORT_FILE
+    else
+      checkDockerImageForCves $IMAGE_NAME2
+    end
+  end
+  if test $status -ne 0
+    echo "Grype CVE check failed for $IMAGE_NAME2"
+    return 1
+  end
+  pushDockerImage $IMAGE_NAME2
   and if test "$GCR_REG" = "On"
       docker tag $IMAGE_NAME1 $GCR_REG_PREFIX$IMAGE_NAME2
       and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME2
@@ -2045,6 +2060,75 @@ end
 
 function unpackBuildFiles
   runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
+end
+
+function installGrype
+  if not set -q GRYPE_DIR[1]
+    set -gx GRYPE_DIR "$WORKDIR/work/tools/grype"
+  end
+  echo "Installing grype to $GRYPE_DIR"
+  if test ! -d "$GRYPE_DIR"
+    mkdir -p "$GRYPE_DIR"
+  end
+  curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b $GRYPE_DIR
+  set -l GRYPE_BIN "$GRYPE_DIR/grype"
+  $GRYPE_BIN version 2>&1 > /dev/null
+  if $status -ne 0
+    echo "Failed to install grype"
+    return 1
+  end
+  set -gx GRYPE_BIN $GRYPE_BIN
+  echo "Grype is installed successfully"
+end
+
+function downloadOrUpdateGrype
+  # if grype location is not predefined, set it to default value
+  if not set -q GRYPE_DIR[1]
+    set -gx GRYPE_DIR "$WORKDIR/work/tools/grype"
+  end
+  if not set -q GRYPE_BIN[1]
+    set -gx GRYPE_BIN "$GRYPE_DIR/grype"
+  end
+  if test -f "$GRYPE_BIN"
+    $GRYPE_BIN version
+    if test $status -eq 0
+      echo "Grype is already installed. Updating the CVE database"
+      $GRYPE_BIN db update
+      if test $status -eq 0
+        echo "Grype CVE database is updated successfully"
+        return 0
+      end
+      echo "Failed to update the Grype CVE database"
+      return 1
+    end
+  end
+
+  # grype is not installed
+  installGrype
+  return $status
+end
+
+function checkDockerImageForCves
+  if not set -q GRYPE_BIN[1]
+    downloadOrUpdateGrype
+    if test $status -ne 0
+      return 1
+    end
+  end
+  set -l image $argv[1]
+  set -l report_file $argv[2]
+  set -l severity_threshold $argv[3]
+  if not set -q severity_threshold[1]
+    set severity_threshold "high"
+  end
+  echo "scanning image for CVEs: $image"
+  if set -q report_file[1]
+    $GRYPE_BIN -f $severity_threshold -s all-layers --file $report_file docker:$image
+    return $status
+  else
+    $GRYPE_BIN -f $severity_threshold -s all-layers docker:$image
+    return $status
+  end
 end
 
 ## #############################################################################

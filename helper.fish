@@ -365,6 +365,10 @@ function debDockerImage; set -gx DOCKER_DISTRO deb ; end
 if test -z "$DOCKER_DISTRO"; alpineDockerImage
 else ; set -gx DOCKER_DISTRO $DOCKER_DISTRO ; end
 
+function enableCveChecksForDockerImage ; set -gx RUN_CVE_CHECKS_FOR_DOCKER_IMAGE 1 ; end
+function enableCreateCveReportForDockerImage ; set -gx CREATE_CVE_REPORT_FOR_DOCKER_IMAGE 1 ; end
+function publishDockerImageOnlyIfCveChecksPass ; set -gx PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS 1 ; end
+
 function skipNondeterministic ; set -gx SKIPNONDETERMINISTIC true ; end
 function includeNondeterministic ; set -gx SKIPNONDETERMINISTIC false ; end
 if test -z "$SKIPNONDETERMINISTIC"; skipNondeterministic
