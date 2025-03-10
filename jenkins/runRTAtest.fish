@@ -29,6 +29,12 @@ and oskarCompile
 and TT_compile
 and downloadAuxBinariesToBuildBin
 
+if test "$SAN" = "On"
+     echo "$WORKDIR/work/ArangoDB/utils/llvm-symbolizer-server.py > $WORKDIR/work/symbolizer.log  2>&1 &"
+     $WORKDIR/work/ArangoDB/utils/llvm-symbolizer-server.py > $WORKDIR/work/symbolizer.log  2>&1 &
+end
+
+
 and checkoutRTA
 and cd work/release-test-automation/
 if test "$ENTERPRISEEDITION" = "On"
@@ -36,12 +42,17 @@ if test "$ENTERPRISEEDITION" = "On"
 end
 and bash -x ./jenkins/oskar_tar.sh $argv
 
+if test "$SAN" = "On"
+   jobs
+   kill %1
+end
+
 set -l s $status
 
 # compiling results:
 moveResultsToWorkspace
 
-set -l matches $WORKDIR/work/release-test-automation/test_dir/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv,tar,png}
+set -l matches $WORK/work/release-test-automation/test_dir/*.{asc,testfailures.txt,deb,dmg,rpm,7z,tar.gz,tar.bz2,zip,html,csv,tar,png}
 for f in $matches
    echo $f | grep -qv testreport ; and echo "mv $f $WORKSPACE" ; and mv $f $WORKSPACE; or echo "skipping $f"
 end
