@@ -141,7 +141,7 @@ if count $src/results-*.csv > /dev/null
   end
 
   echo "Generating images"
-  docker run -v (pwd)/work:/work pavlov99/gnuplot gnuplot $gp
+  "$DOCKER" run -v (pwd)/work:/work pavlov99/gnuplot gnuplot $gp
   or begin
     echo "=== $gp ==="
     cat $gp

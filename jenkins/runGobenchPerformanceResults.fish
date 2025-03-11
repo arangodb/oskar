@@ -81,4 +81,4 @@ if test (count work/images/*.png) -gt 0
 end
 
 echo "Generating images"
-docker run -v (pwd)/work:/work pavlov99/gnuplot gnuplot $gp
+"$DOCKER" run -v (pwd)/work:/work pavlov99/gnuplot gnuplot $gp
