@@ -5,6 +5,7 @@ if test -f /usr/bin/podman
   echo podman
   set -xg DOCKER "podman"
   set -xg DOCKER_URL_PREFIX "docker.io/"
+  set -xg DEFAULT_DOCKER_ARGS "--pids-limit 256704"
 else
   set -xg DOCKER "docker"
 end
