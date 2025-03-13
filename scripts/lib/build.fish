@@ -220,10 +220,10 @@ function runMake
   end
 
   if test "$SHOW_DETAILS" = "On"
-    make $MAKEFLAGS $argv[1] VERBOSE=1 2>&1
+    make $MAKEFLAGS $argv[1] 2>&1
     or exit $status
   else
-    echo make output in work/buildArangoDB.log 
+    echo make output in work/buildArangoDB.log
     set -l ep ""
 
     if test "$SHOW_DETAILS" = "Ping"
@@ -232,9 +232,9 @@ function runMake
     end
 
     if test "$argv[1]" = "install"
-      nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log VERBOSE=1 2>&1
+      nice make $MAKEFLAGS > $INNERWORKDIR/buildArangoDB.log 2>&1
     end
-    and nice make $MAKEFLAGS $argv[1] >> $INNERWORKDIR/buildArangoDB.log VERBOSE=1 2>&1
+    and nice make $MAKEFLAGS $argv[1] >> $INNERWORKDIR/buildArangoDB.log 2>&1
     or begin
       if test -n "$ep"
         kill $ep
