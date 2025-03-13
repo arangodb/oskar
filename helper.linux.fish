@@ -1225,22 +1225,8 @@ function buildDockerAny
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
     docker tag $IMAGE_NAME1 $IMAGE_NAME2
   end
-  if not test $status -eq 0
-    return $status
-  end
-  if test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "1"
-    if test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "1"
-      set -l CVE_REPORT_FILE $WORKDIR/work/grype-cve-report-$IMAGE_NAME2.txt
-      checkDockerImageForCves $IMAGE_NAME2 $CVE_REPORT_FILE
-    else
-      checkDockerImageForCves $IMAGE_NAME2
-    end
-  end
-  if test $status -ne 0
-    echo "Grype CVE check failed for $IMAGE_NAME2"
-    return 1
-  end
-  pushDockerImage $IMAGE_NAME2
+  and validateDockerImageIfNeeded $IMAGE_NAME2
+  and pushDockerImage $IMAGE_NAME2
   and if test "$GCR_REG" = "On"
       docker tag $IMAGE_NAME1 $GCR_REG_PREFIX$IMAGE_NAME2
       and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME2
@@ -1256,6 +1242,30 @@ function buildDockerAny
     and  if test "$GCR_REG" = "On"
       docker tag $IMAGE_NAME3 $GCR_REG_PREFIX$IMAGE_NAME3
       and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME3
+    end
+  end
+end
+
+function validateDockerImageIfNeeded
+  if test (count $argv) -eq 0
+    echo Must give docker image name as argument
+    return 1
+  end
+  set -l image_name $argv[1]
+  if test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "1"
+    if test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "1"
+      set -l CVE_REPORT_FILE $WORKDIR/work/grype-cve-report-$image_name.txt
+      checkDockerImageForCves $image_name $CVE_REPORT_FILE
+    else
+      checkDockerImageForCves $image_name
+    end
+  end
+  if test $status -ne 0
+    echo "Grype CVE check failed for $image_name"
+    if test "$PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS" = "1" 
+      return 1
+    else
+      return 0
     end
   end
 end
@@ -2105,7 +2115,6 @@ function downloadOrUpdateGrype
 
   # grype is not installed
   installGrype
-  return $status
 end
 
 function checkDockerImageForCves
@@ -2117,17 +2126,16 @@ function checkDockerImageForCves
   end
   set -l image $argv[1]
   set -l report_file $argv[2]
-  set -l severity_threshold $argv[3]
-  if not set -q severity_threshold[1]
-    set severity_threshold "high"
+  if not set -q CVE_SEVERITY_THRESHOLD[1]
+    set CVE_SEVERITY_THRESHOLD "high"
   end
   echo "scanning image for CVEs: $image"
   if set -q report_file[1]
-    $GRYPE_BIN -f $severity_threshold -s all-layers --file $report_file docker:$image
-    return $status
+    $GRYPE_BIN -f $CVE_SEVERITY_THRESHOLD -s all-layers --file $report_file docker:$image
+    or return $status
   else
-    $GRYPE_BIN -f $severity_threshold -s all-layers docker:$image
-    return $status
+    $GRYPE_BIN -f $CVE_SEVERITY_THRESHOLD -s all-layers docker:$image
+    or return $status
   end
 end
 
