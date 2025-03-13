@@ -21,4 +21,4 @@ if test "$PLATFORM" = "linux"
   set GOLD = -DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold  -DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold
 end
 
-nice make -j$PARALLELISM $MAKE_TARGETS $argv VERBOSE=1
+nice make -j$PARALLELISM $MAKE_TARGETS $argv VERBOSE=1 V=1
