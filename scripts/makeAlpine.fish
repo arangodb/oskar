@@ -19,4 +19,4 @@ or exit $status
 
 mkdir -p install
 set -x DESTDIR (pwd)/install
-nice make -j$PARALLELISM $argv
+nice make -j$PARALLELISM $argv VERBOSE=1
