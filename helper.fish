@@ -2350,7 +2350,7 @@ end
 function cleanWorkspace
   if test -d $WORKDIR/work
     pushd $WORKDIR/work
-    and find . -maxdepth 1 '!' "(" -name ArangoDB -o -name . -o -name .. -o -name ".cc*" -o -name "sourceInfo.*" ")" -exec rm -rf "{}" ";"
+    and find . -maxdepth 1 '!' "(" -name ArangoDB -o -name . -o -name .. -o -name ".cc*" -o -name "sourceInfo.*" -o -name ".gcs-credentials" ")" -exec rm -rf "{}" ";"
     and popd
   end
 end

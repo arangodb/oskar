@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# This is for static gcc13.2.0 and clang16.0.6 builds on Ubuntu
+# This is for static gcc13.2.0 and clang19.1.7 builds on Ubuntu
 source ./scripts/lib/build.fish
 
 if test "$PARALLELISM" = ""
