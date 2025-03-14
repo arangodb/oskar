@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# This is for static gcc13.2.0 and clang16.0.6 builds on Ubuntu
+# This is for static gcc13.2.0 and clang19.1.7 builds on Ubuntu
 source ./scripts/lib/build.fish
 
 if test "$PARALLELISM" = ""
@@ -123,14 +123,21 @@ if test "$MINIMAL_DEBUG_INFO" = "On"
 end
 
 setupCcacheBinPath ubuntu
+and echo "USE_CCACHE=$USE_CCACHE"
 and setupCcache ubuntu
+and echo "USE_CCACHE=$USE_CCACHE"
 and cleanBuildDirectory
+and echo "USE_CCACHE=$USE_CCACHE"
 and cd $INNERWORKDIR/ArangoDB/build
 and TT_init
 and cmakeCcache
+and echo "USE_CCACHE=$USE_CCACHE"
 and selectArchitecture
+and echo "USE_CCACHE=$USE_CCACHE"
 and selectMaintainer
+and echo "USE_CCACHE=$USE_CCACHE"
 and runCmake
+and echo "USE_CCACHE=$USE_CCACHE"
 and TT_cmake
 and if test "$SKIP_MAKE" = "On"
   echo "Finished cmake at "(date)", skipping build"
