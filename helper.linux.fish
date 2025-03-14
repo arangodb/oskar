@@ -1701,7 +1701,7 @@ function runInContainer
   # cover SIGINT, since this will directly abort the whole function.
   set c ("$DOCKER" run -d --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
              --pids-limit 256704 \
-             -m 256G \
+             -m 64G \
              -v $WORKDIR/work/:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \

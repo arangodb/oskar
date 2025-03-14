@@ -220,7 +220,7 @@ function runMake
   end
 
   if test "$SHOW_DETAILS" = "On"
-    make $MAKEFLAGS $argv[1] VERBOSE=1 2>&1
+    make $MAKEFLAGS $argv[1] VERBOSE=1  -j 32 2>&1
     or exit $status
   else
     echo make output in work/buildArangoDB.log 
