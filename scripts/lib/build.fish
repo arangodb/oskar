@@ -286,6 +286,7 @@ function TT_cmake
 end
 
 function TT_make
+  set -l fish_trace on
   set -g TT_t3 (date -u +%s)
   and echo $TT_t0,make,(expr $TT_t3 - $TT_t2) >> $INNERWORKDIR/buildTimes.csv
 end
