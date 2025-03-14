@@ -41,10 +41,10 @@ echo "AUTH: $ARANGO_AUTH"
 echo "EDITION: $ARANGO_EDITION"
 echo
 
-docker kill $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
-docker rm -fv $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
-docker pull $DOCKER_IMAGE
-docker run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version | tee ./${ARANGO_DOCKER_NAME}.txt
+"$DOCKER" kill $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
+"$DOCKER" rm -fv $ARANGO_DOCKER_NAME > /dev/null 2>&1 || true
+"$DOCKER" pull $DOCKER_IMAGE
+"$DOCKER" run --rm --cap-add SYS_NICE $DOCKER_IMAGE arangosh --version | tee ./${ARANGO_DOCKER_NAME}.txt
 export SERVER_FULL_VERSION=$(cat ./${ARANGO_DOCKER_NAME}.txt | grep -oP '^server-version: \K.*$')
 
 OUTDIR="`pwd`/output"
@@ -52,7 +52,7 @@ rm -rf $OUTDIR
 mkdir $OUTDIR
 DOCKER_AUTH=""
 STARTER_AUTH=""
-DOCKER_CMD="docker run --rm --hostname localhost --cap-add SYS_NICE --name $ARANGO_DOCKER_NAME -d $EXPORT_PORTS -v $OUTDIR:/testrun"
+DOCKER_CMD="$DOCKER run --rm --hostname localhost --cap-add SYS_NICE --name $ARANGO_DOCKER_NAME -d $EXPORT_PORTS -v $OUTDIR:/testrun"
 #DOCKER_IMAGE="registry.arangodb.biz:5000/arangodb/linux-${ARANGO_EDITION}-maintainer:$ARANGO_BRANCH"
 STARTER_CMD="arangodb --starter.address localhost --starter.local --server.storage-engine $ARANGO_STORAGE_ENGINE --starter.data-dir /testrun ${MMFILES_DEPRECATED_OPTION}"
 STARTER_MODE=""
@@ -101,7 +101,7 @@ command="$DOCKER_CMD $DOCKER_AUTH $DOCKER_IMAGE /testrun/starter.sh $STARTER_CMD
 echo $command
 $command
 
-trap "$(trap -p | grep EXIT | sed "s/.*-- '\(.*\)'.EXIT/\1;/g")docker rm -fv $ARANGO_DOCKER_NAME ; sudo chown jenkins:jenkins -R output ; tar czf arango_data.tar.gz output" EXIT
+trap "$(trap -p | grep EXIT | sed "s/.*-- '\(.*\)'.EXIT/\1;/g") "$DOCKER" rm -fv $ARANGO_DOCKER_NAME ; sudo chown jenkins:jenkins -R output ; tar czf arango_data.tar.gz output" EXIT
 
 echo "Waiting until ArangoDB is ready on port ${ARANGO_PORTS[0]}"
 
@@ -131,7 +131,7 @@ done
 
 if [ $count -ge 240 ]; then
     echo "docker logs:"
-    docker logs $ARANGO_DOCKER_NAME
+    "$DOCKER" logs $ARANGO_DOCKER_NAME
 
     echo
     echo "curl:"
