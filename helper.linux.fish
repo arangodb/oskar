@@ -1252,8 +1252,8 @@ function validateDockerImageIfNeeded
     return 1
   end
   set -l image_name $argv[1]
-  if test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "1"
-    if test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "1"
+  if test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "1"; or test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "On"
+    if test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "1"; or test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "On"
       set -l CVE_REPORT_FILE $WORKDIR/work/grype-cve-report-$image_name.txt
       checkDockerImageForCves $image_name $CVE_REPORT_FILE
     else
@@ -1262,7 +1262,7 @@ function validateDockerImageIfNeeded
   end
   if test $status -ne 0
     echo "Grype CVE check failed for $image_name"
-    if test "$PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS" = "1" 
+    if test "$PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS" = "1"; or test "$PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS" = "On"
       return 1
     else
       return 0
