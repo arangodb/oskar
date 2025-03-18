@@ -1,5 +1,5 @@
 #!/usr/bin/env fish
-# This is for static gcc13.2.0 and clang16.0.6 builds on Ubuntu
+# This is for static gcc13.2.0 and clang19.1.7 builds on Ubuntu
 source ./scripts/lib/build.fish
 
 if test "$PARALLELISM" = ""
@@ -13,11 +13,11 @@ end
 echo "Using parallelism $PARALLELISM"
 
 if test "$COMPILER_VERSION" = ""
-  set -xg COMPILER_VERSION clang16.0.6
+  set -xg COMPILER_VERSION clang19.1.7
 end
 echo "Using compiler version $COMPILER_VERSION"
 
-if test "$COMPILER_VERSION" = "clang16.0.6"
+if test "$COMPILER_VERSION" = "clang19.1.7"
   set -xg CC_NAME clang
   set -xg CXX_NAME clang++
 else if test "$COMPILER_VERSION" = "13.2.0"
@@ -37,6 +37,14 @@ if test "$ARCH" = "x86_64" -a (string sub -s 1 -l 1 "$OPENSSLPATH") = "3"
   set -xg X86_64_SUFFIX "64"
 end
 
+if test "$ARCH" = "x86_64"
+  set -xg LAPACK_LIB_PATH "/usr/lib/x86_64-linux-gnu/lapack/liblapack.a"
+  set -xg BLAS_LIB_PATH "/usr/lib/x86_64-linux-gnu/blas/libblas.a"
+else
+  set -xg LAPACK_LIB_PATH "/usr/lib/aarch64-linux-gnu/lapack/liblapack.a"
+  set -xg BLAS_LIB_PATH "/usr/lib/aarch64-linux-gnu/blas/libblas.a"
+end
+
 set -l pie ""
 
 if test "$STATIC_EXECUTABLES" = ""
@@ -53,15 +61,17 @@ set -g FULLARGS $argv \
  -DOPENSSL_ROOT_DIR=/opt \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL \
  -DBUILD_REPO_INFO=$BUILD_REPO_INFO \
- -DARANGODB_BUILD_DATE="$ARANGODB_BUILD_DATE"
+ -DARANGODB_BUILD_DATE="$ARANGODB_BUILD_DATE" \
+ -DLAPACK_LIBRARIES="$LAPACK_LIB_PATH" \
+ -DBLAS_LIBRARIES="$BLAS_LIB_PATH"
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie -fno-stack-protector -fuse-ld=lld" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie -fno-stack-protector -fuse-ld=lld -fopenmp=libomp -L/opt/omp -llapack -lgfortran" \
     -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld " \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld -fopenmp=libomp -L/opt/omp -llapack -lgfortran" \
     -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off
