@@ -2091,7 +2091,7 @@ function installGrype
   curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b $GRYPE_DIR
   set -l GRYPE_BIN "$GRYPE_DIR/grype"
   $GRYPE_BIN version 2>&1 > /dev/null
-  if $status -ne 0
+  if test $status -ne 0
     echo "Failed to install grype"
     return 1
   end
