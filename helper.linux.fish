@@ -1254,7 +1254,11 @@ function validateDockerImageIfNeeded
   set -l image_name $argv[1]
   if test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "1"; or test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "On"
     if test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "1"; or test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "On"
-      set -l CVE_REPORT_FILE $WORKDIR/work/grype-cve-report-$image_name.txt
+      grype_report_dir=$WORKDIR/work/grype_reports
+      if ! test -d $grype_report_dir
+        mkdir -p $grype_report_dir
+      end
+      set -l CVE_REPORT_FILE $grype_report_dir/grype-cve-report-$image_name.txt
       checkDockerImageForCves $image_name $CVE_REPORT_FILE
     else
       checkDockerImageForCves $image_name

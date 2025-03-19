@@ -2436,6 +2436,11 @@ function moveResultsToWorkspace
       echo "mv JUnit XMLs ($WORKDIR/work/ArangoDB/testrunXml)"
       mv $WORKDIR/work/ArangoDB/testrunXml $WORKSPACE/testrunXml
     end
+
+    if test -d $WORKDIR/work/grype_reports
+      echo "mv grype reports ($WORKDIR/work/grype_reports)"
+      mv $WORKDIR/work/grype_reports $WORKSPACE/grype_reports
+    end
   end
 end
 
