@@ -1252,6 +1252,7 @@ function validateDockerImageIfNeeded
     return 1
   end
   set -l image_name $argv[1]
+  echo "going to scan docker image for CVEs: $image_name"
   set -l filesafe_image_name (string replace "/" "-" -- $image_name)
   if test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "1"; or test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "On"
     if test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "1"; or test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "On"
