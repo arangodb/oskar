@@ -1,8 +1,153 @@
 import json
 import os
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, BaseLoader
 from datetime import datetime
 import sys
+
+REPORT_HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>grype scan report</title>
+    <style>
+        h1 {
+            text-align: left;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            text-align: left;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .nowrap-col {
+            white-space: nowrap;
+        }
+    </style>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <td>Scan date</td>
+            <td>{{ scan_date }}</td>
+        </tr>
+        <tr>
+            <td>Grype version</td>
+            <td>{{ grype_version }}</td>
+        </tr>
+        <tr>
+            <td>CVE database build timestamp</td>
+            <td>{{ db_date }}</td>
+        </tr>
+    </table>
+
+    <label>
+        <input type="checkbox" id="toggleCheckbox" checked> Show only CVEs with severity >= High
+    </label>
+
+    <table id="filtered-table" style = "display: table;">
+        <th>Image tags</th>
+        <th>Severity</th>
+        <th>CVE ID</th>
+        <th>Description</th>
+        <th>Artifact name</th>
+        <th>Artifact type</th>
+        <th>Artifact version</th>
+        <th>Fixed version(s)</th>
+        <tbody id="table-body">
+            {% for scan in scans %}
+            {% for vulnerability in scan.vulnerabilities %}
+            {% if vulnerability.severity == "Critical" or vulnerability.severity == "High" %}
+            <tr>
+                {% if loop.index == 1 %}
+                <td class="nowrap-col" rowspan="{{ scan.row_count_high_critical }}">{{ scan.image_tags }}</td>
+                {% endif %}
+                <td bgcolor="pink">{{ vulnerability.severity }}</td>
+                <td><a href="{{ vulnerability.dataSource }}">{{ vulnerability.id }}</a></td>
+                <td>{{ vulnerability.description }}</td>
+                <td>{{ vulnerability.artifact_name }}</td>
+                <td>{{ vulnerability.artifact_type }}</td>
+                <td>{{ vulnerability.artifact_version }}</td>
+                <td>{{ vulnerability.fixed_versions }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table id="full-table" style="display: none;">
+        <th>Image tags</th>
+        <th>Severity</th>
+        <th>CVE ID</th>
+        <th>Description</th>
+        <th>Artifact name</th>
+        <th>Artifact type</th>
+        <th>Artifact version</th>
+        <th>Fixed version(s)</th>
+        <tbody id="table-body">
+            {% for scan in scans %}
+            {% for vulnerability in scan.vulnerabilities %}
+            <tr>
+                {% if loop.index == 1 %}
+                <td class="nowrap-col" rowspan="{{ scan.row_count_total }}">{{ scan.image_tags }}</td>
+                {% endif %}
+                {% if vulnerability.severity == "Critical" or vulnerability.severity == "High" %}
+                <td bgcolor="pink">{{ vulnerability.severity }}</td>
+                {% else %}
+                <td>{{ vulnerability.severity }}</td>
+                {% endif %}
+                <td><a href="{{ vulnerability.dataSource }}">{{ vulnerability.id }}</a></td>
+                <td>{{ vulnerability.description }}</td>
+                <td>{{ vulnerability.artifact_name }}</td>
+                <td>{{ vulnerability.artifact_type }}</td>
+                <td>{{ vulnerability.artifact_version }}</td>
+                <td>{{ vulnerability.fixed_versions }}</td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        document.getElementById("toggleCheckbox").addEventListener("change", function () {
+            let fullTable = document.getElementById("full-table");
+            let filteredTable = document.getElementById("filtered-table");
+
+            if (this.checked) {
+                filteredTable.style.display = "table";
+                fullTable.style.display = "none";
+            } else {
+                filteredTable.style.display = "none";
+                fullTable.style.display = "table";
+            }
+        });
+    </script>
+
+</body>
+
+</html>
+
+"""
 
 if len(sys.argv) != 3:
     print("This script generates an HTML report from the JSON files output by the Grype scanner. Files must be named grypeResult*.json.\nUsage: python generate_cve_report.py [path to directory containing JSON files] [name of the HTML report file]")
@@ -70,8 +215,7 @@ for result in json_results:
     )
     report_data["scans"].append(table_entry)
 
-env = Environment(loader=FileSystemLoader("."))
-template = env.get_template("template.html")
+template = Environment(loader=BaseLoader).from_string(REPORT_HTML_TEMPLATE)
 html_output = template.render(report_data)
 
 with open(report_filename, "w", encoding="utf-8") as file:
