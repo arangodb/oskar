@@ -168,9 +168,9 @@ for filename in filenames:
             json_results.append(json.load(file))
 
 report_data = {}
-report_data["scan_date"] = json_results[0]["descriptor"]["timestamp"]
-report_data["grype_version"] = json_results[0]["descriptor"]["version"]
-report_data["db_date"] = json_results[0]["descriptor"]["db"]["built"]
+report_data["scan_date"] = json_results[0].get("descriptor", {}).get("timestamp", "")
+report_data["grype_version"] = json_results[0].get("descriptor", {}).get("version", "")
+report_data["db_date"] = json_results[0].get("descriptor", {}).get("descriptor", {}).get("db", {}).get("status", {}).get("from", {}).get("built", "")
 report_data["scans"] = []
 
 severity_order = {
