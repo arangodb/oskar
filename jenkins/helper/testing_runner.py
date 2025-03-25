@@ -511,22 +511,23 @@ class TestingRunner():
         core_files_list += system_corefiles
         if len(core_files_list) == 0 or core_max_count <= 0:
             print(f'Coredumps are not collected: {str(len(core_files_list))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
-            return
-        if not self.crashed or self.success:
-            self.append_report_txt("non captured crash reports found; please inspect the tests to find out who created them.")
-        self.crashed = True
-        self.success = False
-        core_zip_dir = get_workspace() / 'coredumps'
-        core_zip_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            if not self.crashed or self.success:
+                self.append_report_txt("non captured crash reports found; please inspect the tests to find out who created them.")
+            self.crashed = True
+            self.success = False
+            core_zip_dir = get_workspace() / 'coredumps'
+            core_zip_dir.mkdir(parents=True, exist_ok=True)
 
-        crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
-        self.mp_zip_tar(core_files_list, core_zip_dir, crash_report_file, 'coredump', 'crashreport')
-        shutil.rmtree(str(core_zip_dir), ignore_errors=True)
+            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
+            self.mp_zip_tar(core_files_list, core_zip_dir, crash_report_file, 'coredump', 'crashreport')
+            shutil.rmtree(str(core_zip_dir), ignore_errors=True)
 
-        self.cleanup_unneeded_binary_files()
-        binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
-        bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
-        self.mp_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
+            self.cleanup_unneeded_binary_files()
+        if self.crashed:
+            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
+            bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
+            self.mp_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
 
     def generate_test_report(self):
         """ regular testresults zip """
