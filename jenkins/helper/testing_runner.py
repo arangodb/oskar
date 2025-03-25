@@ -524,9 +524,10 @@ class TestingRunner():
             shutil.rmtree(str(core_zip_dir), ignore_errors=True)
 
             self.cleanup_unneeded_binary_files()
-        binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
-        bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
-        self.mp_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
+        if self.crashed:
+            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
+            bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
+            self.mp_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
 
     def generate_test_report(self):
         """ regular testresults zip """
