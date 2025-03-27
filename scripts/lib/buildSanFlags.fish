@@ -7,10 +7,11 @@ function buildSanFlags --argument SRCDIR
     # Enable full SAN mode
     # This also has to be in runRTAtest.fish
     if not test -z "$SAN"; and test "$SAN" = "On"
+      compiler_libraries "$COMPILER_VERSION"
       echo "Use SAN mode: $SAN_MODE"
       set common_options "log_exe_name=true:external_symbolizer_path=$INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-client.py"
       set -xg ARCHER_OPTIONS "verbose=1"
-      set -xg OMP_TOOL_LIBRARIES /usr/lib/llvm-19/lib/libarcher.so
+      set -xg OMP_TOOL_LIBRARIES "$COMPILER_LIB_DIR/libarcher.so"
       switch "$SAN_MODE"
         case "AULSan"
           # address sanitizer

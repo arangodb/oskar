@@ -83,6 +83,28 @@ function compiler
   end
 end
 
+function compiler_libraries
+  set -l cversion $argv[1]
+
+  if test "$cversion" = ""
+    set -e COMPILER_VERSION
+    return 0
+  end
+
+  switch $cversion
+    case 13.2.0
+      set -xg COMPILER_LIB_DIR /usr/lib/gcc-13/lib/
+    case clang16.0.6
+      set -xg COMPILER_LIB_DIR /usr/lib/llvm-16/lib/
+
+    case clang19.1.7
+      set -xg COMPILER_LIB_DIR /usr/lib/llvm-19/lib/
+
+    case '*'
+      echo "unknown compiler version $cversion"
+  end
+end
+
 function opensslVersion
   set -l oversion $argv[1]
 
