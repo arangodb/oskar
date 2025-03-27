@@ -9,7 +9,8 @@ function buildSanFlags --argument SRCDIR
     if not test -z "$SAN"; and test "$SAN" = "On"
       echo "Use SAN mode: $SAN_MODE"
       set common_options "log_exe_name=true:external_symbolizer_path=$INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-client.py"
-
+      set -xg ARCHER_OPTIONS "verbose=1"
+      set -xg OMP_TOOL_LIBRARIES /usr/lib/llvm-19/lib/libarcher.so
       switch "$SAN_MODE"
         case "AULSan"
           # address sanitizer
@@ -43,7 +44,7 @@ function buildSanFlags --argument SRCDIR
 
           # suppressions
           if test -f "$SRCDIR/tsan_arangodb_suppressions.txt"
-            set -xg TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0"
+            set -xg TSAN_OPTIONS "$TSAN_OPTIONS:suppressions=$INNERWORKDIR/ArangoDB/tsan_arangodb_suppressions.txt:print_suppressions=0:ignore_noninstrumented_modules=1"
           end
 
           echo "TSAN: $TSAN_OPTIONS"
