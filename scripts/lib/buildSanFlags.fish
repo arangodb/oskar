@@ -10,7 +10,7 @@ function buildSanFlags --argument SRCDIR
       compiler_libraries "$COMPILER_VERSION"
       echo "Use SAN mode: $SAN_MODE"
       set common_options "log_exe_name=true:external_symbolizer_path=$INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-client.py"
-      set -xg ARCHER_OPTIONS "verbose=1"
+      set -xg ARCHER_OPTIONS verbose=1
       set -xg OMP_TOOL_LIBRARIES "$COMPILER_LIB_DIR/libarcher.so"
       switch "$SAN_MODE"
         case "AULSan"
