@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import hashlib
+import json
 import pprint
 import re
 import shutil
@@ -63,7 +64,7 @@ def zipp_this(filenames, target_dir):
     for corefile in filenames:
         try:
             print(f'zipping {corefile}')
-            zipfile.ZipFile(str(target_dir / (corefile.name + '.xz')),
+            zipfile.ZipFile(str(target_dir / (corefile.name + "." + ZIPEXT)),
                             mode='w', compression=zipfile.ZIP_LZMA).write(str(corefile))
         except Exception as exc:
             print(f'skipping {corefile} since {exc}')
@@ -77,18 +78,18 @@ def testing_runner(testing_instance, this, arangosh):
     try:
         this.start = datetime.now(tz=None)
         this.cov_prefix = None
+        this.cov_prefix_var = None
         if this.cfg.is_cov:
-            if this.cfg.is_lcov:
-                this.cov_prefix =  (Path(COVERAGE_VALUE) /
-                                    this.name_enum.replace(' ', '_'))
-                if this.cov_prefix.exists():
-                    print(f"deleting pre-existing coverage {str(this.cov_prefix)}")
-                    shutil.rmtree(str(this.cov_prefix))
-            else:
-                this.cov_prefix =  Path(COVERAGE_VALUE)
+            this.cov_prefix =  (Path(COVERAGE_VALUE) /
+                                this.name_enum.replace(' ', '_'))
+            if this.cov_prefix.exists():
+                print(f"deleting pre-existing coverage {str(this.cov_prefix)}")
+                shutil.rmtree(str(this.cov_prefix))
             if not this.cov_prefix.exists():
                 this.cov_prefix.mkdir(parents=True)
+            this.cov_prefix_var = this.cov_prefix / "testingjs"
         ret = arangosh.run_testing(this.suite,
+                                   this.arangosh_args,
                                    this.args,
                                    999999999,
                                    this.base_logdir,
@@ -96,7 +97,7 @@ def testing_runner(testing_instance, this, arangosh):
                                    this.name_enum,
                                    this.temp_dir,
                                    COVERAGE_VAR,
-                                   str(this.cov_prefix) if this.cov_prefix is not None else this.cov_prefix,
+                                   str(this.cov_prefix_var) if this.cov_prefix is not None else this.cov_prefix,
                                    True) #verbose?
         this.success = (
             not ret["progressive_timeout"] or
@@ -108,7 +109,7 @@ def testing_runner(testing_instance, this, arangosh):
         this.delta_seconds = this.delta.total_seconds()
         this.crashed = not this.crashed_file.exists() or this.crashed_file.read_text() == "true"
         this.success = this.success and this.success_file.exists() and this.success_file.read_text() == "true"
-        print(f'done with {this.name_enum} -> {this.success}')
+        print(f"done with {this.name_enum} -> {this.success} {ret['rc_exit']}")
         if this.report_file.exists():
             this.structured_results = this.report_file.read_text(encoding="UTF-8", errors='ignore')
         this.summary = ret['error']
@@ -148,7 +149,7 @@ def testing_runner(testing_instance, this, arangosh):
     finally:
         print('finally')
         try:
-            if this.cov_prefix is not None and this.cfg.is_lcov:
+            if this.cov_prefix is not None:
                 with COVERAGE_LOCK:
                     start = time.time()
                     cov_dir = Path(this.cov_prefix)
@@ -168,6 +169,8 @@ def testing_runner(testing_instance, this, arangosh):
             print(traceback.format_exc())
             raise ex
         with arangosh.slot_lock:
+            with open((this.cfg.run_root / "job_to_pids.jsonl"), "a+", encoding="utf-8")  as jsonl_file:
+                jsonl_file.write(f'{json.dumps({"pid": ret["pid"], "logfile": str(this.log_file)})}\n')
             testing_instance.running_suites.remove(this.name_enum)
         testing_instance.done_job(this.parallelity)
 
@@ -410,7 +413,7 @@ class TestingRunner():
             filep.write(text + '\n')
 
     # pylint: disable=too-many-arguments
-    def mt_zip_tar(self, fnlist, zip_dir, tarfile, verb, filetype):
+    def mp_zip_tar(self, fnlist, zip_dir, tarfile, verb, filetype):
         """ use full machine to compress files in zip-tar """
         zip_slots = psutil.cpu_count(logical=False)
         count = 0
@@ -508,22 +511,23 @@ class TestingRunner():
         core_files_list += system_corefiles
         if len(core_files_list) == 0 or core_max_count <= 0:
             print(f'Coredumps are not collected: {str(len(core_files_list))} coredumps found; coredumps max limit to collect is {str(core_max_count)}!')
-            return
-        if not self.crashed or self.success:
-            self.append_report_txt("non captured crash reports found; please inspect the tests to find out who created them.")
-        self.crashed = True
-        self.success = False
-        core_zip_dir = get_workspace() / 'coredumps'
-        core_zip_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            if not self.crashed or self.success:
+                self.append_report_txt("non captured crash reports found; please inspect the tests to find out who created them.")
+            self.crashed = True
+            self.success = False
+            core_zip_dir = get_workspace() / 'coredumps'
+            core_zip_dir.mkdir(parents=True, exist_ok=True)
 
-        crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
-        self.mt_zip_tar(core_files_list, core_zip_dir, crash_report_file, 'coredump', 'crashreport')
-        shutil.rmtree(str(core_zip_dir), ignore_errors=True)
+            crash_report_file = get_workspace() / datetime.now(tz=None).strftime(f"crashreport-{self.cfg.datetime_format}")
+            self.mp_zip_tar(core_files_list, core_zip_dir, crash_report_file, 'coredump', 'crashreport')
+            shutil.rmtree(str(core_zip_dir), ignore_errors=True)
 
-        self.cleanup_unneeded_binary_files()
-        binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
-        bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
-        self.mt_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
+            self.cleanup_unneeded_binary_files()
+        if self.crashed:
+            binary_report_file = get_workspace() / datetime.now(tz=None).strftime(f"binaries-{self.cfg.datetime_format}")
+            bin_files_list = [f for f in self.cfg.bin_dir.glob('*') if not f.is_symlink()]
+            self.mp_zip_tar(bin_files_list, self.cfg.bin_dir, binary_report_file, 'binary support', 'binreport')
 
     def generate_test_report(self):
         """ regular testresults zip """
@@ -637,6 +641,7 @@ class TestingRunner():
                                [ *args,
                                  '--index', f"{i}",
                                  '--testBuckets', f'{num_buckets}/{i}'],
+                               test['arangosh_args'],
                                test['priority'],
                                parallelity,
                                test['flags']))
@@ -646,6 +651,7 @@ class TestingRunner():
                            name,
                            test["suite"],
                            [ *args],
+                           test['arangosh_args'],
                            test['priority'],
                            parallelity,
                            test['flags']))

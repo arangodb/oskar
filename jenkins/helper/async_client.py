@@ -212,7 +212,8 @@ def kill_children(identifier, params, children):
                 killed.append(one_child.pid)
                 err += add_message_to_report(
                     params,
-                    f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}")
+                    f"{identifier}: killing {one_child.name()} - {str(one_child.pid)}",
+                    True, True)
                 one_child.resume()
         except FileNotFoundError:
             pass
@@ -601,6 +602,7 @@ class ArangoCLIprogressiveTimeoutExecutor:
                 timeout_str = "TIMEOUT OCCURED!"
                 print(timeout_str)
                 timeout_str += "\n"
+                params['error'] += timeout_str
             elif rc_exit is None:
                 print_log(f"{identifier} waiting for regular exit", params)
                 rc_exit = process.wait()

@@ -194,13 +194,15 @@ def read_definition_line(line):
     flags = []
     params = {}
     args = []
+    arangosh_args = []
 
     for idx, bit in enumerate(remainder):
         if bit == "--":
             args = remainder[idx + 1:]
             break
-
-        if "=" in bit:
+        if bit.startswith("--"):
+            arangosh_args.append(bit)
+        elif "=" in bit:
             key, value = bit.split("=", maxsplit=1)
             params[key] = value
         else:
@@ -226,6 +228,7 @@ def read_definition_line(line):
         "parallelity": params["parallelity"],
         "flags": flags,
         "args": args,
+        "arangosh_args": arangosh_args,
         "params": params
     }
 

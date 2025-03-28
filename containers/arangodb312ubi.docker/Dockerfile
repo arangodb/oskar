@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
 MAINTAINER Frank Celler <info@arangodb.com>
 
 RUN microdnf update -y && rm -rf /var/cache/yum
@@ -22,13 +22,14 @@ LABEL name="$name" \
 
 ADD ./LICENSE /licenses/LICENSE
 
-RUN microdnf install gpg wget binutils && \
-    curl -L -O http://mirror.centos.org/centos/8-stream/BaseOS/$(uname -p)/os/Packages/numactl-libs-2.0.16-4.el8.$(uname -p).rpm && \
-    rpm -i numactl-libs-2.0.16-4.el8.$(uname -p).rpm && \
-    rm numactl-libs-2.0.16-4.el8.$(uname -p).rpm && \
-    curl -L -O http://mirror.centos.org/centos/8-stream/BaseOS/$(uname -p)/os/Packages/numactl-2.0.16-4.el8.$(uname -p).rpm && \
-    rpm -i numactl-2.0.16-4.el8.$(uname -p).rpm && \
-    rm numactl-2.0.16-4.el8.$(uname -p).rpm && \
+RUN PACKAGES_REPO="https://mirror.stream.centos.org/9-stream/BaseOS/$(uname -p)/os/Packages" && \
+    NUMA_PACKAGES_VERSION="2.0.16-3.el9.$(uname -p)" && \
+    microdnf -y install gpg wget binutils && \
+    for i in numactl-libs numactl; do \
+      curl -L -O $PACKAGES_REPO/$i-$NUMA_PACKAGES_VERSION.rpm && \
+      rpm -i $i-$NUMA_PACKAGES_VERSION.rpm && \
+      rm -f $i-$NUMA_PACKAGES_VERSION.rpm; \
+    done && \
     microdnf clean all
 
 ADD install.tar.gz /

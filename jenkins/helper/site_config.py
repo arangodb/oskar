@@ -20,12 +20,6 @@ if IS_COVERAGE:
     if 'LLVM_PROFILE_FILE' in os.environ:
         COVERAGE_VAR = 'LLVM_PROFILE_FILE'
         COVERAGE_TYPE = 'LLVM'
-    elif 'GCOV_PREFIX' in os.environ:
-        COVERAGE_VAR = 'GCOV_PREFIX'
-        COVERAGE_TYPE = 'GCOV'
-    else:
-        COVERAGE_TYPE = 'GCOV'
-    if COVERAGE_VAR:
         COVERAGE_VALUE = os.environ[COVERAGE_VAR]
     print(f"coverage value: {COVERAGE_VAR} = {COVERAGE_VALUE}")
 IS_ARM = platform.processor() == "arm" or platform.processor() == "aarch64"
@@ -123,6 +117,7 @@ class SiteConfig:
         # pylint: disable=too-many-statements disable=too-many-branches
         print_env()
         init_temp()
+        self.basedir = Path.cwd()
         self.datetime_format = "%Y-%m-%dT%H%M%SZ"
         self.trace = False
         self.portbase = 7000
@@ -177,14 +172,8 @@ class SiteConfig:
             if self.is_aulsan:
                 san_cov_msg = ' - AUL-SAN '
             elif self.is_cov:
-                if COVERAGE_TYPE == 'GCOV':
-                    san_cov_msg = ' - GCOV'
-                    slot_divisor = 3
-                    self.is_lcov = False
-                else:
-                    san_cov_msg = ' - LCOV'
-                    slot_divisor = 2
-                    self.is_lcov = True
+                san_cov_msg = ' - LCOV'
+                slot_divisor = 2
             san_cov_msg += ' enabled, reducing possible system capacity\n'
             self.rapid_fire = 1
             self.available_slots /= slot_divisor
@@ -222,7 +211,7 @@ class SiteConfig:
  - {self.core_dozend} / {self.loop_sleep} machine size / loop frequency
  - {socket_count} number of currently active tcp sockets
 {san_cov_msg}""")
-        self.cfgdir = base_source_dir / 'etc' / 'relative'
+        self.cfgdir = base_source_dir / 'etc' / 'testing'
         self.bin_dir = bin_dir
         self.base_path = base_source_dir
         self.test_data_dir = base_source_dir

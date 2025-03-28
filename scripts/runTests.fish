@@ -92,6 +92,10 @@ set -g timeout 0
 set -g timeLimit -1
 set -g suiteRunner ""
 
+if test "$SAN" = "On"
+     $INNERWORKDIR/ArangoDB/utils/llvm-symbolizer-server.py > $INNERWORKDIR/symbolizer.log  2>&1 &
+end
+
 switch $TESTSUITE
   case "cluster"
     resetLaunch 4
@@ -99,7 +103,7 @@ switch $TESTSUITE
     set suiteRunner "launchClusterTests"
   case "single_cluster"
     resetLaunch 4
-    set -xg timeLimit 8100
+    set -xg timeLimit 10100
     set suiteRunner "launchSingleClusterTests"
   case "single"
     resetLaunch 1
@@ -126,7 +130,7 @@ end
 if test "$SAN" = "On"
   switch $SAN_MODE
     case "TSan"
-      set timeLimit (math $timeLimit \* 13)
+      set timeLimit (math $timeLimit \* 14)
     case "AULSan"
       set timeLimit (math $timeLimit \* 8)
     case "*"
@@ -138,6 +142,10 @@ end
 
 eval "$suiteRunner"
 
+if test "$SAN" = "On"
+   jobs
+   kill %1
+end
 echo "RESULT: $result"
 
 if test $result = GOOD

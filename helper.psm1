@@ -11,6 +11,31 @@ If (-Not($ENV:OSKAR_BRANCH))
     $ENV:OSKAR_BRANCH = "master"
 }
 
+If (-Not($ENV:ARANGODB_GIT_HOST))
+{
+    $ENV:ARANGODB_GIT_HOST = "github.com"
+}
+
+If (-Not($ENV:ARANGODB_GIT_ORGA))
+{
+    $ENV:ARANGODB_GIT_ORGA = "arangodb"
+}
+
+If (-Not($ENV:HELPER_GIT_ORGA))
+{
+    $ENV:HELPER_GIT_ORGA = "arangodb-helper"
+}
+
+If (-Not($ENV:ENTERPRISE_GIT_HOST))
+{
+    $ENV:ENTERPRISE_GIT_HOST = "github.com"
+}
+
+If (-Not($ENV:ENTERPRISE_GIT_ORGA))
+{
+    $ENV:ENTERPRISE_GIT_ORGA = "arangodb"
+}
+
 If (-Not(Test-Path -PathType Container -Path "work"))
 {
     New-Item -ItemType Directory -Path "work"
@@ -56,7 +81,7 @@ If (Get-Command pskill.exe -ErrorAction SilentlyContinue)
 }
 
 $global:REG_WER = "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
-$global:COREDIR = "$env:WORKSPACE\core"
+$global:COREDIR = "$ENV:WORKSPACE\core"
 If (-Not(Test-Path -Path $global:COREDIR))
 {
   New-Item -ItemType "directory" -Path "$global:COREDIR"
@@ -65,23 +90,39 @@ Else
 {
   Remove-Item "$global:COREDIR\*" -Recurse -Force
 }
-$env:COREDIR=$global:COREDIR
+$ENV:COREDIR=$global:COREDIR
 $global:INNERWORKDIR = "$WORKDIR\work"
 $global:ARANGODIR = "$INNERWORKDIR\ArangoDB"
 $global:ENTERPRISEDIR = "$global:ARANGODIR\enterprise"
-$env:TMP = "$INNERWORKDIR\tmp"
+$ENV:TMP = "$INNERWORKDIR\tmp"
+$global:ARANGODB_BUILD_DATE = "$ENV:ARANGODB_BUILD_DATE"
 
+Function setVisualStudioEnvs
+{
+    param (
+        [Parameter(Mandatory=$true)]
+        $patternVersion
+    )
+    $installationPath = $(Get-VSSetupInstance | Select-VSSetupInstance -Version $patternVersion).InstallationPath
+    if ("$installationPath" -and (test-path "$installationPath\Common7\Tools\vsdevcmd.bat")) {
+        & "${env:COMSPEC}" /s /c "`"$installationPath\Common7\Tools\vsdevcmd.bat`" -no_logo && set" | foreach-object {
+        $name, $value = $_ -split '=', 2
+        set-content env:\"$name" $value
+        }
+    }
+}
 Function VS2019
 {
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All | Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname | Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $ENV:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All | Where {$_.DisplayName -match "Visual Studio Community 2019"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname | Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
     $global:GENERATOR = "Visual Studio 16 2019"
     $global:GENERATORID = "v142"
     $global:MSVS = "2019"
+    setVisualStudioEnvs "[16.0,17.0)"
 }
 
 Function VS2022
 {
-    $env:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All | Where {$_.DisplayName -match "Visual Studio Community 2022"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname | Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
+    $ENV:CLCACHE_CL = $($(Get-ChildItem $(Get-VSSetupInstance -All | Where {$_.DisplayName -match "Visual Studio Community 2022"}).InstallationPath -Filter cl_original.exe -Recurse | Select-Object Fullname | Where {$_.FullName -match "Hostx64\\x64"}).FullName | Select-Object -Last 1)
     $global:GENERATOR = "Visual Studio 17 2022"
     $global:GENERATORID = "v143"
     $global:MSVS = "2022"
@@ -120,11 +161,11 @@ Function findCompilerVersion
 }
 
 findCompilerVersion
-$env:CLCACHE_DIR = "$INNERWORKDIR\.clcache.windows"
-$env:CMAKE_CONFIGURE_DIR = "$INNERWORKDIR\.cmake.windows"
-$env:CLCACHE_LOG = 0
-$env:CLCACHE_HARDLINK = 1
-$env:CLCACHE_OBJECT_CACHE_TIMEOUT_MS = 120000
+$ENV:CLCACHE_DIR = "$INNERWORKDIR\.clcache.windows"
+$ENV:CMAKE_CONFIGURE_DIR = "$INNERWORKDIR\.cmake.windows"
+$ENV:CLCACHE_LOG = 0
+$ENV:CLCACHE_HARDLINK = 1
+$ENV:CLCACHE_OBJECT_CACHE_TIMEOUT_MS = 120000
 
 $global:launcheableTests = @()
 $global:maxTestCount = 0
@@ -135,13 +176,13 @@ $global:hasTestCrashes = $False
 
 $global:ok = $true
 
-If (-Not(Test-Path -Path $env:TMP))
+If (-Not(Test-Path -Path $ENV:TMP))
 {
-  New-Item -ItemType "directory" -Path "$env:TMP"
+  New-Item -ItemType "directory" -Path "$ENV:TMP"
 }
-If (-Not(Test-Path -Path $env:CMAKE_CONFIGURE_DIR))
+If (-Not(Test-Path -Path $ENV:CMAKE_CONFIGURE_DIR))
 {
-  New-Item  -ItemType "directory" -Path "$env:CMAKE_CONFIGURE_DIR"
+  New-Item  -ItemType "directory" -Path "$ENV:CMAKE_CONFIGURE_DIR"
 }
 
 ################################################################################
@@ -210,7 +251,7 @@ Function 7unzip($zip)
 
 Function isGCE
 {
-    return "$env:COMPUTERNAME" -eq "JENKINS-WIN-GCE"
+    return "$ENV:COMPUTERNAME" -eq "JENKINS-WIN-GCE"
 }
 
 Function hostKey
@@ -239,7 +280,7 @@ Function configureWER($executable, $path)
     New-ItemProperty "$regPath" -Name DumpType -PropertyType DWord -Value 2 -Force | Out-Null
 }
 
-$global:OPENSSL_DEFAULT_VERSION = "1.1.0l"
+$global:OPENSSL_DEFAULT_VERSION = "3.4.0"
 $global:OPENSSL_VERSION = $global:OPENSSL_DEFAULT_VERSION
 
 $global:OPENSSL_MODES = "release", "debug"
@@ -265,7 +306,7 @@ Function oskarOpenSSL
     If ($global:ok)
     {
       Write-Host "Set OPENSSL_ROOT_DIR via environment variable to $OPENSSL_PATH"
-      $env:OPENSSL_ROOT_DIR = $OPENSSL_PATH
+      $ENV:OPENSSL_ROOT_DIR = $OPENSSL_PATH
     }
     Else
     {
@@ -378,8 +419,8 @@ Function buildOpenSSL ($path, $version, $msvs, [string[]] $modes, [string[]] $ty
             ForEach ($type In $types)
             {
               $OPENSSL_BUILD="${type}-${mode}"
-              $env:installdir = "${path}\OpenSSL\${version}\VS_${msvs}\${OPENSSL_BUILD}"
-              If (Test-Path -PathType Leaf -Path "$env:installdir")
+              $ENV:installdir = "${path}\OpenSSL\${version}\VS_${msvs}\${OPENSSL_BUILD}"
+              If (Test-Path -PathType Leaf -Path "$ENV:installdir")
               {
                   Remove-Item -Force -Recurse -Path "${env:installdir}\*"
                   New-Item -Path "${env:installdir}"
@@ -468,10 +509,10 @@ Function trimCache
 {
     If ($CLCACHE -eq "On")
     {
-        If ($env:CLCACHE_CL)
+        If ($ENV:CLCACHE_CL)
         {
-            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-c" -logfile $false -priority "Normal"
-            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $ENV:CLCACHE_CL)\cl.exe" -argument "-c" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $ENV:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
         }
         Else
         {
@@ -488,11 +529,11 @@ Function clearCache
 {
     If ($CLCACHE -eq "On")
     {
-        If ($env:CLCACHE_CL)
+        If ($ENV:CLCACHE_CL)
         {
-            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-C" -logfile $false -priority "Normal"
-            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-z" -logfile $false -priority "Normal"
-            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $ENV:CLCACHE_CL)\cl.exe" -argument "-C" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $ENV:CLCACHE_CL)\cl.exe" -argument "-z" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $ENV:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
         }
         Else
         {
@@ -509,10 +550,10 @@ Function configureCache
 {
     If ($CLCACHE -eq "On")
     {
-        If ($env:CLCACHE_CL)
+        If ($ENV:CLCACHE_CL)
         {
-            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
-            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $ENV:CLCACHE_CL)\cl.exe" -argument "-M 107374182400" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $ENV:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
             
         }
         Else
@@ -530,10 +571,10 @@ Function showCacheStats
 {
     If ($CLCACHE -eq "On")
     {
-        If ($env:CLCACHE_CL)
+        If ($ENV:CLCACHE_CL)
         {
             $tmp_stats = $global:ok
-            proc -process "$(Split-Path $env:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
+            proc -process "$(Split-Path $ENV:CLCACHE_CL)\cl.exe" -argument "-s" -logfile $false -priority "Normal"
             $global:ok = $tmp_stats
         }
         Else
@@ -551,12 +592,12 @@ Function showConfig
 {
     Write-Host "------------------------------------------------------------------------------"
     Write-Host "Global Configuration"
-    Write-Host "User           : "$env:USERDOMAIN\$env:USERNAME
-    Write-Host "Path           : "$env:PATH
+    Write-Host "User           : "$ENV:USERDOMAIN\$ENV:USERNAME
+    Write-Host "Path           : "$ENV:PATH
     Write-Host "Use cache      : "$CLCACHE
-    Write-Host "Cache          : "$env:CLCACHE_CL
-    Write-Host "Cachedir       : "$env:CLCACHE_DIR
-    Write-Host "CMakeConfigureCache      : "$env:CMAKE_CONFIGURE_DIR
+    Write-Host "Cache          : "$ENV:CLCACHE_CL
+    Write-Host "Cachedir       : "$ENV:CLCACHE_DIR
+    Write-Host "CMakeConfigureCache      : "$ENV:CMAKE_CONFIGURE_DIR
     Write-Host " "
     Write-Host "Build Configuration"
     Write-Host "Buildmode      : "$BUILDMODE
@@ -593,7 +634,7 @@ Function showConfig
     Write-Host "Directories"
     Write-Host "Inner workdir  : "$INNERWORKDIR
     Write-Host "Workdir        : "$WORKDIR
-    Write-Host "Workspace      : "$env:WORKSPACE
+    Write-Host "Workspace      : "$ENV:WORKSPACE
     Write-Host "------------------------------------------------------------------------------"
     Write-Host "Cache Statistics"
     showCacheStats
@@ -705,7 +746,7 @@ Function clcacheOn
 Function clcacheOff
 {
     $global:CLCACHE = "Off"
-    $env:CLCACHE_DISABLE = "1"
+    $ENV:CLCACHE_DISABLE = "1"
 }
 If (-Not($CLCACHE))
 {
@@ -1080,11 +1121,11 @@ Function downloadStarter
     }
     If ($STARTER_REV -eq "latest")
     {
-        $JSON = Invoke-WebRequest -Uri 'https://api.github.com/repos/arangodb-helper/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
+        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:HELPER_GIT_ORGA/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
         $STARTER_REV = $JSON.name
     }
     Write-Host "Download: Starter"
-    (New-Object System.Net.WebClient).DownloadFile("https://github.com/arangodb-helper/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
+    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:HELPER_GIT_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
     setupSourceInfo "Starter" $STARTER_REV
 }
 
@@ -1094,7 +1135,7 @@ Function downloadSyncer
     {
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        If (-Not($env:DOWNLOAD_SYNC_USER))
+        If (-Not($ENV:DOWNLOAD_SYNC_USER))
         {
             Write-Host "Need environment variable set!"
         }
@@ -1102,13 +1143,13 @@ Function downloadSyncer
         $SYNCER_REV = $Matches[0]
         If ($SYNCER_REV -eq "latest")
         {
-            $JSON = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/latest" | ConvertFrom-Json
+            $JSON = curl -s -L "https://$ENV:DOWNLOAD_SYNC_USER@api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:ARANGODB_GIT_ORGA/arangosync/releases/latest" | ConvertFrom-Json
             $SYNCER_REV = $JSON.name
         }
-        $ASSET = curl -s -L "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
+        $ASSET = curl -s -L "https://$ENV:DOWNLOAD_SYNC_USER@api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:ARANGODB_GIT_ORGA/arangosync/releases/tags/$SYNCER_REV" | ConvertFrom-Json
         $ASSET_ID = $(($ASSET.assets) | Where-Object -Property name -eq arangosync-windows-amd64.exe).id
         Write-Host "Download: Syncer $SYNCER_REV"
-        curl -s -L -H "Accept: application/octet-stream" "https://$env:DOWNLOAD_SYNC_USER@api.github.com/repos/arangodb/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
+        curl -s -L -H "Accept: application/octet-stream" "https://$ENV:DOWNLOAD_SYNC_USER@api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:ARANGODB_GIT_ORGA/arangosync/releases/assets/$ASSET_ID" -o "$global:ARANGODIR\build\arangosync.exe"
         If (Select-String -Path "$global:ARANGODIR\build\arangosync.exe" -Pattern '"message": "Not Found"')
         {
             Write-Host "Download: Syncer FAILED!"
@@ -1144,7 +1185,7 @@ Function checkoutArangoDB
     Set-Location $INNERWORKDIR
     If (-Not(Test-Path -PathType Container -Path "ArangoDB"))
     {
-        proc -process "git" -argument "clone https://github.com/arangodb/ArangoDB" -logfile $false -priority "Normal"
+        proc -process "git" -argument "clone https://$ENV:ARANGODB_GIT_HOST/$ENV:ARANGODB_GIT_ORGA/ArangoDB" -logfile $false -priority "Normal"
     }
     Pop-Location
 }
@@ -1158,7 +1199,7 @@ Function checkoutEnterprise
         Set-Location $global:ARANGODIR
         If (-Not(Test-Path -PathType Container -Path "enterprise"))
         {
-            proc -process "git" -argument "clone ssh://git@github.com/arangodb/enterprise" -logfile $false -priority "Normal"
+            proc -process "git" -argument "clone ssh://git@$ENV:ENTERPRISE_GIT_HOST/$ENV:ENTERPRISE_GIT_ORGA/enterprise" -logfile $false -priority "Normal"
         }
         Pop-Location
     }
@@ -1291,7 +1332,7 @@ Function switchBranches($branch_c,$branch_e)
     }
     If ($global:ok)
     {
-        setupSourceInfo "VERSION" $(Get-Content $INNERWORKDIR/ArangoDB/ARANGO-VERSION)
+        setupSourceInfo "VERSION" $(Get-Content $INNERWORKDIR/$ENV:ARANGODB_GIT_ORGA/ARANGO-VERSION)
         setupSourceInfo "Community" $(git rev-parse --verify HEAD)
         findArangoDBVersion
     }
@@ -1387,9 +1428,9 @@ Function clearResults
     {
         Remove-Item -Force $INNERWORKDIR\test.log
     }
-    If (Test-Path -PathType Leaf -Path $env:TMP\testProtocol.txt)
+    If (Test-Path -PathType Leaf -Path $ENV:TMP\testProtocol.txt)
     {
-        Remove-Item -Force $env:TMP\testProtocol.txt
+        Remove-Item -Force $ENV:TMP\testProtocol.txt
     }
     If (Test-Path -PathType Leaf -Path $INNERWORKDIR\testfailures.txt)
     {
@@ -1414,9 +1455,9 @@ Function clearWorkdir
 {
     $Excludes = [System.Collections.ArrayList]@(
         ("$global:ARANGODIR*" | split-path -leaf),
-        ("$env:TMP*" | split-path -leaf),
-        ("$env:CLCACHE_DIR*" | split-path -leaf),
-        ("$env:CMAKE_CONFIGURE_DIR*" | split-path -leaf),
+        ("$ENV:TMP*" | split-path -leaf),
+        ("$ENV:CLCACHE_DIR*" | split-path -leaf),
+        ("$ENV:CMAKE_CONFIGURE_DIR*" | split-path -leaf),
         ("${global:INNERWORKDIR}\sourceInfo*" | split-path -leaf)
     )
     If ((isGCE) -eq $False)
@@ -1456,26 +1497,26 @@ Function getRepoState
 Function noteStartAndRepoState
 {
     getRepoState
-    If (Test-Path -PathType Leaf -Path $env:TMP\testProtocol.txt)
+    If (Test-Path -PathType Leaf -Path $ENV:TMP\testProtocol.txt)
     {
-        Remove-Item -Force $env:TMP\testProtocol.txt
+        Remove-Item -Force $ENV:TMP\testProtocol.txt
     }
-    New-Item -Force $env:TMP\testProtocol.txt
-    $(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH.mm.ssZ") | Add-Content $env:TMP\testProtocol.txt
-    Write-Output "========== Status of main repository:" | Add-Content $env:TMP\testProtocol.txt
+    New-Item -Force $ENV:TMP\testProtocol.txt
+    $(Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH.mm.ssZ") | Add-Content $ENV:TMP\testProtocol.txt
+    Write-Output "========== Status of main repository:" | Add-Content $ENV:TMP\testProtocol.txt
     Write-Host "========== Status of main repository:"
     ForEach ($line in $global:repoState)
     {
-        Write-Output " $line" | Add-Content $env:TMP\testProtocol.txt
+        Write-Output " $line" | Add-Content $ENV:TMP\testProtocol.txt
         Write-Host " $line"
     }
     If ($ENTERPRISEEDITION -eq "On")
     {
-        Write-Output "Status of enterprise repository:" | Add-Content $env:TMP\testProtocol.txt
+        Write-Output "Status of enterprise repository:" | Add-Content $ENV:TMP\testProtocol.txt
         Write-Host "Status of enterprise repository:"
         ForEach ($line in $global:repoStateEnterprise)
         {
-            Write-Output " $line" | Add-Content $env:TMP\testProtocol.txt
+            Write-Output " $line" | Add-Content $ENV:TMP\testProtocol.txt
             Write-Host " $line"
         }
     }
@@ -1487,17 +1528,17 @@ Function getCacheID
        
     If ($ENTERPRISEEDITION -eq "On")
     {
-        Get-ChildItem -Include "CMakeLists.txt","VERSIONS","*.cmake" -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
+        Get-ChildItem -Include "CMakeLists.txt","VERSIONS","*.cmake" -Recurse  | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $ENV:TMP\allHashes.txt
     }
     Else
     {
         # if there happenes to be an enterprise directory, we ignore it.
-        Get-ChildItem -Include "CMakeLists.txt","VERSIONS","*.cmake" -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $env:TMP\allHashes.txt
+        Get-ChildItem -Include "CMakeLists.txt","VERSIONS","*.cmake" -Recurse | ? { $_.Directory -NotMatch '.*enterprise.*' } | ? { $_.Directory -NotMatch '.*build.*' } | Get-FileHash > $ENV:TMP\allHashes.txt
     }
     
-    $hash = "$((Get-FileHash $env:TMP\allHashes.txt).Hash)" + ($env:OPENSSL_ROOT_DIR).GetHashCode() + (Split-Path $env:CLCACHE_CL).GetHashCode()
-    $hashStr = "$env:CMAKE_CONFIGURE_DIR\${hash}-EP_${ENTERPRISEEDITION}.zip"
-    Remove-Item -Force $env:TMP\allHashes.txt
+    $hash = "$((Get-FileHash $ENV:TMP\allHashes.txt).Hash)" + ($ENV:OPENSSL_ROOT_DIR).GetHashCode() + (Split-Path $ENV:CLCACHE_CL).GetHashCode()
+    $hashStr = "$ENV:CMAKE_CONFIGURE_DIR\${hash}-EP_${ENTERPRISEEDITION}.zip"
+    Remove-Item -Force $ENV:TMP\allHashes.txt
     return $hashStr
 }
 
@@ -1606,8 +1647,8 @@ Function configureWindows
               $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
           }
           Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
-          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" $global:CMAKEPARAMS `"$global:ARANGODIR`""
-          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" $global:CMAKEPARAMS `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
       }
       Else
       {
@@ -1615,8 +1656,8 @@ Function configureWindows
             downloadStarter
           }
           Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" $global:CMAKEPARAMS `"$global:ARANGODIR`""
-          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" $global:CMAKEPARAMS `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+          Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`""
+          proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
       }
       #If (!$haveCache)
       #{
@@ -1636,9 +1677,9 @@ Function buildWindows
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Write-Host "Build: cmake --build . --config `"$BUILDMODE`" --parallel -- /p:CL_MPcount=$numberSlots $global:BUILDPARAMS"
     #Remove-Item -Force "${global:INNERWORKDIR}\*.pdb.${global:PDBS_ARCHIVE_TYPE}" -ErrorAction SilentlyContinue
-    $env:UseMultiToolTask = "true"
-    $env:EnforceProcessCountAcrossBuilds = "true"
-    $env:EnableClServerMode= "true"
+    $ENV:UseMultiToolTask = "true"
+    $ENV:EnforceProcessCountAcrossBuilds = "true"
+    $ENV:EnableClServerMode= "true"
     proc -process "cmake" -argument "--build . --config `"$BUILDMODE`" --parallel -- /p:CL_MPcount=$numberSlots" -logfile "$INNERWORKDIR\build $global:BUILDPARAMS" -priority "Normal"
     If ($global:ok)
     {
@@ -1681,8 +1722,8 @@ Function signWindows
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     ForEach ($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
-        Write-Host "Sign: signtool.exe sign /sm /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`""
-        proc -process signtool.exe -argument "sign /sm /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://sha256timestamp.ws.symantec.com/sha256/timestamp`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
+        Write-Host "Sign: signtool.exe sign /sm /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://timestamp.digicert.com`" `"$PACKAGE`""
+        proc -process signtool.exe -argument "sign /sm /fd sha1 /td sha1 /sha1 D4F9266E06107CF3C29AA7E5635AD5F76018F6A3 /tr `"http://timestamp.digicert.com`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
     }
     Pop-Location
 }
@@ -2149,7 +2190,7 @@ Function makeRelease
     }
 }
 
-parallelism ([int]$env:NUMBER_OF_PROCESSORS)
+parallelism ([int]$ENV:NUMBER_OF_PROCESSORS)
 initSourceInfo
 
 $global:SYSTEM_IS_WINDOWS=$true

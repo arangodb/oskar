@@ -2,9 +2,11 @@
 
 cd $INNERWORKDIR/ArangoDB
 
-if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
-  echo "Intentionally don't pack build files for $ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR base!"
-  exit 0
+if test "$ARANGODB_VERSION_MAJOR" -eq 3
+  if not test "$ARANGODB_VERSION_MINOR" -ge 12; and begin; test "$ARANGODB_VERSION_MINOR" -le 11; and test "$ARANGODB_VERSION_PATCH" -le 9; end
+    echo "Intentionally don't pack build files for $ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR.$ARANGODB_VERSION_PATCH base!"
+    exit 0
+  end
 end
 
 set -l suffix ""
