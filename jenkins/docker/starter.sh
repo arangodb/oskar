@@ -15,9 +15,9 @@ if test -z "$SSH_AUTH_SOCK"; then
   agentstarted=1
 fi
 
-docker run -v $HOME/.ssh:/root/.ssh arangodb/ssh-client ssh -o StrictHostKeyChecking=no -T git@github.com
+"$DOCKER" run -v $HOME/.ssh:/root/.ssh arangodb/ssh-client ssh -o StrictHostKeyChecking=no -T git@github.com
 
-docker run \
+"$DOCKER" run \
        -e "PDOCKER=`getent group docker | cut -d: -f3`" \
        -e "PGID=`id -g`" \
        -e "PHOME=$HOME" \

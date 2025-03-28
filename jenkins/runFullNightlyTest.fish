@@ -1,4 +1,5 @@
 #!/usr/bin/env fish
+set -l fish_trace on
 source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear

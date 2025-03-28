@@ -29,11 +29,11 @@ and popd
 
 and sudo rm -rf work/database $simple/results.csv
 and echo "==== starting performance run ===="
-and echo "docker run  -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY  -v (pwd)/work/ArangoDB:/ArangoDB  -v (pwd)/work:/data  -v $simple:/performance  -v $gobenchdir:/gobench"
+and echo "$DOCKER run  -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY  -v (pwd)/work/ArangoDB:/ArangoDB  -v (pwd)/work:/data  -v $simple:/performance  -v $gobenchdir:/gobench"
 
 and for protocol in VST HTTP
   echo "Protocol: " $protocol
-  docker run \
+  "$DOCKER" run \
     --cap-add SYS_NICE \
     -e ARANGO_LICENSE_KEY=$ARANGODB_LICENSE_KEY \
     -e ARANGO_BRANCH=$ARANGODB_BRANCH \
