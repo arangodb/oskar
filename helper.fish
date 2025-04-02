@@ -365,6 +365,25 @@ function debDockerImage; set -gx DOCKER_DISTRO deb ; end
 if test -z "$DOCKER_DISTRO"; alpineDockerImage
 else ; set -gx DOCKER_DISTRO $DOCKER_DISTRO ; end
 
+function enableDockerCveCheck ; set -gx RUN_CVE_CHECKS_FOR_DOCKER_IMAGE 1 ; end
+function disableDockerCveCheck ; set -gx RUN_CVE_CHECKS_FOR_DOCKER_IMAGE 0 ; end
+function enableCveReport ; set -gx CREATE_CVE_REPORT_FOR_DOCKER_IMAGE 1 ; end
+function disableCveReport ; set -gx CREATE_CVE_REPORT_FOR_DOCKER_IMAGE 0 ; end
+function cveTolerance
+  set allowed_values "negligible" "low" "medium" "high" "critical"
+  if test (count $argv) -ne 1
+    echo "Usage: cveTolerance [value]. Possible values: $allowed_values"
+    return 1
+  end
+  set tolerance (string lower $argv[1])  
+  if contains -- $tolerance $allowed_values
+    set -gx CVE_SEVERITY_THRESHOLD $tolerance
+  else
+    echo "Invalid tolerance value: $tolerance. Possible values: $allowed_values"
+    return 1
+  end
+end
+
 function skipNondeterministic ; set -gx SKIPNONDETERMINISTIC true ; end
 function includeNondeterministic ; set -gx SKIPNONDETERMINISTIC false ; end
 if test -z "$SKIPNONDETERMINISTIC"; skipNondeterministic
@@ -2423,6 +2442,11 @@ function moveResultsToWorkspace
     if test -d $WORKDIR/work/ArangoDB/testrunXml
       echo "mv JUnit XMLs ($WORKDIR/work/ArangoDB/testrunXml)"
       mv $WORKDIR/work/ArangoDB/testrunXml $WORKSPACE/testrunXml
+    end
+
+    if test -d $WORKDIR/work/grype_reports
+      echo "mv grype reports ($WORKDIR/work/grype_reports)"
+      mv $WORKDIR/work/grype_reports $WORKSPACE/grype_reports
     end
   end
 end
