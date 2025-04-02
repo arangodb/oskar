@@ -369,13 +369,20 @@ function enableDockerCveCheck ; set -gx RUN_CVE_CHECKS_FOR_DOCKER_IMAGE 1 ; end
 function disableDockerCveCheck ; set -gx RUN_CVE_CHECKS_FOR_DOCKER_IMAGE 0 ; end
 function enableCveReport ; set -gx CREATE_CVE_REPORT_FOR_DOCKER_IMAGE 1 ; end
 function disableCveReport ; set -gx CREATE_CVE_REPORT_FOR_DOCKER_IMAGE 0 ; end
-function cveBlockPublishing ; set -gx PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS 1 ; end
-function cveNoBlockPublishing ; set -gx PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS 0 ; end
-function cveToleranceNegligible ; set -gx CVE_SEVERITY_THRESHOLD negligible ; end
-function cveToleranceLow ; set -gx CVE_SEVERITY_THRESHOLD low ; end
-function cveToleranceMedium ; set -gx CVE_SEVERITY_THRESHOLD medium ; end
-function cveToleranceHigh ; set -gx CVE_SEVERITY_THRESHOLD high ; end
-function cveToleranceCritical ; set -gx CVE_SEVERITY_THRESHOLD critical ; end
+function cveTolerance
+  set allowed_values "negligible" "low" "medium" "high" "critical"
+  if test (count $argv) -ne 1
+    echo "Usage: cveTolerance [value]. Possible values: $allowed_values"
+    return 1
+  end
+  set tolerance (string lower $argv[1])  
+  if contains -- $tolerance $allowed_values
+    set -gx CVE_SEVERITY_THRESHOLD $tolerance
+  else
+    echo "Invalid tolerance value: $tolerance. Possible values: $allowed_values"
+    return 1
+  end
+end
 
 function skipNondeterministic ; set -gx SKIPNONDETERMINISTIC true ; end
 function includeNondeterministic ; set -gx SKIPNONDETERMINISTIC false ; end
