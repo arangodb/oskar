@@ -93,12 +93,12 @@ function compiler_libraries
 
   switch $cversion
     case 13.2.0
-      set -xg COMPILER_LIB_DIR /usr/lib/gcc-13/lib/
+      set -xg COMPILER_LIB_DIR /usr/lib/gcc-13/lib
     case clang16.0.6
-      set -xg COMPILER_LIB_DIR /usr/lib/llvm-16/lib/
+      set -xg COMPILER_LIB_DIR /usr/lib/llvm-16/lib
 
     case clang19.1.7
-      set -xg COMPILER_LIB_DIR /usr/lib/llvm-19/lib/
+      set -xg COMPILER_LIB_DIR /usr/lib/llvm-19/lib
 
     case '*'
       echo "unknown compiler version $cversion"
