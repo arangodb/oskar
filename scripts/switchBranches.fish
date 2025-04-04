@@ -1,5 +1,4 @@
 #!/usr/bin/env fish
-set -l fish_trace on
 
 function setupSourceInfo
   set -l field $argv[1]
