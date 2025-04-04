@@ -1701,7 +1701,7 @@ function runInContainer
   # cover SIGINT, since this will directly abort the whole function.
   set -l fish_trace on
   set c ("$DOCKER" run -d --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
-             "${DEFAULT_DOCKER_ARGS}" \
+             "$DEFAULT_DOCKER_ARGS" \
              -m 64G \
              -v $WORKDIR/work/:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
