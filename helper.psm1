@@ -952,25 +952,6 @@ If (-Not($ENABLE_REPORT_DUMPS))
     enableDumpsToReport
 }
 
-Function findRcloneVersion
-{
-    $global:RCLONE_VERSION = "1.51.0"
-
-    If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
-    {
-        $RCLONE_VERSION = Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_VERSION" | Select Line
-        If ($RCLONE_VERSION -ne "")
-        {
-            If ($RCLONE_VERSION -match '[0-9]+\.[0-9]+\.[0-9]+' -And $Matches.count -eq 1)
-            {
-                $global:RCLONE_VERSION = $Matches[0]
-            }
-        }
-    }
-
-    setupSourceInfo "Rclone" "$global:RCLONE_VERSION"
-}
-
 Function findUseRclone
 {
     If (Test-Path -Path "$global:ARANGODIR\VERSIONS")
@@ -1165,58 +1146,40 @@ Function downloadSyncer
 Function downloadRclone
 {
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+    findUseRclone
+    if ($global:USE_RCLONE -eq "false") { return; }
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_GO").Line -match '(.*[\-].*)|latest' | Out-Null
-    $RCLONE_GO = $Matches[0]
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_GO").Line -match '\"(.*[\-].*)\"|latest' | Out-Null
+    $RCLONE_GO = $Matches[1]
     If ($RCLONE_GO -eq "")
     {
-        Write-Host "Failed to identify RCLONE_REV from VERSIONS file!"
+        Write-Host "Failed to identify RCLONE_GO from VERSIONS file!"
     }
     Else
     {
         Write-Host "Identified RCLONE_GO is $RCLONE_GO"
     }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_GO").Line -match '(v[0-9]+.[0-9]+.[0-9]+[\-]?[0-9a-z]*[\-]?[0-9]?)|latest' | Out-Null
-    $RCLONE_REV = $Matches[0]    
-    If ($RCLONE_REV -eq "")
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_VERSION").Line -match '[0-9]+.[0-9]+.[0-9]+' | Out-Null
+    $RCLONE_VERSION = $Matches[0]
+    If ($RCLONE_VERSION -eq "")
     {
-        Write-Host "Failed to identify RCLONE_REV from VERSIONS file!"
+        Write-Host "Failed to identify RCLONE_VERSION from VERSIONS file!"
     }
     Else
     {
-        Write-Host "Identified RCLONE_REV is $RCLONE_REV"
+        Write-Host "Identified RCLONE_VERSION is $RCLONE_VERSION"
     }
-    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_GO").Line -match '(v[0-9]+.[0-9]+.[0-9]+[\-]?[0-9a-z]*[\-]?[0-9]?)|latest' | Out-Null
-    $RCLONE_REV = $Matches[0]    
-    If ($RCLONE_REV -eq "")
+    $RCLONE_REV = "golang-${RCLONE_GO}"
+    If ($RCLONE_GO -eq "latest")
     {
-        Write-Host "Failed to identify RCLONE_REV from VERSIONS file!"
-    }
-    Else
-    {
-        Write-Host "Identified RCLONE_REV is $RCLONE_REV"
-    }
-    If ($RCLONE_REV -eq "latest")
-    {
-        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:HELPER_GIT_ORGA/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
+        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:ARANGODB_GIT_ORGA/rclone-arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
         $RCLONE_REV = $JSON.name
     }
-    Write-Host "Download: Starter"
-    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:HELPER_GIT_ORGA/arangodb/releases/download/$RCLONE_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
-    setupSourceInfo "Starter" $RCLONE_REV
-}
-
-Function copyRclone
-{
-    findUseRclone
-    If ($global:USE_RCLONE -eq "false")
-    {
-        Write-Host "Not copying rclone since it's not used!"
-        return
-    }
-    findRcloneVersion
-    Write-Host "Copying rclone from rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe to $global:ARANGODIR\build\rclone-arangodb.exe ..."    
-    Copy-Item -Path "$global:WORKDIR\rclone\v${global:RCLONE_VERSION}\rclone-arangodb-windows-amd64.exe" -Destination "$global:ARANGODIR\build\rclone-arangodb.exe" -Force
+    $RCLONE_RELEASE = "${RCLONE_REV}_${ARANGODB_VERSION_MAJOR}.${ARANGODB_VERSION_MINOR}_v${RCLONE_VERSION}"
+    Write-Host "https://$ENV:ARANGODB_GIT_HOST/$ENV:ARANGODB_GIT_ORGA/rclone-arangodb/releases/download/$RCLONE_REV/${RCLONE_RELEASE}_rclone-arangodb-windows-amd64.exe"
+    Write-Host "Download: Rclone"
+    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:ARANGODB_GIT_ORGA/rclone-arangodb/releases/download/$RCLONE_REV/${RCLONE_RELEASE}_rclone-arangodb-windows-amd64.exe","$global:ARANGODIR\build\rclone-arangodb.exe")
+    setupSourceInfo "Rclone" $RCLONE_RELEASE
 }
 
 ################################################################################
@@ -1685,9 +1648,9 @@ Function configureWindows
           {
               $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
           }
-          If ($global:USE_RCLONE -eq "true")
+          If ($global:USE_RCLONE -eq "true" -and $global:PACKAGING -eq "On")
           {
-              copyRclone
+              downloadRclone
               $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
           }
           Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
