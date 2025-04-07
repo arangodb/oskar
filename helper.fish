@@ -476,7 +476,7 @@ function findRcloneRelease
   findRcloneGoVersion
   and findRcloneVersion
 
-  set -xg RCLONE_RELEASE "golang-"$RCLONE_GO_VERSION"_"$RCLONE_VERSIO
+  set -xg RCLONE_RELEASE "golang-"$RCLONE_GO_VERSION"_"$RCLONE_VERSION
   setupSourceInfo "Rclone" "$RCLONE_RELEASE"
 end
 
