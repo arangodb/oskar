@@ -682,7 +682,7 @@ function buildEnterprisePackage
   and buildStaticArangoDB
   and downloadStarter
   and downloadSyncer
-  and downloadRclone "linux"
+  and downloadRclone
   and buildPackage $packages
 
   if test $status -ne 0
@@ -871,7 +871,7 @@ function makeTestPackageLinux
   and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
-  and if test "$ENTERPRISEEDITION" = "On"; downloadSyncer; and downloadRclone "linux"; end
+  and if test "$ENTERPRISEEDITION" = "On"; downloadSyncer; and downloadRclone; end
   and buildTarGzServerLinuxTestPackage
 
   if test $status -ne 0
@@ -1241,7 +1241,7 @@ function buildDockerAny
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
     downloadSyncer
-    downloadRclone "linux"
+    downloadRclone
   end
   and buildDockerImage $IMAGE_NAME1
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
@@ -1579,7 +1579,7 @@ function pullUbuntuPackagingImage2 ; docker pull $UBUNTUPACKAGINGIMAGE2 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
-  and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
+  and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,downloadRclone,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
   and cd $WORKDIR/containers/buildUtils.docker
   and eval "docker build $IMAGE_ARGS --pull -t $ALPINEUTILSIMAGE ."
   or begin ; popd ; return 1 ; end
@@ -2090,7 +2090,7 @@ end
 
 function downloadAuxBinariesToBuildBin
   if test "$ENTERPRISEEDITION" = "On"
-     downloadRclone "linux"
+     downloadRclone
      and cp work/ArangoDB/build/install/usr/sbin/rclone-arangodb work/ArangoDB/build/bin/
      and downloadSyncer
      and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12

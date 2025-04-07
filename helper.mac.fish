@@ -511,7 +511,7 @@ function setupComponents
       end
       and downloadSyncer
       if test "$USE_RCLONE" = "true"
-        downloadRclone "macos"
+        downloadRclone
       end
     end
   else
