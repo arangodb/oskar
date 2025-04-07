@@ -444,9 +444,23 @@ if test ! -d work ; mkdir work ; end
 if test -z "$ARANGODB_DOCS_BRANCH" ; set -gx ARANGODB_DOCS_BRANCH "main"
 else ; set -gx ARANGODB_DOCS_BRANCH $ARANGODB_DOCS_BRANCH ; end
 
+function findRcloneGoVersion
+  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
+  set -xg RCLONE_GO_VERSION "1.22.12"
+
+  test -f $f
+  and begin
+    set -l v (fgrep RCLONE_GO_VERSION $f | awk '{print $2}' | tr -d '"' | tr -d "'")
+
+    if test "$v" != ""
+      set -xg RCLONE_GO_VERSION "$v"
+    end
+  end
+end
+
 function findRcloneVersion
   set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
-  set -xg RCLONE_VERSION "1.59.0"
+  set -xg RCLONE_VERSION "1.65.2"
 
   test -f $f
   and begin
@@ -455,9 +469,15 @@ function findRcloneVersion
     if test "$v" != ""
       set -xg RCLONE_VERSION "$v"
     end
-
-    setupSourceInfo "Rclone" "$RCLONE_VERSION"
   end
+end
+
+function findRcloneRelease
+  findRcloneGoVersion
+  and findRcloneVersion
+
+  set -xg RCLONE_RELEASE "golang-"$RCLONE_GO_VERSION"_"$RCLONE_VERSIO
+  setupSourceInfo "Rclone" "$RCLONE_RELEASE"
 end
 
 function findUseRclone
@@ -475,15 +495,17 @@ function findUseRclone
   if test "$v" = ""
     #echo "$f: no USE_RCLONE specified, using false"
     set -gx USE_RCLONE "false"
+    return 1
   else
     #echo "Using rclone '$v' from '$f'"
     set -gx USE_RCLONE "$v"
+    return 0
   end
 end
 
 if test -z "$USE_RCLONE" ; findUseRclone ; end
 
-function copyRclone
+function prepareDownloadRclone
   findUseRclone
 
   if test "$USE_RCLONE" = "false"
@@ -512,7 +534,7 @@ function copyRclone
       end
   end
 
-  findRcloneVersion
+  findRcloneRelease
 
   echo Copying rclone from rclone/v$RCLONE_VERSION/rclone-arangodb-$os-$arch to $WORKDIR/work/$THIRDPARTY_SBIN/rclone-arangodb ...
   mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN

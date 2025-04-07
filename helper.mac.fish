@@ -494,6 +494,13 @@ function downloadSyncer
   and convertSItoJSON
 end
 
+function downloadRclone
+  findUseRclone
+  and mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+  and runLocal $SCRIPTSDIR/downloadRclone.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+  and convertSItoJSON
+end
+
 function setupComponents
   cleanupThirdParty
   if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10
@@ -504,7 +511,7 @@ function setupComponents
       end
       and downloadSyncer
       if test "$USE_RCLONE" = "true"
-        copyRclone "macos"
+        downloadRclone "macos"
       end
     end
   else

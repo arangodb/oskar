@@ -1162,6 +1162,50 @@ Function downloadSyncer
     }
 }
 
+Function downloadRclone
+{
+    Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_GO").Line -match '(.*[\-].*)|latest' | Out-Null
+    $RCLONE_GO = $Matches[0]
+    If ($RCLONE_GO -eq "")
+    {
+        Write-Host "Failed to identify RCLONE_REV from VERSIONS file!"
+    }
+    Else
+    {
+        Write-Host "Identified RCLONE_GO is $RCLONE_GO"
+    }
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_GO").Line -match '(v[0-9]+.[0-9]+.[0-9]+[\-]?[0-9a-z]*[\-]?[0-9]?)|latest' | Out-Null
+    $RCLONE_REV = $Matches[0]    
+    If ($RCLONE_REV -eq "")
+    {
+        Write-Host "Failed to identify RCLONE_REV from VERSIONS file!"
+    }
+    Else
+    {
+        Write-Host "Identified RCLONE_REV is $RCLONE_REV"
+    }
+    (Select-String -Path "$global:ARANGODIR\VERSIONS" -SimpleMatch "RCLONE_GO").Line -match '(v[0-9]+.[0-9]+.[0-9]+[\-]?[0-9a-z]*[\-]?[0-9]?)|latest' | Out-Null
+    $RCLONE_REV = $Matches[0]    
+    If ($RCLONE_REV -eq "")
+    {
+        Write-Host "Failed to identify RCLONE_REV from VERSIONS file!"
+    }
+    Else
+    {
+        Write-Host "Identified RCLONE_REV is $RCLONE_REV"
+    }
+    If ($RCLONE_REV -eq "latest")
+    {
+        $JSON = Invoke-WebRequest -Uri 'https://api.$ENV:ARANGODB_GIT_HOST/repos/$ENV:HELPER_GIT_ORGA/arangodb/releases/latest' -UseBasicParsing | ConvertFrom-Json
+        $RCLONE_REV = $JSON.name
+    }
+    Write-Host "Download: Starter"
+    (New-Object System.Net.WebClient).DownloadFile("https://$ENV:ARANGODB_GIT_HOST/$ENV:HELPER_GIT_ORGA/arangodb/releases/download/$RCLONE_REV/arangodb-windows-amd64.exe","$global:ARANGODIR\build\arangodb.exe")
+    setupSourceInfo "Starter" $RCLONE_REV
+}
+
 Function copyRclone
 {
     findUseRclone
