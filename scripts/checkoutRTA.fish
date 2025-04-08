@@ -4,6 +4,10 @@ ssh -o StrictHostKeyChecking=no -T git@$ARANGODB_GIT_HOST
 cd $INNERWORKDIR
 and git config --global http.postBuffer 524288000
 and git config --global https.postBuffer 524288000
+
+git config --global user.email "release-bot@arangodb.com"
+git config --global user.name "Release test automation"
+
 # and git config --global pull.rebase true
 and if test ! -d release-test-automation/.git
   rm -rf release-test-automation
