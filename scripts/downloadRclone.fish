@@ -53,7 +53,7 @@ mkdir -p $RCLONE_FOLDER
 set -l RCLONE_PATH $RCLONE_FOLDER/rclone-arangodb
 echo "https://$ARANGODB_GIT_HOST/$HELPER_GIT_ORGA/rclone-arangodb/releases/download/$RCLONE_REV/"$RCLONE_RELEASE"_rclone-arangodb-$PLATFORM-$arch"
 and curl -s -L -o "$RCLONE_PATH" "https://$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/rclone-arangodb/releases/download/$RCLONE_REV/"$RCLONE_RELEASE"_rclone-arangodb-$PLATFORM-$arch"
-and file -bL --mime "$RCLONE_PATH" | grep -q '^text'
+and apt install -y file && file -bL --mime "$RCLONE_PATH" | grep -q '^text'
 and chmod 755 "$RCLONE_PATH"
 and echo Rclone ready for build $RCLONE_PATH
 and setupSourceInfo "$RCLONE_RELEASE"
