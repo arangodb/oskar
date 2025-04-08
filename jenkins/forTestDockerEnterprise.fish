@@ -36,7 +36,7 @@ and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter
 and downloadSyncer
-and copyRclone "linux"
+and downloadRclone
 and setArchSuffix
 and set -xg HUB_ENTERPRISE "arangodb/enterprise-test:$DOCKER_TAG_JENKINS$archSuffix"
 and buildDockerImage $HUB_ENTERPRISE
