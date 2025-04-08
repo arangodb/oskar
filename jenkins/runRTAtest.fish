@@ -10,6 +10,7 @@ and eval $EDITION
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
+or exit 1
 if test "$ASAN" = "true"
    echo "San build"
    sanOn
