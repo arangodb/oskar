@@ -19,7 +19,7 @@ function createIndex
   and mkdir root-dir
   and echo "create new links..."
   and cp -rs $SRC root-dir/
-  and find root-dir -name "*3e*" -exec rm -f "{}" ";"
+#  and find root-dir -name "*3e*" -exec rm -f "{}" ";"
   and find root-dir -name "index.html" -exec rm -f "{}" ";"
   and echo "creating index.html..."
   and sed -e 's/os\.walk(root)/os\.walk(root,followlinks=True)/' program.py > program2.py
