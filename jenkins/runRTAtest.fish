@@ -49,7 +49,7 @@ and TT_compile
 and downloadAuxBinariesToBuildBin
 and checkoutRTA
 and cd work/release-test-automation/
-and bash -x ./jenkins/oskar_tar.sh $argv
+and eval "bash -x ./jenkins/oskar_tar.sh $argv"
 
 set -l s $status
 
