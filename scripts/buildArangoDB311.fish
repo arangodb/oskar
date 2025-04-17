@@ -29,7 +29,7 @@ else
 end
 
 if test "$OPENSSL_VERSION" = ""
-  set -xg OPENSSL_VERSION 3.4
+  set -xg OPENSSL_VERSION 3.5
 end
 echo "Using openssl version $OPENSSL_VERSION"
 
