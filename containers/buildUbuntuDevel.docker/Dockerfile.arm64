@@ -81,35 +81,14 @@ WORKDIR build
 RUN cmake -G Ninja -DLLVM_ENABLE_PROJECTS="clang;openmp" -DCMAKE_C_COMPILER=clang-${CLANG_VERSION} \
   -DCMAKE_CXX_COMPILER=clang++-${CLANG_VERSION} -DCMAKE_BUILD_TYPE=RelWithDebInfo -DLIBOMP_ENABLE_SHARED=OFF \
   -DENABLE_OMPT_TOOLS=OFF -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON -DCMAKE_INSTALL_PREFIX=/usr \
-  -DENABLE_LIBOMPTARGET=OFF -DLIBOMP_INSTALL_ALIASES=OFF ../llvm && ninja && \
-  mkdir -p /opt/omp && cp ./lib/libomp.so.5 /opt/omp/libomp.a
+  -DENABLE_LIBOMPTARGET=OFF -DLIBOMP_INSTALL_ALIASES=OFF ../llvm && ninja
 
+RUN mkdir -p /opt/omp && cp ./lib/libomp.so.5 /opt/omp/libomp.a
 
-FROM prepare AS nodejs
-# yarn for UI build:
-ARG NODE_VERSION="20.14.0"
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
-  export NVM_DIR="$HOME/.nvm" &&\
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" \
-  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && \
-  nvm install ${NODE_VERSION} && \
-  nvm use ${NODE_VERSION} && \
-  node --version && \
-  npm install -g yarn && \
-  ln -s /root/.nvm/versions/node/v${NODE_VERSION}/bin/* /usr/local/bin/
-
-
-FROM nodejs AS node_modules
-
-RUN cd / ; git clone -n --depth=1 --filter=tree:0 https://github.com/arangodb/arangodb && \
-  cd /arangodb && git sparse-checkout set --no-cone js/apps/system/_admin/aardvark/APP/react && \
-  git checkout && \
-  cd /arangodb/js/apps/system/_admin/aardvark/APP/react && yarn install && mv node_modules / && \
-  cd / && rm -rf /arangodb && tar -cvJf /root/node_modules.tar.xz node_modules && rm -rf /node_modules
 
 # Finally, build the actual build image based on the above preparation:
 
-FROM nodejs
+FROM prepare
 
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
@@ -138,9 +117,28 @@ RUN apt-get update --fix-missing && \
     libclang-rt-${CLANG_VERSION}-dev libomp-${CLANG_VERSION}-dev && \
   rm -rf /var/cache/apt/archives /var/lib/apt/lists
 
+
 # sccache for cloud compiler cache:
 
 RUN curl -L https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERSION}/sccache-v${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl.tar.gz | tar xvz -C /tmp && mv /tmp/sccache-v${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl/sccache /usr/bin/sccache && chmod +x /usr/bin/sccache && rm -rf /tmp/sccache-v${SCCACHE_VERSION}-${ARCH}-unknown-linux-musl
+
+
+# yarn for UI build:
+ARG NODE_VERSION="20.14.0"
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash && \
+  export NVM_DIR="$HOME/.nvm" &&\
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" \
+  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && \
+  nvm install ${NODE_VERSION} && \
+  nvm use ${NODE_VERSION} && \
+  node --version && \
+  npm install -g yarn && \
+  ln -s /root/.nvm/versions/node/v${NODE_VERSION}/bin/* /usr/local/bin/ 
+RUN cd / ; git clone -n --depth=1 --filter=tree:0 https://github.com/arangodb/arangodb && \
+  cd /arangodb && git sparse-checkout set --no-cone js/apps/system/_admin/aardvark/APP/react && \
+  git checkout && \
+  cd /arangodb/js/apps/system/_admin/aardvark/APP/react && yarn install && mv node_modules / && \
+  cd /; rm -rf /arangodb
 
 # Fetch V8:
 #COPY --from=v8 /opt/v8/lib /opt/v8/lib
@@ -155,7 +153,7 @@ COPY --from=openmp /opt/omp /opt/omp
 
 COPY ./tools/* /tools/
 
-RUN [ "/tools/install.sh", "3.5", "0" ]
+RUN [ "/tools/install.sh", "3.4", "1" ]
 
 COPY ./scripts /scripts
 
@@ -168,8 +166,6 @@ RUN /scripts/create-sccache-hardlinks.sh
 RUN LC_ALL="C" update-ccache-symlinks
 
 RUN git config --global --add safe.directory '*'
-
-COPY --from=node_modules /root/node_modules.tar.xz /node_modules.tar.xz
 
 RUN pip3 install py7zr psutil cppcheck-junit lcov_cobertura --break-system-packages
 
