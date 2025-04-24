@@ -1747,6 +1747,7 @@ function runInContainer
              -e MAINTAINER="$MAINTAINER" \
              -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
              -e NODE_NAME="$NODE_NAME" \
+             -e NODE_MODULES_BUNDLE="$NODE_MUDULES_BUNDLE" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
              -e ONLYGREY="$ONLYGREY" \
@@ -1879,6 +1880,7 @@ function interactiveContainer
     -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
     -e NODE_NAME="$NODE_NAME" \
     -e NOSTRIP="$NOSTRIP" \
+    -e NODE_MODULES_BUNDLE="$NODE_MUDULES_BUNDLE" \
     -e NO_RM_BUILD="$NO_RM_BUILD" \
     -e ONLYGREY="$ONLYGREY" \
     -e OPENSSL_VERSION="$OPENSSL_VERSION" \
