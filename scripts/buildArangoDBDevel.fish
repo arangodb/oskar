@@ -39,10 +39,10 @@ end
 
 if test "$ARCH" = "x86_64"
   set -xg LAPACK_LIB_PATH "/usr/lib/x86_64-linux-gnu/lapack/liblapack.a"
-  set -xg BLAS_LIB_PATH "/usr/lib/x86_64-linux-gnu/blas/libblas.a"
+  set -xg BLAS_LIB_PATH "/usr/lib/x86_64-linux-gnu/libblas.a"
 else
   set -xg LAPACK_LIB_PATH "/usr/lib/aarch64-linux-gnu/lapack/liblapack.a"
-  set -xg BLAS_LIB_PATH "/usr/lib/aarch64-linux-gnu/blas/libblas.a"
+  set -xg BLAS_LIB_PATH "/usr/lib/aarch64-linux-gnu/libblas.a"
 end
 
 set -l pie ""
@@ -120,6 +120,12 @@ end
 if test "$MINIMAL_DEBUG_INFO" = "On"
   set -g FULLARGS $FULLARGS \
     -DUSE_MINIMAL_DEBUGINFO=On
+end
+
+if test (string trim "$NODE_MODULES_BUNDLE") = "" -a -e "/node_modules.tar.xz"
+  set -g FULLARGS $FULLARGS -DNODE_MODULES_BUNDLE="/node_modules.tar.xz"
+else if test -e "$NODE_MODULES_BUNDLE"
+  set -g FULLARGS $FULLARGS -DNODE_MODULES_BUNDLE="$NODE_MODULES_BUNDLE"
 end
 
 setupCcacheBinPath ubuntu

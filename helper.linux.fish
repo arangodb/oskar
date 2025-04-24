@@ -22,7 +22,7 @@ else
 end
 
 set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE_312_TAG 14
+set -gx UBUNTUBUILDIMAGE_312_TAG 15
 set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
 set -gx UBUNTUBUILDIMAGE_311_NAME arangodb/ubuntubuildarangodb-311
@@ -1747,6 +1747,7 @@ function runInContainer
              -e MAINTAINER="$MAINTAINER" \
              -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
              -e NODE_NAME="$NODE_NAME" \
+             -e NODE_MODULES_BUNDLE="$NODE_MUDULES_BUNDLE" \
              -e NOSTRIP="$NOSTRIP" \
              -e NO_RM_BUILD="$NO_RM_BUILD" \
              -e ONLYGREY="$ONLYGREY" \
@@ -1879,6 +1880,7 @@ function interactiveContainer
     -e MINIMAL_DEBUG_INFO="$MINIMAL_DEBUG_INFO" \
     -e NODE_NAME="$NODE_NAME" \
     -e NOSTRIP="$NOSTRIP" \
+    -e NODE_MODULES_BUNDLE="$NODE_MUDULES_BUNDLE" \
     -e NO_RM_BUILD="$NO_RM_BUILD" \
     -e ONLYGREY="$ONLYGREY" \
     -e OPENSSL_VERSION="$OPENSSL_VERSION" \
