@@ -36,7 +36,6 @@ end
 
 and maintainerOn
 and eval $EDITION
-and eval $TEST_SUITE
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
