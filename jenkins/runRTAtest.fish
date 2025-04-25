@@ -7,6 +7,9 @@ and TT_init
 and set -xg RTA_EDITION "C,Cr2"
 and maintainerOn
 and eval $EDITION
+if test "$ENTERPRISEEDITION" = "On"
+   set -xg RTA_EDITION "EP,EPr2"
+end
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
@@ -29,6 +32,16 @@ if test "$BUILD_MODE" = "release"
    echo "switching to release build"
    releaseMode
 end
+
+
+and maintainerOn
+and eval $EDITION
+and eval $TEST_SUITE
+and setAllLogsToWorkspace
+and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
+and updateDockerBuildImage
+and begin
+end
 and pingDetails
 and TT_setup
 and oskarCompile
@@ -36,11 +49,7 @@ and TT_compile
 and downloadAuxBinariesToBuildBin
 and checkoutRTA
 and cd work/release-test-automation/
-
-if test "$ENTERPRISEEDITION" = "On"
-   set -xg RTA_EDITION "EP,EPr2"
-end
-bash -x ./jenkins/oskar_tar.sh $argv
+and bash -x ./jenkins/oskar_tar.sh $argv
 
 set -l s $status
 
