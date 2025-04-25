@@ -3,11 +3,9 @@ set -l fish_trace on
 source jenkins/helper/jenkins.fish
 
 cleanPrepareLockUpdateClear2
-TT_init
-set -xg RTA_EDITION "C,Cr2"
-
+and TT_init
+and set -xg RTA_EDITION "C,Cr2"
 and eval $EDITION
-and eval $TEST_SUITE
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
@@ -29,9 +27,9 @@ and TT_setup
 and oskarCompile
 and TT_compile
 and downloadAuxBinariesToBuildBin
-
 and checkoutRTA
 and cd work/release-test-automation/
+
 if test "$ENTERPRISEEDITION" = "On"
    set -xg RTA_EDITION "EP,EPr2"
 end
