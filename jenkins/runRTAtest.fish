@@ -33,7 +33,7 @@ and cd work/release-test-automation/
 if test "$ENTERPRISEEDITION" = "On"
    set -xg RTA_EDITION "EP,EPr2"
 end
-and bash -x ./jenkins/oskar_tar.sh $argv
+bash -x ./jenkins/oskar_tar.sh $argv
 
 set -l s $status
 
