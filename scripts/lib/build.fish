@@ -223,7 +223,7 @@ function runMake
     make $MAKEFLAGS $argv[1] 2>&1
     or exit $status
   else
-    echo make output in work/buildArangoDB.log
+    echo make output in work/buildArangoDB.log 
     set -l ep ""
 
     if test "$SHOW_DETAILS" = "Ping"

@@ -21,6 +21,7 @@ else
   set -xg UBUNTUBUILDIMAGE_TAG_ARCH "x86_64"
 end
 
+
 set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
 set -gx UBUNTUBUILDIMAGE_312_TAG 15
 set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
@@ -226,29 +227,29 @@ function checkoutMirror
     exit 1
   end
 
-  runInContainer -v $argv[1]:/mirror $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMirror.fish
+  runInContainer -v $argv[1]:/mirror $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMirror.fish
   or return $status
 end
 
 function checkoutArangoDB
-  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutArangoDB.fish
+  runInContainer $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutArangoDB.fish
   or return $status
   community
 end
 
 function checkoutEnterprise
-  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutEnterprise.fish
+  runInContainer $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutEnterprise.fish
   or return $status
   enterprise
 end
 
 function checkoutMiniChaos
-  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMiniChaos.fish
+  runInContainer $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutMiniChaos.fish
   or return $status
 end
 
 function checkoutRTA
-  runInContainer -e RTA_BRANCH="$RTA_BRANCH" $ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutRTA.fish
+  runInContainer -e RTA_BRANCH="$RTA_BRANCH" $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/checkoutRTA.fish
   or return $status
 end
 
@@ -267,7 +268,7 @@ function switchBranches
   end
 
   checkoutIfNeeded
-  and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
+  and runInContainer $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
   and convertSItoJSON
   and findArangoDBVersion
   and findRequiredCompiler
@@ -290,20 +291,20 @@ set -gx LDAPHOST "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
 set -gx LDAPHOST2 "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
 
 function stopLdapServer
-  docker stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
-  and docker rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
-  docker stop "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
-  and docker rm "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
-  docker network rm "$LDAPNETWORK$LDAPEXT"
+  "$DOCKER" stop "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+  and "$DOCKER" rm "$LDAPDOCKERCONTAINERNAME$LDAPEXT"
+  "$DOCKER" stop "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
+  and "$DOCKER" rm "$LDAP2DOCKERCONTAINERNAME$LDAPEXT"
+  "$DOCKER" network rm "$LDAPNETWORK$LDAPEXT"
   echo "LDAP servers stopped"
   true
 end
 
 function launchLdapServer
   stopLdapServer
-  and docker network create "$LDAPNETWORK$LDAPEXT"
-  and docker run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
-  and docker run -d --name "$LDAPHOST2" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
+  and "$DOCKER" network create "$LDAPNETWORK$LDAPEXT"
+  and "$DOCKER" run -d --name "$LDAPHOST" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
+  and "$DOCKER" run -d --name "$LDAPHOST2" --net="$LDAPNETWORK$LDAPEXT" $LDAPIMAGE
   and echo "LDAP servers launched"
 end
 
@@ -321,7 +322,7 @@ function buildArangoDB
   and findDefaultArchitecture
   and findUseARM
   and set -xg STATIC_EXECUTABLES Off
-  and runInContainer (findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
+  and runInContainer $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   and packBuildFiles
   set -l s $status
   if test $s -ne 0
@@ -337,7 +338,7 @@ function makeArangoDB
     and findDefaultArchitecture
     and findUseARM
   end
-  and runInContainer (findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
+  and runInContainer $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
   and packBuildFiles
   set -l s $status
   if test $s -ne 0
@@ -358,7 +359,7 @@ function buildStaticArangoDB
         unpackBuildFiles "$BUILD_FILES_ARCHIVE"
       else
         echo "UNPACK_BUILD_FILES: $UNPACK_BUILD_FILES"
-        runInContainer (findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
+        runInContainer $DOCKER_URL_PREFIX(findStaticBuildImage) $SCRIPTSDIR/(findStaticBuildScript) $argv
         and packBuildFiles
         and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3
               if test "$ARANGODB_VERSION_MINOR" -ge 12; or begin; test "$ARANGODB_VERSION_MINOR" -eq 11; and test "$ARANGODB_VERSION_PATCH" -ge 10; end
@@ -380,7 +381,7 @@ function makeStaticArangoDB
     and findDefaultArchitecture
     and findUseARM
   end
-  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
+  and runInContainer $DOCKER_URL_PREFIX(findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   and packBuildFiles
   set -l s $status
   if test $s -ne 0
@@ -399,7 +400,7 @@ function buildExamples
   and if test "$NO_RM_BUILD" != 1
     buildStaticArangoDB
   end
-  and runInContainer (findStaticBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
+  and runInContainer $DOCKER_URL_PREFIX(findStaticBuildImage) $SCRIPTSDIR/buildExamples.fish $argv
   set -l s $status
   if test $s -ne 0
     echo Build error!
@@ -420,11 +421,11 @@ function oskar
   and if test "$SAN" = "On"
     parallelism 2
     clearSanStatus
-    runInContainer --security-opt seccomp=unconfined --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    runInContainer --security-opt seccomp=unconfined --cap-add SYS_NICE --cap-add SYS_PTRACE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
     set s (math $s + (getSanStatus))
   else
-    runInContainer --security-opt seccomp=unconfined --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runTests.fish $argv
+    runInContainer --security-opt seccomp=unconfined --cap-add SYS_NICE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runTests.fish $argv
     set s $status
   end
 
@@ -441,11 +442,11 @@ function rlogTests
   and if test "$SAN" = "On"
     parallelism 2
     clearSanStatus
-    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/rlog/pr.fish $argv
+    runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/rlog/pr.fish $argv
     set s $status
     set s (math $s + (getSanStatus))
   else
-    runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/rlog/pr.fish $argv
+    runInContainer --cap-add SYS_NICE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/rlog/pr.fish $argv
     set s $status
   end
 
@@ -463,17 +464,17 @@ function oskarFull
     launchLdapServer
     and if test "$SAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     end
     set s $status
   else
     if test "$SAN" = "On"
       parallelism 2
-      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     else
-      runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
+      runInContainer --cap-add SYS_NICE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runFullTests.fish $argv
     end
   end
   set s $status
@@ -496,17 +497,17 @@ function oskarOneTest
     launchLdapServer
     and if test "$SAN" = "On"
       parallelism 2
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE --cap-add SYS_PTRACE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
     else
-      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
+      runInContainer --net="$LDAPNETWORK$LDAPEXT" --cap-add SYS_NICE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
     end
     set s $status
   else
     if test "$SAN" = "On"
       parallelism 2
-      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
+      runInContainer --cap-add SYS_NICE --cap-add SYS_PTRACE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
     else
-      runInContainer --cap-add SYS_NICE (findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
+      runInContainer --cap-add SYS_NICE $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/runOneTest.fish $argv
     end
   end
   set s $status
@@ -543,7 +544,7 @@ function jslint
 
   set -l s 0
   findArangoDBVersion
-  and runInContainer arangodb/arangodb:$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR /scripts/jslint.sh
+  and runInContainer "$DOCKER_URL_PREFIX"arangodb/arangodb:$ARANGODB_VERSION_MAJOR.$ARANGODB_VERSION_MINOR /scripts/jslint.sh
   set s $status
 
   popd
@@ -557,7 +558,7 @@ end
 function cppcheckArangoDB
   checkoutIfNeeded
 
-  runInContainer $CPPCHECKIMAGE /scripts/cppcheck.sh $argv
+  runInContainer $DOCKER_URL_PREFIX$CPPCHECKIMAGE /scripts/cppcheck.sh $argv
   return $status
 end
 
@@ -598,7 +599,7 @@ function collectCoverage
   findRequiredCompiler
   and findRequiredOpenSSL
   and echo "collecting llvm coverage"
-  and runInContainer --env LLVM_PROFILE_FILE=/work/gcov/  (findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
+  and runInContainer --env LLVM_PROFILE_FILE=/work/gcov/  $DOCKER_URL_PREFIX(findStaticBuildImage)  python3 -u "$WORKSPACE/jenkins/helper/aggregate_coverage.py" "$INNERWORKDIR/" gcov coverage
   return $status
 end
 
@@ -613,7 +614,7 @@ function signSourcePackage
   and runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
         -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
-	(findBuildImage) $SCRIPTSDIR/signFile.fish \
+	$DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/signFile.fish \
 	/work/ArangoDB-$SOURCE_TAG.tar.gz \
 	/work/ArangoDB-$SOURCE_TAG.tar.bz2 \
 	/work/ArangoDB-$SOURCE_TAG.zip
@@ -625,7 +626,7 @@ function createCompleteTar
   set -l RELEASE_TAG $argv[1]
 
   pushd $WORKDIR/work and runInContainer \
-	$ALPINEUTILSIMAGE $SCRIPTSDIR/createCompleteTar.fish \
+	$DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/createCompleteTar.fish \
 	$RELEASE_TAG
   and popd
   or begin ; popd ; return 1 ; end
@@ -775,7 +776,7 @@ function buildDebianPackage
   and echo -n " -- ArangoDB <hackers@arangodb.com>  " >> $ch
   and date -R >> $ch
   and sed -i "s/@ARCHITECTURE@/$ARCH/g" $TARGET/control
-  and runInContainer $UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/buildDebianPackage.fish
+  and runInContainer $DOCKER_URL_PREFIX$UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/buildDebianPackage.fish
   set -l s $status
   if test $s -ne 0
     echo Error when building a debian package
@@ -810,7 +811,7 @@ function buildRPMPackage
   and cp $WORKDIR/rpm/$pd/arangodb3.initd $WORKDIR/work
   and cp $WORKDIR/rpm/$pd/arangodb3.service $WORKDIR/work
   and cp $WORKDIR/rpm/$pd/arangodb3.logrotate $WORKDIR/work
-  and runInContainer $CENTOSPACKAGINGIMAGE $SCRIPTSDIR/buildRPMPackage.fish
+  and runInContainer $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE $SCRIPTSDIR/buildRPMPackage.fish
 end
 
 ## #############################################################################
@@ -840,7 +841,7 @@ function runMiniChaos
       -v $WORKDIR/work/ArangoDB/mini-chaos:/mini-chaos \
       -v $WORKDIR/work/mini-chaos/$package:/$package \
       -e ARANGODB_OVERRIDE_CRASH_HANDLER=0 \
-      (findBuildImage) $SCRIPTSDIR/startMiniChaos.fish $package $duration
+      $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/startMiniChaos.fish $package $duration
 end
 
 
@@ -1245,12 +1246,12 @@ function buildDockerAny
   end
   and buildDockerImage $IMAGE_NAME1
   and if test "$IMAGE_NAME1" != "$IMAGE_NAME2"
-    docker tag $IMAGE_NAME1 $IMAGE_NAME2
+    "$DOCKER" tag $IMAGE_NAME1 $IMAGE_NAME2
   end
   and validateDockerImageIfNeeded $IMAGE_NAME2
   and pushDockerImage $IMAGE_NAME2
   and if test "$GCR_REG" = "On"
-      docker tag $IMAGE_NAME1 $GCR_REG_PREFIX$IMAGE_NAME2
+      "$DOCKER" tag $IMAGE_NAME1 $GCR_REG_PREFIX$IMAGE_NAME2
       and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME2
     end
   and if test "$ENTERPRISEEDITION" = "On"
@@ -1259,10 +1260,10 @@ function buildDockerAny
     echo $IMAGE_NAME1 > $WORKDIR/work/arangodb3.docker
   end
   and if test "$IMAGE_NAME3" != ""
-    docker tag $IMAGE_NAME1 $IMAGE_NAME3
+    "$DOCKER" tag $IMAGE_NAME1 $IMAGE_NAME3
     and pushDockerImage $IMAGE_NAME3
     and  if test "$GCR_REG" = "On"
-      docker tag $IMAGE_NAME3 $GCR_REG_PREFIX$IMAGE_NAME3
+      "$DOCKER" tag $IMAGE_NAME3 $GCR_REG_PREFIX$IMAGE_NAME3
       and pushDockerImage $GCR_REG_PREFIX$IMAGE_NAME3
     end
   end
@@ -1390,7 +1391,7 @@ function buildDockerImage
   popd
 
   pushd $containerpath
-  and eval "docker build $BUILD_ARGS --pull --no-cache -t $imagename ."
+  and eval "$DOCKER build $BUILD_ARGS --pull --no-cache -t $DOCKER_URL_PREFIX$imagename ."
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1403,12 +1404,12 @@ function pushDockerImage
 
   set -l imagename $argv[1]
 
-  if test (docker images -q $imagename 2> /dev/null) = ""
+  if test ("$DOCKER" images -q $DOCKER_URL_PREFIX$imagename 2> /dev/null) = ""
     echo Given image is not present locally
     return 1
   end
 
-  docker push $imagename
+  "$DOCKER" push $DOCKER_URL_PREFIX$imagename
 end
 
 function pushDockerManifest
@@ -1419,14 +1420,14 @@ function pushDockerManifest
 
   set manifestname $argv[1]
 
-  docker manifest inspect $manifestname
-  and docker manifest rm $manifestname
+  "$DOCKER" manifest inspect $manifestname
+  and "$DOCKER" manifest rm $manifestname
 
-  docker manifest create \
+  "$DOCKER" manifest create \
   $manifestname \
   --amend $manifestname-amd64 \
   --amend $manifestname-arm64v8
-  and docker manifest push --purge $manifestname
+  and "$DOCKER" manifest push --purge $DOCKER_URL_PREFIX$manifestname
   and return 0
   or return 1
 end
@@ -1462,7 +1463,7 @@ function buildDockerLocal
 
   pushd $containerpath
   set -l tag (date +%Y%m%d%H%M%S)
-  and eval "docker build -t $imagename --pull . 2>&1"
+  and eval "$DOCKER build -t $imagename --pull . 2>&1"
   or begin ; popd ; return 1 ; end
   popd
 end
@@ -1506,9 +1507,9 @@ function buildUbuntuBuildImage311
   and cd $WORKDIR/containers/buildUbuntu311.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_311 -f ./Dockerfile.x86-64 ."
+          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.x86-64 ."
         case "aarch64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_311 -f ./Dockerfile.arm64 ."
+          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.arm64 ."
         case '*'
           echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_311"
           exit 1
@@ -1518,21 +1519,21 @@ function buildUbuntuBuildImage311
 end
 
 function pushUbuntuBuildImage311
-  docker tag $UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
-  and docker push $UBUNTUBUILDIMAGE_311
-  and docker push $UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
+  "$DOCKER" tag $UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
+  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311
+  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
 end
 
-function pullUbuntuBuildImage311 ; docker pull $UBUNTUBUILDIMAGE_311 ; end
+function pullUbuntuBuildImage311 ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 ; end
 
 function buildUbuntuBuildImageDevel
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntuDevel.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_312 -f ./Dockerfile.x86-64 ."
+          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.x86-64 ."
         case "aarch64"
-          eval "docker build $IMAGE_ARGS --pull -t $UBUNTUBUILDIMAGE_312 -f ./Dockerfile.arm64 ."
+          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.arm64 ."
         case '*'
           echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_312"
           exit 1
@@ -1542,101 +1543,101 @@ function buildUbuntuBuildImageDevel
 end
 
 function pushUbuntuBuildImageDevel
-  docker tag $UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
-  and docker push $UBUNTUBUILDIMAGE_312
-  and docker push $UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
+  "$DOCKER" tag $UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
+  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312
+  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
 end
 
-function pullUbuntuBuildImageDevel ; docker pull $UBUNTUBUILDIMAGE_312 ; end
+function pullUbuntuBuildImageDevel ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 ; end
 
 function buildUbuntuPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
   and cd $WORKDIR/containers/buildUbuntuPackaging.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUPACKAGINGIMAGE ."
+  and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUPACKAGINGIMAGE ."
   and rm -f $WORKDIR/containers/buildUbuntuPackaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushUbuntuPackagingImage ; docker push $UBUNTUPACKAGINGIMAGE ; end
+function pushUbuntuPackagingImage ; "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUPACKAGINGIMAGE ; end
 
-function pullUbuntuPackagingImage ; docker pull $UBUNTUPACKAGINGIMAGE ; end
+function pullUbuntuPackagingImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUPACKAGINGIMAGE ; end
 
 function buildUbuntuPackagingImage2
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging2.docker/scripts
   and cd $WORKDIR/containers/buildUbuntuPackaging2.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $UBUNTUPACKAGINGIMAGE2 ."
+  and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUPACKAGINGIMAGE2 ."
   and rm -f $WORKDIR/containers/buildUbuntuPackaging2.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushUbuntuPackagingImage2 ; docker push $UBUNTUPACKAGINGIMAGE2 ; end
+function pushUbuntuPackagingImage2 ; "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUPACKAGINGIMAGE2 ; end
 
-function pullUbuntuPackagingImage2 ; docker pull $UBUNTUPACKAGINGIMAGE2 ; end
+function pullUbuntuPackagingImage2 ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUPACKAGINGIMAGE2 ; end
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
   and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,downloadRclone,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
   and cd $WORKDIR/containers/buildUtils.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $ALPINEUTILSIMAGE ."
+  and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE ."
   or begin ; popd ; return 1 ; end
   popd
 end
 
 function pushAlpineUtilsImage
-  docker tag $ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:latest
-  and docker push $ALPINEUTILSIMAGE
-  and docker push $ALPINEUTILSIMAGE_NAME:latest
+  "$DOCKER" tag $ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:latest
+  and "$DOCKER" push $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE
+  and "$DOCKER" push $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE_NAME:latest
 end
 
-function pullAlpineUtilsImage ; docker pull $ALPINEUTILSIMAGE ; end
+function pullAlpineUtilsImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE ; end
 
 function buildCentosPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildRPMPackage.fish containers/buildCentos7Packaging.docker/scripts
   and cd $WORKDIR/containers/buildCentos7Packaging.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $CENTOSPACKAGINGIMAGE ."
+  and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE ."
   and rm -f $WORKDIR/containers/buildCentos7Packaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
 
 function pushCentosPackagingImage
-  docker tag $CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:latest
-  and docker push $CENTOSPACKAGINGIMAGE
-  and docker push $CENTOSPACKAGINGIMAGE_NAME:latest
+  "$DOCKER" tag $CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:latest
+  and "$DOCKER" push $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE
+  and "$DOCKER" push $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE_NAME:latest
 end
 
-function pullCentosPackagingImage ; docker pull $CENTOSPACKAGINGIMAGE ; end
+function pullCentosPackagingImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE ; end
 
 function buildCppcheckImage
   pushd $WORKDIR/containers/cppcheck.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $CPPCHECKIMAGE ."
+  and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$CPPCHECKIMAGE ."
   or begin ; popd ; return 1 ; end
   popd
 end
 function pushCppcheckImage
-  docker tag $CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:latest
-  and docker push $CPPCHECKIMAGE
-  and docker push $CPPCHECKIMAGE_NAME:latest
+  "$DOCKER" tag $CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:latest
+  and "$DOCKER" push $DOCKER_URL_PREFIX$CPPCHECKIMAGE
+  and "$DOCKER" push $DOCKER_URL_PREFIX$CPPCHECKIMAGE_NAME:latest
 end
-function pullCppcheckImage ; docker pull $CPPCHECKIMAGE ; end
+function pullCppcheckImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$CPPCHECKIMAGE ; end
 
 function buildLdapImage
   pushd $WORKDIR/containers/ldap.docker
-  and eval "docker build $IMAGE_ARGS --pull -t $LDAPIMAGE ."
+  and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$LDAPIMAGE ."
   or begin ; popd ; return 1 ; end
   popd
 end
 function pushLdapImage
-  docker tag $LDAPIMAGE $LDAPIMAGE_NAME:latest
-  and docker push $LDAPIMAGE
-  and docker push $LDAPIMAGE_NAME:latest
+  "$DOCKER" tag $LDAPIMAGE $LDAPIMAGE_NAME:latest
+  and "$DOCKER" push $DOCKER_URL_PREFIX$LDAPIMAGE
+  and "$DOCKER" push $DOCKER_URL_PREFIX$LDAPIMAGE_NAME:latest
 end
-function pullLdapImage ; docker pull $LDAPIMAGE ; end
+function pullLdapImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$LDAPIMAGE ; end
 
 function remakeImages
   set -l s 0
@@ -1698,7 +1699,9 @@ function runInContainer
   # from a regular user. Therefore we have to do some Eiertanz to stop it
   # if we receive a TERM outside the container. Note that this does not
   # cover SIGINT, since this will directly abort the whole function.
-  set c (docker run -d --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
+  set c ("$DOCKER" run -d --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
+             $DEFAULT_DOCKER_ARGS \
+             -m 64G \
              -v $WORKDIR/work/:$INNERWORKDIR \
              -v $SSH_AUTH_SOCK:/ssh-agent \
              -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
@@ -1793,24 +1796,26 @@ function runInContainer
              $argv)
   function termhandler --on-signal TERM --inherit-variable c
     if test -n "$c"
-      docker stop $c >/dev/null
-      docker rm $c >/dev/null
+      "$DOCKER" stop $c >/dev/null
+      "$DOCKER" rm $c >/dev/null
     end
   end
-  docker logs -f $c          # print output to stdout
-  docker stop $c >/dev/null  # happens when the previous command gets a SIGTERM
-  set s (docker inspect $c --format "{{.State.ExitCode}}")
-  docker rm $c >/dev/null
+  "$DOCKER" logs -f $c          # print output to stdout
+  "$DOCKER" stop $c >/dev/null  # happens when the previous command gets a SIGTERM
+  set s ("$DOCKER" inspect $c --format "{{.State.ExitCode}}")
+  "$DOCKER" rm $c >/dev/null
   functions -e termhandler
   # Cleanup ownership:
-  docker run \
-      -v $WORKDIR/work:$INNERWORKDIR \
-      -e UID=(id -u) \
-      -e GID=(id -g) \
-      -e INNERWORKDIR=$INNERWORKDIR \
-      --rm \
-      $ALPINEUTILSIMAGE $SCRIPTSDIR/recursiveChown.fish
-
+  if test "$DOCKER" = "docker"
+    "$DOCKER" run \
+        -v $WORKDIR/work:$INNERWORKDIR \
+        -v "$WORKDIR/scripts/":"/scripts" \
+        -e UID=(id -u) \
+        -e GID=(id -g) \
+        -e INNERWORKDIR=$INNERWORKDIR \
+        --rm \
+        $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/recursiveChown.fish
+  end
   if test -n "$agentstarted"
     ssh-agent -k > /dev/null
     set -e SSH_AUTH_SOCK
@@ -1833,7 +1838,7 @@ function interactiveContainer
     set -l agentstarted ""
   end
 
-  docker run -it --rm --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
+  "$DOCKER" run -it --rm --cap-add=SYS_PTRACE --privileged --security-opt seccomp=unconfined \
     -v $WORKDIR/work/:$INNERWORKDIR \
     -v $SSH_AUTH_SOCK:/ssh-agent \
     -v "$WORKDIR/jenkins/helper":"$WORKSPACE/jenkins/helper" \
@@ -1944,7 +1949,7 @@ function buildRclone
   rm -rf rclone/$argv[1]
   mkdir rclone/$argv[1]
 
-  docker run \
+  "$DOCKER" run \
     -v (pwd)/scripts:/scripts \
     -v (pwd)/rclone/$argv[1]:/data \
     -e RCLONE_VERSION=$argv[1] \
@@ -1967,7 +1972,7 @@ function findOpenSSLVersion
 end
 
 function clearWorkDir
-  runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/clearWorkDir.fish
+  runInContainer $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/clearWorkDir.fish
 end
 
 function transformSpec
@@ -2059,13 +2064,13 @@ function updateDockerBuildImage
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
-  and docker pull (findBuildImage)
-  and docker pull (findStaticBuildImage)
+  and "$DOCKER" pull $DOCKER_URL_PREFIX(findBuildImage)
+  and "$DOCKER" pull $DOCKER_URL_PREFIX(findStaticBuildImage)
 end
 
 function downloadStarter
   mkdir -p $WORKDIR/work/$THIRDPARTY_BIN
-  and runInContainer $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
+  and runInContainer $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/downloadStarter.fish $INNERWORKDIR/$THIRDPARTY_BIN $argv
   and convertSItoJSON
 end
 
@@ -2077,7 +2082,7 @@ function downloadSyncer
     end
     mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
     and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-    and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+    and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
     and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
     and convertSItoJSON
   end
@@ -2104,17 +2109,17 @@ function downloadAuxBinariesToBuildBin
 end
 
 function packObjectFiles
-  runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/packObjectFiles.fish
+  runInContainer $DOCKER_URL_PREFIX(eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/packObjectFiles.fish
 end
 
 function packBuildFiles
   if test "$PACK_BUILD_FILES" = "On"
-    runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/packBuildFiles.fish
+    runInContainer $DOCKER_URL_PREFIX(eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/packBuildFiles.fish
   end
 end
 
 function unpackBuildFiles
-  runInContainer (eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
+  runInContainer $DOCKER_URL_PREFIX(eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
 end
 
 function installGrype

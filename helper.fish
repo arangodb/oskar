@@ -1,6 +1,17 @@
 set -gx KEYNAME     86FEC04D
 set -gx KEYNAME_OLD 115E1684
 
+if test -f /usr/bin/podman
+  echo podman
+  set -xg DOCKER "podman"
+  set -xg DOCKER_URL_PREFIX "docker.io/"
+  set -xg DEFAULT_DOCKER_ARGS --pids-limit 256704
+else
+  set -xg DOCKER "docker"
+  set -xg DOCKER_URL_PREFIX ""
+end
+
+
 function lockDirectory
   # Now grab the lock ourselves:
   set -l pid (echo %self)
@@ -2278,6 +2289,7 @@ function findArangoDBVersion
   echo "ARANGODB_SNIPPETS:                 $ARANGODB_SNIPPETS"
   echo "ARANGODB_TGZ_UPSTREAM:             $ARANGODB_TGZ_UPSTREAM"
   echo "DOCKER_TAG:                        $DOCKER_TAG"
+  echo "DOCKER:                            $DOCKER"
   echo '------------------------------------------------------------------------------'
   echo
 end
