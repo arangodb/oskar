@@ -1,4 +1,10 @@
 #!/usr/bin/env fish
+
+set -xg TEST_DEFINITIONS test-definitions.txt
+if test (count $argv) -gt 1
+    set -xg TEST_DEFINITIONS $argv[1]
+end
+
 source jenkins/helper/jenkins.fish
 
 set s 0
@@ -18,7 +24,7 @@ and begin
   rm -rf $WORKDIR/work/gcov.old
   if test -d $WORKDIR/work/gcov ; mv $WORKDIR/work/gcov $WORKDIR/work/gcov.old ; end
 
-  oskarFull --isAsan true --sanitizer true ; or set s $status
+  oskarFull --testdefinitions $TEST_DEFINITIONS --isAsan true --sanitizer true; or set s $status
   if test "$s" -eq 1
      set exitcode 5
   end

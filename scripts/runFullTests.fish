@@ -2,6 +2,13 @@
 set -g SCRIPTS (dirname (status -f))
 source $SCRIPTS/lib/tests.fish
 
+set -xg TEST_DEFINITIONS test-definitions.txt
+if test (count $argv) -gt 2 -a "$argv[1]" -eq "--testdefinitions"
+    set -xg TEST_DEFINITIONS $argv[2]
+    set -e $argv[1]
+    set -e $argv[1]
+end
+
 set -xg ADDITIONAL_OPTIONS $argv
 
 set ENTERPRISE_ARG "--no-enterprise"
@@ -15,7 +22,7 @@ end
 
 function launchSingleTests
   echo "Using test definitions from arangodb repo"
-  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --full "$ENTERPRISE_ARG"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/$TEST_DEFINITIONS" -f launch --full "$ENTERPRISE_ARG"
   set x $status
   if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
     set -xg result "GOOD"
@@ -30,7 +37,7 @@ end
 ################################################################################
 
 function launchGTest
-  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest "$ENTERPRISE_ARG"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/$TEST_DEFINITIONS" -f launch --gtest "$ENTERPRISE_ARG"
   set x $status
   if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
     set -xg result "GOOD"
@@ -46,7 +53,7 @@ end
 
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster --full "$ENTERPRISE_ARG"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/$TEST_DEFINITIONS" -f launch --cluster --full "$ENTERPRISE_ARG"
   set x $status
   if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
     set -xg result "GOOD"
@@ -62,7 +69,7 @@ end
 
 function launchSingleClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster --full "$ENTERPRISE_ARG"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/$TEST_DEFINITIONS" -f launch --single_cluster --full "$ENTERPRISE_ARG"
   set x $status
   if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
     set -xg result "GOOD"
@@ -79,6 +86,9 @@ end
 # Switch off jemalloc background threads for the tests since this seems
 # to overload our systems and is not needed.
 set -x MALLOC_CONF background_thread:false
+
+
+
 
 setupTmp
 cd $INNERWORKDIR/ArangoDB
