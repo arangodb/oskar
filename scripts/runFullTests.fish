@@ -1,9 +1,11 @@
 #!/usr/bin/env fish
+set -l fish_trace on
+
 set -g SCRIPTS (dirname (status -f))
 source $SCRIPTS/lib/tests.fish
 
 set -xg TEST_DEFINITIONS test-definitions.txt
-if test (count "$argv") -gt 0 -a "$argv[1]" -eq "--testdefinitions"
+if test (count "$argv") -gt 0 -a "$argv[0]" -eq "--testdefinitions"
     set -xg TEST_DEFINITIONS $argv[2]
     set -e $argv[1]
     set -e $argv[1]
