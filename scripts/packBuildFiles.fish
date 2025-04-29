@@ -18,4 +18,4 @@ set builddirs "build js/apps/system/_admin/aardvark/APP/react/build"
 echo Working on build directories: $builddirs
 
 rm -rf "$INNERWORKDIR/arangodb3$suffix-$PLATFORM-build_files_$BUILDMODE-$ARANGODB_VERSION"_"$ARCH.tar.gz" &>/dev/null 
-eval tar --checkpoint=200 -czf "$INNERWORKDIR/arangodb3$suffix-$PLATFORM-build_files_$BUILDMODE-$ARANGODB_VERSION"_"$ARCH.tar.gz" $builddirs
+eval tar --checkpoint=2000 -czf "$INNERWORKDIR/arangodb3$suffix-$PLATFORM-build_files_$BUILDMODE-$ARANGODB_VERSION"_"$ARCH.tar.gz" $builddirs
