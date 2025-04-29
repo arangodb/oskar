@@ -283,10 +283,10 @@ def combine_coverage_dirs_multi(cfg,
     if combined_dir.exists():
         shutil.rmtree(str(combined_dir))
     combined_dir.mkdir()
-    coverage_dir = base_dir / 'coverage'
-    # if coverage_dir.exists():
-        # shutil.rmtree(str(coverage_dir))
-    coverage_dir.mkdir()
+    #coverage_dir = base_dir / 'coverage'
+    #if coverage_dir.exists():
+    #    shutil.rmtree(str(coverage_dir))
+    #coverage_dir.mkdir()
     count = 0
     jobcount = 0
     if len(sub_jobs) == 0:
