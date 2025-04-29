@@ -5,6 +5,8 @@ set -g SCRIPTS (dirname (status -f))
 source $SCRIPTS/lib/tests.fish
 
 set -xg TEST_DEFINITIONS test-definitions.txt
+echo "$argv[1]"
+echo "$argv[2]"
 if test (count "$argv") -gt 0 -a "$argv[1]" -eq "--testdefinitions"
     set -xg TEST_DEFINITIONS $argv[2]
     set -e $argv[1]
