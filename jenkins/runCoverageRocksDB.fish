@@ -3,7 +3,7 @@ set -l fish_trace on
 
 set -xg TEST_DEFINITIONS test-definitions.txt
 
-if test (count $argv) -gt 1
+if test (count $argv) -gt 0
     set -xg TEST_DEFINITIONS $argv[1]
 end
 echo count $argv
