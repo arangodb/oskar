@@ -33,9 +33,6 @@ if test "$BUILD_MODE" = "release"
    releaseMode
 end
 
-
-and maintainerOn
-and eval $EDITION
 and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage

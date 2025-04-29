@@ -1,10 +1,12 @@
 #!/usr/bin/env fish
+set -l fish_trace on
 
 set -xg TEST_DEFINITIONS test-definitions.txt
+
 if test (count $argv) -gt 1
     set -xg TEST_DEFINITIONS $argv[1]
 end
-
+echo count $argv
 source jenkins/helper/jenkins.fish
 
 set s 0
