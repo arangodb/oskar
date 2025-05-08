@@ -73,6 +73,7 @@ REPORT_HTML_TEMPLATE = """
         <th>Artifact type</th>
         <th>Artifact version</th>
         <th>Fixed version(s)</th>
+        <th>Locations(s)</th>
         <tbody id="table-body">
             {% for scan in scans %}
             {% for vulnerability in scan.vulnerabilities %}
@@ -88,6 +89,11 @@ REPORT_HTML_TEMPLATE = """
                 <td>{{ vulnerability.artifact_type }}</td>
                 <td>{{ vulnerability.artifact_version }}</td>
                 <td>{{ vulnerability.fixed_versions }}</td>
+                <td>
+                {% for location in vulnerability.locations %}
+                    {{ location.path }}<br>
+                {% endfor %}
+                </td>
             </tr>
             {% endif %}
             {% endfor %}
@@ -200,6 +206,7 @@ for result in json_results:
         vulnerability_entry["fixed_versions"] = "<br>".join(
             vulnerability.get("fix", {}).get("versions", [])
         )
+        vulnerability_entry["locations"] = artifact.get("locations", [])
         table_entry["vulnerabilities"].append(vulnerability_entry)
     table_entry["vulnerabilities"] = sorted(
         table_entry["vulnerabilities"],
