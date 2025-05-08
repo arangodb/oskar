@@ -110,6 +110,7 @@ REPORT_HTML_TEMPLATE = """
         <th>Artifact type</th>
         <th>Artifact version</th>
         <th>Fixed version(s)</th>
+        <th>Locations(s)</th>
         <tbody id="table-body">
             {% for scan in scans %}
             {% for vulnerability in scan.vulnerabilities %}
@@ -128,6 +129,11 @@ REPORT_HTML_TEMPLATE = """
                 <td>{{ vulnerability.artifact_type }}</td>
                 <td>{{ vulnerability.artifact_version }}</td>
                 <td>{{ vulnerability.fixed_versions }}</td>
+                <td>
+                {% for location in vulnerability.locations %}
+                    {{ location.path }}<br>
+                {% endfor %}
+                </td>
             </tr>
             {% endfor %}
             {% endfor %}
