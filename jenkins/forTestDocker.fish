@@ -39,9 +39,9 @@ and setArchSuffix
 and set -xg HUB_COMMUNITY "arangodb/arangodb-test:$DOCKER_TAG_JENKINS$archSuffix"
 and buildDockerImage $HUB_COMMUNITY
 and validateDockerImageIfNeeded $HUB_COMMUNITY
-and docker push $HUB_COMMUNITY
-and docker tag $HUB_COMMUNITY $GCR_REG_PREFIX$HUB_COMMUNITY
-and docker push $GCR_REG_PREFIX$HUB_COMMUNITY
+and "$DOCKER" push $HUB_COMMUNITY
+and "$DOCKER" tag $HUB_COMMUNITY $GCR_REG_PREFIX$HUB_COMMUNITY
+and "$DOCKER" push $GCR_REG_PREFIX$HUB_COMMUNITY
 and echo $HUB_COMMUNITY >> $WORKSPACE/imagenames.log
 and echo $GCR_REG_PREFIX$HUB_COMMUNITY >> $WORKSPACE/imagenames.log
 
@@ -61,9 +61,9 @@ and downloadRclone
 and setArchSuffix
 and set -xg HUB_ENTERPRISE "arangodb/enterprise-test:$DOCKER_TAG_JENKINS$archSuffix"
 and buildDockerImage $HUB_ENTERPRISE
-and docker push $HUB_ENTERPRISE
-and docker tag $HUB_ENTERPRISE $GCR_REG_PREFIX$HUB_ENTERPRISE
-and docker push $GCR_REG_PREFIX$HUB_ENTERPRISE
+and "$DOCKER" push $HUB_ENTERPRISE
+and "$DOCKER" tag $HUB_ENTERPRISE $GCR_REG_PREFIX$HUB_ENTERPRISE
+and "$DOCKER" push $GCR_REG_PREFIX$HUB_ENTERPRISE
 and echo $HUB_ENTERPRISE >> $WORKSPACE/imagenames.log
 and echo $GCR_REG_PREFIX$HUB_ENTERPRISE >> $WORKSPACE/imagenames.log
 
