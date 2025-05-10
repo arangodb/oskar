@@ -1,3 +1,4 @@
+if [ -z "$DOCKER" ]; then DOCKER="docker"; fi
 if [ -z "$ARANGO_AUTH" ]; then ARANGO_AUTH="auth"; fi
 if [ -z "$ARANGO_BRANCH" ]; then ARANGO_BRANCH="devel"; fi
 if [ -z "$ARANGO_DOCKER_REG" ]; then ARANGO_DOCKER_REG="docker.io/arangodb"; fi
