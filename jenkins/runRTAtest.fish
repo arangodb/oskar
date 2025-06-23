@@ -15,7 +15,7 @@ and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
 or exit 1
 
-if test "$SAN" = "On"
+if test -n "$SAN_MODE"
   echo "Setting additional sanitizer flags"
   # https://stackoverflow.com/questions/56104472/why-would-setting-export-openblas-num-threads-1-impair-the-performance
   set -xg OPENBLAS_NUM_THREADS 1
