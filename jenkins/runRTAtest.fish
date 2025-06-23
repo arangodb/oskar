@@ -2,7 +2,6 @@
 set -l fish_trace on
 source jenkins/helper/jenkins.fish
 
-
 cleanPrepareLockUpdateClear2
 and TT_init
 and set -xg RTA_EDITION "C,Cr2"
@@ -15,10 +14,14 @@ and setAllLogsToWorkspace
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
 or exit 1
-if test "$ASAN" = "true"
+
+if test "$SAN" = "On"
+  echo "Setting additional sanitizer flags"
   # https://stackoverflow.com/questions/56104472/why-would-setting-export-openblas-num-threads-1-impair-the-performance
   set -xg OPENBLAS_NUM_THREADS 1
+end
 
+if test "$ASAN" = "true"
    echo "San build"
    sanOn
    and buildSanFlags "$WORKDIR/work/ArangoDB"
