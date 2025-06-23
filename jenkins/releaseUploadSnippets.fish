@@ -26,24 +26,6 @@ and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 or begin unlockDirectory ; exit 1 ; end
 
-function upload
-  cd /mnt/buildfiles/stage2
-  set -l HOST "$PANTHEON_SITE.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f@appserver.$PANTHEON_SITE.9c5a08db-bfdf-42bc-9393-00c9fdf4c90f.drush.in"
-  set -l SSL "ssh -o StrictHostkeyChecking=false -i $HOME/.ssh/pantheon -p 2222"
-
-  if test "$RELEASE_TYPE" = "preview"
-    rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-technical-preview/
-    and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-technical-preview-enterprise/
-  else
-    if test "$RELEASE_IS_HEAD" = "true"
-      rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Community/ $HOST:files/d/download-current/
-      and rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/$ARANGODB_REPO
-    else
-      rsync --backup --backup-dir=.backup --exclude=.backup --exclude="*~" -rvvz -e $SSL $ARANGODB_PACKAGES/snippets/Enterprise/ $HOST:files/d/download-enterprise/$ARANGODB_REPO
-    end    
-  end
-end
-
 set META kmajv4agbby8qytdoqnqxeb904vbd5zk1mpq.arangodb.com
 
 rm -f /tmp/index.html
@@ -51,13 +33,16 @@ echo "<html><body></body></html>" > /tmp/index.html
 
 function uploadMeta
   cd /mnt/buildfiles/stage2
-  and gsutil cp $ARANGODB_PACKAGES/snippets/Community/meta.json gs://$META/wpv0cu548xhrw6h5carxr7s0rt8an71388mvx05znw/meta-community-$ARANGODB_PACKAGES.json
+  and if test "$ARANGODB_VERSION_MAJOR" -eq 3
+        if test "$ARANGODB_VERSION_MINOR" -le 11; or begin; test "$ARANGODB_VERSION_MINOR" -eq 12; and test "$ARANGODB_VERSION_PATCH" -lt 5; end
+          gsutil cp $ARANGODB_PACKAGES/snippets/Community/meta.json gs://$META/wpv0cu548xhrw6h5carxr7s0rt8an71388mvx05znw/meta-community-$ARANGODB_PACKAGES.json
+        end
+      end
   and gsutil cp $ARANGODB_PACKAGES/snippets/Enterprise/meta.json gs://$META/wpv0cu548xhrw6h5carxr7s0rt8an71388mvx05znw/meta-enterprise-$ARANGODB_PACKAGES.json
   and gsutil cp /tmp/index.html gs://$META/index.html
 end
 
 # there might be internet hickups
-# upload
 uploadMeta
 
 set -l s $status

@@ -58,7 +58,11 @@ and switchBranches "$RELEASE_TAG" "$RELEASE_TAG" true
 and findArangoDBVersion
 and downloadLatestRegctl
 and if test "$UPDATE_COMMUNITY" = "true"
-      updateDockerHub arangodb $DOCKER_TAG
+      if test "$ARANGODB_VERSION_MAJOR" -eq 3
+        if test "$ARANGODB_VERSION_MINOR" -le 11; or begin; test "$ARANGODB_VERSION_MINOR" -eq 12; and test "$ARANGODB_VERSION_PATCH" -lt 5; end
+          updateDockerHub arangodb $DOCKER_TAG
+        end
+      end
     end
 and if test "$UPDATE_ENTERPRISE" = "true"
       updateDockerHub enterprise $DOCKER_TAG

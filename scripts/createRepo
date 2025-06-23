@@ -75,21 +75,22 @@ create_repo(){
     local repo_name="$5"                   # Debian_8.0
     local arch="$6"                        # amd64 -- we might need a archlist like "amd64:armhf"
     local package_type="$7"                # package_type
+    local use_community="${8:-true}"       # true|false
     local in_community="Community"         # community
-    local repo_community="Community"
+    local repo_community="Community"       # community
     local in_enterprise="Enterprise"       # enterprise
     local repo_enterprise="Enterprise"     # enterprise
     local url_base="https://download.arangodb.com" # (rpm only)
     local url_secret="9c169fe900ff79790395784287bfa82f0dc0059375a34a2881b9b745c8efd42e"
 
 
-    url_community="$url_base/arangodb${version_fs}/$repo_name"
+    [[ "$use_community" == "true" ]] && url_community="$url_base/arangodb${version_fs}/$repo_name"
     url_enterprise="$url_base/$url_secret/arangodb${version_fs}/$repo_name"
 
     # setup_gpg
 
-  echo "community #################################"
-  create_repo_edition "$version" "$major_minor" "$arch" "$package_type" \
+  [[ "$use_community" == "true" ]] && echo "community #################################"
+  [[ "$use_community" == "true" ]] &&  create_repo_edition "$version" "$major_minor" "$arch" "$package_type" \
                       "$in_path/$in_community/$in_name" \
                       "$repo_path/$repo_community/$repo_name" \
                       "$url_community"
