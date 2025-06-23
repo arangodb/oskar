@@ -2,8 +2,6 @@
 set -l fish_trace on
 source jenkins/helper/jenkins.fish
 
-# https://stackoverflow.com/questions/56104472/why-would-setting-export-openblas-num-threads-1-impair-the-performance
-set -xg OPENBLAS_NUM_THREADS 1
 
 cleanPrepareLockUpdateClear2
 and TT_init
@@ -18,6 +16,9 @@ and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and updateDockerBuildImage
 or exit 1
 if test "$ASAN" = "true"
+  # https://stackoverflow.com/questions/56104472/why-would-setting-export-openblas-num-threads-1-impair-the-performance
+  set -xg OPENBLAS_NUM_THREADS 1
+
    echo "San build"
    sanOn
    and buildSanFlags "$WORKDIR/work/ArangoDB"
