@@ -1477,13 +1477,17 @@ function createRepositories
 
   pushd $WORKDIR
   and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and begin; test "$ARANGODB_VERSION_MINOR" -ge 12; or begin; test "$ARANGODB_VERSION_MINOR" -eq 11; and test "$ARANGODB_VERSION_PATCH" -ge 11; end; end;
+        set -l editions "All"
+        if test "$ARANGODB_VERSION_MINOR" -ge 12; and test "$ARANGODB_VERSION_PATCH" -ge 5
+          set editions "Enterprise"
+        end
         runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
         -v $WORKSPACE/signing-keys/.gnupg4:/root/.gnupg \
         -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
         -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
         -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
-        -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll
+        -it $UBUNTUPACKAGINGIMAGE2 "SCRIPTSDIR/createAll $editions"
       else
         runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \

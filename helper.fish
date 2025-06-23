@@ -1041,7 +1041,14 @@ function makeSnippets
     end
   end
 
-  for edition in "community" "enterprise"
+  set -l editions "community enterprise"
+  if test "$ARANGODB_VERSION_MAJOR" -eq 3
+    if test "$ARANGODB_VERSION_MINOR" -eq 12; and test "$ARANGODB_VERSION_PATCH" -ge 5
+      set editions "enterprise"
+    end
+  end
+
+  for edition in $editions
     eval "$edition"
     and buildDockerSnippet $OUT
     and for arch in $archSnippets
@@ -1082,7 +1089,7 @@ function makeSnippets
       echo ','
     end
 
-    for edition in "community" "enterprise"
+    for edition in $editions
       if test -f "$SNIPPETS/meta-docker-$edition.json"
         echo '"docker-'$edition'":'
         cat "$SNIPPETS/meta-docker-$edition.json"
