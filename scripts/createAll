@@ -53,7 +53,7 @@ echo "User archs are $arch_list"
 
 ensure_oskar "$version" "$incoming" "$repo" \
             "Linux" "RPM" \
-            "$arch_list" "rpm"
+            "$arch_list" "rpm" $([[ " $editions " == *" Community "* ]] && echo "true" || echo "false")
 
 #debian
 #ubuntu

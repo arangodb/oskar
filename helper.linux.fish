@@ -1487,7 +1487,8 @@ function createRepositories
         -v $WORKSPACE/signing-keys/.rpmmacros:/root/.rpmmacros \
         -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/packages:/packages \
         -v /mnt/buildfiles/stage2/$ARANGODB_PACKAGES/repositories:/repositories \
-        -it $UBUNTUPACKAGINGIMAGE2 "SCRIPTSDIR/createAll $editions"
+        -it $UBUNTUPACKAGINGIMAGE2 $SCRIPTSDIR/createAll "$editions"
+        exit
       else
         runInContainer \
         -e ARANGO_SIGN_PASSWD="$ARANGO_SIGN_PASSWD" \
