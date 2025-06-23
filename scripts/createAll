@@ -7,7 +7,7 @@ if test -d /root/.gnupg-old; then
   chmod 700 /root/.gnupg-old
 fi
 
-editions="Community Enteprise"
+editions="Community Enterprise"
 if [ -n "$1" ] && [ "$1" = "Enterprise" ]; then
   echo "\$1 positional parameter is present: making only $1 repo(s)!"
   editions="Enterprise"

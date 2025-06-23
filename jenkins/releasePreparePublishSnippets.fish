@@ -41,6 +41,9 @@ and set -g SP_PACKAGES $DST
 and if test "$ARANGODB_VERSION_MAJOR" -eq 3
       if test "$ARANGODB_VERSION_MINOR" -le 11; or begin; test "$ARANGODB_VERSION_MINOR" -eq 12; and test "$ARANGODB_VERSION_PATCH" -lt 5; end
         set -g SP_SNIPPETS_CO $DST/snippets/Community
+      else
+        echo "Set SP_SNIPPETS_CO to $DST/snippets/Community only for source snippet (3.12.5+ case)!"
+        set -g SP_SNIPPETS_CO $DST/snippets/Community
       end
     end
 and set -g SP_SNIPPETS_EN $DST/snippets/Enterprise
@@ -56,6 +59,9 @@ and mkdir -p $DST
 and if test "$ARANGODB_VERSION_MAJOR" -eq 3
       if test "$ARANGODB_VERSION_MINOR" -le 11; or begin; test "$ARANGODB_VERSION_MINOR" -eq 12; and test "$ARANGODB_VERSION_PATCH" -lt 5; end
         echo "creating community snippets destination directory '$SP_SNIPPETS_CO'"
+        and mkdir -p $SP_SNIPPETS_CO
+      else
+        echo "creating community snippets destination directory (only for source snippet!) '$SP_SNIPPETS_CO'"
         and mkdir -p $SP_SNIPPETS_CO
       end
     end
@@ -111,19 +117,23 @@ and if test "$ARANGODB_VERSION_MAJOR" -eq 3
 and cp $WS_SNIPPETS/meta-*-enterprise*.json $SP_SNIPPETS_EN
 
 if test "$ARANGODB_VERSION_MAJOR" -eq 3
-  if test "$ARANGODB_VERSION_MINOR" -le 11; or begin; test "$ARANGODB_VERSION_MINOR" -eq 12; and test "$ARANGODB_VERSION_PATCH" -lt 5; end
-    echo "========== CREATE META-DATA COMMUNITY =========="
-    and begin
-          echo "{"
-          for file in (ls -1 $SP_SNIPPETS_CO/meta-*json | sort)
-            set key (echo $file | sed -e 's:.*/meta-\(.*\).json:\1:')
-            echo \"$key\":
-            cat $file
-            echo ","
-          end
-          echo \"serial\": \"(date +%s)\" "}"
-        end | jq . > $SP_SNIPPETS_CO/meta.json
-  end
+  set -l snippets_filter 'meta-*json'
+  and if test "$ARANGODB_VERSION_MINOR" -le 11; or begin; test "$ARANGODB_VERSION_MINOR" -eq 12; and test "$ARANGODB_VERSION_PATCH" -lt 5; end
+        echo "========== CREATE META-DATA COMMUNITY =========="
+      else
+        echo "========== CREATE META-DATA COMMUNITY (SOURCE SNIPPET ONLY!) =========="
+        set snippets_filter 'meta-source.json'
+      end
+  and begin
+        echo "{"
+        for file in (ls -1 $SP_SNIPPETS_CO/$snippets_filter | sort)
+          set key (echo $file | sed -e 's:.*/meta-\(.*\).json:\1:')
+          echo \"$key\":
+          cat $file
+          echo ","
+        end
+        echo \"serial\": \"(date +%s)\" "}"
+      end | jq . > $SP_SNIPPETS_CO/meta.json
 end
 
 and echo "========== CREATE META-DATA ENTERPRISE =========="
