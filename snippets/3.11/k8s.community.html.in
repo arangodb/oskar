@@ -18,12 +18,12 @@
     In order to install ArangoDB in your Kubernetes Cluster, first
     deploy the latest operator. Instructions how to do so can be found
     in the documentation:
-    <a href="https://www.arangodb.com/docs/@ARANGODB_PACKAGES@/deployment-kubernetes.html" target="_blank">ArangoDB Kubernetes Operator</a>.
+    <a href="https://arangodb.github.io/kube-arangodb/docs/using-the-operator.html" target="_blank">ArangoDB Kubernetes Operator</a>.
   </p>
   <p>
     After that, create and deploy a
-    <a href="https://www.arangodb.com/docs/@ARANGODB_PACKAGES@/deployment-kubernetes-deployment-resource.html" target="_blank">
-      ArangoDBDeployment
+    <a href="https://arangodb.github.io/kube-arangodb/docs/deployment-resource-reference.html" target="_blank">
+      ArangoDeployment
     </a>
     resource according to your needs and additionally specify
     <pre>spec:
