@@ -8,6 +8,18 @@ else
   set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG"
 end
 
+if test -z "$DOCKER_DISTRO"
+  echo "DOCKER_DISTRO required"
+  exit 1
+else
+  if test "$DOCKER_DISTRO" = "ubi"
+    set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-ubi"
+  end
+  if test "$DOCKER_DISTRO" = "deb"
+    set -xg DOCKER_TAG_JENKINS "$DOCKER_TAG_JENKINS-deb"
+  end
+end
+
 if test -z "$IS_NIGHTLY_BUILD"
   echo "IS_NIGHTLY_BUILD required"
   exit 1
