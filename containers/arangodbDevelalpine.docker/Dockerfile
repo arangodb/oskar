@@ -1,7 +1,7 @@
 FROM alpine:3.21
 MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
-RUN apk add --no-cache pwgen numactl numactl-tools
+RUN apk add --no-cache pwgen numactl numactl-tools elfutils
 
 ADD install.tar.gz /
 COPY setup.sh /setup.sh
