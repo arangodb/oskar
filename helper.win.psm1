@@ -1613,48 +1613,31 @@ Function configureWindows
     }
 
     $ARANGODIR_SLASH = $global:ARANGODIR -replace "\\","/"
-    If ($ENTERPRISEEDITION -eq "On")
+
+    if ($global:PACKAGING -eq "On")
     {
-        # Configure for Enterprise Edition
-
-        if ($global:PACKAGING -eq "On")
-        {
-            downloadStarter
-            downloadSyncer
-        }
-
-        If (-Not $global:ok)
-        {
-            return
-        }
-
-        Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
-        Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS -S `"$global:ARANGODIR`" -B `"$global:ARANGODIR\build`""
-
-        #   proc -process "cmake" -argument "-G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`"" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+        downloadStarter
     }
-    Else
+
+    If (-Not $global:ok)
     {
-        # Configure for Community Edition
-        Write-Host "Configure (community) started in: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
-
-        if ($global:PACKAGING -eq "On") {
-            downloadStarter
-        }
-
-        $cmake_preset = "community-win"
-        $BUILD_MODE = "Release"
-        if ($MAINTAINER -eq "On") {
-            $cmake_preset = "community-win-developer"
-            $BUILD_MODE = "Debug"
-        }
-
-        $process_args = "--fresh --preset $cmake_preset -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=Off -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS -S `"$global:ARANGODIR`" -B `"$global:ARANGODIR\build`""
-
-        Write-Host "CMake arguments: $process_args"
-
-        proc -process "cmake" -argument "$process_args" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
+        return
     }
+
+    Write-Host "Configure (enterprise: $ENTERPRISEEDITION) started in: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
+
+    $cmake_preset = "community-win"
+    $BUILD_MODE = "Release"
+    if ($MAINTAINER -eq "On") {
+        $cmake_preset = "community-win-developer"
+        $BUILD_MODE = "Debug"
+    }
+
+    $process_args = "--fresh --preset $cmake_preset -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS -S `"$global:ARANGODIR`" -B `"$global:ARANGODIR\build`""
+
+    Write-Host "CMake arguments: $process_args"
+
+    proc -process "cmake" -argument "$process_args" -logfile "$INNERWORKDIR\cmake" -priority "Normal"
 
     Write-Host "CMake configure finished in: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     Pop-Location
@@ -1807,7 +1790,7 @@ Function buildArangoDB
     If ($global:ok)
     {
         Push-Location $ENV:WORKSPACE
-        Get-VSSetupInstance | Out-File -FilePath .\vssetup.reg.log
+        # Get-VSSetupInstance | Out-File -FilePath .\vssetup.reg.log
         Get-ChildItem Env: | Out-File -FilePath .\env.reg.log
         Pop-Location
 
@@ -1858,7 +1841,7 @@ Function buildArangoDB
             Invoke-Command  {reg export HKLM hklm.reg.log}
             Invoke-Command  {reg export HKCU hkcu.reg.log}
             Invoke-Command  {reg export HKCR hkcr.reg.log}
-            Get-VSSetupInstance | Out-File -FilePath .\vssetup.reg.log
+            #Get-VSSetupInstance | Out-File -FilePath .\vssetup.reg.log
             Get-ChildItem Env: | Out-File -FilePath .\env.reg.log
             ForEach ($file in $(Get-ChildItem . -Filter "*.reg.log"))
             {
@@ -2131,34 +2114,28 @@ Function oskar8
     comm
 }
 
-function oskarWindows
+function windowsCommunity
 {
     community
     staticExecutablesOff
     clcacheOff
     packagingOff
     skipPackagingOn
-    showConfig
     releaseModeNoSymbols
-    configureWindows
-    If ($global:ok)
-    {
-        buildWindows
-        If ($global:ok)
-        {
-            packageWindows
-            If ($global:ok)
-            {
-                Write-Host "Windows build OK."
-            } else {
-                Write-Host "Windows packaging error, see $INNERWORKDIR\build.* for details."
-            }
-        } else {
-            Write-Host "Windows build error, see $INNERWORKDIR\cmake.* for details."
-        }
-    } else {
-        Write-Host "Windows cmake configure, see $INNERWORKDIR\cmake.* for details."
-    }
+    showConfig
+    buildArangoDB
+}
+
+function windowsEnterprise
+{
+    enterprise
+    staticExecutablesOff
+    clcacheOff
+    packagingOff
+    skipPackagingOn
+    releaseModeNoSymbols
+    showConfig
+    buildArangoDB
 }
 
 Function rlogCompile
