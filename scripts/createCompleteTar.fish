@@ -12,7 +12,9 @@ set -g SYNCER_REV "unknown"
 set -g STARTER_REV "unknown"
 
 function checkoutCommunity
+  echo "================================================================================"
   echo "Checkout ArangoDB Community $RELEASE_TAG"
+  echo "================================================================================"
   pushd $INNERWORKDIR/CompleteTar
   and git clone --progress --single-branch --branch $RELEASE_TAG ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/arangodb ArangoDB-$RELEASE_TAG
   and pushd $INNERWORKDIR/CompleteTar/ArangoDB-$RELEASE_TAG/3rdParty
@@ -25,7 +27,9 @@ function checkoutCommunity
 end
 
 function checkoutEnterprise
+  echo "================================================================================"
   echo "Checkout ArangoDB Enterprise $RELEASE_TAG"
+  echo "================================================================================"
   pushd $INNERWORKDIR/CompleteTar/ArangoDB-$RELEASE_TAG
   and git clone --progress --single-branch --branch $RELEASE_TAG ssh://git@$ENTERPRISE_GIT_HOST/$ENTERPRISE_GIT_ORGA/enterprise enterprise
   or begin popd; return 1; end
@@ -41,7 +45,9 @@ function findVersion
 end
 
 function checkoutStarter
+  echo "================================================================================"
   echo "Checkout ArangoDB Starter $STARTER_REV"
+  echo "================================================================================"
   pushd $INNERWORKDIR/CompleteTar
   and git clone --progress --single-branch --branch $STARTER_REV ssh://git@$ARANGODB_GIT_HOST/$HELPER_GIT_ORGA/arangodb Starter-$STARTER_REV
   or begin popd; return 1; end
@@ -49,17 +55,21 @@ function checkoutStarter
 end
 
 function checkoutSyncer
-  if test -n "$SYNCER_REV"
+  if test -n "$SYNCER_REV" -a "$SYNCER_REV" != "unknown"
+    echo "================================================================================"
     echo "Checkout ArangoDB Syncer $SYNCER_REV"
+    echo "================================================================================"
     pushd $INNERWORKDIR/CompleteTar
     and git clone --progress --single-branch --branch $SYNCER_REV ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/arangosync arangosync-$SYNCER_REV
     or begin popd; return 1; end
     popd
-    end
+  end
 end
 
 function checkoutOskar
+  echo "================================================================================"
   echo "Checkout OSKAR"
+  echo "================================================================================"
   pushd $INNERWORKDIR/CompleteTar
   and git clone --progress --single-branch --branch master ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/oskar
   or begin popd; return 1; end
@@ -67,14 +77,25 @@ function checkoutOskar
 end
 
 function createTar
-  echo "Checkout OSKAR"
+  echo "================================================================================"
+  echo "Creating TAR"
+  echo "================================================================================"
   pushd $INNERWORKDIR/CompleteTar
-  and tar -c \
-      	  -z \
+  and if test -n "$SYNCER_REV" -a "$SYNCER_REV" != "unknown"
+    tar -c \
+       	  -z \
 	  --exclude=.git \
 	  --exclude=.gitignore \
 	  -f ArangoDBe-$RELEASE_TAG.tar.gz \
 	  ArangoDB-$RELEASE_TAG Starter-$STARTER_REV arangosync-$SYNCER_REV oskar
+  else
+    tar -c \
+       	  -z \
+	  --exclude=.git \
+	  --exclude=.gitignore \
+	  -f ArangoDBe-$RELEASE_TAG.tar.gz \
+	  ArangoDB-$RELEASE_TAG Starter-$STARTER_REV oskar
+  end
   or begin popd; return 1; end
   popd
 end
