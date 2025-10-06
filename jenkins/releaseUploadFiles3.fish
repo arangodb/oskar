@@ -19,9 +19,15 @@ or begin unlockDirectory ; exit 1 ; end
 
 function upload
   cd /mnt/buildfiles/stage2
-  and echo "Copying COMMUNITY"
+  and if test "$ARANGODB_VERSION_MAJOR" -eq 3
+        if test "$ARANGODB_VERSION_MINOR" -le 11; or begin; test "$ARANGODB_VERSION_MINOR" -eq 12; and test "$ARANGODB_VERSION_PATCH" -lt 5; end
+          echo "Copying COMMUNITY"
+          and gsutil -m rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/packages/Community gs://download.arangodb.com/$ARANGODB_REPO/Community
+        else
+          echo "Copying only COMMUNITY (part) SOURCE for 3.12.5+ EE!"
+        end
+      end
   and gsutil -m rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/source gs://download.arangodb.com/Source
-  and gsutil -m rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/packages/Community gs://download.arangodb.com/$ARANGODB_REPO/Community
   and echo "Copying ENTERPRISE"
   and gsutil -m rsync -c -x 'index\.html' -r $ARANGODB_PACKAGES/packages/Enterprise gs://download.arangodb.com/$ENTERPRISE_DOWNLOAD_KEY/$ARANGODB_REPO/Enterprise
 end

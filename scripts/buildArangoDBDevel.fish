@@ -57,7 +57,7 @@ set -g FULLARGS $argv \
  -DSTATIC_EXECUTABLES=$STATIC_EXECUTABLES \
  -DUSE_ENTERPRISE=$ENTERPRISEEDITION \
  -DUSE_MAINTAINER_MODE=$MAINTAINER \
- -DCMAKE_LIBRARY_PATH="/opt/lib$X86_64_SUFFIX;/opt/lib" \
+ -DCMAKE_LIBRARY_PATH="/opt/lib$X86_64_SUFFIX" \
  -DOPENSSL_ROOT_DIR=/opt \
  -DUSE_STRICT_OPENSSL_VERSION=$USE_STRICT_OPENSSL \
  -DBUILD_REPO_INFO=$BUILD_REPO_INFO \
@@ -67,11 +67,11 @@ set -g FULLARGS $argv \
 
 if test "$MAINTAINER" = "On"
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie -fno-stack-protector -fuse-ld=lld -fopenmp=libomp -L/opt/omp -llapack -lgfortran" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie -fno-stack-protector -fuse-ld=lld -fopenmp=libgomp -llapack -lgfortran" \
     -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld"
 else
   set -g FULLARGS $FULLARGS \
-    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld -fopenmp=libomp -L/opt/omp -llapack -lgfortran" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,--build-id=sha1 $pie $inline -fno-stack-protector -fuse-ld=lld -fopenmp=libgomp -llapack -lgfortran" \
     -DCMAKE_SHARED_LINKER_FLAGS="-fuse-ld=lld" \
     -DUSE_CATCH_TESTS=Off \
     -DUSE_GOOGLE_TESTS=Off

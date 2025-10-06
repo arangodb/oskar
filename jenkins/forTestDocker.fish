@@ -61,6 +61,7 @@ and downloadRclone
 and setArchSuffix
 and set -xg HUB_ENTERPRISE "arangodb/enterprise-test:$DOCKER_TAG_JENKINS$archSuffix"
 and buildDockerImage $HUB_ENTERPRISE
+and validateDockerImageIfNeeded $HUB_ENTERPRISE
 and "$DOCKER" push $HUB_ENTERPRISE
 and "$DOCKER" tag $HUB_ENTERPRISE $GCR_REG_PREFIX$HUB_ENTERPRISE
 and "$DOCKER" push $GCR_REG_PREFIX$HUB_ENTERPRISE

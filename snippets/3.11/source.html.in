@@ -8,7 +8,7 @@
     for the individual releases (e.g. <code>@ARANGODB_PACKAGES@</code> branch
     and <code>v@SOURCE_TAG@</code> tag). In general you will not need the
     source packages, unless you want to
-    <a href="https://www.arangodb.com/docs/@ARANGODB_PACKAGES@/cookbook/compiling.html" target="_blank">compile</a>
+    <a href="https://github.com/arangodb/arangodb/blob/@ARANGODB_PACKAGES@/CONTRIBUTING.md#building" target="_blank">compile</a>
     ArangoDB on an operating system not supported by us.
   </p>
   <hr/>
