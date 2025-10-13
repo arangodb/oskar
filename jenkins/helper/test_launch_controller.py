@@ -268,8 +268,8 @@ def read_yaml_suite(name, suite, definition, testfile_definitions, bucket_name, 
                 arangosh_args.append(val)
 
     is_cluster = False
-    if 'type' in params:
-        if params['type'] == "cluster":
+    if 'type' in definition['options']:
+        if definition['options']['type'] == "cluster":
             is_cluster = True
             flags.append('cluster')
         else:
@@ -290,15 +290,17 @@ def read_yaml_suite(name, suite, definition, testfile_definitions, bucket_name, 
         run_job = 'run-linux-tests'
     return {
         "bucket": bucket_name,
-        "name": name if not "name" in params else params['name'],
+        "name": params.get("name", suite),
         "suites": suite,
+        "suite": suite,
         "size": size,
         "flags": flags,
         "args": args.copy(),
+        "priority": params["priority"],
         "arangosh_args": arangosh_args.copy(),
         "params": params.copy(),
         "testfile_definitions": testfile_definitions,
-        "run_job": run_job,,
+        "run_job": run_job,
         "parallelity": params["parallelity"],
     }
 
