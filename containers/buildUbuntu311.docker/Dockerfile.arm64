@@ -35,7 +35,7 @@ FROM prepare
 MAINTAINER Max Neunhoeffer <max@arangodb.com>
 
 ARG ARCH="aarch64"
-ARG SCCACHE_VERSION="0.9.1"
+ARG SCCACHE_VERSION="0.10.0"
 
 # We provide gcc 13.2.0 as well as clang 16.0.6 from Ubunutu 24.04
 
@@ -68,7 +68,7 @@ RUN curl -L https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERS
 
 COPY ./tools/* /tools/
 
-RUN [ "/tools/install.sh", "3.5", "0" ]
+RUN [ "/tools/install.sh", "3.5", "4" ]
 
 COPY ./scripts /scripts
 
