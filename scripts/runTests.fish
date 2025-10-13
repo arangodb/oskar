@@ -7,9 +7,6 @@ if test "$ENTERPRISEEDITION" = "On"
    set ENTERPRISE_ARG "--enterprise"
 end
 
-echo "--------------------------------------------------------------------------------"
-echo $BASE_VERSION
-set
 if test -f "$INNERWORKDIR/ArangoDB/tests/test-definitions.yml"
    echo yaml
    set -xg TD_TYPE yml
