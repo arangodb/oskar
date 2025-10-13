@@ -166,13 +166,14 @@ def validate_params(params, is_cluster):
 
     def parse_number_or_default(key, default_value=None):
         """ check number """
-        if key in params and not isinstance(params[key], int):
-            if params[key][0] == '*': # factor the default
-                params[key] = default_value * parse_number(params[key][1:])
-            else:
-                params[key] = parse_number(params[key])
-        elif default_value is not None:
-            params[key] = default_value
+        if not isinstance(params[key], int):
+            if key in params:
+                if params[key][0] == '*': # factor the default
+                    params[key] = default_value * parse_number(params[key][1:])
+                else:
+                    params[key] = parse_number(params[key])
+            elif default_value is not None:
+                params[key] = default_value
 
     parse_number_or_default("priority", 250)
     parse_number_or_default("parallelity", 4 if is_cluster else 1)
