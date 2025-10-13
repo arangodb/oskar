@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 
-if test "$BASE_VERSION" = "devel"
+if test -f "$INNERWORKDIR/ArangoDB/tests/test-definitions.yml"
    set -xg TEST_DEFINITIONS test-definitions.yml
 else
    set -xg TEST_DEFINITIONS test-definitions.txt

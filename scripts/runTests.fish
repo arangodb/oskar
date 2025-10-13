@@ -9,7 +9,8 @@ end
 
 echo "--------------------------------------------------------------------------------"
 echo $BASE_VERSION
-if test "$BASE_VERSION" = "devel"
+set
+if test -f "$INNERWORKDIR/ArangoDB/tests/test-definitions.yml"
    echo yaml
    set -xg TD_TYPE yml
 else
