@@ -6,7 +6,11 @@ set ENTERPRISE_ARG "--no-enterprise"
 if test "$ENTERPRISEEDITION" = "On"
    set ENTERPRISE_ARG "--enterprise"
 end
+
+echo "--------------------------------------------------------------------------------"
+echo $BASE_VERSION
 if test "$BASE_VERSION" = "devel"
+   echo yaml
    set -xg TD_TYPE yml
 else
    set -xg TD_TYPE txt
