@@ -1,6 +1,6 @@
 #!/usr/bin/env fish
 
-if test "$BASE_VERSION" == "devel"
+if test "$BASE_VERSION" = "devel"
    set -xg TEST_DEFINITIONS test-definitions.yml
 else
    set -xg TEST_DEFINITIONS test-definitions.txt
