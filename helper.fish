@@ -1005,12 +1005,18 @@ function buildTarGzPackageHelper
 end
 
 ## #############################################################################
+## nightly snippets
+## #############################################################################
+
+
+
+## #############################################################################
 ## release snippets
 ## #############################################################################
 
-function makeSnippets
+function makeReleaseSnippets
   if test (count $argv) -lt 2
-    echo "usage: makeSnippets <stage2> <stage1>"
+    echo "usage: makeReleaseSnippets <stage2> <stage1>"
     return 1
   end
 
