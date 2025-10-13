@@ -298,7 +298,8 @@ def read_yaml_suite(name, suite, definition, testfile_definitions, bucket_name, 
         "arangosh_args": arangosh_args.copy(),
         "params": params.copy(),
         "testfile_definitions": testfile_definitions,
-        "run_job": run_job,
+        "run_job": run_job,,
+        "parallelity": params["parallelity"],
     }
 
 def read_yaml_serial_suite(name, definition, testfile_definitions, bucket_name, yaml_struct):
