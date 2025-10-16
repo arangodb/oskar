@@ -90,7 +90,7 @@ def filter_one_test(args, test):
     if IS_COVERAGE:
         if 'coverage' in test:
             return True
-    full = args.full or args.nightly
+    full = args.full
     filters = []
 
     if 'full' in test:
