@@ -386,42 +386,47 @@ def read_yaml_multi_suite(name, definition, testfile_definitions, cli_args):
 
 def read_yaml_bucket_suite(bucket_name, definition, testfile_definitions, cli_args):
     """ convert yaml representation into the internal one """
+    ret = []
     args = {}
     if 'args' in definition:
         args = definition['args']
-    suite_names = []
-    sub_suites = []
-    options_json = []
+    options = []
+    if 'options' in definition:
+        options = definition['options']
     for suite in definition['suites']:
         if isinstance(suite, str):
-            options_json.append({})
-            suite_names.append(suite)
-        else:
-            suite_name = list(suite.keys())[0]
-            if 'options' in suite[suite_name]:
-                if filter_one_test(cli_args, suite[suite_name]['options']):
-                    print(f"skipping {suite}")
-                    continue
-            suite_names.append(suite_name)
-            sub_suites.append(suite[suite_name])
-            if 'args' in suite[suite_name]:
-                options_json.append(get_args(suite[suite_name]['args']))
-            else:
-                options_json.append({})
-    args['optionsJson'] = json.dumps(options_json, separators=(',', ':'))
-    joint_suite_name = ','.join(suite_names)
-    definition['options']['buckets'] = len(suite_names)
-    definition['options']['args'] = args
-
-    return read_yaml_suite(bucket_name,
-                           joint_suite_name,
+            ret.append(
+                read_yaml_suite(suite,
+                           suite,
                            {
                                'options': definition['options'],
                                'name': bucket_name,
                                'args': args,
-                               'suites': definition['suites']
+                               'suites': suite
                            },
                            testfile_definitions)
+            )
+        else:
+            suite_name = list(suite.keys())[0]
+            local_options = options.copy()
+            if 'options' in suite[suite_name]:
+                local_options = local_options | suite[suite_name]['options']
+            local_args = args.copy()
+            if 'args' in suite[suite_name]:
+                local_args = local_args | suite[suite_name]['args']
+            ret.append(
+                read_yaml_suite(suite_name,
+                           suite_name,
+                           {
+                               'options': local_options,
+                               'name': bucket_name,
+                               'args': local_args,
+                               'suites': suite_name
+                           },
+                           testfile_definitions)
+            )
+
+    return ret
 
 def read_definitions(filename, override_branch, args):
     """read test definitions txt"""
@@ -444,7 +449,7 @@ def read_definitions(filename, override_branch, args):
                     suite = testcase[suite_name]
                     if "suites" in suite:
                         if 'options' in suite and 'bucket' in suite['options']:
-                            tests.append(read_yaml_bucket_suite(suite_name, suite, testfile_definitions, args))
+                            tests += read_yaml_bucket_suite(suite_name, suite, testfile_definitions, args)
                         else:
                             tests.append(read_yaml_multi_suite(suite_name, suite, testfile_definitions, args))
                     else:
