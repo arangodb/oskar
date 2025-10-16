@@ -314,7 +314,7 @@ def read_yaml_suite(name, suite, definition, testfile_definitions):
     run_job = 'run-linux-tests'
     return {
         "name": name if not "name" in params else params['name'],
-        "suites": suite,
+        "suite": suite,
         "size": size,
         "flags": flags,
         "args": args.copy(),
@@ -402,7 +402,7 @@ def read_yaml_bucket_suite(bucket_name, definition, testfile_definitions, cli_ar
                                'options': definition['options'],
                                'name': bucket_name,
                                'args': args,
-                               'suites': suite
+                               'suite': suite
                            },
                            testfile_definitions)
             )
@@ -421,7 +421,7 @@ def read_yaml_bucket_suite(bucket_name, definition, testfile_definitions, cli_ar
                                'options': local_options,
                                'name': bucket_name,
                                'args': local_args,
-                               'suites': suite_name
+                               'suite': suite_name
                            },
                            testfile_definitions)
             )
