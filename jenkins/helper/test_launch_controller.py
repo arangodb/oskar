@@ -83,6 +83,23 @@ def filter_tests(args, tests):
         return res_sg + res_cl
     return list_generator(args.cluster)
 
+def filter_one_test(args, test):
+    """filter testcase by operations target Single/Cluster/full"""
+    if args.all:
+        return False
+    if IS_COVERAGE:
+        if 'coverage' in test:
+            return True
+    full = args.full or args.nightly
+    filters = []
+
+    if 'full' in test:
+        if full and not test['full']:
+            return True
+        if not full and test['full']:
+            return True
+    return False
+
 formats = {
     "dump": generate_dump_output,
     "launch": launch,
@@ -91,6 +108,7 @@ formats = {
 known_flags = {
     "cluster": "this test requires a cluster",
     "single": "this test requires a single server",
+    "mixed": "some buckets will run cluster, some not.",
     "full": "this test is only executed in full tests",
     "!full": "this test is only executed in non-full tests",
     "gtest": "only the testsuites starting with 'gtest' are to be executed",
@@ -165,7 +183,7 @@ def validate_params(params, is_cluster):
             raise Exception(f"invalid numeric value: {value}") from exc
 
     def parse_number_or_default(key, default_value=None):
-        """ check number """
+        """check number"""
         if key in params and not isinstance(params[key], int):
             if params[key][0] == '*': # factor the default
                 params[key] = default_value * parse_number(params[key][1:])
@@ -182,7 +200,7 @@ def validate_params(params, is_cluster):
 
 
 def validate_flags(flags):
-    """ check whether target flags are valid """
+    """check whether target flags are valid"""
     if "cluster" in flags and "single" in flags:
         raise Exception("`cluster` and `single` specified for the same test")
     if "full" in flags and "!full" in flags:
@@ -190,7 +208,7 @@ def validate_flags(flags):
 
 
 def read_definition_line(line):
-    """ parse one test definition line """
+    """parse one test definition line"""
     bits = line.split()
     if len(bits) < 1:
         raise Exception("expected at least one argument: <testname>")
@@ -226,18 +244,23 @@ def read_definition_line(line):
     validate_flags(flags)
     params = validate_params(params, 'cluster' in flags)
 
+    if len(arangosh_args) == 0:
+        arangosh_args = ""
+    run_job = 'run-linux-tests'
     return {
         "name": params.get("name", suites),
-        "suite": suites,
+        "suites": suites,
         "priority": params["priority"],
         "parallelity": params["parallelity"],
         "flags": flags,
         "args": args,
         "arangosh_args": arangosh_args,
-        "params": params
+        "params": params,
+        "testfile_definitions": testfile_definitions,
+        "run_job": run_job,
     }
 
-def read_yaml_suite(name, suite, definition, testfile_definitions, bucket_name, yaml_struct):
+def read_yaml_suite(name, suite, definition, testfile_definitions):
     """ convert yaml representation into the internal one """
     if not 'options' in definition:
         definition['options'] = {}
@@ -267,16 +290,20 @@ def read_yaml_suite(name, suite, definition, testfile_definitions, bucket_name, 
             else:
                 arangosh_args.append(val)
 
+    medium_size = False
     is_cluster = False
-    if 'type' in definition['options']:
-        if definition['options']['type'] == "cluster":
-            is_cluster = True
+    if 'type' in params:
+        if params['type'] == "cluster":
+            medium_size = True
             flags.append('cluster')
+        elif params['type'] == "mixed":
+            medium_size = True
+            flags.append('mixed')
         else:
             flags.append('single')
-    size = "medium" if is_cluster else "small"
-    size = size if not "size" in params else params['size']
     params = validate_params(definition['options'], is_cluster)
+    size = "medium" if medium_size else "small"
+    size = size if not "size" in params else params['size']
 
     if 'full' in params:
         flags.append("full" if params["full"] else "!full")
@@ -284,15 +311,10 @@ def read_yaml_suite(name, suite, definition, testfile_definitions, bucket_name, 
         flags.append("coverage" if params["coverage"] else "!coverage")
     if 'sniff' in params:
         flags.append("sniff" if params["sniff"] else "!sniff")
-    if yaml_struct != {}:
-        run_job = yaml_struct['add-yaml']['derives-to']
-    else:
-        run_job = 'run-linux-tests'
+    run_job = 'run-linux-tests'
     return {
-        "bucket": bucket_name,
-        "name": params.get("name", suite),
+        "name": name if not "name" in params else params['name'],
         "suites": suite,
-        "suite": suite,
         "size": size,
         "flags": flags,
         "args": args.copy(),
@@ -304,7 +326,27 @@ def read_yaml_suite(name, suite, definition, testfile_definitions, bucket_name, 
         "parallelity": params["parallelity"],
     }
 
-def read_yaml_serial_suite(name, definition, testfile_definitions, bucket_name, yaml_struct):
+def get_args(args):
+    """ serialize args into json similar to fromArgv in testing.js """
+    sub_args = {}
+    for key in args.keys():
+        value = args[key]
+        if ":" in key:
+            keyparts = key.split(":")
+            if not keyparts[0] in sub_args:
+                sub_args[keyparts[0]] = {}
+            sub_args[keyparts[0]][keyparts[1]] = value
+        elif key in sub_args:
+            if isinstance(sub_args[key], list):
+                sub_args[key].append(value)
+            else:
+                sub_args[key] = [value]
+        else:
+            sub_args[key] = value
+    return sub_args
+
+
+def read_yaml_multi_suite(name, definition, testfile_definitions, cli_args):
     """ convert yaml representation into the internal one """
     generated_definition = {
     }
@@ -320,57 +362,97 @@ def read_yaml_serial_suite(name, definition, testfile_definitions, bucket_name, 
         suite_strs = []
         options_json = []
         for suite in definition['suites']:
-            suite_name = list(suite.keys())[0]
-            if 'args' in suite[suite_name]:
-                options_json.append(suite[suite_name]['args'])
+            if isinstance(suite, str):
+                options_json.append({})
+                suite_name = suite
+            else:
+                suite_name = list(suite.keys())[0]
+                if not isinstance(suite, dict):
+                    raise Exception(f"suite should be a dict, it is {type(suite)}")
+                if 'options' in suite[suite_name]:
+                    if filter_one_test(cli_args, suite[suite_name]['options']):
+                        print(f"skipping {suite}")
+                        continue
+                if 'args' in suite[suite_name]:
+                    options_json.append(get_args(suite[suite_name]['args']))
+                else:
+                    options_json.append({})
             suite_strs.append(suite_name)
         generated_name = ','.join(suite_strs)
         args['optionsJson'] = json.dumps(options_json, separators=(',', ':'))
     if args != {}:
         generated_definition['args'] = args
-    name = generated_name
-    if 'name' in definition:
-        name = definition['name']
-    return read_yaml_suite(name, generated_name, generated_definition, testfile_definitions, bucket_name, yaml_struct)
+    return read_yaml_suite(name, generated_name, generated_definition, testfile_definitions)
 
-def read_yaml_bucket_suite(name, definition, testfile_definitions, bucket_name, yaml_struct):
+def read_yaml_bucket_suite(bucket_name, definition, testfile_definitions, cli_args):
     """ convert yaml representation into the internal one """
-    bucket_name = definition['name']
-    ret = []
+    args = {}
+    if 'args' in definition:
+        args = definition['args']
+    suite_names = []
+    sub_suites = []
+    options_json = []
     for suite in definition['suites']:
-        suite_name = list(suite.keys())[0]
-        ret.append(read_yaml_suite(suite_name, suite_name, suite[suite_name], testfile_definitions, bucket_name, yaml_struct))
-    return ret
+        if isinstance(suite, str):
+            options_json.append({})
+            suite_names.append(suite)
+        else:
+            suite_name = list(suite.keys())[0]
+            if 'options' in suite[suite_name]:
+                if filter_one_test(cli_args, suite[suite_name]['options']):
+                    print(f"skipping {suite}")
+                    continue
+            suite_names.append(suite_name)
+            sub_suites.append(suite[suite_name])
+            if 'args' in suite[suite_name]:
+                options_json.append(get_args(suite[suite_name]['args']))
+            else:
+                options_json.append({})
+    args['optionsJson'] = json.dumps(options_json, separators=(',', ':'))
+    joint_suite_name = ','.join(suite_names)
+    definition['options']['buckets'] = len(suite_names)
+    definition['options']['args'] = args
 
-def read_definitions(filename):
-    """ read test definitions txt """
+    return read_yaml_suite(bucket_name,
+                           joint_suite_name,
+                           {
+                               'options': definition['options'],
+                               'name': bucket_name,
+                               'args': args,
+                               'suites': definition['suites']
+                           },
+                           testfile_definitions)
+
+def read_definitions(filename, override_branch, args):
+    """read test definitions txt"""
     tests = []
     has_error = False
     testfile_definitions = {}
     yaml_text = ""
-    have_yaml = False
-    parsed_yaml = {}
     if filename.endswith(".yml"):
         with open(filename, "r", encoding="utf-8") as filep:
             config = yaml.safe_load(filep)
-            filtered_config = []
+            if isinstance(config, dict):
+                if "add-yaml" in config:
+                    parsed_yaml = {"add-yaml": copy.deepcopy(config["add-yaml"])}
+                if "jobProperties" in config:
+                    testfile_definitions = copy.deepcopy(config["jobProperties"])
+                config = config['tests']
             for testcase in config:
                 suite_name = list(testcase.keys())[0]
-                if suite_name == "add-yaml":
-                    parsed_yaml = {"add-yaml": copy.deepcopy(testcase["add-yaml"])}
-                elif suite_name == "jobProperties":
-                    testfile_definitions = copy.deepcopy(testcase["jobProperties"])
-                else:
-                    filtered_config.append(testcase)
-            for testcase in filtered_config:
-                suite_name = list(testcase.keys())[0]
-                if suite_name == "serial":
-                    tests.append(read_yaml_serial_suite(suite_name, testcase, testfile_definitions, None, parsed_yaml))
-                elif suite_name == "bucket":
-                    tests += read_yaml_bucket_suite(suite_name, testcase, testfile_definitions, None, parsed_yaml)
-                    None
-                else:
-                    tests.append(read_yaml_suite(suite_name, suite_name, testcase[suite_name], testfile_definitions, None, parsed_yaml))
+                try:
+                    suite = testcase[suite_name]
+                    if "suites" in suite:
+                        if 'options' in suite and 'bucket' in suite['options']:
+                            tests.append(read_yaml_bucket_suite(suite_name, suite, testfile_definitions, args))
+                        else:
+                            tests.append(read_yaml_multi_suite(suite_name, suite, testfile_definitions, args))
+                    else:
+                        tests.append(read_yaml_suite(suite_name, suite_name,
+                                                     suite, testfile_definitions))
+                except Exception as ex:
+                    print(f"while parsing {suite_name} {testcase}")
+                    raise ex
     else:
         with open(filename, "r", encoding="utf-8") as filep:
             for line_no, line in enumerate(filep):
@@ -398,7 +480,7 @@ def main():
     """ entrypoint """
     try:
         args = parse_arguments()
-        tests = read_definitions(args.definitions)
+        tests = read_definitions(args.definitions, "", args)
         if args.validate_only:
             return  # nothing left to do
         tests = filter_tests(args, tests)
