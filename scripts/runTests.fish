@@ -7,13 +7,20 @@ if test "$ENTERPRISEEDITION" = "On"
    set ENTERPRISE_ARG "--enterprise"
 end
 
+if test -f "$INNERWORKDIR/ArangoDB/tests/test-definitions.yml"
+   echo yaml
+   set -xg TD_TYPE yml
+else
+   set -xg TD_TYPE txt
+end
+
 ################################################################################
 ## Single tests: runtime,command
 ################################################################################
 
 function launchSingleTests
   echo "Using test definitions from arangodb repo"
-  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch "$ENTERPRISE_ARG"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.$TD_TYPE" -f launch "$ENTERPRISE_ARG"
   set x $status
   if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
     set -xg result "GOOD"
@@ -28,7 +35,7 @@ end
 ################################################################################
 
 function launchGTest
-  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --gtest "$ENTERPRISE_ARG"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.$TD_TYPE" -f launch --gtest "$ENTERPRISE_ARG"
   set x $status
   if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
     set -xg result "GOOD"
@@ -44,7 +51,7 @@ end
 
 function launchClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --cluster "$ENTERPRISE_ARG"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.$TD_TYPE" -f launch --cluster "$ENTERPRISE_ARG"
   set x $status
   if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
     set -xg result "GOOD"
@@ -60,7 +67,7 @@ end
 
 function launchSingleClusterTests
   echo "Using test definitions from arangodb repo"
-  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.txt" -f launch --single_cluster "$ENTERPRISE_ARG"
+  python3 -u "$WORKSPACE/jenkins/helper/test_launch_controller.py" "$INNERWORKDIR/ArangoDB/tests/test-definitions.$TD_TYPE" -f launch --single_cluster "$ENTERPRISE_ARG"
   set x $status
   if test "$x" = "0" -a -f $INNERWORKDIR/testRuns.html
     set -xg result "GOOD"
