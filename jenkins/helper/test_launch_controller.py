@@ -291,7 +291,10 @@ def read_yaml_suite(name, suite, definition, testfile_definitions):
                 arangosh_args.append(val)
 
     medium_size = False
-    is_cluster = False
+    is_cluster = (definition['options'] and
+                  'type' in definition['options'] and
+                  definition['options']['type'] == 'cluster')
+    params = validate_params(definition['options'], is_cluster)
     if 'type' in params:
         if params['type'] == "cluster":
             medium_size = True
@@ -301,7 +304,6 @@ def read_yaml_suite(name, suite, definition, testfile_definitions):
             flags.append('mixed')
         else:
             flags.append('single')
-    params = validate_params(definition['options'], is_cluster)
     size = "medium" if medium_size else "small"
     size = size if not "size" in params else params['size']
 
