@@ -352,36 +352,32 @@ def read_yaml_multi_suite(name, definition, testfile_definitions, cli_args):
     """ convert yaml representation into the internal one """
     generated_definition = {
     }
+    args = {}
     if 'options' in definition:
         generated_definition['options'] = definition['options']
-    args = {}
-    generated_name = ""
     if 'args' in definition:
         args = definition['args'].copy()
-    if isinstance(definition['suites'][0], str):
-        generated_name = ','.join(definition['suites'])
-    else:
-        suite_strs = []
-        options_json = []
-        for suite in definition['suites']:
-            if isinstance(suite, str):
-                options_json.append({})
-                suite_name = suite
+    suite_strs = []
+    options_json = []
+    for suite in definition['suites']:
+        if isinstance(suite, str):
+            options_json.append({})
+            suite_name = suite
+        else:
+            suite_name = list(suite.keys())[0]
+            if not isinstance(suite, dict):
+                raise Exception(f"suite should be a dict, it is {type(suite)}")
+            if 'options' in suite[suite_name]:
+                if filter_one_test(cli_args, suite[suite_name]['options']):
+                    print(f"skipping {suite}")
+                    continue
+            if 'args' in suite[suite_name]:
+                options_json.append(get_args(suite[suite_name]['args']))
             else:
-                suite_name = list(suite.keys())[0]
-                if not isinstance(suite, dict):
-                    raise Exception(f"suite should be a dict, it is {type(suite)}")
-                if 'options' in suite[suite_name]:
-                    if filter_one_test(cli_args, suite[suite_name]['options']):
-                        print(f"skipping {suite}")
-                        continue
-                if 'args' in suite[suite_name]:
-                    options_json.append(get_args(suite[suite_name]['args']))
-                else:
-                    options_json.append({})
-            suite_strs.append(suite_name)
-        generated_name = ','.join(suite_strs)
-        args['optionsJson'] = json.dumps(options_json, separators=(',', ':'))
+                options_json.append({})
+        suite_strs.append(suite_name)
+    generated_name = ','.join(suite_strs)
+    args['optionsJson'] = json.dumps(options_json, separators=(',', ':'))
     if args != {}:
         generated_definition['args'] = args
     return read_yaml_suite(name, generated_name, generated_definition, testfile_definitions)
@@ -390,11 +386,11 @@ def read_yaml_bucket_suite(bucket_name, definition, testfile_definitions, cli_ar
     """ convert yaml representation into the internal one """
     ret = []
     args = {}
-    if 'args' in definition:
-        args = definition['args']
     options = []
     if 'options' in definition:
         options = definition['options']
+    if 'args' in definition:
+        args = definition['args']
     for suite in definition['suites']:
         if isinstance(suite, str):
             ret.append(
