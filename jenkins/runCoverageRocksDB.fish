@@ -1,6 +1,10 @@
 #!/usr/bin/env fish
 
-set -xg TEST_DEFINITIONS test-definitions.txt
+if test -f "$INNERWORKDIR/ArangoDB/tests/test-definitions.yml"
+   set -xg TEST_DEFINITIONS test-definitions.yml
+else
+   set -xg TEST_DEFINITIONS test-definitions.txt
+end
 if test (count $argv) -gt 0
     set -xg TEST_DEFINITIONS $argv[1]
 end
