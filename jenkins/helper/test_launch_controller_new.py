@@ -132,6 +132,61 @@ def convert_job_to_legacy_format(
         else []
     )
 
+    # For multi-suite jobs, add optionsJson
+    if len(job.suites) > 1:
+        import json
+
+        options_json = []
+        for suite in job.suites:
+            # Convert suite arguments to dict format for optionsJson
+            suite_args = {}
+            if suite.arguments and suite.arguments.extra_args:
+                # Parse extra_args back into dict format
+                i = 0
+                while i < len(suite.arguments.extra_args):
+                    arg = suite.arguments.extra_args[i]
+                    if arg.startswith("--"):
+                        key = arg[2:]  # Remove -- prefix
+
+                        # Get the value
+                        value = None
+                        if i + 1 < len(suite.arguments.extra_args):
+                            next_arg = suite.arguments.extra_args[i + 1]
+                            if not next_arg.startswith("--"):
+                                # Convert string booleans back to bool
+                                if next_arg == "true":
+                                    value = True
+                                elif next_arg == "false":
+                                    value = False
+                                else:
+                                    value = next_arg
+                                i += 2
+                            else:
+                                # Boolean flag without explicit value
+                                value = True
+                                i += 1
+                        else:
+                            # Boolean flag at end
+                            value = True
+                            i += 1
+
+                        # Handle colon-separated keys (nest them)
+                        if ":" in key:
+                            keyparts = key.split(":", 1)
+                            parent_key, child_key = keyparts[0], keyparts[1]
+                            if parent_key not in suite_args:
+                                suite_args[parent_key] = {}
+                            suite_args[parent_key][child_key] = value
+                        else:
+                            suite_args[key] = value
+                    else:
+                        i += 1
+
+            options_json.append(suite_args)
+
+        # Add optionsJson as a command-line argument
+        args.extend(["--optionsJson", json.dumps(options_json, separators=(",", ":"))])
+
     # Determine priority (default 250)
     priority = job.options.priority if job.options.priority is not None else 250
 
