@@ -189,7 +189,7 @@ def validate_params(params, is_cluster):
                 params[key] = default_value * parse_number(params[key][1:])
             else:
                 params[key] = parse_number(params[key])
-        elif default_value is not None:
+        elif key not in params and default_value is not None:
             params[key] = default_value
 
     parse_number_or_default("priority", 250)
