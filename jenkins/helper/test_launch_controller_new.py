@@ -78,16 +78,22 @@ def parse_arguments():
 
 
 def convert_job_to_legacy_format(
-    job: TestJob, deployment_type: DeploymentType, prefix: str = ""
+    job: TestJob,
+    deployment_type: DeploymentType,
+    prefix: str = "",
+    suite_index: int = None,
 ) -> dict:
     """
     Convert a TestJob from the clean data model to the legacy dict format
     expected by dump_handler and launch_handler.
 
+    For Jenkins, multi-suite jobs are split into separate jobs (one per suite).
+
     Args:
         job: TestJob instance
         deployment_type: The deployment type to use (may differ from job.options.deployment_type)
         prefix: Prefix for the test name (e.g., "sg_" or "cl_")
+        suite_index: If provided, only convert the suite at this index (for splitting multi-suite jobs)
 
     Returns:
         Dictionary in legacy format with keys: name, prefix, priority, parallelity,
@@ -125,67 +131,84 @@ def convert_job_to_legacy_format(
     if job.options.suffix:
         params["suffix"] = job.options.suffix
 
-    # Build args list (use extra_args from TestArguments)
-    args = (
-        job.arguments.extra_args.copy()
-        if job.arguments and job.arguments.extra_args
-        else []
-    )
+    # Determine which suite(s) to include
+    # If suite_index is provided, we're splitting a multi-suite job
+    if suite_index is not None:
+        suites_to_process = [job.suites[suite_index]]
+        # Use suite-specific args if available
+        suite_args = (
+            suites_to_process[0].arguments.extra_args
+            if suites_to_process[0].arguments
+            else []
+        )
+        args = (
+            list(job.arguments.extra_args) + suite_args if job.arguments else suite_args
+        )
+    else:
+        suites_to_process = job.suites
+        # Build args list (use extra_args from TestArguments)
+        args = (
+            job.arguments.extra_args.copy()
+            if job.arguments and job.arguments.extra_args
+            else []
+        )
 
-    # For multi-suite jobs, add optionsJson
-    if len(job.suites) > 1:
-        import json
+        # For multi-suite jobs (when not splitting), add optionsJson
+        if len(job.suites) > 1:
+            import json
 
-        options_json = []
-        for suite in job.suites:
-            # Convert suite arguments to dict format for optionsJson
-            suite_args = {}
-            if suite.arguments and suite.arguments.extra_args:
-                # Parse extra_args back into dict format
-                i = 0
-                while i < len(suite.arguments.extra_args):
-                    arg = suite.arguments.extra_args[i]
-                    if arg.startswith("--"):
-                        key = arg[2:]  # Remove -- prefix
+            options_json = []
+            for suite in job.suites:
+                # Convert suite arguments to dict format for optionsJson
+                suite_args = {}
+                if suite.arguments and suite.arguments.extra_args:
+                    # Parse extra_args back into dict format
+                    i = 0
+                    while i < len(suite.arguments.extra_args):
+                        arg = suite.arguments.extra_args[i]
+                        if arg.startswith("--"):
+                            key = arg[2:]  # Remove -- prefix
 
-                        # Get the value
-                        value = None
-                        if i + 1 < len(suite.arguments.extra_args):
-                            next_arg = suite.arguments.extra_args[i + 1]
-                            if not next_arg.startswith("--"):
-                                # Convert string booleans back to bool
-                                if next_arg == "true":
-                                    value = True
-                                elif next_arg == "false":
-                                    value = False
+                            # Get the value
+                            value = None
+                            if i + 1 < len(suite.arguments.extra_args):
+                                next_arg = suite.arguments.extra_args[i + 1]
+                                if not next_arg.startswith("--"):
+                                    # Convert string booleans back to bool
+                                    if next_arg == "true":
+                                        value = True
+                                    elif next_arg == "false":
+                                        value = False
+                                    else:
+                                        value = next_arg
+                                    i += 2
                                 else:
-                                    value = next_arg
-                                i += 2
+                                    # Boolean flag without explicit value
+                                    value = True
+                                    i += 1
                             else:
-                                # Boolean flag without explicit value
+                                # Boolean flag at end
                                 value = True
                                 i += 1
+
+                            # Handle colon-separated keys (nest them)
+                            if ":" in key:
+                                keyparts = key.split(":", 1)
+                                parent_key, child_key = keyparts[0], keyparts[1]
+                                if parent_key not in suite_args:
+                                    suite_args[parent_key] = {}
+                                suite_args[parent_key][child_key] = value
+                            else:
+                                suite_args[key] = value
                         else:
-                            # Boolean flag at end
-                            value = True
                             i += 1
 
-                        # Handle colon-separated keys (nest them)
-                        if ":" in key:
-                            keyparts = key.split(":", 1)
-                            parent_key, child_key = keyparts[0], keyparts[1]
-                            if parent_key not in suite_args:
-                                suite_args[parent_key] = {}
-                            suite_args[parent_key][child_key] = value
-                        else:
-                            suite_args[key] = value
-                    else:
-                        i += 1
+                options_json.append(suite_args)
 
-            options_json.append(suite_args)
-
-        # Add optionsJson as a command-line argument
-        args.extend(["--optionsJson", json.dumps(options_json, separators=(",", ":"))])
+            # Add optionsJson as a command-line argument
+            args.extend(
+                ["--optionsJson", json.dumps(options_json, separators=(",", ":"))]
+            )
 
     # Determine priority (default 250)
     priority = job.options.priority if job.options.priority is not None else 250
@@ -196,8 +219,14 @@ def convert_job_to_legacy_format(
     else:
         parallelity = 4 if is_cluster else 1
 
+    # Determine job name - use suite name if we're splitting
+    if suite_index is not None:
+        job_name = suites_to_process[0].name
+    else:
+        job_name = job.name
+
     return {
-        "name": job.name,
+        "name": job_name,
         "prefix": prefix,
         "priority": priority,
         "parallelity": parallelity,
@@ -243,8 +272,16 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
         # If --all flag is set, skip filtering
         if args.all:
             deployment_type = job.options.deployment_type or DeploymentType.SINGLE
-            legacy_test = convert_job_to_legacy_format(job, deployment_type)
-            legacy_tests.append(legacy_test)
+            # For Jenkins, split multi-suite jobs into separate jobs
+            if len(job.suites) > 1:
+                for suite_idx in range(len(job.suites)):
+                    legacy_test = convert_job_to_legacy_format(
+                        job, deployment_type, suite_index=suite_idx
+                    )
+                    legacy_tests.append(legacy_test)
+            else:
+                legacy_test = convert_job_to_legacy_format(job, deployment_type)
+                legacy_tests.append(legacy_test)
             continue
 
         # Determine which deployment types to test
@@ -306,9 +343,17 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
             # in the YAML format. Those flags only existed in the old text-based format.
             # The old controller didn't have these in YAML either.
 
-            # Convert and add to list
-            legacy_test = convert_job_to_legacy_format(job, deployment_type, prefix)
-            legacy_tests.append(legacy_test)
+            # For Jenkins, split multi-suite jobs into separate jobs (one per suite)
+            if len(job.suites) > 1:
+                for suite_idx in range(len(job.suites)):
+                    legacy_test = convert_job_to_legacy_format(
+                        job, deployment_type, prefix, suite_index=suite_idx
+                    )
+                    legacy_tests.append(legacy_test)
+            else:
+                # Single-suite job - convert normally
+                legacy_test = convert_job_to_legacy_format(job, deployment_type, prefix)
+                legacy_tests.append(legacy_test)
 
     return legacy_tests
 
