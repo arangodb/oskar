@@ -113,15 +113,29 @@ def convert_job_to_legacy_format(
             flags.append("mixed")
 
     # Add full/!full flag
-    if job.options.full is True:
+    # When splitting by suite, use suite-level full if available
+    full_value = None
+    if suite_index is not None and job.suites[suite_index].options:
+        full_value = job.suites[suite_index].options.full
+    if full_value is None:
+        full_value = job.options.full
+
+    if full_value is True:
         flags.append("full")
-    elif job.options.full is False:
+    elif full_value is False:
         flags.append("!full")
 
     # Add coverage flag
-    if job.options.coverage is True:
+    # When splitting by suite, use suite-level coverage if available
+    coverage_value = None
+    if suite_index is not None and job.suites[suite_index].options:
+        coverage_value = job.suites[suite_index].options.coverage
+    if coverage_value is None:
+        coverage_value = job.options.coverage
+
+    if coverage_value is True:
         flags.append("coverage")
-    elif job.options.coverage is False:
+    elif coverage_value is False:
         flags.append("!coverage")
 
     # Build params dict
@@ -341,38 +355,42 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
             # Check if job should be included based on deployment type compatibility
             # Only apply filtering in normal mode (not single_cluster mode)
             if filter_mode is not None:
-                job_deployment = job.options.deployment_type or DeploymentType.SINGLE
+                job_deployment = job.options.deployment_type
 
-                # Skip if job explicitly requires single and we're testing cluster
-                if (
-                    job_deployment == DeploymentType.SINGLE
-                    and filter_mode == DeploymentType.CLUSTER
-                ):
-                    continue
+                # Jobs without explicit deployment_type can run in any mode
+                if job_deployment is not None:
+                    # Skip if job explicitly requires single and we're testing cluster
+                    if (
+                        job_deployment == DeploymentType.SINGLE
+                        and filter_mode == DeploymentType.CLUSTER
+                    ):
+                        continue
 
-                # Skip if job explicitly requires cluster and we're testing single
-                if (
-                    job_deployment == DeploymentType.CLUSTER
-                    and filter_mode == DeploymentType.SINGLE
-                ):
-                    continue
+                    # Skip if job explicitly requires cluster and we're testing single
+                    if (
+                        job_deployment == DeploymentType.CLUSTER
+                        and filter_mode == DeploymentType.SINGLE
+                    ):
+                        continue
             else:
                 # In single_cluster mode, use deployment_type for filtering
-                job_deployment = job.options.deployment_type or DeploymentType.SINGLE
+                job_deployment = job.options.deployment_type
 
-                # Skip if job explicitly requires single and we're testing cluster
-                if (
-                    job_deployment == DeploymentType.SINGLE
-                    and deployment_type == DeploymentType.CLUSTER
-                ):
-                    continue
+                # Jobs without explicit deployment_type can run in any mode
+                if job_deployment is not None:
+                    # Skip if job explicitly requires single and we're testing cluster
+                    if (
+                        job_deployment == DeploymentType.SINGLE
+                        and deployment_type == DeploymentType.CLUSTER
+                    ):
+                        continue
 
-                # Skip if job explicitly requires cluster and we're testing single
-                if (
-                    job_deployment == DeploymentType.CLUSTER
-                    and deployment_type == DeploymentType.SINGLE
-                ):
-                    continue
+                    # Skip if job explicitly requires cluster and we're testing single
+                    if (
+                        job_deployment == DeploymentType.CLUSTER
+                        and deployment_type == DeploymentType.SINGLE
+                    ):
+                        continue
 
             # Apply full/PR filter
             if job.options.full is True and not is_full:
@@ -390,10 +408,24 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
                     legacy_test = convert_job_to_legacy_format(
                         job, deployment_type, prefix, suite_index=suite_idx
                     )
+                    # In cluster filtering mode, add the cluster flag if not present
+                    # (old controller only adds flag for cluster mode, not single mode)
+                    if (
+                        filter_mode == DeploymentType.CLUSTER
+                        and "cluster" not in legacy_test["flags"]
+                    ):
+                        legacy_test["flags"].append("cluster")
                     legacy_tests.append(legacy_test)
             else:
                 # Convert to legacy format
                 legacy_test = convert_job_to_legacy_format(job, deployment_type, prefix)
+                # In cluster filtering mode, add the cluster flag if not present
+                # (old controller only adds flag for cluster mode, not single mode)
+                if (
+                    filter_mode == DeploymentType.CLUSTER
+                    and "cluster" not in legacy_test["flags"]
+                ):
+                    legacy_test["flags"].append("cluster")
                 legacy_tests.append(legacy_test)
 
     return legacy_tests
