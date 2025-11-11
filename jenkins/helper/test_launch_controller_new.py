@@ -236,6 +236,35 @@ def convert_job_to_legacy_format(
     }
 
 
+def _convert_and_split_job(
+    job: TestJob, deployment_type: DeploymentType, prefix: str = ""
+) -> List[dict]:
+    """
+    Convert a job to legacy format, splitting multi-suite jobs if needed.
+
+    For Jenkins, multi-suite jobs are split into separate jobs (one per suite).
+
+    Args:
+        job: TestJob instance
+        deployment_type: Deployment type to use
+        prefix: Prefix for test name (e.g., "sg_" or "cl_")
+
+    Returns:
+        List of legacy format dictionaries (one per suite for multi-suite jobs)
+    """
+    if len(job.suites) > 1:
+        # Split multi-suite job into separate jobs
+        return [
+            convert_job_to_legacy_format(
+                job, deployment_type, prefix, suite_index=suite_idx
+            )
+            for suite_idx in range(len(job.suites))
+        ]
+    else:
+        # Single-suite job
+        return [convert_job_to_legacy_format(job, deployment_type, prefix)]
+
+
 def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
     """
     Filter jobs based on command-line arguments and convert to legacy format.
@@ -272,16 +301,7 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
         # If --all flag is set, skip filtering
         if args.all:
             deployment_type = job.options.deployment_type or DeploymentType.SINGLE
-            # For Jenkins, split multi-suite jobs into separate jobs
-            if len(job.suites) > 1:
-                for suite_idx in range(len(job.suites)):
-                    legacy_test = convert_job_to_legacy_format(
-                        job, deployment_type, suite_index=suite_idx
-                    )
-                    legacy_tests.append(legacy_test)
-            else:
-                legacy_test = convert_job_to_legacy_format(job, deployment_type)
-                legacy_tests.append(legacy_test)
+            legacy_tests.extend(_convert_and_split_job(job, deployment_type))
             continue
 
         # Determine which deployment types to test
@@ -343,17 +363,8 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
             # in the YAML format. Those flags only existed in the old text-based format.
             # The old controller didn't have these in YAML either.
 
-            # For Jenkins, split multi-suite jobs into separate jobs (one per suite)
-            if len(job.suites) > 1:
-                for suite_idx in range(len(job.suites)):
-                    legacy_test = convert_job_to_legacy_format(
-                        job, deployment_type, prefix, suite_index=suite_idx
-                    )
-                    legacy_tests.append(legacy_test)
-            else:
-                # Single-suite job - convert normally
-                legacy_test = convert_job_to_legacy_format(job, deployment_type, prefix)
-                legacy_tests.append(legacy_test)
+            # Convert and split multi-suite jobs if needed
+            legacy_tests.extend(_convert_and_split_job(job, deployment_type, prefix))
 
     return legacy_tests
 
