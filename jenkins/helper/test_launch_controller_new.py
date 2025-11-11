@@ -87,13 +87,11 @@ def convert_job_to_legacy_format(
     Convert a TestJob from the clean data model to the legacy dict format
     expected by dump_handler and launch_handler.
 
-    For Jenkins, multi-suite jobs are split into separate jobs (one per suite).
-
     Args:
         job: TestJob instance
         deployment_type: The deployment type to use (may differ from job.options.deployment_type)
         prefix: Prefix for the test name (e.g., "sg_" or "cl_")
-        suite_index: If provided, only convert the suite at this index (for splitting multi-suite jobs)
+        suite_index: If provided, extract only this suite (for buckets:auto splitting)
 
     Returns:
         Dictionary in legacy format with keys: name, prefix, priority, parallelity,
@@ -105,13 +103,14 @@ def convert_job_to_legacy_format(
     # Build flags list
     flags = []
 
-    # Add deployment type flag
-    if deployment_type == DeploymentType.SINGLE:
-        flags.append("single")
-    elif deployment_type == DeploymentType.CLUSTER:
-        flags.append("cluster")
-    elif deployment_type == DeploymentType.MIXED:
-        flags.append("mixed")
+    # Add deployment type flag (only if explicitly set)
+    if deployment_type is not None:
+        if deployment_type == DeploymentType.SINGLE:
+            flags.append("single")
+        elif deployment_type == DeploymentType.CLUSTER:
+            flags.append("cluster")
+        elif deployment_type == DeploymentType.MIXED:
+            flags.append("mixed")
 
     # Add full/!full flag
     if job.options.full is True:
@@ -131,21 +130,25 @@ def convert_job_to_legacy_format(
     if job.options.suffix:
         params["suffix"] = job.options.suffix
 
-    # Determine which suite(s) to include
-    # If suite_index is provided, we're splitting a multi-suite job
+    # When suite_index is provided (buckets:auto splitting), extract only that suite
     if suite_index is not None:
-        suites_to_process = [job.suites[suite_index]]
-        # Use suite-specific args if available
-        suite_args = (
-            suites_to_process[0].arguments.extra_args
-            if suites_to_process[0].arguments
+        suite = job.suites[suite_index]
+        job_name = suite.name
+
+        # Build args by combining job-level and suite-specific arguments
+        # Start with job-level args
+        args = (
+            job.arguments.extra_args.copy()
+            if job.arguments and job.arguments.extra_args
             else []
         )
-        args = (
-            list(job.arguments.extra_args) + suite_args if job.arguments else suite_args
-        )
+        # Add suite-specific args
+        if suite.arguments and suite.arguments.extra_args:
+            args.extend(suite.arguments.extra_args)
     else:
-        suites_to_process = job.suites
+        # Regular job - use job name and job-level arguments
+        job_name = job.name
+
         # Build args list (use extra_args from TestArguments)
         args = (
             job.arguments.extra_args.copy()
@@ -153,7 +156,7 @@ def convert_job_to_legacy_format(
             else []
         )
 
-        # For multi-suite jobs (when not splitting), add optionsJson
+        # For multi-suite jobs, add optionsJson
         if len(job.suites) > 1:
             import json
 
@@ -211,19 +214,30 @@ def convert_job_to_legacy_format(
             )
 
     # Determine priority (default 250)
-    priority = job.options.priority if job.options.priority is not None else 250
+    # When splitting by suite, use suite-level priority if available
+    if (
+        suite_index is not None
+        and job.suites[suite_index].options
+        and job.suites[suite_index].options.priority is not None
+    ):
+        priority = job.suites[suite_index].options.priority
+    elif job.options.priority is not None:
+        priority = job.options.priority
+    else:
+        priority = 250
 
     # Determine parallelity (default: 4 for cluster, 1 for single)
-    if job.options.parallelity is not None:
+    # When splitting by suite, use suite-level parallelity if available
+    if (
+        suite_index is not None
+        and job.suites[suite_index].options
+        and job.suites[suite_index].options.parallelity is not None
+    ):
+        parallelity = job.suites[suite_index].options.parallelity
+    elif job.options.parallelity is not None:
         parallelity = job.options.parallelity
     else:
         parallelity = 4 if is_cluster else 1
-
-    # Determine job name - use suite name if we're splitting
-    if suite_index is not None:
-        job_name = suites_to_process[0].name
-    else:
-        job_name = job.name
 
     return {
         "name": job_name,
@@ -234,35 +248,6 @@ def convert_job_to_legacy_format(
         "params": params,
         "args": args,
     }
-
-
-def _convert_and_split_job(
-    job: TestJob, deployment_type: DeploymentType, prefix: str = ""
-) -> List[dict]:
-    """
-    Convert a job to legacy format, splitting multi-suite jobs if needed.
-
-    For Jenkins, multi-suite jobs are split into separate jobs (one per suite).
-
-    Args:
-        job: TestJob instance
-        deployment_type: Deployment type to use
-        prefix: Prefix for test name (e.g., "sg_" or "cl_")
-
-    Returns:
-        List of legacy format dictionaries (one per suite for multi-suite jobs)
-    """
-    if len(job.suites) > 1:
-        # Split multi-suite job into separate jobs
-        return [
-            convert_job_to_legacy_format(
-                job, deployment_type, prefix, suite_index=suite_idx
-            )
-            for suite_idx in range(len(job.suites))
-        ]
-    else:
-        # Single-suite job
-        return [convert_job_to_legacy_format(job, deployment_type, prefix)]
 
 
 def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
@@ -300,8 +285,17 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
 
         # If --all flag is set, skip filtering
         if args.all:
-            deployment_type = job.options.deployment_type or DeploymentType.SINGLE
-            legacy_tests.extend(_convert_and_split_job(job, deployment_type))
+            deployment_type = job.options.deployment_type
+            # For buckets:auto jobs with multiple suites, split into separate jobs
+            if job.options.buckets == "auto" and len(job.suites) > 1:
+                for suite_idx in range(len(job.suites)):
+                    legacy_test = convert_job_to_legacy_format(
+                        job, deployment_type, suite_index=suite_idx
+                    )
+                    legacy_tests.append(legacy_test)
+            else:
+                legacy_test = convert_job_to_legacy_format(job, deployment_type)
+                legacy_tests.append(legacy_test)
             continue
 
         # Determine which deployment types to test
@@ -323,35 +317,62 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
                 deployment_types_to_test.append((DeploymentType.SINGLE, "sg_"))
                 deployment_types_to_test.append((DeploymentType.CLUSTER, "cl_"))
         else:
-            # Single mode based on --cluster flag
+            # Single mode based on --cluster flag - use job's actual deployment type for flags
+            job_deployment = job.options.deployment_type
             if args.cluster:
-                deployment_type = DeploymentType.CLUSTER
+                filter_mode = DeploymentType.CLUSTER
             else:
-                deployment_type = DeploymentType.SINGLE
-            deployment_types_to_test.append((deployment_type, ""))
+                filter_mode = DeploymentType.SINGLE
+            deployment_types_to_test.append((job_deployment, filter_mode, ""))
 
         # Process each deployment type
-        for deployment_type, prefix in deployment_types_to_test:
+        for item in deployment_types_to_test:
+            if len(item) == 2:
+                # single_cluster mode: (deployment_type_for_flags, prefix)
+                deployment_type, prefix = item
+                filter_mode = None
+            else:
+                # normal mode: (deployment_type_for_flags, filter_mode, prefix)
+                deployment_type, filter_mode, prefix = item
             # Create a filter context
             is_full = args.full
             is_enterprise = args.enterprise
 
             # Check if job should be included based on deployment type compatibility
-            job_deployment = job.options.deployment_type or DeploymentType.SINGLE
+            # Only apply filtering in normal mode (not single_cluster mode)
+            if filter_mode is not None:
+                job_deployment = job.options.deployment_type or DeploymentType.SINGLE
 
-            # Skip if job explicitly requires single and we're testing cluster
-            if (
-                job_deployment == DeploymentType.SINGLE
-                and deployment_type == DeploymentType.CLUSTER
-            ):
-                continue
+                # Skip if job explicitly requires single and we're testing cluster
+                if (
+                    job_deployment == DeploymentType.SINGLE
+                    and filter_mode == DeploymentType.CLUSTER
+                ):
+                    continue
 
-            # Skip if job explicitly requires cluster and we're testing single
-            if (
-                job_deployment == DeploymentType.CLUSTER
-                and deployment_type == DeploymentType.SINGLE
-            ):
-                continue
+                # Skip if job explicitly requires cluster and we're testing single
+                if (
+                    job_deployment == DeploymentType.CLUSTER
+                    and filter_mode == DeploymentType.SINGLE
+                ):
+                    continue
+            else:
+                # In single_cluster mode, use deployment_type for filtering
+                job_deployment = job.options.deployment_type or DeploymentType.SINGLE
+
+                # Skip if job explicitly requires single and we're testing cluster
+                if (
+                    job_deployment == DeploymentType.SINGLE
+                    and deployment_type == DeploymentType.CLUSTER
+                ):
+                    continue
+
+                # Skip if job explicitly requires cluster and we're testing single
+                if (
+                    job_deployment == DeploymentType.CLUSTER
+                    and deployment_type == DeploymentType.SINGLE
+                ):
+                    continue
 
             # Apply full/PR filter
             if job.options.full is True and not is_full:
@@ -363,8 +384,17 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
             # in the YAML format. Those flags only existed in the old text-based format.
             # The old controller didn't have these in YAML either.
 
-            # Convert and split multi-suite jobs if needed
-            legacy_tests.extend(_convert_and_split_job(job, deployment_type, prefix))
+            # For buckets:auto jobs with multiple suites, split into separate jobs
+            if job.options.buckets == "auto" and len(job.suites) > 1:
+                for suite_idx in range(len(job.suites)):
+                    legacy_test = convert_job_to_legacy_format(
+                        job, deployment_type, prefix, suite_index=suite_idx
+                    )
+                    legacy_tests.append(legacy_test)
+            else:
+                # Convert to legacy format
+                legacy_test = convert_job_to_legacy_format(job, deployment_type, prefix)
+                legacy_tests.append(legacy_test)
 
     return legacy_tests
 
