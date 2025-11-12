@@ -16,7 +16,7 @@ from typing import List
 
 from src.config_lib import TestDefinitionFile, TestJob, DeploymentType
 from src.filters import should_include_job
-from site_config import IS_ARM, IS_WINDOWS, IS_MAC, IS_COVERAGE
+from site_config import IS_ARM, IS_WINDOWS, IS_COVERAGE
 
 from dump_handler import generate_dump_output
 from launch_handler import launch
@@ -281,8 +281,6 @@ def filter_and_convert_jobs(test_def: TestDefinitionFile, args) -> List[dict]:
     platform_flags = set()
     if IS_WINDOWS:
         platform_flags.add("exclude_windows")
-    if IS_MAC:
-        platform_flags.add("exclude_mac")
     if IS_ARM:
         platform_flags.add("exclude_arm")
     if IS_COVERAGE:
