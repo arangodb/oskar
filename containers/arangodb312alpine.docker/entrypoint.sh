@@ -168,4 +168,4 @@ else
     NUMACTL=""
 fi
 
-exec $NUMACTL "$@"
+$NUMACTL "$@"
