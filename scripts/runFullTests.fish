@@ -5,8 +5,7 @@ source $SCRIPTS/lib/tests.fish
 set -xg TEST_DEFINITIONS test-definitions.txt
 if test (count "$argv") -gt 0 -a "$argv[1]" = "--testdefinitions"
     set -xg TEST_DEFINITIONS $argv[2]
-    set -e $argv[1]
-    set -e $argv[1]
+    set -xg argv $argv[3..-1]
 end
 
 set -xg ADDITIONAL_OPTIONS $argv
