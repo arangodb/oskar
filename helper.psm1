@@ -1729,8 +1729,8 @@ Function signWindows
     Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
     ForEach ($PACKAGE in $(Get-ChildItem -Filter ArangoDB3*.exe).FullName)
     {
-        Write-Host "Sign: signtool.exe sign /sm /fd sha256 /td sha256 /sha1 99FA6564E445AD7EB45B7A410DBBEE260373B080 /tr `"http://timestamp.digicert.com`" `"$PACKAGE`""
-        proc -process signtool.exe -argument "sign /sm /fd sha256 /td sha256 /sha1 99FA6564E445AD7EB45B7A410DBBEE260373B080 /tr `"http://timestamp.digicert.com`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
+        Write-Host "Sign: signtool.exe sign /v /sm /fd sha256 /td sha256 /sha1 99FA6564E445AD7EB45B7A410DBBEE260373B080 /tr `"http://timestamp.digicert.com`" `"$PACKAGE`""
+        proc -process signtool.exe -argument "sign /v /sm /fd sha256 /td sha256 /sha1 99FA6564E445AD7EB45B7A410DBBEE260373B080 /tr `"http://timestamp.digicert.com`" `"$PACKAGE`"" -logfile "$INNERWORKDIR\$($PACKAGE.Split('\')[-1])-sign.log" -priority "Normal"
     }
     Pop-Location
 }
