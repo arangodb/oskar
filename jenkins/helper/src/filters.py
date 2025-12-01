@@ -13,6 +13,7 @@ from .config_lib import (
     DeploymentType,
     SuiteConfig,
     Sanitizer,
+    Architecture,
 )
 
 
@@ -45,6 +46,7 @@ class FilterCriteria:
 
     # Build configuration
     sanitizer: Optional[Sanitizer] = None  # Sanitizer type for this build
+    architecture: Optional[Architecture] = None  # Current build architecture
 
     # Feature flags
     enterprise: bool = True
@@ -110,6 +112,12 @@ def should_include_job(job: TestJob, criteria: FilterCriteria) -> bool:
     Returns:
         True if job should be included, False otherwise
     """
+    # Check architecture compatibility FIRST (even in all_tests mode)
+    # If job specifies architecture, current architecture must match
+    if job.options.architecture is not None and criteria.architecture is not None:
+        if criteria.architecture != job.options.architecture:
+            return False
+
     if criteria.all_tests:
         return True
 
@@ -139,6 +147,54 @@ def should_include_job(job: TestJob, criteria: FilterCriteria) -> bool:
     return True
 
 
+def should_include_suite(suite: SuiteConfig, criteria: FilterCriteria) -> bool:
+    """
+    Determine if a suite should be included based on filter criteria.
+
+    This applies suite-level filtering that may override job-level settings.
+
+    Args:
+        suite: SuiteConfig to check
+        criteria: FilterCriteria to apply
+
+    Returns:
+        True if suite should be included, False otherwise
+    """
+    # Check architecture compatibility FIRST (even in all_tests mode)
+    # If suite specifies architecture, current architecture must match
+    if suite.options.architecture is not None and criteria.architecture is not None:
+        if criteria.architecture != suite.options.architecture:
+            return False
+
+    if criteria.all_tests:
+        return True
+
+    # Check full flag compatibility (suite-level override)
+    # - full=True: Only for nightly/full builds
+    # - full=False: Only for PR builds
+    # - full=None (unspecified): Include in both
+    if suite.options.full is True and not criteria.is_full_run:
+        return False  # Suite requires full run, but we're in PR mode
+    if suite.options.full is False and criteria.is_full_run:
+        return False  # Suite is PR-only, but we're in full/nightly mode
+
+    return True
+
+
+def filter_suites(job: TestJob, criteria: FilterCriteria) -> List[SuiteConfig]:
+    """
+    Filter suites from a job based on criteria.
+
+    Args:
+        job: TestJob containing suites to filter
+        criteria: FilterCriteria to apply
+
+    Returns:
+        Filtered list of SuiteConfig objects
+    """
+    return [suite for suite in job.suites if should_include_suite(suite, criteria)]
+
+
 def filter_jobs(
     test_def: TestDefinitionFile, criteria: FilterCriteria
 ) -> List[TestJob]:
@@ -153,7 +209,7 @@ def filter_jobs(
         Filtered list of TestJob objects
     """
     filtered = []
-    for job_name, job in test_def.jobs.items():
+    for job in test_def.jobs.values():
         if should_include_job(job, criteria):
             filtered.append(job)
 

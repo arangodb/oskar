@@ -13,7 +13,7 @@ Architecture:
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Any, Union, TypeVar, Mapping
 import yaml
 
 
@@ -21,10 +21,12 @@ import yaml
 # Enumerations
 # ============================================================================
 
+E = TypeVar("E", bound=Enum)
+
 
 def _enum_from_string(
-    enum_class: type[Enum], value: str, aliases: Dict[str, Enum] = None
-) -> Enum:
+    enum_class: type[E], value: str, aliases: Optional[Mapping[str, E]] = None
+) -> E:
     """
     Generic helper to parse enum from string, case-insensitive.
 
@@ -101,8 +103,10 @@ class Sanitizer(Enum):
     ALUBSAN = "alubsan"
 
     @classmethod
-    def from_string(cls, value: str) -> "Sanitizer":
+    def from_string(cls, value: str) -> Optional["Sanitizer"]:
         """Parse sanitizer from string, case-insensitive."""
+        if value == "none":
+            return None
         return _enum_from_string(cls, value)
 
 
@@ -147,14 +151,12 @@ class TestOptions:
     priority: Optional[int] = None
     parallelity: Optional[int] = None
     buckets: Optional[Union[int, str]] = None  # int or "auto"
-    storage_engine: Optional[str] = None
-    min_replication_factor: Optional[int] = None
-    max_replication_factor: Optional[int] = None
     replication_version: Optional[str] = None
-    test_data_dir: Optional[str] = None
     suffix: Optional[str] = None  # Job name suffix for disambiguation
     full: Optional[bool] = None  # Only run in full/nightly builds if True
     coverage: Optional[bool] = None  # Run coverage analysis
+    time_limit: Optional[int] = None  # Time limit in seconds
+    architecture: Optional[Architecture] = None  # Allowed architecture (None = all)
 
     def __post_init__(self):
         """Validate option values."""
@@ -181,27 +183,6 @@ class TestOptions:
                     f"buckets must be int or 'auto', got: {type(self.buckets)}"
                 )
 
-        # Validate replication factors
-        if self.min_replication_factor is not None and self.min_replication_factor < 1:
-            raise ValueError(
-                f"min_replication_factor must be at least 1, got: {self.min_replication_factor}"
-            )
-
-        if self.max_replication_factor is not None and self.max_replication_factor < 1:
-            raise ValueError(
-                f"max_replication_factor must be at least 1, got: {self.max_replication_factor}"
-            )
-
-        if (
-            self.min_replication_factor is not None
-            and self.max_replication_factor is not None
-            and self.min_replication_factor > self.max_replication_factor
-        ):
-            raise ValueError(
-                f"min_replication_factor ({self.min_replication_factor}) cannot be greater than "
-                f"max_replication_factor ({self.max_replication_factor})"
-            )
-
     @classmethod
     def from_dict(cls, data: Optional[Dict[str, Any]]) -> "TestOptions":
         """
@@ -217,7 +198,7 @@ class TestOptions:
             return cls()
 
         # Handle type conversions and field name mapping
-        kwargs = {}
+        kwargs: Dict[str, Any] = {}
 
         # Map YAML field names to our field names
         if "type" in data and data["type"] is not None:
@@ -244,19 +225,20 @@ class TestOptions:
             "priority": "priority",
             "parallelity": "parallelity",
             "buckets": "buckets",
-            "storage_engine": "storage_engine",
-            "min_replication_factor": "min_replication_factor",
-            "max_replication_factor": "max_replication_factor",
             "replication_version": "replication_version",
-            "test_data_dir": "test_data_dir",
             "suffix": "suffix",
             "full": "full",
             "coverage": "coverage",
+            "timeLimit": "time_limit",
         }
 
         for yaml_field, our_field in field_mappings.items():
             if yaml_field in data:
                 kwargs[our_field] = data[yaml_field]
+
+        # Handle arch field (parse single architecture string)
+        if "arch" in data and data["arch"] is not None:
+            kwargs["architecture"] = Architecture.from_string(data["arch"])
 
         return cls(**kwargs)
 
@@ -278,14 +260,12 @@ class TestOptions:
                 priority=self.priority,
                 parallelity=self.parallelity,
                 buckets=self.buckets,
-                storage_engine=self.storage_engine,
-                min_replication_factor=self.min_replication_factor,
-                max_replication_factor=self.max_replication_factor,
                 replication_version=self.replication_version,
-                test_data_dir=self.test_data_dir,
                 suffix=self.suffix,
                 full=self.full,
                 coverage=self.coverage,
+                time_limit=self.time_limit,
+                architecture=self.architecture,
             )
 
         # Helper to merge a single field
@@ -298,20 +278,14 @@ class TestOptions:
             priority=merge_field(override.priority, self.priority),
             parallelity=merge_field(override.parallelity, self.parallelity),
             buckets=merge_field(override.buckets, self.buckets),
-            storage_engine=merge_field(override.storage_engine, self.storage_engine),
-            min_replication_factor=merge_field(
-                override.min_replication_factor, self.min_replication_factor
-            ),
-            max_replication_factor=merge_field(
-                override.max_replication_factor, self.max_replication_factor
-            ),
             replication_version=merge_field(
                 override.replication_version, self.replication_version
             ),
-            test_data_dir=merge_field(override.test_data_dir, self.test_data_dir),
             suffix=merge_field(override.suffix, self.suffix),
             full=merge_field(override.full, self.full),
             coverage=merge_field(override.coverage, self.coverage),
+            time_limit=merge_field(override.time_limit, self.time_limit),
+            architecture=merge_field(override.architecture, self.architecture),
         )
 
 
@@ -319,7 +293,7 @@ class TestOptions:
 class TestArguments:
     """Additional command-line arguments for test execution."""
 
-    extra_args: List[str] = field(default_factory=list)
+    extra_args: Dict[str, Any] = field(default_factory=dict)
     arangosh_args: List[str] = field(default_factory=list)
 
     @staticmethod
@@ -359,10 +333,10 @@ class TestArguments:
 
         # Data can be:
         # 1. A dict with extraArgs:key format (from YAML args section)
-        # 2. A dict with 'extra_args' and 'arangosh_args' lists
+        # 2. A dict with 'extra_args' dict and 'arangosh_args' list
         # 3. A dict with nested 'args' key
 
-        extra_args = []
+        extra_args = {}
         arangosh_args = []
 
         # Check if we have direct 'extra_args' field
@@ -374,69 +348,53 @@ class TestArguments:
                 if key == "arangosh_args":
                     # Handle arangosh_args separately
                     continue
-                elif key == "moreArgv":
-                    # Special case: moreArgv value is appended directly without --moreArgv prefix
-                    extra_args.append(str(value))
+                if key == "moreArgv":
+                    # Special case: moreArgv value is stored as-is
+                    extra_args["moreArgv"] = value
                 elif key.startswith("extraArgs:"):
                     # Handle "extraArgs:log.level: replication=trace" format
                     # Keep the full key including "extraArgs:" prefix
-                    extra_args.append(f"--{key}")
-                    # Format boolean values as lowercase strings
+                    extra_args[key] = value
+                else:
+                    # Regular key-value arguments
+                    extra_args[key] = value
+
+        # Handle arangosh_args (convert dict to list)
+        if "arangosh_args" in data:
+            arangosh_data = data["arangosh_args"]
+            if isinstance(arangosh_data, dict):
+                # Convert dict to list format
+                for key, value in arangosh_data.items():
+                    arangosh_args.append(f"--{key}")
                     if isinstance(value, bool):
-                        extra_args.append("true" if value else "false")
+                        arangosh_args.append("true" if value else "false")
                     else:
-                        extra_args.append(str(value))
-                elif isinstance(value, bool):
-                    # Handle boolean flags/values
-                    extra_args.append(f"--{key}")
-                    extra_args.append("true" if value else "false")
-                elif isinstance(value, str):
-                    # Handle string arguments
-                    extra_args.append(f"--{key}")
-                    extra_args.append(value)
-                elif value is not None:
-                    # Handle other types (int, float, etc.)
-                    extra_args.append(f"--{key}")
-                    extra_args.append(str(value))
-
-        # Handle arangosh_args
-        arangosh_args = data.get("arangosh_args", [])
-
-        # Ensure they are lists
-        if isinstance(extra_args, str):
-            extra_args = [extra_args]
-        if isinstance(arangosh_args, str):
-            arangosh_args = [arangosh_args]
-        if isinstance(arangosh_args, dict):
-            # Handle arangosh_args as dict (like in YAML: "javascript.v8-max-heap: 32768")
-            arangosh_list = []
-            for key, value in arangosh_args.items():
-                arangosh_list.append(f"--{key}")
-                arangosh_list.append(str(value))
-            arangosh_args = arangosh_list
+                        arangosh_args.append(str(value))
+            elif isinstance(arangosh_data, list):
+                arangosh_args = list(arangosh_data)
 
         return cls(
-            extra_args=list(extra_args) if extra_args else [],
+            extra_args=dict(extra_args) if extra_args else {},
             arangosh_args=list(arangosh_args) if arangosh_args else [],
         )
 
     def merge_with(self, override: Optional["TestArguments"]) -> "TestArguments":
         """
-        Create a new TestArguments with combined argument lists.
+        Create a new TestArguments with combined arguments.
 
         Args:
-            override: TestArguments to append to self's arguments
+            override: TestArguments to merge with self's arguments (override wins for dict, appends for list)
 
         Returns:
-            New TestArguments with combined lists
+            New TestArguments with merged args
         """
         if override is None:
             return TestArguments(
-                extra_args=list(self.extra_args), arangosh_args=list(self.arangosh_args)
+                extra_args=dict(self.extra_args), arangosh_args=list(self.arangosh_args)
             )
 
         return TestArguments(
-            extra_args=self.extra_args + override.extra_args,
+            extra_args={**self.extra_args, **override.extra_args},
             arangosh_args=self.arangosh_args + override.arangosh_args,
         )
 
@@ -732,6 +690,8 @@ class TestJob:
         if self.options.buckets == "auto":
             return len(self.suites)
 
+        # At this point we know buckets is an int (not None, not "auto")
+        assert isinstance(self.options.buckets, int)
         return self.options.buckets
 
 
@@ -757,7 +717,7 @@ class TestDefinitionFile:
         Returns:
             TestDefinitionFile instance
         """
-        with open(filepath, "r") as f:
+        with open(filepath, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         return cls.from_dict(data)
@@ -814,7 +774,7 @@ class TestDefinitionFile:
         Returns:
             TestDefinitionFile instance
         """
-        jobs = {}
+        jobs: Dict[str, TestJob] = {}
         repo_config = None
 
         # Check if this is the driver test format with 'jobProperties' and 'tests'
@@ -953,14 +913,8 @@ class TestDefinitionFile:
 
 @dataclass
 class BuildConfig:
-    """Build context information for test execution."""
+    """Build context information for test execution (enterprise-only)."""
 
     architecture: Architecture
-    enterprise: bool
     sanitizer: Optional[Sanitizer] = None
     nightly: bool = False
-
-    def __post_init__(self):
-        """Validate build configuration."""
-        # Validation is handled by Architecture and Sanitizer enums
-        pass
