@@ -96,7 +96,7 @@ def matches_deployment_filter(
 
     # Single-only filter
     if criteria.single:
-        return deployment_type in (DeploymentType.SINGLE, None)
+        return deployment_type in (DeploymentType.SINGLE, DeploymentType.MIXED, None)
 
     return True
 

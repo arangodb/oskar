@@ -184,12 +184,14 @@ class TestOptions:
                 )
 
     @classmethod
-    def from_dict(cls, data: Optional[Dict[str, Any]]) -> "TestOptions":
+    def from_dict(cls, data: Optional[Dict[str, Any]], *, apply_defaults: bool = True) -> "TestOptions":
         """
         Create TestOptions from a dictionary, handling type conversions.
 
         Args:
             data: Dictionary from YAML, or None
+            apply_defaults: If True, apply deployment-based size defaults (for job-level options).
+                          If False, leave size as None when not specified (for suite-level options).
 
         Returns:
             TestOptions instance with all None fields if data is None
@@ -211,9 +213,10 @@ class TestOptions:
         # Handle size with deployment type-based defaults (matching old generator logic)
         if "size" in data and data["size"] is not None:
             kwargs["size"] = ResourceSize.from_string(data["size"])
-        else:
+        elif apply_defaults:
             # Default size based on deployment type (old generator compatibility)
             # cluster and mixed default to medium, single defaults to small
+            # Only apply these defaults for job-level options, not suite-level
             deployment_type = kwargs.get("deployment_type")
             if deployment_type in (DeploymentType.CLUSTER, DeploymentType.MIXED):
                 kwargs["size"] = ResourceSize.MEDIUM
@@ -428,7 +431,8 @@ class SuiteConfig:
 
         return cls(
             name=data["name"],
-            options=TestOptions.from_dict(data.get("options")),
+            # Suite-level options should not get default size values
+            options=TestOptions.from_dict(data.get("options"), apply_defaults=False),
             arguments=TestArguments.from_dict(data.get("arguments")),
         )
 
