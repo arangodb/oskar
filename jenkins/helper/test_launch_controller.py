@@ -419,6 +419,16 @@ def convert_job_to_legacy_format(
     )
     params["parallelity"] = parallelity
 
+    # Build suite field
+    # For single-suite jobs, suite matches the job name
+    # For multi-suite jobs, suite is a comma-separated list of all suite names
+    if suite_index is not None:
+        # Single suite job (flattened)
+        suite_names = job_name
+    else:
+        # Multi-suite job - list all suite names
+        suite_names = ",".join(suite.name for suite in job.suites)
+
     return {
         "name": job_name,
         "prefix": prefix,
@@ -427,6 +437,7 @@ def convert_job_to_legacy_format(
         "flags": flags,
         "params": params,
         "args": args,
+        "suite": suite_names,
     }
 
 
