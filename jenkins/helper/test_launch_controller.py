@@ -1,4 +1,4 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 """
 Test launch controller for Jenkins/Oskar.
 
@@ -417,13 +417,21 @@ def convert_job_to_legacy_format(
 
     # Build suite field
     # For single-suite jobs, suite matches the job name
-    # For multi-suite jobs, suite is a comma-separated list of all suite names
+    # For multi-suite jobs, suite is a comma-separated list of FILTERED suite names
+    # (must match the optionsJson array built in build_args_for_job)
     if suite_index is not None:
         # Single suite job (flattened)
         suite_names = job_name
     else:
-        # Multi-suite job - list all suite names
-        suite_names = ",".join(suite.name for suite in job.suites)
+        # Multi-suite job - filter suites to match optionsJson array
+        # This ensures positional alignment between suite names and optionsJson entries
+        criteria = FilterCriteria(
+            full=is_full_run,
+            nightly=False,
+            all_tests=False,
+        )
+        filtered_suites = filter_suites(job, criteria)
+        suite_names = ",".join(suite.name for suite in filtered_suites)
 
     # Build arangosh_args
     # For single-suite jobs, use suite-level arangosh_args if available, otherwise job-level
