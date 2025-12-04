@@ -544,22 +544,24 @@ def flatten_jobs(test_def: TestDefinitionFile) -> List[TestJob]:
         # Check if this is a buckets:auto job with multiple suites
         if job.options.buckets == "auto" and len(job.suites) > 1:
             # Split into separate jobs, one per suite
-            for suite in job.suites:
+            for idx, suite in enumerate(job.suites):
                 # Create a new TestJob with just this suite
                 new_job = deepcopy(job)
-                new_job.name = suite.name
-                new_job.suites = [suite]
+                # Use the deep-copied suite, not the original
+                copied_suite = new_job.suites[idx]
+                new_job.name = copied_suite.name
+                new_job.suites = [copied_suite]
                 # Clear buckets:auto since we've already split
                 new_job.options.buckets = None
 
                 # Merge suite options into job options (suite overrides job)
                 # This allows filters to work correctly on flattened jobs
                 # Skip 'size' to avoid merging config_lib's auto-generated defaults
-                if suite.options:
-                    for field in suite.options.__dataclass_fields__:
+                if copied_suite.options:
+                    for field in copied_suite.options.__dataclass_fields__:
                         if field == 'size':  # Size is handled by get_effective_option_value
                             continue
-                        suite_value = getattr(suite.options, field)
+                        suite_value = getattr(copied_suite.options, field)
                         if suite_value is not None:
                             setattr(new_job.options, field, suite_value)
 
