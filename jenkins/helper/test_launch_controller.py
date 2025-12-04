@@ -74,12 +74,8 @@ def build_filter_criteria(args, config: Optional[DeploymentConfig] = None) -> Fi
     )
 
 
-def dict_to_args_list(args_data: Union[dict, list]) -> List[str]:
-    """Convert args dict to command-line list format (or pass through if already list)."""
-    # Handle both dict (new format) and list (old format for backwards compatibility)
-    if isinstance(args_data, list):
-        return args_data
-
+def dict_to_args_list(args_data: dict) -> List[str]:
+    """Convert args dict to command-line list format."""
     result = []
     for key, value in args_data.items():
         if key == SPECIAL_ARG_MORE_ARGV:
@@ -429,6 +425,22 @@ def convert_job_to_legacy_format(
         # Multi-suite job - list all suite names
         suite_names = ",".join(suite.name for suite in job.suites)
 
+    # Build arangosh_args
+    # For single-suite jobs, use suite-level arangosh_args if available, otherwise job-level
+    # For multi-suite jobs, use job-level arangosh_args
+    if suite_index is not None and job.suites[suite_index].arguments:
+        # Single suite - combine job-level and suite-level arangosh_args
+        arangosh_args = (
+            list(job.arguments.arangosh_args) if job.arguments else []
+        )
+        if job.suites[suite_index].arguments.arangosh_args:
+            arangosh_args.extend(job.suites[suite_index].arguments.arangosh_args)
+    else:
+        # Multi-suite or no suite-specific args
+        arangosh_args = (
+            list(job.arguments.arangosh_args) if job.arguments else []
+        )
+
     return {
         "name": job_name,
         "prefix": prefix,
@@ -438,6 +450,7 @@ def convert_job_to_legacy_format(
         "params": params,
         "args": args,
         "suite": suite_names,
+        "arangosh_args": arangosh_args,
     }
 
 
