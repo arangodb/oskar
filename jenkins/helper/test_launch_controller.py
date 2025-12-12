@@ -11,6 +11,7 @@ and does NOT support driver tests (repository config is ignored).
 """
 import argparse
 import json
+import os
 import sys
 from copy import deepcopy
 from dataclasses import dataclass
@@ -21,6 +22,9 @@ from src.filters import filter_suites, FilterCriteria, should_include_job
 
 from dump_handler import generate_dump_output
 from launch_handler import launch
+
+# Detect coverage build from environment (same as old script)
+IS_COVERAGE = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
 
 # Check python 3
 if sys.version_info[0] != 3:
@@ -55,22 +59,17 @@ def build_filter_criteria(args, config: Optional[DeploymentConfig] = None) -> Fi
     Returns:
         FilterCriteria object for filtering jobs
     """
-    # Determine cluster/single flags based on config
-    if config is None or config.deployment_requirement is None:
-        # --single_cluster flag: no deployment requirement
-        cluster = False
-        single = False
-    else:
+    # Determine deployment_type filter based on config
+    deployment_type_filter = None
+    if config is not None and config.deployment_requirement is not None:
         # Normal mode: filter based on deployment requirement
-        cluster = (config.deployment_requirement == DeploymentType.CLUSTER)
-        single = (config.deployment_requirement == DeploymentType.SINGLE)
+        deployment_type_filter = config.deployment_requirement
 
     return FilterCriteria(
-        cluster=cluster,
-        single=single,
+        deployment_type=deployment_type_filter,
         full=args.full,
         gtest=args.gtest,
-        all_tests=False,
+        coverage=IS_COVERAGE,  # Detect coverage from environment
     )
 
 
@@ -202,6 +201,8 @@ def get_effective_option_value(
 ):
     """Get option value from suite if available, fall back to job, then default.
 
+    Checks both requires and options objects for the attribute.
+
     Args:
         job: The test job
         suite_index: Suite index if splitting by suite, None otherwise
@@ -211,16 +212,31 @@ def get_effective_option_value(
     Returns:
         The effective value for this option
     """
-    # Check suite-level first
-    if suite_index is not None and job.suites[suite_index].options:
-        suite_value = getattr(job.suites[suite_index].options, attr_name, None)
-        if suite_value is not None:
-            return suite_value
+    # Check suite-level first (both requires and options)
+    if suite_index is not None:
+        suite = job.suites[suite_index]
+        # Check requires first
+        if suite.requires:
+            suite_value = getattr(suite.requires, attr_name, None)
+            if suite_value is not None:
+                return suite_value
+        # Then check options
+        if suite.options:
+            suite_value = getattr(suite.options, attr_name, None)
+            if suite_value is not None:
+                return suite_value
 
-    # Fall back to job-level
-    job_value = getattr(job.options, attr_name, None)
-    if job_value is not None:
-        return job_value
+    # Fall back to job-level (both requires and options)
+    # Check requires first
+    if job.requires:
+        job_value = getattr(job.requires, attr_name, None)
+        if job_value is not None:
+            return job_value
+    # Then check options
+    if job.options:
+        job_value = getattr(job.options, attr_name, None)
+        if job_value is not None:
+            return job_value
 
     # Use default
     return default
@@ -309,11 +325,9 @@ def build_args_for_job(
 
     # For multi-suite jobs, add optionsJson
     if len(job.suites) > 1:
-        # Filter suites based on full/nightly criteria
+        # Filter suites based on full criteria
         criteria = FilterCriteria(
             full=is_full_run,
-            nightly=False,  # Jenkins doesn't use nightly flag
-            all_tests=False,
         )
         filtered_suites = filter_suites(job, criteria)
 
@@ -427,8 +441,6 @@ def convert_job_to_legacy_format(
         # This ensures positional alignment between suite names and optionsJson entries
         criteria = FilterCriteria(
             full=is_full_run,
-            nightly=False,
-            all_tests=False,
         )
         filtered_suites = filter_suites(job, criteria)
         suite_names = ",".join(suite.name for suite in filtered_suites)
@@ -572,6 +584,16 @@ def flatten_jobs(test_def: TestDefinitionFile) -> List[TestJob]:
                         suite_value = getattr(copied_suite.options, field)
                         if suite_value is not None:
                             setattr(new_job.options, field, suite_value)
+
+                # Merge suite requires into job requires (suite overrides job)
+                if copied_suite.requires:
+                    if new_job.requires is None:
+                        new_job.requires = copied_suite.requires
+                    else:
+                        for field in copied_suite.requires.__dataclass_fields__:
+                            suite_value = getattr(copied_suite.requires, field)
+                            if suite_value is not None:
+                                setattr(new_job.requires, field, suite_value)
 
                 flattened.append(new_job)
         else:
