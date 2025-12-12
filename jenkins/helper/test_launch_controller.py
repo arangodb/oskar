@@ -11,6 +11,7 @@ and does NOT support driver tests (repository config is ignored).
 """
 import argparse
 import json
+import os
 import sys
 from copy import deepcopy
 from dataclasses import dataclass
@@ -21,6 +22,9 @@ from src.filters import filter_suites, FilterCriteria, should_include_job
 
 from dump_handler import generate_dump_output
 from launch_handler import launch
+
+# Detect coverage build from environment (same as old script)
+IS_COVERAGE = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
 
 # Check python 3
 if sys.version_info[0] != 3:
@@ -65,6 +69,7 @@ def build_filter_criteria(args, config: Optional[DeploymentConfig] = None) -> Fi
         deployment_type=deployment_type_filter,
         full=args.full,
         gtest=args.gtest,
+        coverage=IS_COVERAGE,  # Detect coverage from environment
     )
 
 
