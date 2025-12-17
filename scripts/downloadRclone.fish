@@ -36,7 +36,12 @@ if test (count $argv) -lt 2
     eval "set -xg "(grep RCLONE_GO $INNERWORKDIR/ArangoDB/VERSIONS)
     eval "set -xg "(grep RCLONE_VERSION $INNERWORKDIR/ArangoDB/VERSIONS)    
     set RCLONE_REV golang-"$RCLONE_GO"
-    set -xg RCLONE_RELEASE "$RCLONE_REV"_"$ARANGODB_VERSION_MAJOR"."$ARANGODB_VERSION_MINOR"_v"$RCLONE_VERSION"
+    # Temporary hack for ArangoDB 4.0:
+    if test "$ARANGODB_VERSION_MAJOR" = "4"
+      set -xg RCLONE_RELEASE "$RCLONE_REV"_3.12_v"$RCLONE_VERSION"
+    else
+      set -xg RCLONE_RELEASE "$RCLONE_REV"_"$ARANGODB_VERSION_MAJOR"."$ARANGODB_VERSION_MINOR"_v"$RCLONE_VERSION"
+    end
   end
 else
   set RCLONE_REV "$argv[2]"
