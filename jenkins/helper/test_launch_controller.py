@@ -17,14 +17,15 @@ from copy import deepcopy
 from dataclasses import dataclass
 from typing import List, Union, Dict, Any, Optional, Tuple
 
-from src.config_lib import TestDefinitionFile, TestJob, DeploymentType
+from src.config_lib import TestDefinitionFile, TestJob, DeploymentType, BuildVariant
 from src.filters import filter_suites, FilterCriteria, should_include_job
 
 from dump_handler import generate_dump_output
 from launch_handler import launch
 
-# Detect coverage build from environment (same as old script)
-IS_COVERAGE = 'COVERAGE' in os.environ and os.environ['COVERAGE'] == 'On'
+# Detect coverage/instrumented build from environment (same as old script)
+IS_COVERAGE = "COVERAGE" in os.environ and os.environ["COVERAGE"] == "On"
+BUILD_VARIANT = BuildVariant.COVERAGE if IS_COVERAGE else BuildVariant.NORMAL
 
 # Check python 3
 if sys.version_info[0] != 3:
@@ -45,11 +46,15 @@ class DeploymentConfig:
     """Configuration for how to test a specific deployment type."""
 
     deployment_type: DeploymentType
-    deployment_requirement: Optional[DeploymentType]  # None when --single_cluster (no deployment filtering)
+    deployment_requirement: Optional[
+        DeploymentType
+    ]  # None when --single_cluster (no deployment filtering)
     prefix: str
 
 
-def build_filter_criteria(args, config: Optional[DeploymentConfig] = None) -> FilterCriteria:
+def build_filter_criteria(
+    args, config: Optional[DeploymentConfig] = None
+) -> FilterCriteria:
     """Build FilterCriteria from command-line args and optional deployment config.
 
     Args:
@@ -69,7 +74,9 @@ def build_filter_criteria(args, config: Optional[DeploymentConfig] = None) -> Fi
         deployment_type=deployment_type_filter,
         full=args.full,
         gtest=args.gtest,
-        coverage=IS_COVERAGE,  # Detect coverage from environment
+        build_variant=BUILD_VARIANT,  # Detect coverage/instrumentation from environment
+        v8=True,  # Jenkins always has V8 enabled
+        enterprise=args.enterprise,
     )
 
 
@@ -342,9 +349,7 @@ def build_args_for_job(
             options_json.append(suite_args)
 
         # Add optionsJson as a command-line argument
-        args.extend(
-            ["--optionsJson", json.dumps(options_json, separators=(",", ":"))]
-        )
+        args.extend(["--optionsJson", json.dumps(options_json, separators=(",", ":"))])
 
     return args
 
@@ -368,7 +373,9 @@ def convert_job_to_legacy_format(
     params = {}
 
     # Get original deployment type from job (for determining if we should set type param)
-    original_deployment_type = get_effective_option_value(job, suite_index, "deployment_type")
+    original_deployment_type = get_effective_option_value(
+        job, suite_index, "deployment_type"
+    )
 
     for flag in flags:
         if flag == "cluster":
@@ -450,16 +457,12 @@ def convert_job_to_legacy_format(
     # For multi-suite jobs, use job-level arangosh_args
     if suite_index is not None and job.suites[suite_index].arguments:
         # Single suite - combine job-level and suite-level arangosh_args
-        arangosh_args = (
-            list(job.arguments.arangosh_args) if job.arguments else []
-        )
+        arangosh_args = list(job.arguments.arangosh_args) if job.arguments else []
         if job.suites[suite_index].arguments.arangosh_args:
             arangosh_args.extend(job.suites[suite_index].arguments.arangosh_args)
     else:
         # Multi-suite or no suite-specific args
-        arangosh_args = (
-            list(job.arguments.arangosh_args) if job.arguments else []
-        )
+        arangosh_args = list(job.arguments.arangosh_args) if job.arguments else []
 
     return {
         "name": job_name,
@@ -509,9 +512,7 @@ def determine_deployment_configs(job: TestJob, args) -> List[DeploymentConfig]:
             )
         elif is_multi_suite and job_deployment == DeploymentType.MIXED:
             # Multi-suite mixed jobs: create only 1 job (handles single/cluster internally via optionsJson)
-            deployment_configs.append(
-                DeploymentConfig(DeploymentType.MIXED, None, "")
-            )
+            deployment_configs.append(DeploymentConfig(DeploymentType.MIXED, None, ""))
         else:
             # Single-suite mixed or unspecified tests: run in BOTH modes
             deployment_configs.append(
@@ -579,7 +580,9 @@ def flatten_jobs(test_def: TestDefinitionFile) -> List[TestJob]:
                 # Skip 'size' to avoid merging config_lib's auto-generated defaults
                 if copied_suite.options:
                     for field in copied_suite.options.__dataclass_fields__:
-                        if field == 'size':  # Size is handled by get_effective_option_value
+                        if (
+                            field == "size"
+                        ):  # Size is handled by get_effective_option_value
                             continue
                         suite_value = getattr(copied_suite.options, field)
                         if suite_value is not None:
