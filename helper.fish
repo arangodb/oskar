@@ -717,7 +717,9 @@ end
 
 function makeRelease
   makeEnterpriseRelease "$argv[1]"
-  and makeCommunityRelease "$argv[1]"
+  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 11
+        makeCommunityRelease "$argv[1]"
+      end
 end
 
 function makeCommunityRelease
