@@ -1602,10 +1602,10 @@ function pullAlpineUtilsImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$ALPINEUTILSIMA
 
 function buildFedoraPackagingImage
   pushd $WORKDIR
-  and cp -a scripts/buildRPMPackage.fish containers/buildFedora7Packaging.docker/scripts
-  and cd $WORKDIR/containers/buildFedora7Packaging.docker
+  and cp -a scripts/buildRPMPackage.fish containers/buildFedora43Packaging.docker/scripts
+  and cd $WORKDIR/containers/buildFedora43Packaging.docker
   and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$FEDORAPACKAGINGIMAGE ."
-  and rm -f $WORKDIR/containers/buildFedora7Packaging.docker/scripts/*.fish
+  and rm -f $WORKDIR/containers/buildFedora43Packaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
