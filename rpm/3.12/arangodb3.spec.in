@@ -24,6 +24,8 @@
 %define _logdir %{_localstatedir}/log/arangodb3
 %define _piddir %{_localstatedir}/run/arangodb
 %define _currdate %(date +%%F-%%H-%%M-%%S)
+%define source_date_epoch_from_changelog 0
+%undefine _debugsource_packages
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                      package data
