@@ -19,6 +19,7 @@
 ## -----------------------------------------------------------------------------
 
 %global _build_id_links none
+%global _debuginfo_subpackages 0
 
 %define _cfgdir %{_sysconfdir}/arangodb3
 %define _databasedir %{_localstatedir}/lib/arangodb3
@@ -29,7 +30,6 @@
 
 %define source_date_epoch_from_changelog 0
 %define _duplicate_files_terminate_build 0
-%define _unpackaged_files_terminate_build 0
 %undefine _debugsource_packages
 
 ## -----------------------------------------------------------------------------
@@ -138,7 +138,9 @@ rmdir /tmp/sbin /tmp/bin
 
 %config(noreplace) %attr(-,arangodb,arangodb) %{_cfgdir}
 %{_bindir}/*
-%{_sbindir}/*
+%{_sbindir}/arango*
+%{_sbindir}/arangod
+%{_sbindir}/rclone-arangodb
 %{_mandir}/*/*
 %{_datadir}/arangodb3
 
