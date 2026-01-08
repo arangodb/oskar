@@ -18,13 +18,18 @@
 ## --SECTION--                                                  global variables
 ## -----------------------------------------------------------------------------
 
+%global _build_id_links none
+
 %define _cfgdir %{_sysconfdir}/arangodb3
 %define _databasedir %{_localstatedir}/lib/arangodb3
 %define _appdir %{_localstatedir}/lib/arangodb3-apps
 %define _logdir %{_localstatedir}/log/arangodb3
 %define _piddir %{_localstatedir}/run/arangodb
 %define _currdate %(date +%%F-%%H-%%M-%%S)
+
 %define source_date_epoch_from_changelog 0
+%define _duplicate_files_terminate_build 0
+%define _unpackaged_files_terminate_build 0
 %undefine _debugsource_packages
 
 ## -----------------------------------------------------------------------------
@@ -37,7 +42,7 @@ Release:        @PACKAGE_REVISION@
 Summary:        A scalable graph database system to drive value from connected data, faster.
 License:        Business Source License 1.1
 Group:          Productivity/Databases/Servers
-Conflicts:	arangodb3, arangodb3-client, arangodb3e-client
+Conflicts:      arangodb3, arangodb3-client, arangodb3e-client
 Url:            https://www.arango.ai
 Vendor:         ArangoDB
 
