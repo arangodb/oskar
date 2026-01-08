@@ -37,9 +37,9 @@ set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
 set -gx ALPINEUTILSIMAGE_TAG 4
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
-set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
-set -gx CENTOSPACKAGINGIMAGE_TAG 3
-set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
+set -gx FEDORAPACKAGINGIMAGE_NAME arangodb/fedorapackagearangodb-$ARCH
+set -gx FEDORAPACKAGINGIMAGE_TAG 1
+set -gx FEDORAPACKAGINGIMAGE $FEDORAPACKAGINGIMAGE_NAME:$FEDORAPACKAGINGIMAGE_TAG
 
 set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck-$ARCH
 set -gx CPPCHECKIMAGE_TAG 8
@@ -811,7 +811,7 @@ function buildRPMPackage
   and cp $WORKDIR/rpm/$pd/arangodb3.initd $WORKDIR/work
   and cp $WORKDIR/rpm/$pd/arangodb3.service $WORKDIR/work
   and cp $WORKDIR/rpm/$pd/arangodb3.logrotate $WORKDIR/work
-  and runInContainer $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE $SCRIPTSDIR/buildRPMPackage.fish
+  and runInContainer $DOCKER_URL_PREFIX$FEDORAPACKAGINGIMAGE $SCRIPTSDIR/buildRPMPackage.fish
 end
 
 ## #############################################################################
@@ -1600,23 +1600,23 @@ end
 
 function pullAlpineUtilsImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE ; end
 
-function buildCentosPackagingImage
+function buildFedoraPackagingImage
   pushd $WORKDIR
-  and cp -a scripts/buildRPMPackage.fish containers/buildCentos7Packaging.docker/scripts
-  and cd $WORKDIR/containers/buildCentos7Packaging.docker
-  and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE ."
-  and rm -f $WORKDIR/containers/buildCentos7Packaging.docker/scripts/*.fish
+  and cp -a scripts/buildRPMPackage.fish containers/buildFedora7Packaging.docker/scripts
+  and cd $WORKDIR/containers/buildFedora7Packaging.docker
+  and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$FEDORAPACKAGINGIMAGE ."
+  and rm -f $WORKDIR/containers/buildFedora7Packaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
 
-function pushCentosPackagingImage
-  "$DOCKER" tag $CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:latest
-  and "$DOCKER" push $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE
-  and "$DOCKER" push $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE_NAME:latest
+function pushFedoraPackagingImage
+  "$DOCKER" tag $FEDORAPACKAGINGIMAGE $FEDORAPACKAGINGIMAGE_NAME:latest
+  and "$DOCKER" push $DOCKER_URL_PREFIX$FEDORAPACKAGINGIMAGE
+  and "$DOCKER" push $DOCKER_URL_PREFIX$FEDORAPACKAGINGIMAGE_NAME:latest
 end
 
-function pullCentosPackagingImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE ; end
+function pullFedoraPackagingImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$FEDORAPACKAGINGIMAGE ; end
 
 function buildCppcheckImage
   pushd $WORKDIR/containers/cppcheck.docker
@@ -1655,8 +1655,8 @@ function remakeImages
   pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
   pushUbuntuPackagingImage ; or set -l s 1
-  buildCentosPackagingImage ; or set -l s 1
-  pushCentosPackagingImage ; or set -l s 1
+  buildFedoraPackagingImage ; or set -l s 1
+  pushFedoraPackagingImage ; or set -l s 1
   buildCppcheckImage ; or set -l s 1
   buildLdapImage ; or set -l s 1
 
@@ -2030,8 +2030,8 @@ function pushOskar
   and buildUbuntuPackagingImage
   and pushUbuntuPackagingImage
 
-  and buildCentosPackagingImage
-  and pushCentosPackagingImage
+  and buildFedoraPackagingImage
+  and pushFedoraPackagingImage
 
   and buildCppcheckImage
   and pushCppcheckImage
@@ -2059,7 +2059,7 @@ function updateOskar
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullUbuntuPackagingImage2
-  and pullCentosPackagingImage
+  and pullFedoraPackagingImage
   and pullCppcheckImage
   and pullLdapImage
 end
