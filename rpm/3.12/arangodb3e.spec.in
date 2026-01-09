@@ -92,7 +92,7 @@ mkdir -p %{buildroot}%{_logdir}
 mkdir -p %{buildroot}%{_piddir}
 cp -a $INNERWORKDIR/ArangoDB/build/install/* %{buildroot}
 rm -f %{buildroot}/README
-tree %{buildroot}
+find %{buildroot}
 # Move go executables out of the way to prevent debug info from being stripped:
 mkdir /tmp/sbin /tmp/bin
 # arangodb
@@ -117,7 +117,7 @@ if ls -1q /tmp/bin/ | grep -q . ; then
   mv /tmp/bin/* %{buildroot}/usr/bin/
 fi
 rmdir /tmp/sbin /tmp/bin
-tree %{buildroot}
+find %{buildroot}
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                             files
