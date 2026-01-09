@@ -51,7 +51,7 @@ Vendor:         ArangoDB
 %package client
 Summary:        ArangoDB shell as stand-alone package
 Group:          Productivity/Databases/Servers
-Conflicts:	arangodb3e, arangodb3, arangodb3e-client
+Conflicts:      arangodb3e, arangodb3, arangodb3e-client
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                       description
@@ -92,6 +92,7 @@ mkdir -p %{buildroot}%{_logdir}
 mkdir -p %{buildroot}%{_piddir}
 cp -a $INNERWORKDIR/ArangoDB/build/install/* %{buildroot}
 rm -f %{buildroot}/README
+tree %{buildroot}
 # Move go executables out of the way to prevent debug info from being stripped:
 mkdir /tmp/sbin /tmp/bin
 # arangodb
@@ -116,6 +117,7 @@ if ls -1q /tmp/bin/ | grep -q . ; then
   mv /tmp/bin/* %{buildroot}/usr/bin/
 fi
 rmdir /tmp/sbin /tmp/bin
+tree %{buildroot}
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                             files
