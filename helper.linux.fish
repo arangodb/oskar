@@ -38,7 +38,7 @@ set -gx ALPINEUTILSIMAGE_TAG 4
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
-set -gx CENTOSPACKAGINGIMAGE_TAG 3
+set -gx CENTOSPACKAGINGIMAGE_TAG 4
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
 
 set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck-$ARCH
@@ -1602,10 +1602,10 @@ function pullAlpineUtilsImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$ALPINEUTILSIMA
 
 function buildCentosPackagingImage
   pushd $WORKDIR
-  and cp -a scripts/buildRPMPackage.fish containers/buildCentos7Packaging.docker/scripts
-  and cd $WORKDIR/containers/buildCentos7Packaging.docker
+  and cp -a scripts/buildRPMPackage.fish containers/buildCentosStream9Packaging.docker/scripts
+  and cd $WORKDIR/containers/buildCentosStream9Packaging.docker
   and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$CENTOSPACKAGINGIMAGE ."
-  and rm -f $WORKDIR/containers/buildCentos7Packaging.docker/scripts/*.fish
+  and rm -f $WORKDIR/containers/buildCentosStream9Packaging.docker/scripts/*.fish
   or begin ; popd ; return 1 ; end
   popd
 end
