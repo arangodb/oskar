@@ -42,7 +42,6 @@
 %define _appdir %{_localstatedir}/lib/arangodb3-apps
 %define _logdir %{_localstatedir}/log/arangodb3
 %define _piddir %{_localstatedir}/run/arangodb
-%define _currdate %(date +%%F-%%H-%%M-%%S)
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                      package data
@@ -115,7 +114,7 @@ chmod -x %{buildroot}/usr/bin/arangodb
 # Optional stripping based on external build parameters
 if [ "@RPM_STRIP_NONE@" != "# " ]; then
     # Disable stripping for everything by removing +x from all executables
-    find %{buildroot}/usr -type f -executable -exec chmod -x {} +
+    find %{buildroot}/usr/*bin/ -type f -executable -exec chmod -x {} +
 elif [ "@RPM_STRIP_EXCEPT_ARANGOD@" != "# " ]; then
     # Disable stripping specifically for the main server binary
     chmod -x %{buildroot}/usr/sbin/arangod 2>/dev/null || :
@@ -260,7 +259,7 @@ if test "$1" -eq 1; then
     --database.check-version
 
   if test "$?" -eq 11; then
-    BACKUP="/var/lib/arangodb3-%{_currdate}"
+    BACKUP="/var/lib/arangodb3-$(date +%%F-%%H-%%M-%%S)"
     cp -a /var/lib/arangodb3 "$BACKUP"
     /usr/sbin/arangod --server.rest-server false --log.level error --database.auto-upgrade
 
