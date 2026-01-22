@@ -2196,6 +2196,7 @@ function downloadOrUpdateGrype
   else
     # grype is not installed
     installGrype
+    or return 1
   end
 
   setupGrype
