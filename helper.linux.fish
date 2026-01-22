@@ -2138,9 +2138,14 @@ function setupGrype
 end
 
 function applyGrypeIgnores
-  set -l image "$argv[0]"
+  set -l image "$argv[1]"
   if test "$image" = ""
     echo "Need to set docker image as the first argument of applyGrypeIgnores!"
+    return 1
+  end
+
+  if not set -q GRYPE_CONF_PATH[1]; or not test -f "$GRYPE_CONF_PATH"
+    echo "Need to set a GRYPE_DIR global variable with an existing path!"
     return 1
   end
 
@@ -2165,9 +2170,8 @@ function installGrype
     echo "Failed to install grype"
     return 1
   end
-  setupGrype
-  and set -gx GRYPE_BIN $GRYPE_BIN
-  and echo "Grype is installed successfully"
+  set -gx GRYPE_BIN $GRYPE_BIN
+  echo "Grype is installed successfully"
 end
 
 function downloadOrUpdateGrype
@@ -2185,15 +2189,16 @@ function downloadOrUpdateGrype
       $GRYPE_BIN db update
       if test $status -eq 0
         echo "Grype CVE database is updated successfully"
-        return 0
       end
       echo "Failed to update the Grype CVE database"
       return 1
     end
+  else
+    # grype is not installed
+    installGrype
   end
 
-  # grype is not installed
-  installGrype
+  setupGrype
 end
 
 function checkDockerImageForCves
