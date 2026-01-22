@@ -2131,9 +2131,9 @@ function setupGrype
     echo "Need to set a GRYPE_DIR global variable with an existing path!"
     return 1
   else
-    set -xg GRYPE_CONF_PATH "$GRYPE_DIR/.grype.conf"
+    set -xg GRYPE_CONF_PATH "$GRYPE_DIR/.grype.yml"
     rm -rf "$GRYPE_CONF_PATH"
-    and touch "$GRYPE_DIR/.grype.conf"
+    and touch "$GRYPE_DIR/.grype.yml"
   end
 end
 
