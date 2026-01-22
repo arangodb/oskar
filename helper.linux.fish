@@ -2126,6 +2126,30 @@ function unpackBuildFiles
   runInContainer $DOCKER_URL_PREFIX(eval echo \$UBUNTUBUILDIMAGE_$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR) $SCRIPTSDIR/unpackBuildFiles.fish "$argv[1]"
 end
 
+function setupGrype
+  if not set -q GRYPE_DIR[1]; or not test -d "$GRYPE_DIR"
+    echo "Need to set a GRYPE_DIR global variable with an existing path!"
+    return 1
+  else
+    set -xg GRYPE_CONF_PATH "$GRYPE_DIR/.grype.conf"
+    rm -rf "$GRYPE_CONF_PATH"
+    and touch "$GRYPE_DIR/.grype.conf"
+  end
+end
+
+function applyGrypeIgnores
+  set -l image "$argv[0]"
+  if test "$image" = ""
+    echo "Need to set docker image as the first argument of applyGrypeIgnores!"
+    return 1
+  end
+
+  # CVE-2026-22184
+  if not docker run --rm $image which untgz >/dev/null 2>&1
+    echo "ignore: [{vulnerability: CVE-2026-22184, package: {name: zlib}, reason: 'untgz missing, false positive'}]" >> "$GRYPE_DIR/.grype.conf"  
+  end
+end
+
 function installGrype
   if not set -q GRYPE_DIR[1]
     set -gx GRYPE_DIR "$WORKDIR/work/tools/grype"
@@ -2141,8 +2165,9 @@ function installGrype
     echo "Failed to install grype"
     return 1
   end
-  set -gx GRYPE_BIN $GRYPE_BIN
-  echo "Grype is installed successfully"
+  setupGrype
+  and set -gx GRYPE_BIN $GRYPE_BIN
+  and echo "Grype is installed successfully"
 end
 
 function downloadOrUpdateGrype
@@ -2184,11 +2209,13 @@ function checkDockerImageForCves
     set CVE_SEVERITY_THRESHOLD "high"
   end
   echo "scanning image for CVEs: $image"
+  echo "apply specific CVE exclusions list"
+  applyGrypeIgnores $image
   if set -q report_file[1]
-    $GRYPE_BIN -f $CVE_SEVERITY_THRESHOLD -s all-layers --file $report_file docker:$image
+    $GRYPE_BIN -c $GRYPE_CONF_PATH -f $CVE_SEVERITY_THRESHOLD -s all-layers --file $report_file docker:$image
     or return $status
   else
-    $GRYPE_BIN -f $CVE_SEVERITY_THRESHOLD -s all-layers docker:$image
+    $GRYPE_BIN -c $GRYPE_CONF_PATH -f $CVE_SEVERITY_THRESHOLD -s all-layers docker:$image
     or return $status
   end
 end
