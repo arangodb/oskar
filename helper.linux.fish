@@ -2150,9 +2150,10 @@ function applyGrypeIgnores
   end
 
   # CVE-2026-22184
-  if not docker run --rm $image which untgz >/dev/null 2>&1
-    echo "ignore: [{vulnerability: CVE-2026-22184, package: {name: zlib}, reason: 'untgz missing, false positive'}]" >> "$GRYPE_CONF_PATH"  
-  end
+  # was fixed internally within the Grype DB using a VEX record probably)
+  #if not docker run --rm $image which untgz >/dev/null 2>&1
+  #  echo "ignore: [{vulnerability: CVE-2026-22184, package: {name: zlib}, reason: 'untgz missing, false positive'}]" >> "$GRYPE_CONF_PATH"  
+  #end
 end
 
 function installGrype
