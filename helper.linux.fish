@@ -2199,8 +2199,8 @@ function downloadOrUpdateGrype
     installGrype
     or return 1
   end
-
   setupGrype
+  or return 1
 end
 
 function checkDockerImageForCves
@@ -2218,6 +2218,7 @@ function checkDockerImageForCves
   echo "scanning image for CVEs: $image"
   echo "apply specific CVE exclusions list"
   applyGrypeIgnores $image
+  or return $status
   if set -q report_file[1]
     $GRYPE_BIN -c $GRYPE_CONF_PATH -f $CVE_SEVERITY_THRESHOLD -s all-layers --file $report_file docker:$image
     or return $status
