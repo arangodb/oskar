@@ -17,7 +17,7 @@ and begin
   if test -f "$WORKDIR/work/ArangoDB/tests/test-definitions.yml"
     set -xg TEST_DEFINITIONS test-definitions.yml
   else
-    set -xg TEST_DEFINITIONS test-definitions.txt
+    set -xg TEST_DEFINITIONS tests.txt
   end
   if test (count $argv) -gt 0
     set -xg TEST_DEFINITIONS $argv[1]
