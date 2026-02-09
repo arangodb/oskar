@@ -22,6 +22,10 @@ else
 end
 
 
+set -gx UBUNTUBUILDIMAGE_40_NAME arangodb/ubuntubuildarangodb-devel
+set -gx UBUNTUBUILDIMAGE_40_TAG 19
+set -gx UBUNTUBUILDIMAGE_40 $UBUNTUBUILDIMAGE_40_NAME:$UBUNTUBUILDIMAGE_40_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
+
 set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
 set -gx UBUNTUBUILDIMAGE_312_TAG 19
 set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
@@ -1555,6 +1559,30 @@ end
 
 function pullUbuntuBuildImageDevel ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 ; end
 
+function buildUbuntuBuildImage40
+  pushd $WORKDIR
+  and cd $WORKDIR/containers/buildUbuntuDevel.docker
+  and switch "$ARCH"
+        case "x86_64"
+          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_40 -f ./Dockerfile.x86-64 ."
+        case "aarch64"
+          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_40 -f ./Dockerfile.arm64 ."
+        case '*'
+          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_40"
+          exit 1
+      end
+  or begin ; popd ; return 1 ; end
+  popd
+end
+
+function pushUbuntuBuildImage40
+  "$DOCKER" tag $UBUNTUBUILDIMAGE_40 $UBUNTUBUILDIMAGE_40_NAME:latest-$ARCH
+  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_40
+  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_40_NAME:latest-$ARCH
+end
+
+function pullUbuntuBuildImage40 ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_40 ; end
+
 function buildUbuntuPackagingImage
   pushd $WORKDIR
   and cp -a scripts/buildDebianPackage.fish containers/buildUbuntuPackaging.docker/scripts
@@ -1651,6 +1679,8 @@ function remakeImages
   pushUbuntuBuildImage311 ; or set -l s 1
   buildUbuntuBuildImageDevel ; or set -l s 1
   pushUbuntuBuildImageDevel ; or set -l s 1
+  buildUbuntuBuildImage40 ; or set -l s 1
+  pushUbuntuBuildImage40 ; or set -l s 1
   buildAlpineUtilsImage ; or set -l s 1
   pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
@@ -1670,6 +1700,8 @@ function remakeBuildImages
   pushUbuntuBuildImage311 ; or set -l s 1
   buildUbuntuBuildImageDevel ; or set -l s 1
   pushUbuntuBuildImageDevel ; or set -l s 1
+  buildUbuntuBuildImage40 ; or set -l s 1
+  pushUbuntuBuildImage40 ; or set -l s 1
 
   return $s
 end
@@ -2056,6 +2088,7 @@ function updateOskar
   updateOskarOnly
   and pullUbuntuBuildImage311
   and pullUbuntuBuildImageDevel
+  and pullUbuntuBuildImage40
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullUbuntuPackagingImage2
