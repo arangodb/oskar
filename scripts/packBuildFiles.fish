@@ -14,7 +14,10 @@ if test "$ENTERPRISEEDITION" = "On"
   set suffix "e"
 end
 
-set builddirs "build js/apps/system/_admin/aardvark/APP/react/build"
+set builddirs "build"
+if test "$ARANGODB_VERSION_MAJOR" -lt 4
+  set builddirs "$builddirs js/apps/system/_admin/aardvark/APP/react/build"
+end
 echo Working on build directories: $builddirs
 
 rm -rf "$INNERWORKDIR/arangodb3$suffix-$PLATFORM-build_files_$BUILDMODE-$ARANGODB_VERSION"_"$ARCH.tar.gz" &>/dev/null 
