@@ -2,7 +2,6 @@ FROM ubuntu:24.04
 MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl jq pwgen numactl elfutils sysstat ca-certificates vim lsof && apt-get autoremove -y && apt-get clean
-RUN apt-get install --no-install-recommends -y nodejs && apt-get install --no-install-recommends -y npm && npm install -g foxx-cli && apt-get purge -y npm && apt-get autoremove -y && apt-get clean
 
 ENV GLIBCXX_FORCE_NEW=1
 
