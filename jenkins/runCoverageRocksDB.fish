@@ -14,10 +14,10 @@ and skipGrey
 and single_cluster
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and begin
-  if test -f "$WORKDIR/work/ArangoDB/tests/test-definitions.yml"
-    set -xg TEST_DEFINITIONS test-definitions.yml
+  if test -f "$WORKDIR/work/ArangoDB/tests/tests.yml"
+    set -xg TEST_DEFINITIONS tests.yml
   else
-    set -xg TEST_DEFINITIONS tests.txt
+    set -xg TEST_DEFINITIONS test-definitions.txt
   end
   if test (count $argv) -gt 0
     set -xg TEST_DEFINITIONS $argv[1]
