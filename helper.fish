@@ -862,12 +862,18 @@ function prepareInstall
 
   pushd $path
   and if test $PACKAGE_STRIP = All
-    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
-    if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -le 10; and test $PLATFORM = "darwin"; or test $PLATFORM = "linux"
-      strip usr/sbin/arangod
+    strip usr/bin/{arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+    if test "$ARANGODB_VERSION_MAJOR" -eq 3; and begin test "$PLATFORM" = "darwin"; or test "$PLATFORM" = "linux"; end
+      strip usr/bin/arangobench
+      if test "$ARANGODB_VERSION_MINOR" -le 10
+        strip usr/sbin/arangod
+      end
     end
   else if test $PACKAGE_STRIP = ExceptArangod
-    strip usr/bin/{arangobench,arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+    strip usr/bin/{arangodump,arangoexport,arangoimport,arangorestore,arangosh,arangovpack}
+    if test "$ARANGODB_VERSION_MAJOR" -eq 3
+      strip usr/bin/arangobench
+    end
   end
   and if test "$ENTERPRISEEDITION" != "On"
     rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
