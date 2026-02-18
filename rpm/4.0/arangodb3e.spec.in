@@ -75,7 +75,7 @@ Native graphs, an integrated search engine, and JSON support, via a single query
 
 
 %description client
-The ArangoDB shell as stand-alone program. It also contains the utility programs: arangobench (benchmark), arangorestore & arangodump (backup), arangoimport & arangoexport.
+The ArangoDB shell as stand-alone program. It also contains the utility programs: arangorestore & arangodump (backup), arangoimport & arangoexport.
 
 ## -----------------------------------------------------------------------------
 ## --SECTION--                                                              prep
@@ -155,8 +155,7 @@ echo check: We assume that there is nothing to check.
 %files client
 %defattr(-,root,root,0755)
 
-# This is for arangobench.conf and arangobackup.conf (if the latter is present)
-%config(noreplace) %{_cfgdir}/arangob*.conf
+%config(noreplace) %{_cfgdir}/arangobackup.conf
 %config(noreplace) %{_cfgdir}/arangodump.conf
 %config(noreplace) %{_cfgdir}/arangoexp*.conf
 %config(noreplace) %{_cfgdir}/arangoimp*.conf
@@ -164,8 +163,8 @@ echo check: We assume that there is nothing to check.
 %config(noreplace) %{_cfgdir}/arangorestore.conf
 %config(noreplace) %{_cfgdir}/arangosh.conf
 %config(noreplace) %{_cfgdir}/arangovpack.conf
-# This is for arangobench and arangobackup (if the latter is present)
-%{_bindir}/arangob*
+
+%{_bindir}/arangobackup
 %{_bindir}/arangodump
 %{_bindir}/arangoexp*
 %{_bindir}/arangoimp*
@@ -173,7 +172,6 @@ echo check: We assume that there is nothing to check.
 %{_bindir}/arangorestore
 %{_bindir}/arangosh
 %{_bindir}/arangovpack
-%{_mandir}/*/arangobench*
 %{_mandir}/*/arangodump*
 %{_mandir}/*/arangoimp*
 %{_mandir}/*/arangorestore*
