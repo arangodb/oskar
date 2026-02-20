@@ -158,7 +158,7 @@ echo check: We assume that there is nothing to check.
 %config(noreplace) %{_cfgdir}/arangobackup.conf
 %config(noreplace) %{_cfgdir}/arangodump.conf
 %config(noreplace) %{_cfgdir}/arangoexp*.conf
-%config(noreplace) %{_cfgdir}/arangoimp*.conf
+%config(noreplace) %{_cfgdir}/arangoimport.conf
 %config(noreplace) %{_cfgdir}/arangoinspect.conf
 %config(noreplace) %{_cfgdir}/arangorestore.conf
 %config(noreplace) %{_cfgdir}/arangosh.conf
@@ -167,13 +167,13 @@ echo check: We assume that there is nothing to check.
 %{_bindir}/arangobackup
 %{_bindir}/arangodump
 %{_bindir}/arangoexp*
-%{_bindir}/arangoimp*
+%{_bindir}/arangoimport
 %{_bindir}/arangoinspect
 %{_bindir}/arangorestore
 %{_bindir}/arangosh
 %{_bindir}/arangovpack
 %{_mandir}/*/arangodump*
-%{_mandir}/*/arangoimp*
+%{_mandir}/*/arangoimport
 %{_mandir}/*/arangorestore*
 %{_mandir}/*/arangosh*
 %{_datadir}/arangodb3/js@JS_DIR@/common

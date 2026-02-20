@@ -19,7 +19,6 @@ override_dh_auto_install:
 	mkdir -p debian/@EDITION@/etc/init.d
 	cp debian/arangodb3.init debian/@EDITION@/etc/init.d/arangodb3
 	cd build/install ; for i in arangodump arangoexport arangoimport arangoinspect arangorestore arangosh arangovpack; do cp -a --parents etc/arangodb3/$$i.conf usr/bin/$$i ../../debian/@EDITION@-client; done
-	cd build/install ; for i in arangoimp; do cp -a --parents usr/bin/$$i ../../debian/@EDITION@-client; done
 	cd build/install ; cp -a --parents usr/share/arangodb3/icudtl*.dat ../../debian/@EDITION@-client
 	cd build/install ; if test -d usr/share/arangodb3/js/common; then cp -a --parents usr/share/arangodb3/js/common usr/share/arangodb3/js/client usr/share/arangodb3/js/node ../../debian/@EDITION@-client; else cp -a --parents usr/share/arangodb3/js/*/common usr/share/arangodb3/js/*/client usr/share/arangodb3/js/*/node ../../debian/@EDITION@-client; fi
 	cd build/install ; if test -x usr/bin/arangobackup ; then cp -a --parents etc/arangodb3/arangobackup.conf usr/bin/arangobackup ../../debian/@EDITION@-client ; fi
