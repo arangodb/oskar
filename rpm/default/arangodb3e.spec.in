@@ -173,7 +173,8 @@ echo check: We assume that there is nothing to check.
 %{_bindir}/arangosh
 %{_bindir}/arangovpack
 %{_mandir}/*/arangodump*
-%{_mandir}/*/arangoimport
+%{_mandir}/*/arangoexport*
+%{_mandir}/*/arangoimport*
 %{_mandir}/*/arangorestore*
 %{_mandir}/*/arangosh*
 %{_datadir}/arangodb3/js@JS_DIR@/common
