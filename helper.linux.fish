@@ -1278,6 +1278,7 @@ function validateDockerImageIfNeeded
   echo "going to scan docker image for CVEs: $image_name"
   set -l filesafe_image_name (string replace "/" "-" -- $image_name)
   if test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "1"; or test "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE" = "On"
+    set -xg DOCKER_API_VERSION "1.43"
     if test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "1"; or test "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE" = "On"
       set -l grype_report_dir $WORKDIR/work/grype_reports
       if ! test -d $grype_report_dir
