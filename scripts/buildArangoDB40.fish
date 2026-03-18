@@ -123,6 +123,10 @@ if test "$MINIMAL_DEBUG_INFO" = "On"
     -DUSE_MINIMAL_DEBUGINFO=On
 end
 
+echo "using architecture 'haswell'"
+set -g FULLARGS $FULLARGS \
+  -DTARGET_ARCHITECTURE="haswell"
+
 if test (string trim "$NODE_MODULES_BUNDLE") = "" -a -e "/node_modules.tar.xz"
   set -g FULLARGS $FULLARGS -DNODE_MODULES_BUNDLE="/node_modules.tar.xz"
 else if test -e "$NODE_MODULES_BUNDLE"
