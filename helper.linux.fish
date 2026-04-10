@@ -1382,7 +1382,7 @@ function buildDockerImage
   popd
 
   pushd $containerpath
-  and eval "$DOCKER build $BUILD_ARGS --pull --no-cache -t $DOCKER_URL_PREFIX$imagename ."
+  and eval "$DOCKER build --provenance=false --sbom=false $BUILD_ARGS --pull --no-cache -t $DOCKER_URL_PREFIX$imagename ."
   or begin ; popd ; return 1 ; end
   popd
 end
