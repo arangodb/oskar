@@ -1,4 +1,4 @@
-FROM alpine:3.21
+FROM alpine:3.23
 MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
 
 RUN apk update --no-cache && apk upgrade --no-cache
