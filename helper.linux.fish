@@ -1517,9 +1517,9 @@ function buildUbuntuBuildImage311
   and cd $WORKDIR/containers/buildUbuntu311.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.x86-64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.x86-64 ."
         case "aarch64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.arm64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.arm64 ."
         case '*'
           echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_311"
           exit 1
@@ -1541,9 +1541,9 @@ function buildUbuntuBuildImageDevel
   and cd $WORKDIR/containers/buildUbuntuDevel.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.x86-64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.x86-64 ."
         case "aarch64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.arm64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.arm64 ."
         case '*'
           echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_312"
           exit 1
@@ -1565,9 +1565,9 @@ function buildUbuntuBuildImage40
   and cd $WORKDIR/containers/buildUbuntuDevel.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_40 -f ./Dockerfile.x86-64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_40 -f ./Dockerfile.x86-64 ."
         case "aarch64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_40 -f ./Dockerfile.arm64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_40 -f ./Dockerfile.arm64 ."
         case '*'
           echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_40"
           exit 1
