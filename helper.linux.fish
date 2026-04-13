@@ -23,11 +23,11 @@ end
 
 
 set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE_312_TAG 19
+set -gx UBUNTUBUILDIMAGE_312_TAG 21
 set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
 set -gx UBUNTUBUILDIMAGE_311_NAME arangodb/ubuntubuildarangodb-311
-set -gx UBUNTUBUILDIMAGE_311_TAG 7
+set -gx UBUNTUBUILDIMAGE_311_TAG 8
 set -gx UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:$UBUNTUBUILDIMAGE_311_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
@@ -1513,9 +1513,9 @@ function buildUbuntuBuildImage311
   and cd $WORKDIR/containers/buildUbuntu311.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.x86-64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.x86-64 ."
         case "aarch64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.arm64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.arm64 ."
         case '*'
           echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_311"
           exit 1
@@ -1537,9 +1537,9 @@ function buildUbuntuBuildImageDevel
   and cd $WORKDIR/containers/buildUbuntuDevel.docker
   and switch "$ARCH"
         case "x86_64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.x86-64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.x86-64 ."
         case "aarch64"
-          eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.arm64 ."
+          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.arm64 ."
         case '*'
           echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_312"
           exit 1
