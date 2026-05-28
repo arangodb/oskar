@@ -1,0 +1,37 @@
+# Dependabot configuration for arangodb/oskar.
+# Target: .github/dependabot.yml on the `master` branch.
+# Tracks base-image updates for the customer-shipping ArangoDB container images.
+# Build-toolchain Dockerfiles are intentionally excluded — they're pinned for build reproducibility.
+
+version: 2
+
+updates:
+  - package-ecosystem: "docker"
+    directories:
+      - "/containers/arangodb311alpine.docker"
+      - "/containers/arangodb311deb.docker"
+      - "/containers/arangodb311ubi.docker"
+      - "/containers/arangodb312alpine.docker"
+      - "/containers/arangodb312deb.docker"
+      - "/containers/arangodb312ubi.docker"
+      - "/containers/arangodbDevelalpine.docker"
+      - "/containers/arangodbDeveldeb.docker"
+      - "/containers/arangodbDevelubi.docker"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "docker"
+      - "security"
+    commit-message:
+      prefix: "build"
+      include: "scope"
+    groups:
+      shipping-images-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
