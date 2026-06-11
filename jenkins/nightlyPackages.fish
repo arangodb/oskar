@@ -75,7 +75,9 @@ and begin
 end
 and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and setNightlyVersion
-and makeRelease
+and echo "Community packages creation is COMPLETELY DISABLED! Building enterprise packages only."
+# and makeRelease
+and makeEnterpriseRelease
 and if test "$COPY_TO_STAGE2" = "true"
   copyPackagesToStage2
 end

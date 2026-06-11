@@ -747,11 +747,6 @@ function makeCommunityRelease
 end
 
 function makeEnterpriseRelease
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
-  end
-
   set -l packages "ALL"
 
   if test (count $argv) -lt 3
@@ -762,6 +757,11 @@ function makeEnterpriseRelease
     set -xg ARANGODB_PACKAGE_REVISION "$argv[2]"
     set -xg ARANGODB_FULL_VERSION "$argv[1]-$argv[2]"
     test -n "$argv[3]" ; and set packages "$argv[3]"
+  end
+
+  if test "$SHIPS_ARANGOSYNC" = "On"; and test "$DOWNLOAD_SYNC_USER" = ""
+    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
+    return 1
   end
 
   test (findMinimalDebugInfo) = "On"
@@ -936,7 +936,7 @@ function buildTarGzPackageHelper
   and cd $WORKDIR/work/targz
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
-  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
+  and if test "$SHIPS_ARANGOSYNC" != "On"
         rm -f bin/arangosync
       end
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
@@ -2005,6 +2005,7 @@ function showConfig
   printf $fmt3 'CPU'           $DEFAULT_ARCHITECTURE   '(defaultArchitecture cpuname)'
   printf $fmt3 'Use ARM'       $USE_ARM                '(ARM true or false)'
   printf $fmt3 'Use rclone'    $USE_RCLONE             '(rclone true or false)'
+  printf $fmt3 'Ships arangosync' $SHIPS_ARANGOSYNC    '(shipsSyncOn/Off)'
   printf $fmt3 'Enterprise'    $ENTERPRISEEDITION      '(community/enterprise)'
   printf $fmt3 'Jemalloc'      $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'
   printf $fmt3 'Maintainer'    $MAINTAINER             '(maintainerOn/Off)'
@@ -2308,6 +2309,70 @@ function findArangoDBVersion
   echo "DOCKER:                            $DOCKER"
   echo '------------------------------------------------------------------------------'
   echo
+end
+
+## #############################################################################
+## arangosync
+## #############################################################################
+
+# arangosync is shipped with the Enterprise Edition up to 3.10 and within
+# 3.11 for versions below 3.11.14.5. There is no arangosync in 3.11.14.5 or
+# higher and in 3.12 or higher.
+function shipsSyncOn
+  set -gx SHIPS_ARANGOSYNC On
+end
+
+function shipsSyncOff
+  set -gx SHIPS_ARANGOSYNC Off
+end
+
+if test -z "$SHIPS_ARANGOSYNC"
+  shipsSyncOn
+end
+
+# Sets SHIPS_ARANGOSYNC depending on whether the checked out ArangoDB version
+# still ships arangosync. Requires the version variables set by
+# findArangoDBVersion on a pristine checkout, i.e. must run before
+# setNightlyVersion changes the release type. Called from switchBranches.
+function findShipsArangoSync
+  shipsSyncOn
+  if test "$ARANGODB_VERSION_MAJOR" != "3"
+    shipsSyncOff
+    return 0
+  end
+  if not string match -qr '^[0-9]+$' -- "$ARANGODB_VERSION_MINOR"
+    shipsSyncOff
+    return 0
+  end
+  if test "$ARANGODB_VERSION_MINOR" -le 10
+    return 0
+  end
+  if test "$ARANGODB_VERSION_MINOR" -ne 11
+    shipsSyncOff
+    return 0
+  end
+  if not string match -qr '^[0-9]+$' -- "$ARANGODB_VERSION_PATCH"
+    return 0
+  end
+  if test "$ARANGODB_VERSION_PATCH" -lt 14
+    return 0
+  end
+  if test "$ARANGODB_VERSION_PATCH" -gt 14
+    shipsSyncOff
+    return 0
+  end
+  # 3.11.14: hot-fix releases have a purely numeric release type (3.11.14.X)
+  if not string match -qr '^[0-9]+$' -- "$ARANGODB_VERSION_RELEASE_TYPE"
+    return 0
+  end
+  if test "$ARANGODB_VERSION_RELEASE_TYPE" -ge 5
+    shipsSyncOff
+  end
+  return 0
+end
+
+function echoArangoSyncSkipped
+  echo "INFO: ArangoDB $ARANGODB_VERSION does not ship arangosync anymore (gone since 3.11.14.5 and not in 3.12+): skipping arangosync"
 end
 
 ## #############################################################################

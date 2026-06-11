@@ -271,6 +271,7 @@ function switchBranches
   and runInContainer $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/switchBranches.fish $argv
   and convertSItoJSON
   and findArangoDBVersion
+  and findShipsArangoSync
   and findRequiredCompiler
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
   and findDefaultArchitecture
@@ -665,7 +666,7 @@ function buildPackage
 end
 
 function buildEnterprisePackage
-  if test "$DOWNLOAD_SYNC_USER" = ""
+  if test "$SHIPS_ARANGOSYNC" = "On"; and test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
   end
@@ -850,7 +851,7 @@ end
 ## #############################################################################
 
 function makeTestPackageLinux
-  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = "" -a "$ARANGODB_VERSION_MAJOR" -eq 3 -a "$ARANGODB_VERSION_MINOR" -lt 12
+  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = ""; and test "$SHIPS_ARANGOSYNC" = "On"
     echo "Need to set environment variable DOWNLOAD_SYNC_USER for Enterprise package or use Community."
     return 1
   end
@@ -902,6 +903,9 @@ function buildTarGzServerLinuxTestPackage
   and cd $WORKDIR/work/targz
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
+  and if test "$SHIPS_ARANGOSYNC" != "On"
+        rm -f bin/arangosync
+      end
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and cp bin/README.linux.server ./README
   and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
@@ -958,12 +962,12 @@ end
 ## #############################################################################
 
 function makeDockerRelease
-  if test "$DOWNLOAD_SYNC_USER" = ""
+  findArangoDBVersion ; or return 1
+
+  if test "$SHIPS_ARANGOSYNC" = "On"; and test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
   end
-
-  findArangoDBVersion ; or return 1
 
   if test (count $argv) -ge 1
     makeDockerCommunityRelease $argv[1]
@@ -996,12 +1000,12 @@ function makeDockerCommunityRelease
 end
 
 function makeDockerEnterpriseRelease
-  if test "$DOWNLOAD_SYNC_USER" = ""
+  findArangoDBVersion ; or return 1
+
+  if test "$SHIPS_ARANGOSYNC" = "On"; and test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
   end
-
-  findArangoDBVersion ; or return 1
 
   test (findMinimalDebugInfo) = "On"
   and begin
@@ -1098,12 +1102,12 @@ function makeDockerMultiarchDebug
 end
 
 function makeDockerDebug
-  if test "$DOWNLOAD_SYNC_USER" = ""
+  findArangoDBVersion ; or return 1
+
+  if test "$SHIPS_ARANGOSYNC" = "On"; and test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
   end
-
-  findArangoDBVersion ; or return 1
 
   if test (count $argv) -ge 1
     makeDockerCommunityDebug $argv[1]
@@ -1128,12 +1132,12 @@ function makeDockerCommunityDebug
 end
 
 function makeDockerEnterpriseDebug
-  if test "$DOWNLOAD_SYNC_USER" = ""
+  findArangoDBVersion ; or return 1
+
+  if test "$SHIPS_ARANGOSYNC" = "On"; and test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
   end
-
-  findArangoDBVersion ; or return 1
 
   packageStripNone
   and minimalDebugInfoOff
@@ -2080,7 +2084,7 @@ function downloadStarter
 end
 
 function downloadSyncer
-  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+  if test "$SHIPS_ARANGOSYNC" = "On"
     if test "$DOWNLOAD_SYNC_USER" = ""
       echo "Need to set environment variable DOWNLOAD_SYNC_USER."
       return 1
@@ -2090,6 +2094,9 @@ function downloadSyncer
     and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
     and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
     and convertSItoJSON
+  else
+    echoArangoSyncSkipped
+    rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
   end
 end
 
@@ -2105,7 +2112,7 @@ function downloadAuxBinariesToBuildBin
      downloadRclone
      and cp work/ArangoDB/build/install/usr/sbin/rclone-arangodb work/ArangoDB/build/bin/
      and downloadSyncer
-     and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
+     and if test "$SHIPS_ARANGOSYNC" = "On"
            cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
          end
   end

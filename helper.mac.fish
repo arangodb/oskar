@@ -397,6 +397,7 @@ function switchBranches
   and findRequiredCompiler
   and findUseARM
   and findArangoDBVersion
+  and findShipsArangoSync
 end
 
 function clearWorkdir
@@ -489,9 +490,13 @@ function downloadStarter
 end
 
 function downloadSyncer
-  mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-  and runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
-  and convertSItoJSON
+  if test "$SHIPS_ARANGOSYNC" = "On"
+    mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
+    and runLocal $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
+    and convertSItoJSON
+  else
+    echoArangoSyncSkipped
+  end
 end
 
 function downloadRclone
@@ -560,7 +565,7 @@ function cleanupThirdParty
 end
 
 function buildEnterprisePackage
-  if test "$DOWNLOAD_SYNC_USER" = ""
+  if test "$SHIPS_ARANGOSYNC" = "On"; and test "$DOWNLOAD_SYNC_USER" = ""
     echo "Need to set environment variable DOWNLOAD_SYNC_USER."
     return 1
   end
