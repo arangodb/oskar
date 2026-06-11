@@ -90,7 +90,9 @@ switchBranches $env:ARANGODB_BRANCH $env:ENTERPRISE_BRANCH
 If ($global:ok ) 
 {
     clearResults
-    makeRelease
+    Write-Host "Community packages creation is COMPLETELY DISABLED! Building enterprise packages only."
+    # makeRelease
+    makeEnterpriseRelease
 }
 $s = $global:ok
 If ($global:ok -And $env:COPY_TO_STAGE2 -eq $true) 

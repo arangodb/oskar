@@ -620,6 +620,7 @@ Function showConfig
     Write-Host "PDBs archive:  : "$PDBS_ARCHIVE_TYPE
     Write-Host "DMP workspace  : "$ENABLE_REPORT_DUMPS
     Write-Host "Use rclone     : "$USE_RCLONE
+    Write-Host "Ships arangosync: "$SHIPS_ARANGOSYNC
     Write-Host "Sign package   : "$SIGN
     Write-Host " "
     Write-Host "Test Configuration"
@@ -1110,9 +1111,41 @@ Function downloadStarter
     setupSourceInfo "Starter" $STARTER_REV
 }
 
+# arangosync is shipped with the Enterprise Edition up to 3.11 for versions
+# below 3.11.14.5. There is no arangosync in 3.11.14.5 or higher and in 3.12
+# or higher.
+Function shipsSyncOn
+{
+    $global:SHIPS_ARANGOSYNC = "On"
+}
+
+Function shipsSyncOff
+{
+    $global:SHIPS_ARANGOSYNC = "Off"
+}
+
+# Sets SHIPS_ARANGOSYNC depending on whether the checked out ArangoDB version
+# still ships arangosync. Requires the version variables set by
+# findArangoDBVersion on a pristine checkout, i.e. must run before
+# setNightlyVersion changes the release type. Called from switchBranches.
+Function findShipsArangoSync
+{
+    shipsSyncOn
+    If ($global:ARANGODB_VERSION_MAJOR -ne 3) { shipsSyncOff; return }
+    If ($global:ARANGODB_VERSION_MINOR -notmatch '^[0-9]+$') { shipsSyncOff; return }
+    If ([int]$global:ARANGODB_VERSION_MINOR -le 10) { return }
+    If ([int]$global:ARANGODB_VERSION_MINOR -ne 11) { shipsSyncOff; return }
+    If ($global:ARANGODB_VERSION_PATCH -notmatch '^[0-9]+$') { return }
+    If ([int]$global:ARANGODB_VERSION_PATCH -lt 14) { return }
+    If ([int]$global:ARANGODB_VERSION_PATCH -gt 14) { shipsSyncOff; return }
+    # 3.11.14: hot-fix releases have a purely numeric release type (3.11.14.X)
+    If ($global:ARANGODB_VERSION_RELEASE_TYPE -notmatch '^[0-9]+$') { return }
+    If ([int]$global:ARANGODB_VERSION_RELEASE_TYPE -ge 5) { shipsSyncOff }
+}
+
 Function downloadSyncer
 {
-    If ($global:ARANGODB_VERSION_MAJOR -eq 3 -And $global:ARANGODB_VERSION_MINOR -lt 12)
+    If ($global:SHIPS_ARANGOSYNC -eq "On")
     {
         Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -1140,6 +1173,10 @@ Function downloadSyncer
         {
             setupSourceInfo "Syncer" $SYNCER_REV
         }
+    }
+    Else
+    {
+        Write-Host "INFO: ArangoDB $global:ARANGODB_VERSION does not ship arangosync anymore (gone since 3.11.14.5 and not in 3.12+): skipping arangosync download"
     }
 }
 
@@ -1342,6 +1379,7 @@ Function switchBranches($branch_c,$branch_e)
         setupSourceInfo "VERSION" $(Get-Content $INNERWORKDIR/$ENV:ARANGODB_GIT_ORGA/ARANGO-VERSION)
         setupSourceInfo "Community" $(git rev-parse --verify HEAD)
         findArangoDBVersion
+        findShipsArangoSync
     }
     Else
     {
@@ -1644,14 +1682,21 @@ Function configureWindows
           {
               return
           }
-          If ($global:ARANGODB_VERSION_MAJOR -eq 3 -And $global:ARANGODB_VERSION_MINOR -lt 12)
+          If ($global:SHIPS_ARANGOSYNC -eq "On")
           {
               $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/arangosync.exe"
           }
           If ($global:USE_RCLONE -eq "true" -and $global:PACKAGING -eq "On")
           {
               downloadRclone
-              $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
+              If ($THIRDPARTY_SBIN_LIST)
+              {
+                  $THIRDPARTY_SBIN_LIST="$THIRDPARTY_SBIN_LIST;$ARANGODIR_SLASH/build/rclone-arangodb.exe"
+              }
+              Else
+              {
+                  $THIRDPARTY_SBIN_LIST="$ARANGODIR_SLASH/build/rclone-arangodb.exe"
+              }
           }
           Write-Host "Time: $((Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH.mm.ssZ'))"   
           Write-Host "Configure: cmake -G `"$GENERATOR`" -T `"$GENERATORID$MSVS_COMPILER,host=x64`" -DVERBOSE=On -DUSE_MAINTAINER_MODE=`"$MAINTAINER`" -DUSE_GOOGLE_TESTS=`"$MAINTAINER`" -DUSE_CATCH_TESTS=`"$MAINTAINER`" -DUSE_ENTERPRISE=`"$ENTERPRISEEDITION`" -DCMAKE_BUILD_TYPE=`"$BUILDMODE`" -DPACKAGING=NSIS -DCMAKE_INSTALL_PREFIX=/ -DSKIP_PACKAGING=`"$SKIPPACKAGING`" -DUSE_FAILURE_TESTS=`"$USEFAILURETESTS`" -DSTATIC_EXECUTABLES=`"$STATICEXECUTABLES`" -DOPENSSL_USE_STATIC_LIBS=`"$STATICLIBS`" -DUSE_STRICT_OPENSSL_VERSION=On -DBUILD_REPO_INFO=`"$BUILD_REPO_INFO`" -DTHIRDPARTY_BIN=`"$ARANGODIR_SLASH/build/arangodb.exe`" -DUSE_CLCACHE_MODE=`"$CLCACHE`" -DUSE_CCACHE=`"Off`" -DTHIRDPARTY_SBIN=`"$THIRDPARTY_SBIN_LIST`" -DARANGODB_BUILD_DATE=`"$ARANGODB_BUILD_DATE`" $global:CMAKEPARAMS `"$global:ARANGODIR`""
@@ -2199,5 +2244,9 @@ Function makeRelease
 
 parallelism ([int]$ENV:NUMBER_OF_PROCESSORS)
 initSourceInfo
+If (-Not $global:SHIPS_ARANGOSYNC)
+{
+    shipsSyncOn
+}
 
 $global:SYSTEM_IS_WINDOWS=$true

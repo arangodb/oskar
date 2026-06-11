@@ -13,6 +13,43 @@ end
 
 echo Hello, syncer here, arguments are: $argv
 
+# There is no arangosync in 3.11.14.5 or higher and in 3.12 or higher,
+# so do not download it at all:
+set -l CMAKELIST "$INNERWORKDIR/ArangoDB/CMakeLists.txt"
+if test -f "$CMAKELIST"
+  set -l VERSIONSEDFIX 's/.*"\([0-9a-zA-Z]*\)".*$/\1/'
+  set -l VMAJOR (grep 'set(ARANGODB_VERSION_MAJOR' $CMAKELIST | sed -e $VERSIONSEDFIX)
+  set -l VMINOR (grep 'set(ARANGODB_VERSION_MINOR' $CMAKELIST | sed -e $VERSIONSEDFIX)
+  set -l VPATCH (grep 'set(ARANGODB_VERSION_PATCH' $CMAKELIST | grep -v unset | sed -e $VERSIONSEDFIX)
+  set -l VRELEASE_TYPE (grep 'set(ARANGODB_VERSION_RELEASE_TYPE' $CMAKELIST | grep -v unset | sed -e $VERSIONSEDFIX)
+  set -l SHIPS_ARANGOSYNC "true"
+  if test "$VMAJOR" = "3"
+    if string match -qr '^[0-9]+$' -- "$VMINOR"
+      if test "$VMINOR" -ge 12
+        set SHIPS_ARANGOSYNC "false"
+      else if test "$VMINOR" -eq 11
+        if string match -qr '^[0-9]+$' -- "$VPATCH"
+          if test "$VPATCH" -gt 14
+            set SHIPS_ARANGOSYNC "false"
+          else if test "$VPATCH" -eq 14
+            # 3.11.14: hot-fix releases have a purely numeric release type (3.11.14.X)
+            if string match -qr '^[0-9]+$' -- "$VRELEASE_TYPE"
+              if test "$VRELEASE_TYPE" -ge 5
+                set SHIPS_ARANGOSYNC "false"
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+  if test "$SHIPS_ARANGOSYNC" = "false"
+    echo "INFO: ArangoDB $VMAJOR.$VMINOR.$VPATCH does not ship arangosync anymore (gone since 3.11.14.5 and not in 3.12+): skipping arangosync download"
+    # sourceInfo.log already contains "Syncer: N/A" from its initialization
+    exit 0
+  end
+end
+
 if test -z "$DOWNLOAD_SYNC_USER"
   echo Need DOWNLOAD_SYNC_USER environment variable set!
   exit 1
