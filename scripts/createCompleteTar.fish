@@ -8,7 +8,6 @@ if test (count $argv) -ne 1
 end
 
 set -g RELEASE_TAG $argv[1]
-set -g SYNCER_REV "unknown"
 set -g STARTER_REV "unknown"
 
 function checkoutCommunity
@@ -20,7 +19,6 @@ function checkoutCommunity
   and pushd $INNERWORKDIR/CompleteTar/ArangoDB-$RELEASE_TAG/3rdParty
   and git submodule update --init --force
   and popd
-  and eval "set "(grep SYNCER_REV ArangoDB-$RELEASE_TAG/VERSIONS)
   and eval "set "(grep STARTER_REV ArangoDB-$RELEASE_TAG/VERSIONS)
   or begin popd; return 1; end
   popd
@@ -38,7 +36,6 @@ end
 
 function findVersion
   pushd $INNERWORKDIR/CompleteTar
-  and eval "set "(grep SYNCER_REV ArangoDB-$RELEASE_TAG/VERSIONS)
   and eval "set "(grep STARTER_REV ArangoDB-$RELEASE_TAG/VERSIONS)
   or begin popd; return 1; end
   popd
@@ -52,18 +49,6 @@ function checkoutStarter
   and git clone --progress --single-branch --branch $STARTER_REV ssh://git@$ARANGODB_GIT_HOST/$HELPER_GIT_ORGA/arangodb Starter-$STARTER_REV
   or begin popd; return 1; end
   popd
-end
-
-function checkoutSyncer
-  if test -n "$SYNCER_REV" -a "$SYNCER_REV" != "unknown"
-    echo "================================================================================"
-    echo "Checkout ArangoDB Syncer $SYNCER_REV"
-    echo "================================================================================"
-    pushd $INNERWORKDIR/CompleteTar
-    and git clone --progress --single-branch --branch $SYNCER_REV ssh://git@$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/arangosync arangosync-$SYNCER_REV
-    or begin popd; return 1; end
-    popd
-  end
 end
 
 function checkoutOskar
@@ -81,21 +66,12 @@ function createTar
   echo "Creating TAR"
   echo "================================================================================"
   pushd $INNERWORKDIR/CompleteTar
-  and if test -n "$SYNCER_REV" -a "$SYNCER_REV" != "unknown"
-    tar -c \
-       	  -z \
-	  --exclude=.git \
-	  --exclude=.gitignore \
-	  -f ArangoDBe-$RELEASE_TAG.tar.gz \
-	  ArangoDB-$RELEASE_TAG Starter-$STARTER_REV arangosync-$SYNCER_REV oskar
-  else
-    tar -c \
-       	  -z \
-	  --exclude=.git \
-	  --exclude=.gitignore \
-	  -f ArangoDBe-$RELEASE_TAG.tar.gz \
-	  ArangoDB-$RELEASE_TAG Starter-$STARTER_REV oskar
-  end
+  and tar -c \
+          -z \
+          --exclude=.git \
+          --exclude=.gitignore \
+          -f ArangoDBe-$RELEASE_TAG.tar.gz \
+          ArangoDB-$RELEASE_TAG Starter-$STARTER_REV oskar
   or begin popd; return 1; end
   popd
 end
@@ -107,7 +83,6 @@ and checkoutCommunity
 and checkoutEnterprise
 and findVersion
 and checkoutStarter
-and checkoutSyncer
 and checkoutOskar
 and createTar
 

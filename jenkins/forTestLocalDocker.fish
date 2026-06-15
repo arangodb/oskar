@@ -46,7 +46,6 @@ and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter
-and downloadSyncer
 and set imagename "arangodb/enterprise-local:"(date +%Y%m%d%H%M%S)
 and buildDockerLocal $imagename
 

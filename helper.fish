@@ -62,7 +62,7 @@ function convertSItoJSON
       cat $WORKDIR/work/sourceInfo.log | while read -l line
       set -l var (echo $line | cut -f1 -d ':')
       switch "$var"
-        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Syncer" "Rclone"
+        case "oskar" "VERSION" "Community" "Starter" "Enterprise" "Rclone"
           set -l val (echo $line | cut -f2 -d ' ')
           if test -n $val
             set fields "$fields  \"$var\":\""(echo $line | cut -f2 -d ' ')\"\n""
@@ -92,7 +92,6 @@ function initSourceInfo
   echo "Community: N/A" >> work/sourceInfo.log
   echo "Starter: N/A" >> work/sourceInfo.log
   echo "Enterprise: N/A" >> work/sourceInfo.log
-  echo "Syncer: N/A" >> work/sourceInfo.log
   echo "Rclone: N/A" >> work/sourceInfo.log
   
   popd
@@ -232,54 +231,7 @@ if test -z "$MINIMAL_DEBUG_INFO"
   set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
 end
 
-function defaultArchitecture
-  if test (count $argv) -lt 1
-    set -gx DEFAULT_ARCHITECTURE "westmere"
-  else
-    set -gx DEFAULT_ARCHITECTURE $argv[1]
-  end
-
-  return 0
-end
-
-function findDefaultArchitecture
-  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
-  set -l v ""
-
-  test -f $f
-  and begin
-    set v (fgrep DEFAULT_ARCHITECTURE $f | awk '{print $2}' | tr -d '"' | tr -d "'")
-  end
-
-  defaultArchitecture $v
-end
-
-test -z "$DEFAULT_ARCHITECTURE"; and findDefaultArchitecture
-
-function findUseARM
-  set -l f "$WORKDIR/work/ArangoDB/VERSIONS"
-
-  test -f $f
-  or begin
-    #echo "Cannot find $f; make sure source is checked out"
-    set -gx USE_ARM "Off"
-    return 0
-  end
-
-  set -l v (fgrep USE_ARM $f | awk '{print $2}' | tr -d '"' | tr -d "'")
-
-  if test "$v" != "On"
-    #echo "$f: no USE_ARM specified, using false"
-    set -gx USE_ARM "Off"
-  else
-    #echo "Using ARM '$v' from '$f'"
-    set -gx USE_ARM "$v"
-  end
-
-  return 0
-end
-
-if test -z "$USE_ARM" ; findUseARM ; end
+if test -z "$USE_ARM" ; set -xg USE_ARM "On" ; end
 
 function isGCE
   switch (hostname)
@@ -749,11 +701,6 @@ function makeCommunityRelease
 end
 
 function makeEnterpriseRelease
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
-  end
-
   set -l packages "ALL"
 
   if test (count $argv) -lt 3
@@ -876,14 +823,10 @@ function prepareInstall
     end
   end
   and if test "$ENTERPRISEEDITION" != "On"
-    rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
     rm -f "bin/arangobackup" "usr/bin/arangobackup" "usr/sbin/arangobackup"
   else
     if test -f usr/bin/arangobackup -a $PACKAGE_STRIP != None
       strip usr/bin/arangobackup
-      if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 11; and test $PLATFORM = "darwin"
-        rm -f "bin/arangosync" "usr/bin/arangosync" "usr/sbin/arangosync"
-      end
     end
   end
   set s $status
@@ -944,9 +887,6 @@ function buildTarGzPackageHelper
   and cd $WORKDIR/work/targz
   and rm -rf bin
   and cp -a $WORKDIR/binForTarGz bin
-  and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -ge 12
-        rm -f bin/arangosync
-      end
   and find bin "(" -name "*.bak" -o -name "*~" ")" -delete
   and cp bin/README.$os.server ./README
   and sed -i$suffix -E "s/@ARANGODB_PACKAGE_NAME@/$name-$os-$v$arch/g" README
@@ -996,10 +936,8 @@ function buildTarGzPackageHelper
       --exclude "$name-client-$os-$v$arch/sbin" \
       --exclude "$name-client-$os-$v$arch/bin/arangod" \
       --exclude "$name-client-$os-$v$arch/bin/arangodb" \
-      --exclude "$name-client-$os-$v$arch/bin/arangosync" \
       --exclude "$name-client-$os-$v$arch/usr/sbin" \
       --exclude "$name-client-$os-$v$arch/usr/bin/arangodb" \
-      --exclude "$name-client-$os-$v$arch/usr/bin/arangosync" \
       --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/arangodb-update-db" \
       --exclude "$name-client-$os-$v$arch/usr/share/arangodb3/js/server" \
       "$name-client-$os-$v$arch"
@@ -2010,8 +1948,6 @@ function showConfig
   printf $fmt3 'Buildmode'     $BUILDMODE              '(debugMode/releaseMode)'
   printf $fmt3 'Compiler'      $compiler_version       '(compiler x.y.z)'
   printf $fmt3 'OpenSSL'       $openssl_version        '(opensslVersion x.y.z)'
-  printf $fmt3 'CPU'           $DEFAULT_ARCHITECTURE   '(defaultArchitecture cpuname)'
-  printf $fmt3 'Use ARM'       $USE_ARM                '(ARM true or false)'
   printf $fmt3 'Use rclone'    $USE_RCLONE             '(rclone true or false)'
   printf $fmt3 'Enterprise'    $ENTERPRISEEDITION      '(community/enterprise)'
   printf $fmt3 'Jemalloc'      $JEMALLOC_OSKAR         '(jemallocOn/jemallocOff)'

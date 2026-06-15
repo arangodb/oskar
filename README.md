@@ -356,10 +356,6 @@ You need to set the following environment variables:
 The prefix for the link of the community and enterprise edition that
 is used to construct the download link in the snippets.
 
-    set -xg DOWNLOAD_SYNC_USER username:password
-
-A github user that can download the syncer executable from github.
-
 ### Results
 
 Under Linux:

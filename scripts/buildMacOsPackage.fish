@@ -59,11 +59,6 @@ function setupApp
     pushd $INNERWORKDIR/ArangoDB/build
     and make install DESTDIR=$INNERWORKDIR/dmg/$APPNAME/Contents/Resources
     and generateJsSha1Sum dmg/$APPNAME/Contents/Resources/opt/arangodb/share/arangodb3/js
-    and if test "$ENTERPRISEEDITION" = "On"; and test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12 
-          pushd $INNERWORKDIR/dmg/$APPNAME/Contents/Resources/opt/arangodb/bin
-          ln -s ../sbin/arangosync
-          popd
-        end
     and popd
     or begin popd; exit 1; end
   end

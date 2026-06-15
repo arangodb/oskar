@@ -35,7 +35,6 @@ and switchBranches $ARANGODB_BRANCH $ENTERPRISE_BRANCH true
 and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter
-and downloadSyncer
 and downloadRclone
 and setArchSuffix
 and set -xg HUB_ENTERPRISE "arangodb/enterprise-test:$DOCKER_TAG_JENKINS$archSuffix"

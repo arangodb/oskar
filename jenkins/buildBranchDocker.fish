@@ -12,7 +12,6 @@ and setNightlyVersion
 and findArangoDBVersion
 and buildStaticArangoDB
 and downloadStarter
-and downloadSyncer
 and buildDockerImage $IMAGE_NAME
 
 set -l s $status
