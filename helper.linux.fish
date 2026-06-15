@@ -30,10 +30,6 @@ set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
 set -gx UBUNTUBUILDIMAGE_312_TAG 22
 set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
-set -gx UBUNTUBUILDIMAGE_311_NAME arangodb/ubuntubuildarangodb-311
-set -gx UBUNTUBUILDIMAGE_311_TAG 8
-set -gx UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:$UBUNTUBUILDIMAGE_311_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
-
 set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
 set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
 
@@ -277,8 +273,6 @@ function switchBranches
   and findArangoDBVersion
   and findRequiredCompiler
   and set -gx MINIMAL_DEBUG_INFO (findMinimalDebugInfo)
-  and findDefaultArchitecture
-  and findUseARM
 end
 
 ## #############################################################################
@@ -323,8 +317,6 @@ function buildArangoDB
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
-  and findDefaultArchitecture
-  and findUseARM
   and set -xg STATIC_EXECUTABLES Off
   and runInContainer $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/(findBuildScript) $argv
   and packBuildFiles
@@ -339,8 +331,6 @@ function makeArangoDB
   if test "$COMPILER_VERSION" = ""
     findRequiredCompiler
     and findRequiredOpenSSL
-    and findDefaultArchitecture
-    and findUseARM
   end
   and runInContainer $DOCKER_URL_PREFIX(findBuildImage) $SCRIPTSDIR/makeArangoDB.fish $argv
   and packBuildFiles
@@ -355,8 +345,6 @@ function buildStaticArangoDB
   checkoutIfNeeded
   and findRequiredCompiler
   and findRequiredOpenSSL
-  and findDefaultArchitecture
-  and findUseARM
   and set -xg STATIC_EXECUTABLES On
   and if test "$UNPACK_BUILD_FILES" = "On"
         echo "UNPACK_BUILD_FILES: $UNPACK_BUILD_FILES"
@@ -382,8 +370,6 @@ function makeStaticArangoDB
   if test "$COMPILER_VERSION" = ""
     findRequiredCompiler
     and findRequiredOpenSSL
-    and findDefaultArchitecture
-    and findUseARM
   end
   and runInContainer $DOCKER_URL_PREFIX(findStaticBuildImage) $SCRIPTSDIR/makeAlpine.fish $argv
   and packBuildFiles
@@ -669,11 +655,6 @@ function buildPackage
 end
 
 function buildEnterprisePackage
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
-  end
-
   set -l packages "ALL"
   test -n "$argv[1]"; and set packages "$argv[1]"
  
@@ -686,7 +667,6 @@ function buildEnterprisePackage
   and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
-  and downloadSyncer
   and downloadRclone
   and buildPackage $packages
 
@@ -854,11 +834,6 @@ end
 ## #############################################################################
 
 function makeTestPackageLinux
-  if test "$ENTERPRISEEDITION" = "On" -a "$DOWNLOAD_SYNC_USER" = "" -a "$ARANGODB_VERSION_MAJOR" -eq 3 -a "$ARANGODB_VERSION_MINOR" -lt 12
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER for Enterprise package or use Community."
-    return 1
-  end
-
   test (findMinimalDebugInfo) = "On"
   and begin
     packageStripExceptArangod
@@ -876,7 +851,7 @@ function makeTestPackageLinux
   and set -xg NOSTRIP 1
   and buildStaticArangoDB
   and downloadStarter
-  and if test "$ENTERPRISEEDITION" = "On"; downloadSyncer; and downloadRclone; end
+  and if test "$ENTERPRISEEDITION" = "On"; downloadRclone; end
   and buildTarGzServerLinuxTestPackage
 
   if test $status -ne 0
@@ -962,11 +937,6 @@ end
 ## #############################################################################
 
 function makeDockerRelease
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
-  end
-
   findArangoDBVersion ; or return 1
 
   if test (count $argv) -ge 1
@@ -1000,11 +970,6 @@ function makeDockerCommunityRelease
 end
 
 function makeDockerEnterpriseRelease
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
-  end
-
   findArangoDBVersion ; or return 1
 
   test (findMinimalDebugInfo) = "On"
@@ -1102,11 +1067,6 @@ function makeDockerMultiarchDebug
 end
 
 function makeDockerDebug
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
-  end
-
   findArangoDBVersion ; or return 1
 
   if test (count $argv) -ge 1
@@ -1132,11 +1092,6 @@ function makeDockerCommunityDebug
 end
 
 function makeDockerEnterpriseDebug
-  if test "$DOWNLOAD_SYNC_USER" = ""
-    echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-    return 1
-  end
-
   findArangoDBVersion ; or return 1
 
   packageStripNone
@@ -1245,7 +1200,6 @@ function buildDockerAny
   and buildStaticArangoDB
   and downloadStarter
   and if test "$ENTERPRISEEDITION" = "On"
-    downloadSyncer
     downloadRclone
   end
   and buildDockerImage $IMAGE_NAME1
@@ -1512,30 +1466,6 @@ end
 ## build and packaging images
 ## #############################################################################
 
-function buildUbuntuBuildImage311
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntu311.docker
-  and switch "$ARCH"
-        case "x86_64"
-          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.x86-64 ."
-        case "aarch64"
-          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 -f ./Dockerfile.arm64 ."
-        case '*'
-          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_311"
-          exit 1
-      end
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushUbuntuBuildImage311
-  "$DOCKER" tag $UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
-  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311
-  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311_NAME:latest-$ARCH
-end
-
-function pullUbuntuBuildImage311 ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 ; end
-
 function buildUbuntuBuildImageDevel
   pushd $WORKDIR
   and cd $WORKDIR/containers/buildUbuntuDevel.docker
@@ -1614,7 +1544,7 @@ function pullUbuntuPackagingImage2 ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUPAC
 
 function buildAlpineUtilsImage
   pushd $WORKDIR
-  and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadSyncer,downloadRclone,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
+  and cp -a scripts/{checkoutArangoDB,checkoutEnterprise,clearWorkDir,downloadStarter,downloadRclone,runTests,runFullTests,switchBranches,recursiveChown}.fish containers/buildUtils.docker/scripts
   and cd $WORKDIR/containers/buildUtils.docker
   and eval "$DOCKER build $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE ."
   or begin ; popd ; return 1 ; end
@@ -1676,8 +1606,6 @@ function pullLdapImage ; "$DOCKER" pull $DOCKER_URL_PREFIX$LDAPIMAGE ; end
 function remakeImages
   set -l s 0
 
-  buildUbuntuBuildImage311 ; or set -l s 1
-  pushUbuntuBuildImage311 ; or set -l s 1
   buildUbuntuBuildImageDevel ; or set -l s 1
   pushUbuntuBuildImageDevel ; or set -l s 1
   buildUbuntuBuildImage40 ; or set -l s 1
@@ -1697,8 +1625,6 @@ end
 function remakeBuildImages
   set -l s 0
 
-  buildUbuntuBuildImage311 ; or set -l s 1
-  pushUbuntuBuildImage311 ; or set -l s 1
   buildUbuntuBuildImageDevel ; or set -l s 1
   pushUbuntuBuildImageDevel ; or set -l s 1
   buildUbuntuBuildImage40 ; or set -l s 1
@@ -1770,7 +1696,6 @@ function runInContainer
              -e CCACHEBINPATH="$CCACHEBINPATH" \
              -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
              -e COVERAGE="$COVERAGE" \
-             -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
              -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
              -e GID=(id -g) \
              -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
@@ -1904,7 +1829,6 @@ function interactiveContainer
     -e CCACHEBINPATH="$CCACHEBINPATH" \
     -e COMPILER_VERSION=(echo (string replace -r '[_\-].*$' "" $COMPILER_VERSION)) \
     -e COVERAGE="$COVERAGE" \
-    -e DEFAULT_ARCHITECTURE="$DEFAULT_ARCHITECTURE" \
     -e ENTERPRISEEDITION="$ENTERPRISEEDITION" \
     -e GID=(id -g) \
     -e GIT_CURL_VERBOSE="$GIT_CURL_VERBOSE" \
@@ -2051,9 +1975,6 @@ function pushOskar
   and source helper.fish
   and git push
 
-  and buildUbuntuBuildImage311
-  and pushUbuntuBuildImage311
-
   and buildUbuntuBuildImageDevel
   and pushUbuntuBuildImageDevel
 
@@ -2087,7 +2008,6 @@ end
 
 function updateOskar
   updateOskarOnly
-  and pullUbuntuBuildImage311
   and pullUbuntuBuildImageDevel
   and pullUbuntuBuildImage40
   and pullAlpineUtilsImage
@@ -2112,20 +2032,6 @@ function downloadStarter
   and convertSItoJSON
 end
 
-function downloadSyncer
-  if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
-    if test "$DOWNLOAD_SYNC_USER" = ""
-      echo "Need to set environment variable DOWNLOAD_SYNC_USER."
-      return 1
-    end
-    mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
-    and rm -f $WORKDIR/work/ArangoDB/build/install/usr/sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-    and runInContainer -e DOWNLOAD_SYNC_USER=$DOWNLOAD_SYNC_USER $DOCKER_URL_PREFIX$ALPINEUTILSIMAGE $SCRIPTSDIR/downloadSyncer.fish $INNERWORKDIR/$THIRDPARTY_SBIN $argv
-    and ln -s ../sbin/arangosync $WORKDIR/work/ArangoDB/build/install/usr/bin/arangosync
-    and convertSItoJSON
-  end
-end
-
 function downloadRclone
   findUseRclone
   and mkdir -p $WORKDIR/work/$THIRDPARTY_SBIN
@@ -2137,10 +2043,6 @@ function downloadAuxBinariesToBuildBin
   if test "$ENTERPRISEEDITION" = "On"
      downloadRclone
      and cp work/ArangoDB/build/install/usr/sbin/rclone-arangodb work/ArangoDB/build/bin/
-     and downloadSyncer
-     and if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
-           cp work/ArangoDB/build/install/usr/sbin/arangosync work/ArangoDB/build/bin/
-         end
   end
   and downloadStarter
   and cp work/ArangoDB/build/install/usr/bin/arangodb work/ArangoDB/build/bin/

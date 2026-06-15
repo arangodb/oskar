@@ -119,6 +119,10 @@ else
   end
 end
 
+echo "using architecture 'sandy-bridge'"
+set -g FULLARGS $FULLARGS \
+  -DTARGET_ARCHITECTURE="sandy-bridge"
+
 if test "$MINIMAL_DEBUG_INFO" = "On"
   set -g FULLARGS $FULLARGS \
     -DUSE_MINIMAL_DEBUGINFO=On

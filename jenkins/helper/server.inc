@@ -76,9 +76,6 @@ case "$ARANGO_MODE" in
   "cluster")
     STARTER_MODE="--starter.mode cluster --starter.port ${ARANGO_STARTER_PORT}"
   ;;
-  "activefailover")
-    STARTER_MODE="--starter.mode activefailover --starter.port ${ARANGO_STARTER_PORT}"
-  ;;
   "singleserver")
     STARTER_MODE="--starter.mode single --starter.port ${ARANGO_STARTER_PORT}"
   ;;

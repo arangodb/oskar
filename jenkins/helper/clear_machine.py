@@ -10,7 +10,6 @@ import psutil
 arango_processes = [
     "arangod",
     "arangodb",
-    "arangosync",
     "arangosh",
     "arangodbtests"
 ]

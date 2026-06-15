@@ -25,16 +25,6 @@ where `/tmp/mydata` should point to the directory containing the
 data. The database itself will be in `/tmp/mydata/single8529/data`.
 The apps will be stored in `/tmp/mydata/single8529/apps`.
 
-Active Failover
-===============
-
-An active failover deployment can be started using
-
-    arangodb --starter.mode activefailover --starter.data-dir /tmp/mydata
-
-Please then read the instructions printed on screen for starting the
-additional servers.
-
 Cluster
 =======
 

@@ -4,7 +4,6 @@ function setupSourceInfo
   set -l field $argv[1]
   set -l value $argv[2]
   set -l suffix ""
-  test $PLATFORM = "darwin"; and set suffix ".bak"
   sed -i$suffix -E 's/^'"$field"':.*$/'"$field"': '"$value"'/g' $INNERWORKDIR/sourceInfo.log
 end
 
