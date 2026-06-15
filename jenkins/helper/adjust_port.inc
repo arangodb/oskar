@@ -5,10 +5,6 @@ case "$ARANGO_MODE" in
     ports=(`./oskar/jenkins/helper/port.sh --cluster`)
     export ARANGO_PORTS="${ports[1]} ${ports[5]} ${ports[9]}"
   ;;
-  "activefailover")
-    ports=(`./oskar/jenkins/helper/port.sh --activefailover`)
-    export ARANGO_PORTS="${ports[1]} ${ports[4]} ${ports[7]}"
-  ;;
   "singleserver")
     ports=(`./oskar/jenkins/helper/port.sh --singleserver`)
     export ARANGO_PORTS="${ports[1]}"

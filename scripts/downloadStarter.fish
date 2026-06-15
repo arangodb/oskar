@@ -5,7 +5,6 @@
 function setupSourceInfo
   set -l starterRev $argv[1]
   set -l suffix ""
-  test $PLATFORM = "darwin"; and set suffix ".bak"
   sed -i$suffix -E 's/^Starter:.*$/Starter: '"$starterRev"'/g' $INNERWORKDIR/sourceInfo.log
 end
 
