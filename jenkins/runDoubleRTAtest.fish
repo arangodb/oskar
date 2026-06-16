@@ -65,7 +65,6 @@ buildVersion
 and checkoutRTA
 and cd work/release-test-automation/
 and mkdir -p arangoversions
-set -g ARANGODB_OLD_BRANCH
 and eval "bash -x ./jenkins/oskar_double_tar.sh $argv"
 
 set -l s $status
