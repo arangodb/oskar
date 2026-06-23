@@ -2186,8 +2186,13 @@ function applyGrypeIgnores
   # CVE-2026-22184
   # was fixed internally within the Grype DB using a VEX record probably)
   #if not docker run --rm $image which untgz >/dev/null 2>&1
-  #  echo "ignore: [{vulnerability: CVE-2026-22184, package: {name: zlib}, reason: 'untgz missing, false positive'}]" >> "$GRYPE_CONF_PATH"  
+  #  echo "ignore: [{vulnerability: CVE-2026-22184, package: {name: zlib}, reason: 'untgz missing, false positive'}]" >> "$GRYPE_CONF_PATH"
   #end
+
+  # GO-2026-4964: false positive - grype can't compare rclone's "+dirty" build
+  # version (v1.74.3+dirty) against the fixed range (>= v1.73.5), so it flags an
+  # already-fixed advisory. Pinned to the exact reported version on purpose.
+  echo "ignore: [{vulnerability: GO-2026-4964, package: {name: github.com/rclone/rclone, version: 'v1.74.3+dirty'}, reason: 'false positive: +dirty build version breaks grype comparison; rclone v1.74.3 is past the fix in v1.73.5'}]" >> "$GRYPE_CONF_PATH"
 end
 
 function installGrype
