@@ -1174,6 +1174,24 @@ end
 
 function buildDockerRelease
   echo "building docker release"
+
+  # GA (stable) images must not publish with unreviewed CVEs. Default the
+  # grype gate in validateDockerImageIfNeeded to run-and-block for stable
+  # releases when the operator hasn't already set these explicitly (e.g. via
+  # Jenkins job env), so the check is no longer opt-in for GA publishing.
+  # This only fills in unset values -- any explicit setting (on or off) is
+  # left untouched.
+  if test "$RELEASE_TYPE" = "stable"
+    test -z "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE"
+    and enableDockerCveCheck
+
+    test -z "$PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS"
+    and set -xg PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS 1
+
+    test -z "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE"
+    and enableCveReport
+  end
+
   sanOff
   and maintainerOff
   and releaseMode
