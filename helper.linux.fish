@@ -2147,11 +2147,16 @@ function downloadOrUpdateGrype
     if test $status -eq 0
       echo "Grype is already installed. Updating the CVE database"
       $GRYPE_BIN db update
-      if test $status -eq 0
-        echo "Grype CVE database is updated successfully"
+      if test $status -ne 0
+        echo "Failed to update the Grype CVE database"
+        return 1
       end
-      echo "Failed to update the Grype CVE database"
-      return 1
+      echo "Grype CVE database is updated successfully"
+    else
+      # binary is there but not runnable, clearResults never cleans work/tools
+      echo "Grype at $GRYPE_BIN is not usable, reinstalling"
+      installGrype
+      or return 1
     end
   else
     # grype is not installed
