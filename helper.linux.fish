@@ -2181,6 +2181,12 @@ function checkDockerImageForCves
   end
   echo "scanning image for CVEs: $image"
   echo "apply specific CVE exclusions list"
+  # rebuild the config per image. applyGrypeIgnores appends, so reusing a
+  # config from an earlier image in the same job (makeDockerRelease scans the
+  # community image and then the enterprise one) leaves two top-level "ignore"
+  # keys, which grype's YAML loader rejects.
+  setupGrype
+  or return 1
   applyGrypeIgnores $image
   or return $status
   if set -q report_file[1]
