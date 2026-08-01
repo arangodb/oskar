@@ -1129,6 +1129,24 @@ end
 
 function buildDockerRelease
   echo "building docker release"
+
+  # GA (stable) images must not publish with unreviewed CVEs. Default the
+  # grype gate in validateDockerImageIfNeeded to run-and-block for stable
+  # releases when the operator hasn't already set these explicitly (e.g. via
+  # Jenkins job env), so the check is no longer opt-in for GA publishing.
+  # This only fills in unset values -- any explicit setting (on or off) is
+  # left untouched.
+  if test "$RELEASE_TYPE" = "stable"
+    test -z "$RUN_CVE_CHECKS_FOR_DOCKER_IMAGE"
+    and enableDockerCveCheck
+
+    test -z "$PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS"
+    and set -xg PUBLISH_DOCKER_IMAGE_ONLY_IF_CVE_CHECKS_PASS 1
+
+    test -z "$CREATE_CVE_REPORT_FOR_DOCKER_IMAGE"
+    and enableCveReport
+  end
+
   sanOff
   and maintainerOff
   and releaseMode
@@ -2129,11 +2147,16 @@ function downloadOrUpdateGrype
     if test $status -eq 0
       echo "Grype is already installed. Updating the CVE database"
       $GRYPE_BIN db update
-      if test $status -eq 0
-        echo "Grype CVE database is updated successfully"
+      if test $status -ne 0
+        echo "Failed to update the Grype CVE database"
+        return 1
       end
-      echo "Failed to update the Grype CVE database"
-      return 1
+      echo "Grype CVE database is updated successfully"
+    else
+      # binary is there but not runnable, clearResults never cleans work/tools
+      echo "Grype at $GRYPE_BIN is not usable, reinstalling"
+      installGrype
+      or return 1
     end
   else
     # grype is not installed
@@ -2158,6 +2181,12 @@ function checkDockerImageForCves
   end
   echo "scanning image for CVEs: $image"
   echo "apply specific CVE exclusions list"
+  # rebuild the config per image. applyGrypeIgnores appends, so reusing a
+  # config from an earlier image in the same job (makeDockerRelease scans the
+  # community image and then the enterprise one) leaves two top-level "ignore"
+  # keys, which grype's YAML loader rejects.
+  setupGrype
+  or return 1
   applyGrypeIgnores $image
   or return $status
   if set -q report_file[1]
