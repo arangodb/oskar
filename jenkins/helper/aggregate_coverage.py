@@ -55,6 +55,8 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
             f'-instr-profile={str(coverage_file)}'
         ]
         self.params = make_tail_params(verbose, "lcov_convert ", lcov_file)
+        print('w'*80)
+        print(self.params)
         print(self.job_parameters)
         start = datetime.now()
         try:
@@ -72,7 +74,7 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
             {"".join(traceback.TracebackException.from_exception(ex).format())}''')
             self.params['error'] += str(ex)
         end = datetime.now()
-        print(f'done with {binary} in {end-start}')
+        print(f'done with {binary} in {end-start} {str(coverage_file)} {coverage_file.stat().st_size}} => {str(lcov_file)} {lcov_file.stat().st_size}')
         ret = {}
         ret['error'] = self.params['error']
         return ret
