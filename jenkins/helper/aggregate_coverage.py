@@ -202,15 +202,17 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
                 if cleanup_file.is_dir():
                     shutil.rmtree(cleanup_file)
                 elif cleanup_file.exists():
-                    print('delete file')
+                    print(f'delete file {str(cleanup_file)}')
                     cleanup_file.unlink()
                     print('file gone')
                 else:
                     print(f'file {str(cleanup_file)} already gone?')
                 print(f"skipping {self.job[0]}")
-            else:
-                print(f"skipping this layer with {self.job[0]} {self.job[1]}")
+        else:
+            print(f"skipping this layer with {self.job[0]} {self.job[1]}")
         print(f"launch(): returning {ret}")
+        convert_to_lcov_file(self.cfg, self.outdir, self.job[2])
+
         return ret
 
 COV_SLOT_LOCK = Lock()
