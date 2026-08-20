@@ -211,7 +211,7 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
         else:
             print(f"skipping this layer with {self.job[0]} {self.job[1]}")
         print(f"launch(): returning {ret}")
-        convert_to_lcov_file(self.cfg, self.outdir, self.job[2])
+        convert_to_lcov_file(self.cfg, self.outdir, Path(self.job[2]))
 
         return ret
 
