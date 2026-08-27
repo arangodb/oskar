@@ -1,17 +1,11 @@
 #!/bin/sh
 set -e
 
-# Install some packages:
+# cppcheck comes from the Alpine package (2.21.x on alpine:3.24) instead of
+# a source compile: oskar never uses the --rule feature the old
+# HAVE_RULES=yes build existed for, and the pinned source tree kept
+# breaking against new toolchains (2.10 no longer compiled at all).
 apk update
-apk add groff g++ make curl fish bash pcre-dev python3
+apk add groff fish bash python3 cppcheck
 
-# Compile cppcheck library:
-export CPPCHECK_VERSION=2.10
-cd /tmp
-curl -L -O https://github.com/danmar/cppcheck/archive/$CPPCHECK_VERSION.tar.gz
-tar xzvf $CPPCHECK_VERSION.tar.gz
-cd cppcheck-$CPPCHECK_VERSION
-make -j $(nproc) MATCHCOMPILER=yes HAVE_RULES=yes FILESDIR=/usr/share/cppcheck/
-make install FILESDIR=/usr/share/cppcheck/
-cd /tmp
-#rm -rf $CPPCHECK_VERSION.tar.gz cppcheck-$CPPCHECK_VERSION
+cppcheck --version

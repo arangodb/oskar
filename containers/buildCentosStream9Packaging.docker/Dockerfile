@@ -1,5 +1,5 @@
 FROM quay.io/centos/centos:stream9-minimal
-MAINTAINER Max Neunhoeffer <max@arangodb.com>
+LABEL org.opencontainers.image.authors="hackers@arangodb.com"
 
 ARG ARCH "x86_64"
 

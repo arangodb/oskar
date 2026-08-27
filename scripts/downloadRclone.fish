@@ -8,6 +8,29 @@ function setupSourceInfo
   sed -i$suffix -E 's/^Rclone:.*$/Rclone: '"$rcloneRev"'/g' $INNERWORKDIR/sourceInfo.log
 end
 
+
+function verifyPinnedSha256
+  # Verify a downloaded binary against the SHA256 pinned in VERSIONS.
+  # Pins exist for the linux assets only (3.12.11+ / 4.0); without a pin
+  # (older branches, darwin) the download stays unverified as before.
+  set -l path $argv[1]
+  set -l key $argv[2]
+  if test "$PLATFORM" != linux
+    return 0
+  end
+  set -l pin (grep "$key " $INNERWORKDIR/ArangoDB/VERSIONS 2>/dev/null | sed -E 's/.*"([0-9a-f]+)".*/\1/' | head -1)
+  if test -z "$pin"
+    echo "No $key pin in VERSIONS, skipping checksum verification"
+    return 0
+  end
+  set -l actual (sha256sum "$path" | awk '{print $1}')
+  if test "$actual" != "$pin"
+    echo "ERROR: $path checksum mismatch: expected $pin, got $actual"
+    return 1
+  end
+  echo "$path checksum verified ($actual)"
+end
+
 set -l arch ""
 
 switch "$ARCH"
@@ -54,6 +77,7 @@ echo "https://$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/rclone-arangodb/releases/dow
 and curl -s -L -o "$RCLONE_PATH" "https://$ARANGODB_GIT_HOST/$ARANGODB_GIT_ORGA/rclone-arangodb/releases/download/$RCLONE_REV/"$RCLONE_RELEASE"_rclone-arangodb-$PLATFORM-$arch"
 and apk add file
 and eval "file -bL --mime $RCLONE_PATH | grep -v -q '^text'"
+and verifyPinnedSha256 "$RCLONE_PATH" RCLONE_SHA256_(string upper "$arch")
 and chmod 755 "$RCLONE_PATH"
 and echo "Rclone ready for build $RCLONE_PATH"
 and setupSourceInfo "$RCLONE_RELEASE"

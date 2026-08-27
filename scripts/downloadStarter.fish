@@ -8,6 +8,29 @@ function setupSourceInfo
   sed -i$suffix -E 's/^Starter:.*$/Starter: '"$starterRev"'/g' $INNERWORKDIR/sourceInfo.log
 end
 
+
+function verifyPinnedSha256
+  # Verify a downloaded binary against the SHA256 pinned in VERSIONS.
+  # Pins exist for the linux assets only (3.12.11+ / 4.0); without a pin
+  # (older branches, darwin) the download stays unverified as before.
+  set -l path $argv[1]
+  set -l key $argv[2]
+  if test "$PLATFORM" != linux
+    return 0
+  end
+  set -l pin (grep "$key " $INNERWORKDIR/ArangoDB/VERSIONS 2>/dev/null | sed -E 's/.*"([0-9a-f]+)".*/\1/' | head -1)
+  if test -z "$pin"
+    echo "No $key pin in VERSIONS, skipping checksum verification"
+    return 0
+  end
+  set -l actual (sha256sum "$path" | awk '{print $1}')
+  if test "$actual" != "$pin"
+    echo "ERROR: $path checksum mismatch: expected $pin, got $actual"
+    return 1
+  end
+  echo "$path checksum verified ($actual)"
+end
+
 set -l arch ""
 
 switch "$ARCH"
@@ -50,6 +73,7 @@ mkdir -p $STARTER_FOLDER
 set -l STARTER_PATH $STARTER_FOLDER/arangodb
 echo "https://$ARANGODB_GIT_HOST/$HELPER_GIT_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-$PLATFORM-$arch"
 and curl -s -L -o "$STARTER_PATH" "https://$ARANGODB_GIT_HOST/$HELPER_GIT_ORGA/arangodb/releases/download/$STARTER_REV/arangodb-$PLATFORM-$arch"
+and verifyPinnedSha256 "$STARTER_PATH" STARTER_SHA256_(string upper "$arch")
 and chmod 755 "$STARTER_PATH"
 and echo Starter ready for build $STARTER_PATH
 and setupSourceInfo "$STARTER_REV"

@@ -829,6 +829,22 @@ function prepareInstall
       strip usr/bin/arangobackup
     end
   end
+  # Assert the strip-policy outcome (linux only: file(1) wording differs
+  # on darwin) so a wrong split fails the build here, not RTA later.
+  and if test "$PLATFORM" = linux; and command -q file
+    if test "$PACKAGE_STRIP" != None
+      if file -b usr/bin/arangosh | string match -q '*not stripped*'
+        echo "prepareInstall: expected usr/bin/arangosh to be stripped, but it is not"
+        false
+      end
+    end
+    and if test "$PACKAGE_STRIP" = ExceptArangod
+      if not file -b usr/sbin/arangod | string match -q '*not stripped*'
+        echo "prepareInstall: usr/sbin/arangod lost its debug info"
+        false
+      end
+    end
+  end
   set s $status
 
   popd

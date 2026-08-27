@@ -1,7 +1,7 @@
 ARG ARCH=
-FROM ${ARCH}ubuntu
+FROM ${ARCH}ubuntu:24.04
 
-MAINTAINER ArangoDB <info@arangodb.com>
+LABEL org.opencontainers.image.authors="hackers@arangodb.com"
 
 RUN apt update && \
     apt upgrade --yes && \

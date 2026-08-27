@@ -30,11 +30,11 @@ set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
 set -gx UBUNTUBUILDIMAGE_312_TAG 23
 set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
 
-set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:1
+set -gx UBUNTUPACKAGINGIMAGE arangodb/ubuntupackagearangodb-$ARCH:3
 set -gx UBUNTUPACKAGINGIMAGE2 arangodb/ubuntupackagearangodb-$ARCH:2
 
 set -gx ALPINEUTILSIMAGE_NAME arangodb/alpineutils-$ARCH
-set -gx ALPINEUTILSIMAGE_TAG 4
+set -gx ALPINEUTILSIMAGE_TAG 5
 set -gx ALPINEUTILSIMAGE $ALPINEUTILSIMAGE_NAME:$ALPINEUTILSIMAGE_TAG
 
 set -gx CENTOSPACKAGINGIMAGE_NAME arangodb/centospackagearangodb-$ARCH
@@ -42,11 +42,11 @@ set -gx CENTOSPACKAGINGIMAGE_TAG 4
 set -gx CENTOSPACKAGINGIMAGE $CENTOSPACKAGINGIMAGE_NAME:$CENTOSPACKAGINGIMAGE_TAG
 
 set -gx CPPCHECKIMAGE_NAME arangodb/cppcheck-$ARCH
-set -gx CPPCHECKIMAGE_TAG 8
+set -gx CPPCHECKIMAGE_TAG 9
 set -gx CPPCHECKIMAGE $CPPCHECKIMAGE_NAME:$CPPCHECKIMAGE_TAG
 
 set -gx LDAPIMAGE_NAME arangodb/ldap-test-$ARCH
-set -gx LDAPIMAGE_TAG 1
+set -gx LDAPIMAGE_TAG 2
 set -gx LDAPIMAGE $LDAPIMAGE_NAME:$LDAPIMAGE_TAG
 
 set -gx LDAPDOCKERCONTAINERNAME ldapserver1
@@ -760,6 +760,9 @@ function buildDebianPackage
   and echo -n " -- ArangoDB <hackers@arangodb.com>  " >> $ch
   and date -R >> $ch
   and sed -i "s/@ARCHITECTURE@/$ARCH/g" $TARGET/control
+  # The upper copyright year is stamped from the build date, like the
+  # nightly pipeline does (scripts/packaging/build-deb.sh on 3.12+).
+  and sed -i "s/@CURRENT_YEAR@/"(date -u +%Y)"/g" $TARGET/control $TARGET/copyright
   and runInContainer $DOCKER_URL_PREFIX$UBUNTUPACKAGINGIMAGE $SCRIPTSDIR/buildDebianPackage.fish
   set -l s $status
   if test $s -ne 0

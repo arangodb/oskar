@@ -1,5 +1,5 @@
-FROM alpine
-MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
+FROM alpine:3.24
+LABEL org.opencontainers.image.authors="hackers@arangodb.com"
 
 ARG ARCH "x86_64"
 

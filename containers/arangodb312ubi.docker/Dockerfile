@@ -1,5 +1,5 @@
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
-MAINTAINER Frank Celler <info@arangodb.com>
+LABEL org.opencontainers.image.authors="hackers@arangodb.com"
 
 RUN microdnf update -y && rm -rf /var/cache/yum
 
