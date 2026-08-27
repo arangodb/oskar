@@ -1,4 +1,4 @@
-FROM quay.io/centos/centos:stream9-minimal
+FROM quay.io/centos/centos:stream10-minimal
 LABEL org.opencontainers.image.authors="hackers@arangodb.com"
 
 ARG ARCH "x86_64"
