@@ -38,7 +38,7 @@ cd /tmp
 rm -rf openssl-$OPENSSLVERSION.tar.gz openssl-$OPENSSLVERSION
 
 # Compile openldap library:
-export OPENLDAPVERSION=2.6.14
+export OPENLDAPVERSION=2.6.15
 cd /tmp
 curl -O ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-$OPENLDAPVERSION.tgz
 tar xzf openldap-$OPENLDAPVERSION.tgz
