@@ -734,7 +734,7 @@ function buildDebianPackage
 
   rm -rf $TARGET
   and cp -a $EDITIONFOLDER $TARGET
-  and for f in arangodb3.init arangodb3.service compat config templates preinst prerm postinst postrm rules
+  and for f in arangodb3.init arangodb3.service compat config templates preinst prerm postinst postrm rules strip-packages.sh
     cp $SOURCE/common/$f $TARGET/$f
     sed -e "s/@EDITION@/$EDITION/g" -i $TARGET/$f
     if test $PACKAGE_STRIP = All

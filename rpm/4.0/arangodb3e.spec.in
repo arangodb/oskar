@@ -25,6 +25,10 @@
 %undefine _unique_debug_names
 %undefine _unique_debug_srcs
 %undefine _debugsource_packages
+# Keep the linker's original GNU build-id (no debugedit recompute), so
+# RPM binaries match the TAR.GZ, DEB and Docker artifacts of the build.
+%global _no_recompute_build_ids 1
+%undefine _unique_build_ids
 
 # Custom post-install macro to fix file permissions.
 # Since we 'hide' files from find-debuginfo using chmod -x, we must restore
