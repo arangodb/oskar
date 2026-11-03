@@ -74,6 +74,8 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
             {"".join(traceback.TracebackException.from_exception(ex).format())}''')
             self.params['error'] += str(ex)
         end = datetime.now()
+        params['output'].close()
+
         print(f'LlvmCov: done with {binary} in {end-start} {str(coverage_file)} {coverage_file.stat().st_size} => {str(lcov_file)} {lcov_file.stat().st_size}')
         ret = {}
         ret['error'] = self.params['error']
@@ -182,6 +184,7 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             for _ in glob.iglob(str(self.outdir) + '**/**', recursive=True):
                 filecount += 1
 
+        params['output'].close()
         print(f"LcovMerger: done with {self.job[0]} +  {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']} => {filecount}")
         ret['error'] = self.params['error']
         if ret['rc_exit'] != 0:
