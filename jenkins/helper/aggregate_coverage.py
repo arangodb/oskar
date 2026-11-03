@@ -74,7 +74,9 @@ class LlvmCov(ArangoCLIprogressiveTimeoutExecutor):
             {"".join(traceback.TracebackException.from_exception(ex).format())}''')
             self.params['error'] += str(ex)
         end = datetime.now()
-        print(f'done with {binary} in {end-start} {str(coverage_file)} {coverage_file.stat().st_size} => {str(lcov_file)} {lcov_file.stat().st_size}')
+        params['output'].close()
+
+        print(f'LlvmCov: done with {binary} in {end-start} {str(coverage_file)} {coverage_file.stat().st_size} => {str(lcov_file)} {lcov_file.stat().st_size}')
         ret = {}
         ret['error'] = self.params['error']
         return ret
@@ -121,7 +123,7 @@ class LcovCobertura(ArangoCLIprogressiveTimeoutExecutor):
             {"".join(traceback.TracebackException.from_exception(ex).format())}''')
             self.params['error'] += str(ex)
         end = datetime.now()
-        print(f'done with {binary} in {end-start}')
+        print(f'LcovCobertura: done with {binary} in {end-start}')
         ret = {}
         ret['error'] = self.params['error']
         return ret
@@ -182,7 +184,8 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
             for _ in glob.iglob(str(self.outdir) + '**/**', recursive=True):
                 filecount += 1
 
-        print(f"done with {self.job[0]} +  {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']} => {filecount}")
+        params['output'].close()
+        print(f"LcovMerger: done with {self.job[0]} +  {self.job[1]} in {end-start} - {ret['rc_exit']} - {self.params['output']} => {filecount}")
         ret['error'] = self.params['error']
         if ret['rc_exit'] != 0:
             print(f"mitigating error: {self.params['error']}")
@@ -202,15 +205,17 @@ class LcovMerger(ArangoCLIprogressiveTimeoutExecutor):
                 if cleanup_file.is_dir():
                     shutil.rmtree(cleanup_file)
                 elif cleanup_file.exists():
-                    print('delete file')
+                    print(f'delete file {str(cleanup_file)}')
                     cleanup_file.unlink()
                     print('file gone')
                 else:
                     print(f'file {str(cleanup_file)} already gone?')
                 print(f"skipping {self.job[0]}")
-            else:
-                print(f"skipping this layer with {self.job[0]} {self.job[1]}")
+        else:
+            print(f"skipping this layer with {self.job[0]} {self.job[1]}")
         print(f"launch(): returning {ret}")
+        convert_to_lcov_file(self.cfg, self.outdir, Path(self.job[2]))
+
         return ret
 
 COV_SLOT_LOCK = Lock()
