@@ -26,12 +26,12 @@ ENV GLIBCXX_FORCE_NEW=1
 
 RUN PACKAGES_REPO="https://mirror.stream.centos.org/9-stream/BaseOS/$(uname -p)/os/Packages" && \
     NUMA_PACKAGES_VERSION="2.0.19-3.el9.$(uname -p)" && \
-    microdnf -y install gpg wget binutils && \
+    microdnf -y install gpg wget binutils libatomic && \
     for i in numactl-libs numactl; do \
-      curl -L -O $PACKAGES_REPO/$i-$NUMA_PACKAGES_VERSION.rpm && \
-      rpm -i $i-$NUMA_PACKAGES_VERSION.rpm && \
-      rm -f $i-$NUMA_PACKAGES_VERSION.rpm; \
+      curl -fL -O $PACKAGES_REPO/$i-$NUMA_PACKAGES_VERSION.rpm || exit 1; \
     done && \
+    rpm -i numactl-libs-$NUMA_PACKAGES_VERSION.rpm numactl-$NUMA_PACKAGES_VERSION.rpm && \
+    rm -f numactl-libs-$NUMA_PACKAGES_VERSION.rpm numactl-$NUMA_PACKAGES_VERSION.rpm && \
     microdnf clean all
 
 ADD install.tar.gz /
