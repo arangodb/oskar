@@ -43,11 +43,7 @@ find build/client-tools -name "*.cpp.o" >> inclusion_list.txt
 if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -gt 11
   echo lib/BuildId/BuildId.ld >> inclusion_list.txt
 end
-if test "$ARANGODB_VERSION_MAJOR" -eq 3; and test "$ARANGODB_VERSION_MINOR" -lt 12
-  cp /scripts/link_executables_3.11.sh scripts/link_executables.sh
-else
-  cp /scripts/link_executables.sh scripts
-end
+cp /scripts/link_executables.sh scripts
 cp /scripts/README.static-linking README.static-linking
 echo scripts/link_executables.sh >> inclusion_list.txt
 echo README.static-linking >> inclusion_list.txt

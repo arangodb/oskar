@@ -22,10 +22,6 @@ else
 end
 
 
-set -gx UBUNTUBUILDIMAGE_312_NAME arangodb/ubuntubuildarangodb-devel
-set -gx UBUNTUBUILDIMAGE_312_TAG 21
-set -gx UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:$UBUNTUBUILDIMAGE_312_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
-
 set -gx UBUNTUBUILDIMAGE_311_NAME arangodb/ubuntubuildarangodb-311
 set -gx UBUNTUBUILDIMAGE_311_TAG 11
 set -gx UBUNTUBUILDIMAGE_311 $UBUNTUBUILDIMAGE_311_NAME:$UBUNTUBUILDIMAGE_311_TAG-$UBUNTUBUILDIMAGE_TAG_ARCH
@@ -724,10 +720,11 @@ function buildDebianPackage
     return 1
   end
 
-  set -l pd "default"
+  set -l pd "$ARANGODB_PACKAGES"
 
-  if test -d $WORKDIR/debian/$ARANGODB_PACKAGES
-    set pd "$ARANGODB_PACKAGES"
+  if not test -d $WORKDIR/debian/$pd
+    echo "$WORKDIR/debian/$pd not found"
+    return 1
   end
 
   # This assumes that a static build has already happened
@@ -795,10 +792,11 @@ function buildRPMPackage
     return 1
   end
 
-  set -l pd "default"
+  set -l pd "$ARANGODB_PACKAGES"
 
-  if test -d $WORKDIR/rpm/$ARANGODB_PACKAGES
-    set pd "$ARANGODB_PACKAGES"
+  if not test -d $WORKDIR/rpm/$pd
+    echo "$WORKDIR/rpm/$pd not found"
+    return 1
   end
 
   # This assumes that a static build has already happened
@@ -1315,7 +1313,8 @@ function buildDockerArgs
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$imagedistro.docker
 
   if not test -d $containerpath
-    set containerpath $WORKDIR/containers/arangodbDevel$imagedistro.docker
+    echo "$containerpath not found"
+    return 1
   end
 
   set -l EDITION "Community"
@@ -1351,7 +1350,8 @@ function buildDockerAddFiles
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$imagedistro.docker
 
   if not test -d $containerpath
-    set containerpath $WORKDIR/containers/arangodbDevel$imagedistro.docker
+    echo "$containerpath not found"
+    return 1
   end
 
   switch $imagedistro
@@ -1373,7 +1373,8 @@ function buildDockerImage
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
 
   if not test -d $containerpath
-    set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
+    echo "$containerpath not found"
+    return 1
   end
 
   pushd $WORKDIR/work
@@ -1455,7 +1456,8 @@ function buildDockerLocal
   set -l containerpath $WORKDIR/containers/arangodb$ARANGODB_VERSION_MAJOR$ARANGODB_VERSION_MINOR$DOCKER_DISTRO.docker
 
   if not test -d $containerpath
-    set containerpath $WORKDIR/containers/arangodbDevel$DOCKER_DISTRO.docker
+    echo "$containerpath not found"
+    return 1
   end
   and tar czf $containerpath/install.tar.gz *
   and buildDockerAddFiles $DOCKER_DISTRO
@@ -1535,30 +1537,6 @@ function pushUbuntuBuildImage311
 end
 
 function pullUbuntuBuildImage311 ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_311 ; end
-
-function buildUbuntuBuildImageDevel
-  pushd $WORKDIR
-  and cd $WORKDIR/containers/buildUbuntuDevel.docker
-  and switch "$ARCH"
-        case "x86_64"
-          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.x86-64 ."
-        case "aarch64"
-          eval "$DOCKER build --provenance=false --sbom=false $IMAGE_ARGS --pull -t $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 -f ./Dockerfile.arm64 ."
-        case '*'
-          echo "fatal, unknown architecture $ARCH to build $UBUNTUBUILDIMAGE_312"
-          exit 1
-      end
-  or begin ; popd ; return 1 ; end
-  popd
-end
-
-function pushUbuntuBuildImageDevel
-  "$DOCKER" tag $UBUNTUBUILDIMAGE_312 $UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
-  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312
-  and "$DOCKER" push $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312_NAME:latest-$ARCH
-end
-
-function pullUbuntuBuildImageDevel ; "$DOCKER" pull $DOCKER_URL_PREFIX$UBUNTUBUILDIMAGE_312 ; end
 
 function buildUbuntuPackagingImage
   pushd $WORKDIR
@@ -1654,8 +1632,6 @@ function remakeImages
 
   buildUbuntuBuildImage311 ; or set -l s 1
   pushUbuntuBuildImage311 ; or set -l s 1
-  buildUbuntuBuildImageDevel ; or set -l s 1
-  pushUbuntuBuildImageDevel ; or set -l s 1
   buildAlpineUtilsImage ; or set -l s 1
   pushAlpineUtilsImage ; or set -l s 1
   buildUbuntuPackagingImage ; or set -l s 1
@@ -1673,8 +1649,6 @@ function remakeBuildImages
 
   buildUbuntuBuildImage311 ; or set -l s 1
   pushUbuntuBuildImage311 ; or set -l s 1
-  buildUbuntuBuildImageDevel ; or set -l s 1
-  pushUbuntuBuildImageDevel ; or set -l s 1
 
   return $s
 end
@@ -2026,9 +2000,6 @@ function pushOskar
   and buildUbuntuBuildImage311
   and pushUbuntuBuildImage311
 
-  and buildUbuntuBuildImageDevel
-  and pushUbuntuBuildImageDevel
-
   and buildAlpineUtilsImage
   and pushAlpineUtilsImage
 
@@ -2060,7 +2031,6 @@ end
 function updateOskar
   updateOskarOnly
   and pullUbuntuBuildImage311
-  and pullUbuntuBuildImageDevel
   and pullAlpineUtilsImage
   and pullUbuntuPackagingImage
   and pullUbuntuPackagingImage2

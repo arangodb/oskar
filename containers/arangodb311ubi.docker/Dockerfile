@@ -1,5 +1,5 @@
 FROM registry.access.redhat.com/ubi9/ubi-minimal:latest
-MAINTAINER Frank Celler <info@arangodb.com>
+LABEL org.opencontainers.image.authors="hackers@arangodb.com"
 
 RUN microdnf update -y && rm -rf /var/cache/yum
 
@@ -25,7 +25,7 @@ ADD ./LICENSE /licenses/LICENSE
 ENV GLIBCXX_FORCE_NEW=1
 
 RUN PACKAGES_REPO="https://mirror.stream.centos.org/9-stream/BaseOS/$(uname -p)/os/Packages" && \
-    NUMA_PACKAGES_VERSION="2.0.16-3.el9.$(uname -p)" && \
+    NUMA_PACKAGES_VERSION="2.0.19-3.el9.$(uname -p)" && \
     microdnf -y install gpg wget binutils && \
     for i in numactl-libs numactl; do \
       curl -L -O $PACKAGES_REPO/$i-$NUMA_PACKAGES_VERSION.rpm && \

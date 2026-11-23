@@ -32,10 +32,11 @@ else
   security unlock-keychain -p $MACOS_ADMIN_KEYCHAIN_PASS
 end
 
-set -g pd "default"
+set -g pd $argv[1]
 
-if test -d $WORKDIR/dmg/$argv[1]
-  set -g pd $argv[1]
+if not test -d $WORKDIR/dmg/$pd
+  echo "$WORKDIR/dmg/$pd not found"
+  exit 1
 end
 
 if test "$ENTERPRISEEDITION" = "On"

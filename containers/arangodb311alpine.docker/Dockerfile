@@ -1,5 +1,5 @@
-FROM alpine:3.21
-MAINTAINER Max Neunhoeffer <hackers@arangodb.com>
+FROM alpine:3.24
+LABEL org.opencontainers.image.authors="hackers@arangodb.com"
 
 RUN apk update --no-cache && apk upgrade --no-cache
 RUN apk add --no-cache pwgen numactl numactl-tools
